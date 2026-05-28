@@ -10,8 +10,24 @@ Read this index first, then load the specific workflow document that matches the
 
 | Trigger | Workflow | Document to load |
 |---|---|---|
-| "configure react-web project" / scaffold the PWA | Create project scaffold | `#react-web-workflow-configure-project` |
+| "configure react-web project" / scaffold the PWA / creating the React project structure | Create project scaffold | `#react-web-workflow-configure-project` |
 | "add feature {feature-name}" / spec task defining a new feature | Add a new feature module | `#react-web-workflow-add-feature` |
+
+## MANDATORY — Workflow loading rule
+
+**BEFORE writing ANY code in `frontend/react-web/`, you MUST:**
+
+1. Check if the task matches a trigger in the table above
+2. If it matches → **STOP** and load the corresponding workflow document via `#context-key`
+3. Follow that workflow document step-by-step — it contains exact configuration, dependencies, and code patterns
+4. **NEVER** create simplified or alternative implementations — the workflow documents are the source of truth
+
+**Trigger matching for "Configure project":**
+- Any spec task that creates `package.json`, Vite config, TypeScript config, or scaffolds the React project structure
+- Any task that creates `App.tsx`, `main.tsx`, ESLint config, or testing infrastructure
+- Keywords: "scaffold", "bootstrap", "configure project", "create react-web", "set up PWA"
+
+**If you skip loading the workflow document, the implementation WILL be wrong.**
 
 ## How to use
 

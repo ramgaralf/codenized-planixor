@@ -1,0 +1,7 @@
+---
+services:
+  codenized.planixor.api:
+    image: ${DOCKER_REGISTRY-}codenizedplanixorapi
+    build:
+      context: .
+      dockerfile: src/Codenized.Planixor.Api/Dockerfile

@@ -1,0 +1,21 @@
+## .NET
+bin/
+obj/
+.vs/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+## NuGet
+*.nupkg
+**/[Pp]ackages/*
+
+## Docker
+.docker/
