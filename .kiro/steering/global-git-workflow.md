@@ -1,6 +1,6 @@
 # Git & Repository Workflow
 
-Applies to all sub-projects (`api/`, `web/`, `app/`).
+Applies to all sub-projects (`backend/`, `frontend/react-web/`, `frontend/android-app/`).
 
 ## Repository structure
 

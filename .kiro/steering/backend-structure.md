@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "api/**"
+fileMatchPattern: "backend/**"
 ---
 
 # API — Project Structure (.NET 10 / Clean Architecture)

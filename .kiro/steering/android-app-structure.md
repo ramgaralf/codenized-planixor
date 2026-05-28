@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "app/**"
+fileMatchPattern: "frontend/android-app/**"
 ---
 
 # App — Project Structure (Android/Kotlin)

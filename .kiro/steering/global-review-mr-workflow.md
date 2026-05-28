@@ -31,10 +31,10 @@ git pull origin {ticket-branch}
 Use the GitLab MCP to fetch the MR diff. Review against:
 
 - Jira ticket specifications
-- Architecture rules (see `api-architecture.md`)
-- Code style guidelines (see `api-tech.md`)
-- Documentation standards (see `api-workflows.md`)
-- Testing standards (see `api-workflows.md`)
+- Architecture rules (see `backend-architecture.md`)
+- Code style guidelines (see `backend-tech.md`)
+- Documentation standards (see `backend-workflows.md`)
+- Testing standards (see `backend-workflows.md`)
 
 ### Review checklist
 

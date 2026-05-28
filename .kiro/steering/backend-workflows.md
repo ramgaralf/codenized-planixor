@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "api/**"
+fileMatchPattern: "backend/**"
 ---
 
 # API — Workflows Index
@@ -10,9 +10,9 @@ Read this index first, then load the specific workflow document that matches the
 
 | Trigger | Workflow | Document to load |
 |---|---|---|
-| "configure solution for {Organization} {Product} using .NET {N}" | Create full solution scaffold | `#api-workflow-configure-solution` |
-| Spec task defining a new entity / "configure entity {EntityName}" | Add a new entity | `#api-workflow-configure-entity` |
-| Spec task defining a new use case / "configure use case {Entity} {Action}" | Add a new use case | `#api-workflow-configure-usecase` |
+| "configure solution for {Organization} {Product} using .NET {N}" | Create full solution scaffold | `#backend-workflow-configure-solution` |
+| Spec task defining a new entity / "configure entity {EntityName}" | Add a new entity | `#backend-workflow-configure-entity` |
+| Spec task defining a new use case / "configure use case {Entity} {Action}" | Add a new use case | `#backend-workflow-configure-usecase` |
 
 ## How to use
 
@@ -24,6 +24,6 @@ Read this index first, then load the specific workflow document that matches the
 
 | Workflow | Requires |
 |---|---|
-| Configure solution | Empty `api/` folder, no `.slnx` present |
+| Configure solution | Empty `backend/` folder, no `.slnx` present |
 | Configure entity | Solution already scaffolded |
 | Configure use case | Solution scaffolded + affected entity exists |

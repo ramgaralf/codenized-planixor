@@ -90,11 +90,11 @@ Load the sample document for the action being implemented — it contains comple
 
 | Action | Sample to load | HTTP | URL | Commands | Queries | Specs | Extensions | Events | Response |
 |---|---|---|---|---|---|---|---|---|---|
-| Add | `#api-sample-add` | POST | `/` | ✅ | ❌ | ❌ | ✅ ToEntity | optional | ID |
-| Get | `#api-sample-get` | GET | `/{id}` | ❌ | ✅ | ✅ | ✅ ToResponse | ❌ | Full entity |
-| GetList | `#api-sample-getlist` | GET | `/` + query | ❌ | ✅ | ✅ | ✅ ToResponseItem | ❌ | List + metadata |
-| Update | `#api-sample-update` | PUT | `/{id}` | ✅ | ❌ | ✅ | ✅ UpdateEntity | optional | ID |
-| Delete | `#api-sample-delete` | DELETE | `/{id}` | ✅ | ❌ | ✅ | ❌ | optional | ID |
+| Add | `#backend-sample-add` | POST | `/` | ✅ | ❌ | ❌ | ✅ ToEntity | optional | ID |
+| Get | `#backend-sample-get` | GET | `/{id}` | ❌ | ✅ | ✅ | ✅ ToResponse | ❌ | Full entity |
+| GetList | `#backend-sample-getlist` | GET | `/` + query | ❌ | ✅ | ✅ | ✅ ToResponseItem | ❌ | List + metadata |
+| Update | `#backend-sample-update` | PUT | `/{id}` | ✅ | ❌ | ✅ | ✅ UpdateEntity | optional | ID |
+| Delete | `#backend-sample-delete` | DELETE | `/{id}` | ✅ | ❌ | ✅ | ❌ | optional | ID |
 
 ---
 

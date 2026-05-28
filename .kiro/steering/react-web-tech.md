@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "web/**"
+fileMatchPattern: "frontend/react-web/**"
 ---
 
 # Web — Tech Stack (React)

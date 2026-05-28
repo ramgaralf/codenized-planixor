@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "api/**"
+fileMatchPattern: "backend/**"
 ---
 
 # API — Architecture & Pipeline
