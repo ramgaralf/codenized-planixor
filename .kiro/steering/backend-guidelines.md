@@ -32,10 +32,13 @@ Consistent with JavaScript, frontend libraries, Swagger/OpenAPI, `System.Text.Js
 | Element | Convention | Example |
 |---|---|---|
 | Class | PascalCase | `CustomerService` |
+| Record (Value Object) | PascalCase | `Email`, `PhoneNumber`, `ShiftDuration` |
 | Struct | PascalCase | `Coordinate` |
 | Enum | PascalCase | `OrderStatus` |
 | Enum member | PascalCase | `Pending`, `Completed` |
 | Interface | PascalCase with `I` prefix | `IRepository`, `IDisposable` |
+| Domain Event | PascalCase + `DomainEvent` suffix | `ShiftCancelledDomainEvent` |
+| Domain Exception | PascalCase + `DomainException` suffix | `ShiftDomainException` |
 
 ### Members
 
@@ -70,6 +73,8 @@ Format: `MethodName_StateUnderTest_ExpectedBehavior` or `Should_DoSomething_When
 ```
 CalculatePrice_WithDiscount_ReturnsCorrectTotal
 ShouldThrowException_WhenEmailIsInvalid
+Create_WithEmptyValue_ThrowsDomainException
+Cancel_WhenAlreadyCancelled_ThrowsDomainException
 ```
 
 ---
@@ -181,3 +186,198 @@ public string Name { get; set; }
 - Structured deferred-relationship markers: `// DEFERRED-RELATIONSHIP: {EntityName}`
 
 When in doubt → **do not add the comment**.
+
+---
+
+## Domain-Driven Design — Coding Rules
+
+### Value Object coding rules
+
+```csharp
+// ✅ Correct Value Object pattern
+public record Email
+{
+    public string Value { get; }
+
+    private Email(string value)
+    {
+        this.Value = value;
+    }
+
+    public static Email Create(string value)
+    {
+        // Validate domain invariants
+        // Throw DomainException on violation
+        // Return new instance
+    }
+}
+
+// ❌ Public constructor
+public record Email(string Value);
+
+// ❌ No validation
+public record Email
+{
+    public static Email Create(string value) => new Email(value);
+}
+
+// ❌ Using class instead of record
+public class Email { ... }
+```
+
+Rules:
+- Always `record` (value equality)
+- Always private constructor
+- Always static `Create()` factory method with validation
+- Throw `DomainException` for invariant violations — never return null or use Result types
+- Can have multiple factory methods if semantically different: `Money.FromCents(int)`, `Money.FromDecimal(decimal)`
+- Can have pure behavior methods: `Email.GetDomain()`, `Money.Add(Money other)`
+- No dependencies — no injected services
+
+### Entity coding rules
+
+```csharp
+// ✅ Correct Entity pattern
+public class Shift
+{
+    private readonly List<IDomainEvent> domainEvents = new();
+
+    public Guid Id { get; private set; }
+    public Email EmployeeEmail { get; private set; }    // Value Object, not string
+    public ShiftStatus Status { get; private set; }
+
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => this.domainEvents.AsReadOnly();
+
+    private Shift() { }    // EF Core
+
+    public static Shift Create(Email employeeEmail, ShiftDuration duration)
+    {
+        // Validate, set state, raise event, return
+    }
+
+    public void Cancel(string reason)
+    {
+        // Validate preconditions
+        // Mutate state
+        // Raise domain event
+    }
+}
+
+// ❌ Anemic entity (no behavior)
+public class Shift
+{
+    public Guid Id { get; set; }
+    public string EmployeeEmail { get; set; }    // raw primitive
+    public string Status { get; set; }
+}
+
+// ❌ Public setters
+public Email EmployeeEmail { get; set; }
+
+// ❌ Logic in service instead of entity
+public class ShiftService
+{
+    public void Cancel(Shift shift, string reason)
+    {
+        shift.Status = ShiftStatus.Cancelled;  // ❌ external mutation
+    }
+}
+```
+
+Rules:
+- Private parameterless constructor for EF Core
+- Static `Create()` factory method — only way to create new instances
+- All setters are `private set`
+- State changes only through named domain methods (`Cancel()`, `Confirm()`, `Reassign()`)
+- Use Value Objects for properties with domain meaning — avoid primitive obsession
+- Domain methods validate preconditions before mutating state
+- Domain methods raise events via `AddDomainEvent()`
+- No infrastructure dependencies — entities are pure domain logic
+
+### When to use Value Objects vs. primitives
+
+| Use Value Object | Use primitive |
+|---|---|
+| Has validation rules (email format, phone format) | Simple identifier with no rules (Guid Id) |
+| Has domain meaning beyond the type (Money ≠ decimal) | Configuration values (string connectionString) |
+| Combines multiple values (DateRange = start + end) | Flags or counters (int retryCount) |
+| Has behavior (Money.Add, Email.GetDomain) | Raw data with no behavior |
+
+### Domain method design
+
+```csharp
+// ✅ Good domain method — validates, mutates, raises event
+public void Confirm(Guid confirmedBy)
+{
+    if (this.Status != ShiftStatus.Pending)
+    {
+        throw new DomainException("Only pending shifts can be confirmed.");
+    }
+
+    this.Status = ShiftStatus.Confirmed;
+    this.ConfirmedBy = confirmedBy;
+    this.ConfirmedAt = DateTime.UtcNow;
+    this.AddDomainEvent(new ShiftConfirmedDomainEvent(this.Id, confirmedBy));
+}
+
+// ❌ Bad — no precondition check
+public void Confirm(Guid confirmedBy)
+{
+    this.Status = ShiftStatus.Confirmed;
+}
+
+// ❌ Bad — returns instead of throwing (inconsistent with Value Object pattern)
+public bool TryConfirm(Guid confirmedBy) { ... }
+```
+
+---
+
+## TDD — Coding Rules
+
+### Mandatory TDD scope
+
+| Code type | TDD required | Reason |
+|---|---|---|
+| Value Objects | ✅ Yes | Pure logic, trivial to test, high value |
+| Entity domain methods | ✅ Yes | Business rules must be verified |
+| Entity factory methods | ✅ Yes | Creation invariants must be verified |
+| Use Case Services | ✅ Yes | Orchestration logic |
+| Application Services | ✅ Yes | Infrastructure-facing logic |
+| Request Validators | ✅ Yes | Input validation rules |
+| EF Core configurations | ❌ No | Declarative, no logic |
+| Endpoint registrations | ❌ No | Declarative, no logic |
+| DTOs | ❌ No | Data containers, no logic |
+| DI registrations | ❌ No | Declarative, no logic |
+
+### TDD workflow
+
+```
+1. RED    — Write ONE failing test (compile error counts as red)
+2. GREEN  — Write the MINIMUM code to pass (no more)
+3. REFACTOR — Improve structure, remove duplication, keep tests green
+4. REPEAT — Next test case
+```
+
+### Implementation order for a new feature
+
+1. Value Object tests → Value Object implementation
+2. Entity tests → Entity implementation
+3. Use Case Service tests → Service implementation
+4. Request Validator tests → Validator implementation
+
+### Test file organization
+
+```
+UnitTest.{Organization}.{Product}/
+└── {Entity}/
+    ├── Domain/
+    │   └── {Entity}Tests.cs              # Entity factory + behavior tests
+    ├── ValueObjects/
+    │   └── {ValueObject}Tests.cs         # Value Object Create() tests
+    ├── Validators/
+    │   └── {Entity}{Action}RequestValidatorTests.cs
+    ├── Services/
+    │   └── {Entity}{Action}ServiceTests.cs
+    └── Controllers/
+        └── {Entity}{Action}ControllerTests.cs
+```

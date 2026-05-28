@@ -19,6 +19,7 @@ Read this index first, then load the specific workflow document that matches the
 1. Identify which workflow matches the user's request using the trigger column above.
 2. Load the corresponding workflow document via its context key (`#`).
 3. Follow the workflow steps exactly — do not proceed to code generation until all mandatory gates pass.
+4. **All code generation follows TDD** — write the failing test first, then implement.
 
 ## Preconditions
 
@@ -27,3 +28,23 @@ Read this index first, then load the specific workflow document that matches the
 | Configure solution | Empty `backend/` folder, no `.slnx` present |
 | Configure entity | Solution already scaffolded |
 | Configure use case | Solution scaffolded + affected entity exists |
+
+## TDD implementation order (applies to all workflows)
+
+When a workflow produces code with logic, follow this order:
+
+1. **Value Object tests** → Value Object `Create()` implementation
+2. **Entity tests** → Entity factory method + domain methods
+3. **Use Case Service tests** → Service `Run()` implementation
+4. **Request Validator tests** → Validator rules
+
+Each step follows Red-Green-Refactor before moving to the next.
+
+## Quality gate
+
+```bash
+dotnet test {TestProjectPath}
+dotnet build {SolutionPath}
+```
+
+All tests must pass and build must succeed before considering a workflow step complete.

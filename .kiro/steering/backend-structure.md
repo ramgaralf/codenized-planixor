@@ -10,10 +10,16 @@ fileMatchPattern: "backend/**"
 ```
 api/
 ├── src/
-│   ├── {Organization}.{Product}.Core/                              # Enterprise Business Rules
-│   │   ├── Entities/                                               # DB entities
+│   ├── {Organization}.{Product}.Core/                              # Enterprise Business Rules (DDD)
+│   │   ├── Entities/                                               # Domain entities (rich models with behavior)
+│   │   │   └── {Entity}.cs
+│   │   ├── ValueObjects/                                           # Value Objects (immutable, self-validating records)
+│   │   │   └── {ValueObject}.cs
 │   │   ├── Enums/
-│   │   ├── ValueObjects/
+│   │   ├── DomainEvents/                                           # Domain events raised by entities
+│   │   │   └── {Entity}{Action}edDomainEvent.cs
+│   │   ├── Exceptions/                                             # Domain-specific exceptions
+│   │   │   └── {Entity}DomainException.cs
 │   │   └── Settings/                                               # AppSettings.cs
 │   │
 │   ├── {Organization}.{Product}.Dtos/                             # Application Business Rules
@@ -71,6 +77,8 @@ api/
 │   │
 │   └── UnitTest.{Organization}.{Product}/                         # Tests
 │       └── {Entity}/
+│           ├── Domain/{Entity}Tests.cs                             # Entity behavior tests (TDD)
+│           ├── ValueObjects/{ValueObject}Tests.cs                  # Value Object validation tests (TDD)
 │           ├── Validators/{Entity}{Action}RequestValidatorTests.cs
 │           ├── Services/{Entity}{Action}ServiceTests.cs
 │           └── Controllers/{Entity}{Action}ControllerTests.cs
@@ -97,6 +105,9 @@ api/
 | API endpoint paths | kebab-case | `/api/v1/task-lists` |
 | JSON properties | camelCase | `"firstName"` |
 | Acronyms | ALL CAPS | `API`, `URL`, `SDK` — never `Api`, `Url` |
+| Value Objects | PascalCase (record) | `Email`, `PhoneNumber`, `ShiftDuration` |
+| Domain Events | PascalCase + `DomainEvent` suffix | `ShiftCancelledDomainEvent` |
+| Factory methods | PascalCase verb | `Entity.Create(...)`, `Email.Create(...)` |
 
 ## Key structural rules
 
@@ -104,9 +115,12 @@ api/
 - **No per-use-case Controller/Interactor/Presenter classes** — these are generic and come from NuGet
 - **One class per file** — file name matches class name
 - **Use cases** live in `UseCases/{Entity}/{Action}/` — one folder per action
-- **Tests** mirror the source structure: `UnitTest/{Entity}/{Action}/Validators|Services|Controllers`
+- **Tests** mirror the source structure: `UnitTest/{Entity}/Domain|ValueObjects|Validators|Services|Controllers`
 - **Endpoints** live in `Api/Endpoints/{Entity}/`
 - **No `Common` project** — types like `IInteractorBehaviour<,>` come from the NuGet
+- **Entities** are rich domain models with behavior — never anemic data containers
+- **Value Objects** are self-validating `record` types with private constructors and static factory methods
+- **Domain Events** live in `Core/DomainEvents/` and are raised from entity methods
 - All files end with **exactly one trailing newline** — no more, no less
 
 ## Code style rules

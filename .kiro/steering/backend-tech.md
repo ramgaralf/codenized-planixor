@@ -9,12 +9,13 @@ fileMatchPattern: "backend/**"
 
 - **Runtime:** .NET 10 (`net10.0`)
 - **Language:** C#
-- **Architecture:** Clean Architecture (hexagonal) — 5 tiers, 11 projects
+- **Architecture:** Clean Architecture (hexagonal) — 5 tiers, 11 projects — DDD tactical patterns in Tier 1
 - **Pipeline:** Generic `Controller<TReq,TRes>` → `Interactor<TReq>` → `ValidationInteractorBehaviour` → `{UseCase}Service` → `Presenter<TRes>` — all from NuGet, never per-use-case classes
-- **ORM:** Entity Framework Core `10.0.7` (MySQL or SQL Server)
+- **Domain modeling:** Rich Entities + Value Objects (record types) + Domain Events
+- **ORM:** Entity Framework Core `10.0.7` (MySQL or SQL Server) — Owned Types for Value Objects
 - **DI:** Auto-registration via `AddCleanArchitecture(friendlyName)`
 - **Validation:** `ValidationInteractorBehaviour` (automatic — never call `RunValidator()` manually)
-- **Testing:** NUnit `4.*` + NSubstitute `5.*`
+- **Testing:** NUnit `4.*` + NSubstitute `5.*` — TDD mandatory for domain and application logic
 - **Code style:** StyleCop `1.1.118`
 
 ## NuGet version alignment
@@ -39,7 +40,7 @@ fileMatchPattern: "backend/**"
 ## Key NuGet packages
 
 ### `Codenized.CleanArchitecture.Abstractions`
-Core NuGet. Provides: `Controller<TReq,TRes>`, `Interactor<TReq>`, `Presenter<TRes>`, `IInteractorService<TReq,TRes>`, `ValidationInteractorBehaviour`, `IValidator<T>`, `ValidatorBase<T>`, `IAppServiceSingleton|Scoped|Transient`, `IDomainEvent`, `IAsyncDomainEventHub<T>`, all exception types, `AddCleanArchitecture(friendlyName)`.
+Core NuGet. Provides: `Controller<TReq,TRes>`, `Interactor<TReq>`, `Presenter<TRes>`, `IInteractorService<TReq,TRes>`, `ValidationInteractorBehaviour`, `IValidator<T>`, `ValidatorBase<T>`, `IAppServiceSingleton|Scoped|Transient`, `IDomainEvent`, `IAsyncDomainEventHub<T>`, all exception types, `AddCleanArchitecture(friendlyName)`, `DomainException`.
 
 ### `Codenized.CleanArchitecture.Persistence.Abstractions`
 Provides: `ContextHandler<TRead,TWrite,TOut>`, `IUnitOfWork`, `IRepository`.
