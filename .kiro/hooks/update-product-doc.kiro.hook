@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Update Product Doc on Feature Complete",
+  "description": "After a spec task is completed, reviews whether the change represents a significant product evolution (new core feature, architecture change, or cross-cutting decision) and updates global-product.md accordingly. Skips minor implementation tasks that don't change the product scope.",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A spec task has just been completed. Review the task that was just finished and determine if it represents a significant product evolution (new core feature added, architecture change, or cross-cutting decision change). If YES: update .kiro/steering/global-product.md to reflect the new capability under \"Core features\" or the relevant section — keep it concise and high-level. If NO (it's just an implementation detail, a refactor, or a minor task): do nothing and move on."
+  }
+}
