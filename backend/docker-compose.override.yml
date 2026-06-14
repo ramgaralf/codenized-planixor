@@ -1,0 +1,5 @@
+---
+services:
+  codenized.planixor.api:
+    ports:
+      - "80:80"

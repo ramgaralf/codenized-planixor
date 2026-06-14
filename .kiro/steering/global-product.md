@@ -17,11 +17,11 @@ Planixor unifies work shift management, calendar (appointments, reminders, meeti
 
 | Project | Technology | Description |
 |---|---|---|
-| `backend` | .NET 10 (C#) | Backend REST API + background services — single source of truth for business logic and data |
-| `frontend/react-web` | React (TypeScript) | Progressive Web App — browser client |
-| `frontend/android-app` | Android / Kotlin | Native Android mobile application |
+| `backend` | .NET 10 (C#) | Backend REST API + background services — sync hub and source of truth for subscribed users' synchronized data |
+| `frontend/react-web` | React (TypeScript) | Progressive Web App — offline-first, uses IndexedDB as primary data store |
+| `frontend/android-app` | Android / Kotlin | Native Android app — offline-first, uses SQLite as primary data store |
 
-The `backend` owns all business logic and data. Both `frontend/react-web` and `frontend/android-app` are thin clients that consume it.
+The application is **offline-first**: both clients store all user data locally and function fully without internet. The `backend` API serves as the synchronization hub exclusively for subscribed users who opt into cross-device sync. See `global-sync-strategy.md` for full details.
 
 ## Organization context
 
@@ -43,6 +43,8 @@ The `backend` owns all business logic and data. Both `frontend/react-web` and `f
 
 - Google Sign-In (OAuth 2.0) as the initial and primary auth provider
 - JWT tokens issued by the API after Google auth verification
+- Authentication is **optional** — free users operate fully offline without an account
+- Subscribed users authenticate to unlock sync capabilities
 
 ### Versioning
 
@@ -63,15 +65,18 @@ The `backend` owns all business logic and data. Both `frontend/react-web` and `f
 - GitFlow branching strategy (see `global-git-workflow.md`)
 - All secrets via environment variables — never hardcoded or committed
 - Each sub-project is self-contained — no shared build files across them
-- Business logic lives exclusively in `backend` — clients handle only presentation and API communication
+- Offline-first data and sync strategy (see `global-sync-strategy.md`)
+- GUIDs as primary identifiers everywhere — no auto-increment IDs
 
 ## Key Principles
 
+- **Offline-first** — the app must be fully functional without internet; sync is an enhancement, not a requirement
 - Keep the user experience simple and focused
 - Prioritize clarity over feature density
 - Build for reliability and correctness from the start
 - Design for i18n from the beginning — no hardcoded strings in UI
-- Shared business logic lives in the API — clients stay thin
+- Business logic lives in the clients for offline operations; the API orchestrates sync and enforces authorization
+- GUIDs everywhere — no auto-increment IDs to avoid sync collisions
 
 ## Status
 

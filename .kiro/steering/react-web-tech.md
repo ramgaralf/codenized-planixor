@@ -30,6 +30,7 @@ fileMatchPattern: "frontend/react-web/**"
 | `react` / `react-dom` | `^19.*` |
 | `typescript` | `~5.9.*` |
 | `vite` (rolldown-vite) | `^7.*` |
+| `@vitejs/plugin-react` | `^6.*` |
 | `tailwindcss` | `^4.*` |
 | `@tailwindcss/vite` | `^4.*` |
 | `vitest` | `^3.*` |
@@ -83,7 +84,51 @@ Key rules:
 ## Vite configuration
 
 - Path aliases: `@` → `./src`, `@features` → `./src/features`, `@shared` → `./src/shared`, `@context` → `./src/context`
-- Plugins: `@vitejs/plugin-react`, `@tailwindcss/vite`
+- Plugins: `@vitejs/plugin-react` (v6+), `@tailwindcss/vite`
+- Use `fileURLToPath(new URL(..., import.meta.url))` for path aliases — NOT `path.resolve(__dirname, ...)` (ESM does not have `__dirname`)
+
+## Vitest configuration
+
+- Import `defineConfig` from `vitest/config` (NOT from `vite`) — this adds the `test` property to the config type
+- Use `react() as never` cast for the plugin — required due to type incompatibility between `rolldown-vite` and `vitest`'s internal Vite types
+- Add `esbuild: { jsx: 'automatic' }` — required because `@vitejs/plugin-react` v6 with rolldown-vite does not inject the JSX runtime in the test environment automatically
+- Use `fileURLToPath(new URL(..., import.meta.url))` for path aliases (same as vite.config.ts)
+
+```typescript
+// vitest.config.ts — canonical structure
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import { fileURLToPath, URL } from 'node:url';
+
+export default defineConfig({
+  plugins: [react() as never],
+  esbuild: {
+    jsx: 'automatic',
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+  },
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@features': fileURLToPath(new URL('./src/features', import.meta.url)),
+      '@shared': fileURLToPath(new URL('./src/shared', import.meta.url)),
+      '@context': fileURLToPath(new URL('./src/context', import.meta.url)),
+    },
+  },
+});
+```
+
+### Known quirks (rolldown-vite + vitest)
+
+| Issue | Cause | Fix |
+|---|---|---|
+| `React is not defined` in tests | `@vitejs/plugin-react` v6 doesn't inject JSX runtime in vitest | Add `esbuild: { jsx: 'automatic' }` to vitest.config.ts |
+| Type error on `react()` plugin | rolldown-vite Plugin type ≠ vitest's internal Vite Plugin type | Cast with `as never` |
+| `__dirname is not defined` | ESM modules don't have `__dirname` | Use `fileURLToPath(new URL(..., import.meta.url))` |
+| `optimizeDeps.rollupOptions deprecated` | Old `@vitejs/plugin-react` v4 uses legacy API | Upgrade to `@vitejs/plugin-react` v6+ |
 
 ## Common commands
 

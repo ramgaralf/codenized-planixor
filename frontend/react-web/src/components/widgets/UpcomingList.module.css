@@ -1,0 +1,29 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.title {
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-semibold);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.listWrapper {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-md);
+}
+
+.emptyText {
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-regular);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin: 0;
+}

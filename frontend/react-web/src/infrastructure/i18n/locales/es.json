@@ -1,0 +1,102 @@
+{
+  "app": {
+    "name": "Planixor",
+    "description": "Organiza tu tiempo. Potencia tu día."
+  },
+  "nav": {
+    "calendar": "Calendario",
+    "shifts": "Turnos",
+    "reminders": "Recordatorios",
+    "reports": "Informes",
+    "settings": "Ajustes"
+  },
+  "views": {
+    "day": "Día",
+    "week": "Semana",
+    "month": "Mes",
+    "year": "Año"
+  },
+  "calendar": {
+    "today": "Hoy",
+    "weekNumber": "Semana {{week}}, {{year}}",
+    "noEvents": "No hay eventos programados para este período",
+    "allDay": "Todo el día",
+    "currentTime": "Hora actual"
+  },
+  "dates": {
+    "monday": "Lunes",
+    "tuesday": "Martes",
+    "wednesday": "Miércoles",
+    "thursday": "Jueves",
+    "friday": "Viernes",
+    "saturday": "Sábado",
+    "sunday": "Domingo",
+    "mondayShort": "Lun",
+    "tuesdayShort": "Mar",
+    "wednesdayShort": "Mié",
+    "thursdayShort": "Jue",
+    "fridayShort": "Vie",
+    "saturdayShort": "Sáb",
+    "sundayShort": "Dom",
+    "january": "Enero",
+    "february": "Febrero",
+    "march": "Marzo",
+    "april": "Abril",
+    "may": "Mayo",
+    "june": "Junio",
+    "july": "Julio",
+    "august": "Agosto",
+    "september": "Septiembre",
+    "october": "Octubre",
+    "november": "Noviembre",
+    "december": "Diciembre"
+  },
+  "empty": {
+    "noData": "No hay datos disponibles",
+    "noEvents": "No hay eventos programados",
+    "noShifts": "No hay turnos asignados",
+    "noUpcoming": "No hay eventos próximos",
+    "noRecords": "No hay registros para el período seleccionado"
+  },
+  "widgets": {
+    "hoursWorked": "Horas trabajadas",
+    "shiftsCompleted": "Turnos completados",
+    "upcoming": "Próximos eventos",
+    "summary": "Resumen"
+  },
+  "reports": {
+    "title": "Informes",
+    "hoursPerDay": "Horas por día",
+    "hoursPerWeek": "Horas por semana",
+    "hoursPerMonth": "Horas por mes",
+    "hoursByShiftType": "Horas por tipo de turno",
+    "totalHours": "Total de horas",
+    "shiftMorning": "Mañana",
+    "shiftAfternoon": "Tarde",
+    "shiftNight": "Noche"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeSystem": "Sistema",
+    "language": "Idioma",
+    "languageEs": "Español",
+    "languageEn": "English"
+  },
+  "actions": {
+    "createEvent": "Crear nuevo evento",
+    "signIn": "Iniciar sesión",
+    "newEvent": "Nuevo evento"
+  },
+  "accessibility": {
+    "fabLabel": "Crear nuevo evento",
+    "previousPeriod": "Período anterior",
+    "nextPeriod": "Período siguiente",
+    "notifications": "Notificaciones",
+    "userMenu": "Menú de usuario",
+    "mainNavigation": "Navegación principal",
+    "calendarNavigation": "Navegación del calendario"
+  }
+}

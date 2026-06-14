@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">Planixor</string>
+    <string name="app_description">Organize your time. Power your day.</string>
+
+    <!-- Navigation -->
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_shifts">Shifts</string>
+    <string name="nav_reminders">Reminders</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Calendar Views -->
+    <string name="calendar_view_day">Day</string>
+    <string name="calendar_view_week">Week</string>
+    <string name="calendar_view_month">Month</string>
+    <string name="calendar_view_year">Year</string>
+
+    <!-- Calendar Navigation -->
+    <string name="calendar_today">Today</string>
+    <string name="calendar_week_label">Week</string>
+    <string name="calendar_week_format">Week %1$d, %2$d</string>
+    <string name="calendar_empty_state">No events scheduled for this period</string>
+
+    <!-- Reports -->
+    <string name="reports_title">Reports</string>
+    <string name="reports_empty_state">No records available for the selected period</string>
+    <string name="reports_total_hours">Total hours</string>
+    <string name="reports_hours_per_day">Hours per day</string>
+    <string name="reports_hours_per_week">Hours per week</string>
+    <string name="reports_hours_per_month">Hours per month</string>
+    <string name="reports_shift_morning">Morning</string>
+    <string name="reports_shift_afternoon">Afternoon</string>
+    <string name="reports_shift_night">Night</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_theme_title">Theme</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_spanish">Español</string>
+    <string name="settings_language_english">English</string>
+
+    <!-- Actions -->
+    <string name="action_create_event">Create event</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_new_event">New event</string>
+
+    <!-- Accessibility -->
+    <string name="fab_content_description">Create new event</string>
+    <string name="content_description_previous">Previous</string>
+    <string name="content_description_next">Next</string>
+    <string name="content_description_navigate_previous">Navigate to previous period</string>
+    <string name="content_description_navigate_next">Navigate to next period</string>
+    <string name="content_description_notifications">Notifications</string>
+    <string name="content_description_user_menu">User menu</string>
+
+    <!-- Widgets -->
+    <string name="widget_hours_worked">Hours worked</string>
+    <string name="widget_shifts_completed">Shifts completed</string>
+    <string name="widget_upcoming">Upcoming</string>
+    <string name="widget_summary">Summary</string>
+
+    <!-- Empty States -->
+    <string name="empty_no_data">No data available</string>
+    <string name="empty_no_events">No events</string>
+    <string name="empty_no_shifts">No shifts</string>
+    <string name="empty_no_upcoming">No upcoming events</string>
+    <string name="empty_no_records">No records</string>
+</resources>

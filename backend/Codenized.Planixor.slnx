@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/Application Business Rules/">
+    <Project Path="src/Codenized.Planixor.Dtos/Codenized.Planixor.Dtos.csproj" />
+    <Project Path="src/Codenized.Planixor.Events/Codenized.Planixor.Events.csproj" />
+    <Project Path="src/Codenized.Planixor.UseCases/Codenized.Planixor.UseCases.csproj" />
+  </Folder>
+  <Folder Name="/Enterprise Business Rules/">
+    <Project Path="src/Codenized.Planixor.Core/Codenized.Planixor.Core.csproj" />
+  </Folder>
+  <Folder Name="/Frameworks and Drivers/">
+    <Project Path="src/Codenized.Planixor.Api/Codenized.Planixor.Api.csproj" />
+    <Project Path="src/Codenized.Planixor.IoC/Codenized.Planixor.IoC.csproj" />
+  </Folder>
+  <Folder Name="/Interface Adapters/">
+    <Project Path="src/Codenized.Planixor.Persistence.IoC/Codenized.Planixor.Persistence.IoC.csproj" />
+    <Project Path="src/Codenized.Planixor.Persistence.MySql.Efc.DataContext/Codenized.Planixor.Persistence.MySql.Efc.DataContext.csproj" />
+    <Project Path="src/Codenized.Planixor.Persistence.MySql.Efc.Repositories/Codenized.Planixor.Persistence.MySql.Efc.Repositories.csproj" />
+    <Project Path="src/Codenized.Planixor.Services/Codenized.Planixor.Services.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="src/UnitTest.Codenized.Planixor/UnitTest.Codenized.Planixor.csproj" />
+  </Folder>
+  <Project Path="docker-compose.dcproj" />
+</Solution>

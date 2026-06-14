@@ -1,0 +1,15 @@
+/* RightPanel — Analytics sidebar
+ * Visible only at ≥1024px (visibility managed by AppLayout grid)
+ * Contains: PeriodSummary, BarChart, DonutChart, UpcomingList
+ */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md);
+  width: 300px;
+  background-color: var(--color-bg);
+  border-left: 1px solid var(--color-border);
+  overflow-y: auto;
+}

@@ -1,0 +1,133 @@
+/* Sidebar — Responsive vertical navigation
+ * Expanded (≥1024px): 240px, icons + labels
+ * Collapsed (768–1023px): 64px, icons only
+ * Hidden (<768px): handled by AppLayout
+ */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--color-bg);
+  border-right: 1px solid var(--color-border);
+  padding: var(--spacing-md) 0;
+  overflow-y: auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.logoIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #ffffff;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: var(--font-weight-bold);
+}
+
+.logoText {
+  font-family: var(--font-family);
+  font-size: 18px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-sm);
+  flex: 1;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.navLink:hover {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.navLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.navLinkActive {
+  color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.navLinkActive:hover {
+  color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+.navIcon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.navLabel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Collapsed mode (768–1023px) */
+@media (max-width: 1023px) {
+  .sidebar {
+    align-items: center;
+  }
+
+  .logo {
+    justify-content: center;
+    padding: var(--spacing-sm);
+  }
+
+  .logoText {
+    display: none;
+  }
+
+  .nav {
+    padding: 0 var(--spacing-xs);
+    align-items: center;
+  }
+
+  .navLink {
+    justify-content: center;
+    padding: var(--spacing-sm);
+    width: 44px;
+    height: 44px;
+  }
+
+  .navLabel {
+    display: none;
+  }
+}

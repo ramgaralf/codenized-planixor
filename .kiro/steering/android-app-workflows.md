@@ -10,9 +10,25 @@ Read this index first, then load the specific workflow document that matches the
 
 | Trigger | Workflow | Description |
 |---|---|---|
-| "configure android-app project" / scaffold the app | Create project scaffold | Set up Gradle, dependencies, base packages, theme, and MainActivity |
+| "configure android-app project" / scaffold the app / creating the Android project structure | Create project scaffold | Set up Gradle, dependencies, base packages, theme, and MainActivity |
 | "add screen {ScreenName}" / spec task defining a new screen | Add a new screen/feature | Create Screen, ViewModel, UiState, and wire navigation |
 | "add entity {EntityName}" / spec task defining a new API entity | Add API integration for entity | Create DTO, Mapper, ApiService, Repository interface + impl |
+
+## MANDATORY — Workflow loading rule
+
+**BEFORE writing ANY code in `frontend/android-app/`, you MUST:**
+
+1. Check if the task matches a trigger in the table above
+2. If it matches → **STOP** and follow the workflow steps described in this document (or load the referenced document if one exists)
+3. Follow the workflow step-by-step — it contains exact configuration, dependencies, and code patterns
+4. **NEVER** create simplified or alternative implementations — the workflow documents are the source of truth
+
+**Trigger matching for "Configure project":**
+- Any spec task that creates `build.gradle.kts`, `settings.gradle.kts`, or scaffolds the Android project structure
+- Any task that creates `MainActivity.kt`, `PlanixorApplication.kt`, theme files, or DI modules
+- Keywords: "scaffold", "bootstrap", "configure project", "create android-app", "set up Android"
+
+**If you skip following the workflow, the implementation WILL be wrong.**
 
 ## Preconditions
 

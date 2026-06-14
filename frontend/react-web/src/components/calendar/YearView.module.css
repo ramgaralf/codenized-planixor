@@ -1,0 +1,144 @@
+/* YearView — Grid of 12 mini-month calendars
+ * Desktop (≥1024px): 4 columns × 3 rows
+ * Tablet (768–1023px): 3 columns × 4 rows
+ * Mobile (<768px): 2 columns × 6 rows
+ * Each mini-month: clickable month name header + compact day grid
+ * Current day highlighted with primary-blue
+ */
+
+.yearView {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+  width: 100%;
+  padding: var(--spacing-md);
+  font-family: var(--font-family);
+}
+
+@media (max-width: 1023px) {
+  .yearView {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .yearView {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mini-month card */
+.miniMonth {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+/* Month name header — clickable */
+.monthHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs) 0;
+  margin-bottom: var(--spacing-xs);
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  text-transform: capitalize;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s ease;
+}
+
+.monthHeader:hover {
+  background-color: var(--color-border);
+}
+
+.monthHeader:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Weekday header row inside mini-month */
+.weekdayRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 2px;
+}
+
+.weekdayLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  user-select: none;
+  line-height: 1;
+  padding: 2px 0;
+}
+
+/* Day grid inside mini-month */
+.dayGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.dayButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  font-size: 11px;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-primary);
+  border: none;
+  background: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: background-color 0.15s ease;
+}
+
+.dayButton:hover {
+  background-color: var(--color-border);
+}
+
+.dayButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.dayButtonToday {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-weight: var(--font-weight-semibold);
+}
+
+.dayButtonToday:hover {
+  background-color: var(--color-primary);
+  opacity: 0.9;
+}
+
+.dayButtonOutside {
+  color: var(--color-text-secondary);
+  opacity: 0.4;
+}
+
+/* Empty placeholder cell (leading/trailing blanks) */
+.dayEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+}

@@ -1,0 +1,92 @@
+/* AppLayout — Responsive three-column grid shell
+ * Desktop (≥1024px): Sidebar (240px) | Main (1fr) | RightPanel (auto)
+ * Tablet (768–1023px): Sidebar collapsed (64px) | Main (1fr)
+ * Mobile (<768px): Single column with bottom nav + FAB
+ */
+
+.layout {
+  display: grid;
+  grid-template-areas:
+    'sidebar main rightPanel';
+  grid-template-columns: 240px 1fr auto;
+  grid-template-rows: 1fr;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--color-bg);
+}
+
+.sidebar {
+  grid-area: sidebar;
+  width: 240px;
+  overflow-y: auto;
+}
+
+.main {
+  grid-area: main;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+.rightPanel {
+  grid-area: rightPanel;
+  overflow-y: auto;
+}
+
+.bottomNav {
+  display: none;
+}
+
+.fab {
+  display: none;
+}
+
+/* Tablet: 768px – 1023px */
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-areas: 'sidebar main';
+    grid-template-columns: 64px 1fr;
+  }
+
+  .sidebar {
+    width: 64px;
+  }
+
+  .rightPanel {
+    display: none;
+  }
+}
+
+/* Mobile: <768px */
+@media (max-width: 767px) {
+  .layout {
+    grid-template-areas: 'main';
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .rightPanel {
+    display: none;
+  }
+
+  .bottomNav {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+  }
+
+  .fab {
+    display: block;
+    position: fixed;
+    bottom: calc(var(--spacing-xl) + 48px);
+    right: var(--spacing-md);
+    z-index: 101;
+  }
+}

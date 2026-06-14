@@ -1,0 +1,3 @@
+cd frontend/react-web
+pnpm run test
+pnpm run build

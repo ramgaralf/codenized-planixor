@@ -250,6 +250,40 @@ Rules:
 
 ---
 
+## Activity-scoped ViewModels (shared state)
+
+Some ViewModels need to be shared across multiple screens (e.g., `ThemeViewModel` controls the app-wide theme). These are scoped to the Activity and provided via `CompositionLocalProvider`:
+
+```kotlin
+// In MainActivity:
+val LocalThemeViewModel = staticCompositionLocalOf<ThemeViewModel> { error("Not provided") }
+
+CompositionLocalProvider(LocalThemeViewModel provides themeViewModel) {
+    PlanixorTheme(themeMode = themeMode) { AppNavigation() }
+}
+
+// In any screen that needs it:
+val themeViewModel = LocalThemeViewModel.current
+```
+
+Rules:
+- Use Activity-scoped ViewModels (`by viewModels()`) only for truly app-wide state (theme, auth)
+- Screen-specific ViewModels still use `hiltViewModel()` scoped to the NavBackStackEntry
+- Never create duplicate instances of a shared ViewModel via `hiltViewModel()` in child screens
+
+---
+
+## Platform integration patterns
+
+| Pattern | Implementation |
+|---|---|
+| Theme switching | `ThemeViewModel` at Activity scope → `PlanixorTheme(themeMode)` → immediate Compose recomposition |
+| Language switching | `AppCompatDelegate.setApplicationLocales(LocaleListCompat)` — immediate, no restart |
+| Activity base class | `AppCompatActivity` (required for `setApplicationLocales`) |
+| Activity theme | `Theme.AppCompat.Light.NoActionBar` parent (required for AppCompatActivity) |
+
+---
+
 ## Development philosophy
 
 - **Simplicity > Cleverness** — prefer explicit, readable code
