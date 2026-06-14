@@ -1,0 +1,126 @@
+/* HeaderBar — Top bar of the main content area
+ * Contains: NotificationBell (stub), NewEventButton (≥768px), UserAvatar (always)
+ * Layout: flex row, justify-end, items centered
+ */
+
+.headerBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Mobile logo — only visible when sidebar is hidden (<768px) */
+.mobileLogo {
+  display: none;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-right: auto;
+}
+
+.mobileLogoIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #ffffff;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: var(--font-weight-bold);
+}
+
+.mobileLogoText {
+  font-family: var(--font-family);
+  font-size: 18px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-full);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.iconButton:hover {
+  background-color: var(--color-surface);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.newEventButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.newEventButton:hover {
+  opacity: 0.9;
+}
+
+.newEventButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.userAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.userAvatar:hover {
+  background-color: var(--color-border);
+}
+
+.userAvatar:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Hide NewEventButton at <768px — FAB takes its place */
+@media (max-width: 767px) {
+  .newEventButton {
+    display: none;
+  }
+
+  .mobileLogo {
+    display: flex;
+  }
+}

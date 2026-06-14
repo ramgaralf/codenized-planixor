@@ -2,6 +2,20 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Apply theme before render to prevent flash of incorrect theme
+      (function() {
+        var stored = null;
+        try { stored = localStorage.getItem('planixor_theme'); } catch(e) {}
+        var valid = stored === 'light' || stored === 'dark' || stored === 'system';
+        var mode = valid ? stored : 'system';
+        if (!valid) { try { localStorage.setItem('planixor_theme', 'system'); } catch(e) {} }
+        var resolved = mode === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : mode;
+        document.documentElement.classList.add(resolved === 'dark' ? 'theme-dark' : 'theme-light');
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Planixor</title>

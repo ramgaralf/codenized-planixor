@@ -119,28 +119,31 @@ Weights needed: 400 (Regular), 500 (Medium), 600 (SemiBold), 700 (Bold)
 ┌─────────────────────────────────────────────────────┐
 │ Sidebar (240px)  │  Main content area               │
 │                  │                                   │
-│ Logo             │  Header (search, notifications,  │
-│ Navigation       │          user avatar, + button)  │
-│  • Inicio        │                                   │
-│  • Calendario    │  Content (calendar, cards, etc.) │
-│  • Turnos        │                                   │
-│  • Equipo        │  Right panel (optional):         │
-│  • Informes      │    Weekly summary, quick stats   │
-│  • Recordatorios │                                   │
+│ Logo (P icon +   │  Top Bar [FIXED — does not scroll]│
+│  "Planixor")     │  (notifications, avatar, +button)│
+│ Navigation       │                                   │
+│  • Calendario    │  View Selector + Date Navigator  │
+│  • Informes      │                                   │
+│  • Turnos        │  Content (scrollable area only): │
+│  • Recordatorios │    calendar views, reports, etc. │
 │  • Ajustes       │                                   │
+│                  │  Right panel (optional, ≥1024px): │
+│                  │    Weekly summary, quick stats    │
 └─────────────────────────────────────────────────────┘
 ```
 
-- Sidebar: fixed, collapsible on smaller screens
-- Active nav item: highlighted with primary color background + white text
-- Main content: scrollable, max-width container for readability
+- Sidebar: fixed (`height: 100%`), no page-level scroll. Logo at top, navigation items below. No user profile section.
+- Active nav item: highlighted with primary color background tint
+- Main content: only the calendar/content area scrolls; top bar stays fixed
+- Layout uses `height: 100vh; overflow: hidden` at the root grid level
+- Mobile (<768px): Logo + "Planixor" text appears in the top bar (left-aligned); bottom nav replaces sidebar
 
-### Layout — Mobile (Android)
+### Layout — Mobile (Android & Web <768px)
 
 ```
 ┌─────────────────────┐
-│ Header (hamburger,  │
-│ logo, notifications)│
+│ Top Bar (logo left, │
+│ avatar/bell right)  │
 ├─────────────────────┤
 │                     │
 │  Content area       │
@@ -148,12 +151,13 @@ Weights needed: 400 (Regular), 500 (Medium), 600 (SemiBold), 700 (Bold)
 │                     │
 ├─────────────────────┤
 │ Bottom navigation   │
-│ (5 items max)       │
+│ (5 items)           │
 └─────────────────────┘
 ```
 
-- Bottom navigation: Calendar, Team, Clock, Reports, Notifications
+- Bottom navigation order: Calendar, Reports, Shifts, Reminders, Settings
 - Cards: rounded corners (12–16px radius), subtle shadow
+- FAB: bottom-right, gradient (blue→purple)
 
 ### Components
 
@@ -243,4 +247,16 @@ Dark mode: reduce shadow opacity by 50%, rely more on surface color differentiat
 - Both light and dark mode must be supported — no light-only or dark-only components
 - Accessibility: all interactive elements must have sufficient contrast and focus indicators
 - The brand gradient is reserved for the logo and primary CTAs — do not overuse
+- **Navigation order** (both platforms): Calendar, Reports, Shifts, Reminders, Settings
+- **No user profile in sidebar/bottom nav** — user management is exclusively via the top bar (avatar button)
+- **Sidebar must have logo** at the top: gradient "P" icon + "Planixor" text (collapsed: icon only)
+- **Mobile top bar must show logo** (left-aligned) when sidebar is hidden (<768px)
+- **Page-level scroll disabled** on web — only content areas scroll; sidebar and top bar remain fixed
+- **Scrollbars** (web): Styled thin, using `--color-border` for thumb (adapts to light/dark theme automatically)
+- **Calendar views do NOT show empty state text** — an empty grid/timeline is sufficient; no "No events" message overlaid
+- **Android bottom nav**: labels only shown on the active/selected item (`alwaysShowLabel = false` on inactive)
+- **Android top bar**: Logo "P" (gradient) + "Planixor" left, notifications bell + user avatar right (mirrors web mobile layout)
+- **Android app icon**: White "P" letter on blue→purple gradient background (adaptive icon format)
+- **Android theme/locale switching**: Applied immediately without app restart (AppCompatDelegate for locale, Compose recomposition for theme)
+- **ThemeViewModel shared at Activity scope** (Android): Use `CompositionLocalProvider` so all screens reference the same instance
 

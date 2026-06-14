@@ -1,0 +1,27 @@
+/* CalendarDashboard — Layout with fixed top bar and scrollable calendar content */
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.topBar {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.calendarContent {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}

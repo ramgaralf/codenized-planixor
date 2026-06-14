@@ -4,7 +4,9 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Stylized "P" letter matching the Planixor brand logo -->
+    <!-- The letter is centered within the 108x108 adaptive icon safe zone (66x66 inner area) -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,30 L54,78 M38,54 L70,54"/>
+        android:pathData="M38,32 L38,76 L46,76 L46,60 L56,60 C64.8,60 72,53.6 72,45.5 C72,37.4 64.8,32 56,32 L38,32 Z M46,40 L55,40 C60.5,40 64,42.8 64,46 C64,49.2 60.5,52 55,52 L46,52 L46,40 Z"/>
 </vector>

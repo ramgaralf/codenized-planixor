@@ -2,5 +2,101 @@
   "app": {
     "name": "Planixor",
     "description": "Organize your time. Power your day."
+  },
+  "nav": {
+    "calendar": "Calendar",
+    "shifts": "Shifts",
+    "reminders": "Reminders",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "views": {
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year"
+  },
+  "calendar": {
+    "today": "Today",
+    "weekNumber": "Week {{week}}, {{year}}",
+    "noEvents": "No events scheduled for this period",
+    "allDay": "All day",
+    "currentTime": "Current time"
+  },
+  "dates": {
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "mondayShort": "Mon",
+    "tuesdayShort": "Tue",
+    "wednesdayShort": "Wed",
+    "thursdayShort": "Thu",
+    "fridayShort": "Fri",
+    "saturdayShort": "Sat",
+    "sundayShort": "Sun",
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+    "june": "June",
+    "july": "July",
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December"
+  },
+  "empty": {
+    "noData": "No data available",
+    "noEvents": "No events scheduled",
+    "noShifts": "No shifts assigned",
+    "noUpcoming": "No upcoming events",
+    "noRecords": "No records for the selected period"
+  },
+  "widgets": {
+    "hoursWorked": "Hours worked",
+    "shiftsCompleted": "Shifts completed",
+    "upcoming": "Upcoming events",
+    "summary": "Summary"
+  },
+  "reports": {
+    "title": "Reports",
+    "hoursPerDay": "Hours per day",
+    "hoursPerWeek": "Hours per week",
+    "hoursPerMonth": "Hours per month",
+    "hoursByShiftType": "Hours by shift type",
+    "totalHours": "Total hours",
+    "shiftMorning": "Morning",
+    "shiftAfternoon": "Afternoon",
+    "shiftNight": "Night"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "language": "Language",
+    "languageEs": "Español",
+    "languageEn": "English"
+  },
+  "actions": {
+    "createEvent": "Create new event",
+    "signIn": "Sign in",
+    "newEvent": "New event"
+  },
+  "accessibility": {
+    "fabLabel": "Create new event",
+    "previousPeriod": "Previous period",
+    "nextPeriod": "Next period",
+    "notifications": "Notifications",
+    "userMenu": "User menu",
+    "mainNavigation": "Main navigation",
+    "calendarNavigation": "Calendar navigation"
   }
 }

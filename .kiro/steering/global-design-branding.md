@@ -73,33 +73,46 @@ Both clients MUST support light mode and dark mode.
 
 ## Layout — React Web (PWA)
 
-- **Fixed left sidebar** with vertical navigation:
-  - Home
-  - Calendar
-  - Shifts
-  - Team
+- **Fixed left sidebar** with vertical navigation (no user profile section — user management via topbar):
+  - Logo ("P" gradient icon + "Planixor" text) at the top
+  - Calendar (default/active on load)
   - Reports
+  - Shifts
   - Reminders
   - Settings
-- **Main area** with adaptive content (weekly calendar, lists, charts)
-- **Right side panel** (optional/collapsible) with:
+- **Main area** with adaptive content:
+  - **Fixed top bar** (does NOT scroll): notifications, user avatar, "New event" button (≥768px)
+  - **Scrollable content**: calendar views, reports, settings
+- **Right side panel** (optional/collapsible, ≥1024px only) with:
   - Weekly summary (hours worked, completed shifts)
   - Next shift
   - Quick reports (compact bar charts)
-- **Header**: search, notifications, user avatar, "New event" button
-- **Calendar views**: Day / Week / Month with navigation selector
+- **Mobile top bar** (<768px): Logo + "Planixor" text aligned left, notifications + avatar right
+- **Calendar views**: Day / Week / Month / Year with navigation selector
+- **Scrollbar**: Styled with theme-adaptive colors (light border in light mode, dark border in dark mode)
+- **Layout constraint**: Page-level scroll disabled (`height: 100vh; overflow: hidden`). Only the calendar content area scrolls. Sidebar and top bar remain fixed.
 
 ## Layout — Android App
 
-- **Bottom navigation bar** with icons:
-  - Calendar
-  - Shifts (team)
-  - Clock (time tracking)
-  - Reports (charts)
-  - Notifications (bell)
-- **Header**: hamburger menu + "Planixor" logo + action button (+)
-- **Main content**: compact view with mini monthly calendar and day event list
+- **Top app bar** (fixed, does NOT scroll):
+  - Left: Logo "P" (gradient icon) + "Planixor" text
+  - Right: Notifications bell icon + User avatar icon (both stubs for now)
+- **Bottom navigation bar** with icons (same order as web sidebar):
+  - Calendar (default/active on load)
+  - Reports
+  - Shifts
+  - Reminders
+  - Settings
+  - **Labels only shown on the active item** (inactive items show icon only)
+- **Main content**: scrollable calendar views (Day/Week/Month/Year)
+- **ViewSelector + DateNavigator**: below the top bar, inside the calendar screen content
+- **FAB**: gradient button for quick event creation
 - **Cards** for shifts and events with a left-side color indicator (by category/shift)
+- **No user profile section in navigation** — user management via top bar avatar icon
+- **App icon**: "P" white letter on blue→purple gradient background (adaptive icon)
+- **Splash screen**: Navy dark background (`#0F172A`) shown while app loads
+- **Theme switching**: Managed via ThemeViewModel shared at Activity scope; applied immediately without restart
+- **Language switching**: Applied via `AppCompatDelegate.setApplicationLocales()` for immediate effect without restart
 
 ## Shared UI components
 
@@ -150,3 +163,9 @@ Both clients MUST support light mode and dark mode.
 - All iconography must be from the same set (do not mix styles)
 - Report charts use exclusively colors from the defined palette
 - Design prioritizes readability and cleanliness — avoid unnecessary decoration
+- **Navigation order** (both platforms): Calendar, Reports, Shifts, Reminders, Settings
+- **No user profile in sidebar/bottom nav** — user access is exclusively via the top bar avatar icon
+- **Calendar views do NOT show "no events" empty state text** — an empty grid is sufficient indication
+- **Android bottom nav labels**: only shown on the active/selected item (inactive items show icon only)
+- **Top bar is shared across platforms**: Logo left + notifications/avatar right (web mobile + Android)
+- **Theme and language changes** must apply immediately without requiring app restart on both platforms

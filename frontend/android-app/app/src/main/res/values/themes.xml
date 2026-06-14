@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Planixor" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Main app theme — AppCompat parent required for AppCompatActivity -->
+    <style name="Theme.Planixor" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
 </resources>
