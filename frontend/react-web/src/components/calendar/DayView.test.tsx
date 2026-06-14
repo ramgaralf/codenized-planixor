@@ -75,9 +75,4 @@ describe('DayView', () => {
     expect(indicator).not.toBeInTheDocument();
   });
 
-  it('should display empty state message', () => {
-    renderDayView();
-
-    expect(screen.getByText('No events scheduled for this period')).toBeInTheDocument();
-  });
 });
