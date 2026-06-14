@@ -76,7 +76,7 @@ export const WeekView = () => {
     const containerHeight = container.clientHeight;
     const scrollTarget = currentHourOffset - containerHeight / 2;
 
-    container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
+    container.scrollTo?.({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
   }, [isCurrentWeek]);
 
   return (

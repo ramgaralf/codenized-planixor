@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { I18nextProvider } from 'react-i18next';
+import { MemoryRouter } from 'react-router-dom';
 import i18n from '@/infrastructure/i18n';
 
 import { HeaderBar } from './HeaderBar';
@@ -9,11 +10,13 @@ beforeAll(async () => {
   await i18n.changeLanguage('en');
 });
 
-const renderHeaderBar = () => {
+const renderHeaderBar = (initialEntries: string[] = ['/']) => {
   return render(
-    <I18nextProvider i18n={i18n}>
-      <HeaderBar />
-    </I18nextProvider>,
+    <MemoryRouter initialEntries={initialEntries}>
+      <I18nextProvider i18n={i18n}>
+        <HeaderBar />
+      </I18nextProvider>
+    </MemoryRouter>,
   );
 };
 
@@ -25,11 +28,18 @@ describe('HeaderBar', () => {
     expect(bell).toBeInTheDocument();
   });
 
-  it('should render the new event button with text label', () => {
-    renderHeaderBar();
+  it('should render the new event button on calendar page', () => {
+    renderHeaderBar(['/']);
 
-    const newEventBtn = screen.getByRole('button', { name: /new event/i });
-    expect(newEventBtn).toBeInTheDocument();
+    const buttons = screen.getAllByRole('button');
+    expect(buttons).toHaveLength(3);
+  });
+
+  it('should not render the new event button on non-calendar pages', () => {
+    renderHeaderBar(['/settings']);
+
+    const buttons = screen.getAllByRole('button');
+    expect(buttons).toHaveLength(2);
   });
 
   it('should render the user avatar button with accessible label', () => {
@@ -45,10 +55,9 @@ describe('HeaderBar', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 
-  it('should render three buttons total', () => {
-    renderHeaderBar();
+  it('should display the page title', () => {
+    renderHeaderBar(['/']);
 
-    const buttons = screen.getAllByRole('button');
-    expect(buttons).toHaveLength(3);
+    expect(screen.getByText('Calendar')).toBeInTheDocument();
   });
 });

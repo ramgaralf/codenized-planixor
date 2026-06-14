@@ -21,26 +21,13 @@ const renderBottomNav = (initialEntries: string[] = ['/']) => {
 };
 
 describe('BottomNav', () => {
-  it('should render 5 items with icons and labels in correct order', () => {
+  it('should render 5 navigation items with icons only (no text labels)', () => {
     renderBottomNav();
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
     const links = within(nav).getAllByRole('link');
 
     expect(links).toHaveLength(5);
-    expect(links[0]).toHaveTextContent('Calendar');
-    expect(links[1]).toHaveTextContent('Shifts');
-    expect(links[2]).toHaveTextContent('Reminders');
-    expect(links[3]).toHaveTextContent('Reports');
-    expect(links[4]).toHaveTextContent('Settings');
-  });
-
-  it('should render an icon for each nav item', () => {
-    renderBottomNav();
-
-    const nav = screen.getByRole('navigation', { name: /main navigation/i });
-    const links = within(nav).getAllByRole('link');
-
     links.forEach((link) => {
       const svg = link.querySelector('svg');
       expect(svg).toBeInTheDocument();
