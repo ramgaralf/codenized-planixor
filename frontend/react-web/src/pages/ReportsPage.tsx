@@ -24,8 +24,6 @@ export const ReportsPage = () => {
 
   return (
     <div className={styles.reportsPage}>
-      <h1 className={styles.pageTitle}>{t('reports.title')}</h1>
-
       <div
         className={styles.timeRangeSelector}
         role="tablist"

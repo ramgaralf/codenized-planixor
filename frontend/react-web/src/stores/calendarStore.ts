@@ -59,7 +59,7 @@ const computePrev = (state: CalendarState): Date => {
 export const useCalendarStore = create<CalendarState>()(
   persist(
     (set) => ({
-      activeView: 'week',
+      activeView: 'day',
       currentDate: new Date(),
       setView: (view) => set({ activeView: view }),
       navigateForward: () =>

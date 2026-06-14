@@ -66,7 +66,7 @@ This document defines the requirements for the Calendar Dashboard — the main p
 #### Acceptance Criteria
 
 1. THE View_Selector SHALL provide four options: Day, Week, Month, Year
-2. WHEN the application launches for the first time, THE View_Selector SHALL default to the Week view. On subsequent launches, THE View_Selector SHALL restore the last used view from local persistence
+2. WHEN the application launches for the first time, THE View_Selector SHALL default to the Day view. On subsequent launches, THE View_Selector SHALL restore the last used view from local persistence
 3. WHEN the user selects a view option, THE Dashboard SHALL update the calendar display to the selected Calendar_View within 300ms
 4. WHEN the user switches from one Calendar_View to another, THE Dashboard SHALL preserve the currently viewed date context such that the newly selected view includes the same focal date (e.g., switching from Day showing March 12 to Week shows the week containing March 12)
 5. THE View_Selector SHALL visually indicate the currently active view using `primary-blue` (#2563EB)

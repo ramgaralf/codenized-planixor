@@ -81,13 +81,13 @@ Both clients MUST support light mode and dark mode.
   - Reminders
   - Settings
 - **Main area** with adaptive content:
-  - **Fixed top bar** (does NOT scroll): notifications, user avatar, "New event" button (≥768px)
+  - **Fixed top bar** (does NOT scroll, global — defined at route/AppShell level, not per-page): notifications (Bell icon), user avatar, "New event" button (only visible on Calendar page)
   - **Scrollable content**: calendar views, reports, settings
 - **Right side panel** (optional/collapsible, ≥1024px only) with:
   - Weekly summary (hours worked, completed shifts)
   - Next shift
   - Quick reports (compact bar charts)
-- **Mobile top bar** (<768px): Logo + "Planixor" text aligned left, notifications + avatar right
+- **Mobile top bar** (<768px): Logo "P" + "Planixor" + page title (smaller, grey) on left; "+" (icon only, only on Calendar page) + bell + avatar on right
 - **Calendar views**: Day / Week / Month / Year with navigation selector
 - **Scrollbar**: Styled with theme-adaptive colors (light border in light mode, dark border in dark mode)
 - **Layout constraint**: Page-level scroll disabled (`height: 100vh; overflow: hidden`). Only the calendar content area scrolls. Sidebar and top bar remain fixed.
@@ -95,15 +95,15 @@ Both clients MUST support light mode and dark mode.
 ## Layout — Android App
 
 - **Top app bar** (fixed, does NOT scroll):
-  - Left: Logo "P" (gradient icon) + "Planixor" text
-  - Right: Notifications bell icon + User avatar icon (both stubs for now)
+  - Left: Logo "P" (gradient icon) + "Planixor · {PageTitle}" format
+  - Right: "+" button (only on Calendar page) + Notifications bell icon + User avatar icon (both stubs for now)
 - **Bottom navigation bar** with icons (same order as web sidebar):
   - Calendar (default/active on load)
   - Reports
   - Shifts
   - Reminders
   - Settings
-  - **Labels only shown on the active item** (inactive items show icon only)
+  - **Icons only, no text labels** (all items show icon only, no `alwaysShowLabel`)
 - **Main content**: scrollable calendar views (Day/Week/Month/Year)
 - **ViewSelector + DateNavigator**: below the top bar, inside the calendar screen content
 - **FAB**: gradient button for quick event creation
@@ -166,6 +166,13 @@ Both clients MUST support light mode and dark mode.
 - **Navigation order** (both platforms): Calendar, Reports, Shifts, Reminders, Settings
 - **No user profile in sidebar/bottom nav** — user access is exclusively via the top bar avatar icon
 - **Calendar views do NOT show "no events" empty state text** — an empty grid is sufficient indication
-- **Android bottom nav labels**: only shown on the active/selected item (inactive items show icon only)
+- **Android bottom nav**: icons only, no text labels at all (removed `alwaysShowLabel`)
+- **Mobile web bottom nav**: icons only, no text labels
 - **Top bar is shared across platforms**: Logo left + notifications/avatar right (web mobile + Android)
+- **Top bar is global** (defined at route/AppShell level, not per-page): shows page title on the left, actions on the right
+- **Page titles are shown only in the top bar** — individual pages do NOT render their own title heading
+- **"New Event" button**: only visible when the user is on the Calendar page (both web and Android top bar)
+- **Recordatorios (Reminders) navigation icon**: AlarmClock (web: `lucide-react` AlarmClock) / Alarm (Android: `Icons.Outlined.Alarm`). Bell/Notifications icon is reserved exclusively for the top bar notifications button.
+- **Default calendar view**: Day (not Week) on both platforms
+- **Current time indicator** (Day View): horizontal blue line with a circle marker (Google Calendar style) on both platforms; the view auto-scrolls to center the current hour on open
 - **Theme and language changes** must apply immediately without requiring app restart on both platforms

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useCalendarStore } from '@/stores/calendarStore';
@@ -6,6 +6,7 @@ import { useCalendarStore } from '@/stores/calendarStore';
 import styles from './WeekView.module.css';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const HOUR_ROW_HEIGHT = 60;
 
 const getFirstDayOfWeek = (locale: string): number => {
   return locale === 'en' ? 0 : 1;
@@ -52,6 +53,7 @@ export const WeekView = () => {
   const currentDate = useCalendarStore((state) => state.currentDate);
   const locale = i18n.language;
   const today = useMemo(() => new Date(), []);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   const firstDayOfWeek = useMemo(() => getFirstDayOfWeek(locale), [locale]);
 
@@ -59,6 +61,23 @@ export const WeekView = () => {
     () => getWeekDates(new Date(currentDate), firstDayOfWeek),
     [currentDate, firstDayOfWeek]
   );
+
+  const isCurrentWeek = useMemo(
+    () => weekDates.some((date) => isSameDay(date, today)),
+    [weekDates, today]
+  );
+
+  useEffect(() => {
+    if (!isCurrentWeek || !bodyRef.current) return;
+
+    const container = bodyRef.current;
+    const now = new Date();
+    const currentHourOffset = now.getHours() * HOUR_ROW_HEIGHT;
+    const containerHeight = container.clientHeight;
+    const scrollTarget = currentHourOffset - containerHeight / 2;
+
+    container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
+  }, [isCurrentWeek]);
 
   return (
     <div className={styles.weekView} role="grid" aria-label={t('views.week')}>
@@ -88,7 +107,7 @@ export const WeekView = () => {
         })}
       </div>
 
-      <div className={styles.body}>
+      <div className={styles.body} ref={bodyRef}>
         {HOURS.map((hour) => (
           <div key={hour} className={styles.hourRow} role="row">
             <div className={styles.hourLabel} role="rowheader" aria-label={formatHourLabel(hour, locale)}>

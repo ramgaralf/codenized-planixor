@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 
 import { AppLayout } from '@/components/layout/AppLayout';
+import { HeaderBar } from '@/components/layout/HeaderBar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { FAB } from '@/components/shared/FAB';
@@ -17,7 +18,12 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
       bottomNav={<BottomNav />}
       fab={<FAB />}
     >
-      {children}
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        <HeaderBar />
+        <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+          {children}
+        </div>
+      </div>
     </AppLayout>
   );
 };

@@ -43,6 +43,7 @@ fun ViewSelector(
                     index = index,
                     count = views.size,
                 ),
+                icon = {},
                 colors = SegmentedButtonDefaults.colors(
                     activeContainerColor = PrimaryBlue,
                     activeContentColor = androidx.compose.ui.graphics.Color.White,

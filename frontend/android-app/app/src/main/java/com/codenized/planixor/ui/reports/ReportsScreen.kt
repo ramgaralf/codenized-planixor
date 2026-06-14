@@ -146,6 +146,7 @@ private fun TimeRangeSelector(
                     index = index,
                     count = views.size,
                 ),
+                icon = {},
                 colors = SegmentedButtonDefaults.colors(
                     activeContainerColor = PrimaryBlue,
                     activeContentColor = Color.White,

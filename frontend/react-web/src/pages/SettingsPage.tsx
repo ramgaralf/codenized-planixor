@@ -30,8 +30,6 @@ export const SettingsPage = () => {
 
   return (
     <div className={styles.settingsPage}>
-      <h1 className={styles.title}>{t('settings.title')}</h1>
-
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>{t('settings.theme')}</h2>
         <div className={styles.optionGroup} role="radiogroup" aria-label={t('settings.theme')}>

@@ -23,7 +23,7 @@ class CalendarViewModel @Inject constructor(
     private val preferencesRepository: PreferencesRepository,
 ) : ViewModel() {
 
-    private val _activeView = MutableStateFlow(CalendarView.Week)
+    private val _activeView = MutableStateFlow(CalendarView.Day)
     val activeView: StateFlow<CalendarView> = _activeView.asStateFlow()
 
     private val _currentDate = MutableStateFlow(LocalDate.now())
@@ -73,13 +73,13 @@ class CalendarViewModel @Inject constructor(
         private val VALID_VALUES = setOf("day", "week", "month", "year")
 
         private fun String?.toCalendarView(): CalendarView = when {
-            this == null -> CalendarView.Week
-            this !in VALID_VALUES -> CalendarView.Week
+            this == null -> CalendarView.Day
+            this !in VALID_VALUES -> CalendarView.Day
             this == "day" -> CalendarView.Day
             this == "week" -> CalendarView.Week
             this == "month" -> CalendarView.Month
             this == "year" -> CalendarView.Year
-            else -> CalendarView.Week
+            else -> CalendarView.Day
         }
 
         private fun CalendarView.toStorageValue(): String = when (this) {

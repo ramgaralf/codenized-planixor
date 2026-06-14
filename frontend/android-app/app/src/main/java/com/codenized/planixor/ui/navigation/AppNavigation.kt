@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,6 +61,15 @@ fun AppNavigation() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val pageTitle = when (currentRoute) {
+        Screen.Calendar.route -> stringResource(R.string.nav_calendar)
+        Screen.Reports.route -> stringResource(R.string.nav_reports)
+        Screen.Shifts.route -> stringResource(R.string.nav_shifts)
+        Screen.Reminders.route -> stringResource(R.string.nav_reminders)
+        Screen.Settings.route -> stringResource(R.string.settings_title)
+        else -> stringResource(R.string.nav_calendar)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -87,19 +97,54 @@ fun AppNavigation() {
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
 
-                        // App name
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                            ),
-                            color = MaterialTheme.colorScheme.onBackground,
-                        )
+                        // App name + page title
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.app_name),
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                ),
+                                color = MaterialTheme.colorScheme.onBackground,
+                            )
+                            Text(
+                                text = " · ",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextSecondary,
+                            )
+                            Text(
+                                text = pageTitle,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Normal,
+                                ),
+                                color = TextSecondary,
+                            )
+                        }
                     }
                 },
                 actions = {
+                    // New event button (only on Calendar screen)
+                    if (currentRoute == Screen.Calendar.route) {
+                        IconButton(onClick = { /* TODO: new event */ }) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(PrimaryBlue),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Add,
+                                    contentDescription = stringResource(R.string.action_new_event),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                    }
                     // Notifications icon button (stub)
                     IconButton(onClick = { /* TODO: notifications */ }) {
                         Icon(

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useCalendarStore } from '@/stores/calendarStore';
@@ -6,6 +6,7 @@ import { useCalendarStore } from '@/stores/calendarStore';
 import styles from './DayView.module.css';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const HOUR_ROW_HEIGHT = 60;
 
 const isSameDay = (date1: Date, date2: Date): boolean => {
   return (
@@ -24,6 +25,7 @@ const getCurrentTimeTopPercent = (): number => {
 export const DayView = () => {
   const { t, i18n } = useTranslation();
   const currentDate = useCalendarStore((state) => state.currentDate);
+  const timelineRef = useRef<HTMLDivElement>(null);
 
   const locale = i18n.language;
   const isToday = isSameDay(currentDate, new Date());
@@ -43,8 +45,20 @@ export const DayView = () => {
 
   const timeIndicatorTop = isToday ? getCurrentTimeTopPercent() : null;
 
+  useEffect(() => {
+    if (!isToday || !timelineRef.current) return;
+
+    const container = timelineRef.current;
+    const now = new Date();
+    const currentHourOffset = now.getHours() * HOUR_ROW_HEIGHT;
+    const containerHeight = container.clientHeight;
+    const scrollTarget = currentHourOffset - containerHeight / 2;
+
+    container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
+  }, [isToday]);
+
   return (
-    <div className={styles.dayView} role="grid" aria-label={t('views.day')}>
+    <div className={styles.dayView} ref={timelineRef} role="grid" aria-label={t('views.day')}>
       <div className={styles.timeline}>
         {HOURS.map((hour) => (
           <div key={hour} className={styles.hourRow} role="row">

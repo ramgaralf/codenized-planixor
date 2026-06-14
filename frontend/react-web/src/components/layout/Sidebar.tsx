@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
-import { Calendar, Clock, Bell, BarChart3, Settings } from 'lucide-react';
+import { Calendar, Clock, AlarmClock, BarChart3, Settings } from 'lucide-react';
 
 import styles from './Sidebar.module.css';
 
@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { to: '/', icon: Calendar, labelKey: 'nav.calendar' },
   { to: '/reports', icon: BarChart3, labelKey: 'nav.reports' },
   { to: '/shifts', icon: Clock, labelKey: 'nav.shifts' },
-  { to: '/reminders', icon: Bell, labelKey: 'nav.reminders' },
+  { to: '/reminders', icon: AlarmClock, labelKey: 'nav.reminders' },
   { to: '/settings', icon: Settings, labelKey: 'nav.settings' },
 ] as const;
 

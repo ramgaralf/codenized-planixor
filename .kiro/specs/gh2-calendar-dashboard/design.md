@@ -35,7 +35,8 @@ Technical design for the Calendar Dashboard — the main page of Planixor across
 │  ┌────────────────────────────────────────────────────────────────┐ │
 │  │  CalendarScreen (Composable)                                    │ │
 │  │  ┌──────────────────────────────────────────────────────────┐  │ │
-│  │  │  TopAppBar: Logo + ViewSelector + DateNavigator          │  │ │
+│  │  │  TopAppBar: Logo "P" + "Planixor · {PageTitle}" + actions  │  │ │
+│  │  │  (actions: "+" only on Calendar, bell, avatar)           │  │ │
 │  │  ├──────────────────────────────────────────────────────────┤  │ │
 │  │  │  CalendarContent (Month grid / Day timeline / Week /     │  │ │
 │  │  │  Year mini-months)                                       │  │ │
@@ -76,9 +77,10 @@ Technical design for the Calendar Dashboard — the main page of Planixor across
                 │   ├── <NavItem /> × 5 (Calendar, Shifts, Reminders, Reports, Settings)
                 │   └── <UserProfile />
                 ├── <MainContent>
-                │   ├── <HeaderBar>
+                │   ├── <HeaderBar>              // GLOBAL — defined at AppShell/route level, not per-page
+                │   │   ├── <PageTitle />           // Shows current page name
+                │   │   ├── <NewEventButton />     // Only visible on Calendar page
                 │   │   ├── <NotificationBell />   // Stub — icon only, no functionality
-                │   │   ├── <NewEventButton />     // Desktop/tablet only
                 │   │   └── <UserAvatar />         // Always visible — account access
                 │   ├── <ViewSelector />           // Day | Week | Month | Year
                 │   ├── <DateNavigator />          // < label > + Today button
@@ -99,9 +101,11 @@ Technical design for the Calendar Dashboard — the main page of Planixor across
 ### Android App — Screen Structure (Jetpack Compose)
 
 ```
-NavHost (Bottom Navigation — 5 items)
+NavHost (Bottom Navigation — 5 items, icons only, no labels)
 ├── CalendarScreen
-│   ├── TopAppBar (logo, view selector as segmented tabs, date nav arrows)
+│   ├── TopAppBar (Logo "P" + "Planixor · Calendario", "+" button, bell, avatar)
+│   ├── ViewSelector (segmented tabs, no checkmark icon)
+│   ├── DateNavigator (arrows + date label + today button)
 │   ├── CalendarContent
 │   │   ├── DayTimeline (vertical 24h slots)
 │   │   ├── WeekGrid (7-column layout + vertical timeline)
@@ -111,7 +115,7 @@ NavHost (Bottom Navigation — 5 items)
 ├── ShiftsScreen (stub — placeholder)
 ├── RemindersScreen (stub — placeholder)
 ├── ReportsScreen
-│   ├── TimeRangeSelector (Day/Week/Month/Year tabs)
+│   ├── TimeRangeSelector (Day/Week/Month/Year segmented tabs, no checkmark icon)
 │   ├── BarChart (hours per subdivision)
 │   ├── DonutChart (hours by shift type)
 │   └── UpcomingList (events + shifts)
@@ -212,7 +216,7 @@ This entity will be used in future issues for data display. Defined here to esta
 
 ### Persistence of activeView
 
-The Zustand calendar store persists `activeView` to LocalStorage via the `persist` middleware. On app launch, the store hydrates from LocalStorage. If no value exists, defaults to `'week'`.
+The Zustand calendar store persists `activeView` to LocalStorage via the `persist` middleware. On app launch, the store hydrates from LocalStorage. If no value exists, defaults to `'day'`.
 
 ```typescript
 // calendarStore.ts
@@ -222,7 +226,7 @@ import { persist } from 'zustand/middleware';
 export const useCalendarStore = create<CalendarState>()(
   persist(
     (set) => ({
-      activeView: 'week',
+      activeView: 'day',
       currentDate: new Date(),
       setView: (view) => set({ activeView: view }),
       navigateForward: () => set((state) => ({ currentDate: computeNext(state) })),
@@ -245,7 +249,7 @@ export const useCalendarStore = create<CalendarState>()(
 |---|---|---|
 | Calendar state | **ViewModel + StateFlow** | Standard Compose pattern. Survives configuration changes. Injected via Hilt. |
 | Theme | **ViewModel + DataStore** | DataStore for persistence, ViewModel exposes as StateFlow for Compose collection. |
-| Active view persistence | **DataStore** | On app launch, ViewModel reads last saved view from DataStore. Defaults to `Week` if absent. |
+| Active view persistence | **DataStore** | On app launch, ViewModel reads last saved view from DataStore. Defaults to `Day` if absent. |
 | Data | **Room + Flow** | Room DAOs return `Flow<List<T>>` — Compose collects as state. |
 | DI | **Hilt** | Standard Google-recommended DI for Android. `@HiltViewModel` for ViewModels, `@Inject` for repositories. |
 
@@ -321,8 +325,8 @@ fun PlanixorTheme(
 - **Layout**: Vertical timeline with 24 hourly slots (00:00–23:00)
 - **Hour labels**: Left column showing formatted time (e.g., "9:00", "10:00")
 - **Events**: Positioned as blocks spanning their duration within the timeline
-- **Current time indicator**: Horizontal red/blue line at the current time (when viewing today)
-- **This issue**: Renders empty timeline structure with hour labels, no events
+- **Current time indicator**: Horizontal blue line + circle marker at the current time (Google Calendar style, when viewing today); view auto-scrolls to center the current hour on open
+- **This issue**: Renders empty timeline structure with hour labels, current time indicator, no events
 
 ### Week View
 - **Layout**: 7-column grid with vertical timeline
@@ -439,7 +443,7 @@ import styles from './Sidebar.module.css';
 |---|---|---|---|---|---|
 | ≥1024px (Desktop) | Expanded (240px, icons + labels) | Visible | Sidebar | Hidden (use HeaderBar button) | Visible |
 | 768–1023px (Tablet) | Collapsed (64px, icons only) | Hidden | Sidebar | Hidden (use HeaderBar button) | Visible |
-| <768px (Mobile) | Hidden | Hidden | Bottom nav bar (5 items) | Visible (bottom-right) | Visible |
+| <768px (Mobile) | Hidden | Hidden | Bottom nav bar (icons only, no labels) | Visible (bottom-right) | Visible |
 
 ---
 
@@ -449,7 +453,7 @@ import styles from './Sidebar.module.css';
 |---|---|---|
 | IndexedDB/Room unavailable | Show error banner: "Unable to access local data" with retry option | Show Snackbar with retry action |
 | Theme preference corrupted | Fall back to `system`, overwrite invalid value | Fall back to `System`, overwrite invalid value |
-| Active view preference invalid | Fall back to `week` | Fall back to `Week` |
+| Active view preference invalid | Fall back to `day` | Fall back to `Day` |
 | Font (Poppins) fails to load | Fall back to system sans-serif stack (`system-ui, -apple-system, sans-serif`) | N/A (bundled in APK) |
 | i18n translation key missing | Show key name as fallback (dev builds log warning) | Show key name as fallback |
 
@@ -652,7 +656,15 @@ com/codenized/planixor/
 | Stub pages for non-calendar sections | Navigation works end-to-end; actual content in dedicated issues |
 | FAB opens stub/placeholder | Event creation flow will be a separate issue |
 | No "empty state" text on calendar views | Empty grid is sufficient indication; text overlaps calendar structure |
-| Android bottom nav: label only on active | Cleaner look with long localized labels; standard Material 3 pattern |
+| Android bottom nav: icons only, no labels | Cleaner look; removed `alwaysShowLabel` entirely for all items |
+| Mobile web bottom nav: icons only, no labels | Consistent with Android; no text labels on any item |
+| Default calendar view is Day (not Week) | Day view provides the most immediate, actionable schedule overview on launch |
+| Current time indicator in Day View | Horizontal blue line + circle (Google Calendar style); auto-scrolls to center current hour on open |
+| Recordatorios uses AlarmClock/Alarm icon | Bell icon is reserved exclusively for the top bar notifications button; AlarmClock differentiates Reminders |
+| Top bar is global (route-level, not per-page) | Defined in AppShell/routes; pages do not render their own title or top bar |
+| Page titles only in top bar | Individual pages (Reports, Settings) do NOT render heading titles; shown only in top bar |
+| "New Event" button only on Calendar page | The "+" action is contextual to the calendar; hidden on other pages (both web and Android) |
+| Android segmented buttons: no checkmark | ViewSelector and Reports TimeRangeSelector use `icon = {}` to hide the default selected check indicator |
 | ThemeViewModel shared at Activity scope (Android) | Single instance ensures theme change in Settings propagates to the entire app immediately |
 | AppCompatActivity for MainActivity (Android) | Required for `AppCompatDelegate.setApplicationLocales()` to work |
 | Theme parent = Theme.AppCompat.Light.NoActionBar | Required when using `AppCompatActivity`; android:Theme.Material causes crash |

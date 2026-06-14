@@ -1,16 +1,24 @@
 /* HeaderBar — Top bar of the main content area
- * Contains: NotificationBell (stub), NewEventButton (≥768px), UserAvatar (always)
- * Layout: flex row, justify-end, items centered
+ * Contains: page title (left), actions (right: notifications, new event, avatar)
+ * Mobile: logo + title left, actions right
  */
 
 .headerBar {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: var(--spacing-md);
   padding: var(--spacing-md) var(--spacing-lg);
   background-color: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
+}
+
+/* Page title — visible on desktop/tablet when sidebar has the logo */
+.pageTitle {
+  font-family: var(--font-family);
+  font-size: 18px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-right: auto;
 }
 
 /* Mobile logo — only visible when sidebar is hidden (<768px) */
@@ -18,7 +26,6 @@
   display: none;
   align-items: center;
   gap: var(--spacing-sm);
-  margin-right: auto;
 }
 
 .mobileLogoIcon {
@@ -41,6 +48,13 @@
   font-size: 18px;
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
+}
+
+/* Actions group (right side) */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
 .iconButton {
@@ -114,13 +128,27 @@
   outline-offset: 2px;
 }
 
-/* Hide NewEventButton at <768px — FAB takes its place */
+/* Mobile: <768px */
 @media (max-width: 767px) {
-  .newEventButton {
-    display: none;
-  }
-
   .mobileLogo {
     display: flex;
+  }
+
+  .pageTitle {
+    margin-right: auto;
+    font-size: 14px;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+  }
+
+  .newEventButton {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0;
+    gap: 0;
+  }
+
+  .newEventButton svg {
+    width: 18px;
+    height: 18px;
   }
 }

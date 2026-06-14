@@ -119,8 +119,8 @@ Weights needed: 400 (Regular), 500 (Medium), 600 (SemiBold), 700 (Bold)
 ┌─────────────────────────────────────────────────────┐
 │ Sidebar (240px)  │  Main content area               │
 │                  │                                   │
-│ Logo (P icon +   │  Top Bar [FIXED — does not scroll]│
-│  "Planixor")     │  (notifications, avatar, +button)│
+│ Logo (P icon +   │  Top Bar [FIXED — GLOBAL, route-level]│
+│  "Planixor")     │  (page title left, +/bell/avatar right)│
 │ Navigation       │                                   │
 │  • Calendario    │  View Selector + Date Navigator  │
 │  • Informes      │                                   │
@@ -136,26 +136,26 @@ Weights needed: 400 (Regular), 500 (Medium), 600 (SemiBold), 700 (Bold)
 - Active nav item: highlighted with primary color background tint
 - Main content: only the calendar/content area scrolls; top bar stays fixed
 - Layout uses `height: 100vh; overflow: hidden` at the root grid level
-- Mobile (<768px): Logo + "Planixor" text appears in the top bar (left-aligned); bottom nav replaces sidebar
+- Mobile (<768px): Logo "P" + "Planixor" + page title (smaller, grey) on left; "+" (icon only, only on Calendar) + bell + avatar on right; bottom nav (icons only, no labels) replaces sidebar
 
 ### Layout — Mobile (Android & Web <768px)
 
 ```
-┌─────────────────────┐
-│ Top Bar (logo left, │
-│ avatar/bell right)  │
-├─────────────────────┤
-│                     │
-│  Content area       │
-│  (scrollable)       │
-│                     │
-├─────────────────────┤
-│ Bottom navigation   │
-│ (5 items)           │
-└─────────────────────┘
+┌──────────────────────────────────────────┐
+│ Top Bar: Logo "P" + "Planixor · {Page}"  │
+│          right: + (calendar only) bell av│
+├──────────────────────────────────────────┤
+│                                          │
+│  Content area                            │
+│  (scrollable)                            │
+│                                          │
+├──────────────────────────────────────────┤
+│ Bottom navigation (icons only, no labels)│
+└──────────────────────────────────────────┘
 ```
 
 - Bottom navigation order: Calendar, Reports, Shifts, Reminders, Settings
+- Bottom navigation: icons only, no text labels on either platform
 - Cards: rounded corners (12–16px radius), subtle shadow
 - FAB: bottom-right, gradient (blue→purple)
 
@@ -214,7 +214,7 @@ Dark mode: reduce shadow opacity by 50%, rely more on surface color differentiat
 
 - Style: outlined/linear, 24px default size, 1.5px stroke
 - Source: consistent icon set (Lucide, Heroicons, or similar)
-- Navigation icons: Calendar, Users/Team, Clock, BarChart, Bell, Settings
+- Navigation icons: Calendar, Users/Team, AlarmClock/Alarm (Reminders), BarChart, Bell (top bar notifications only), Settings
 - Feature icons from brand: Calendario, Turnos de trabajo, Control de horas, Informes, Recordatorios
 
 ---
@@ -254,8 +254,16 @@ Dark mode: reduce shadow opacity by 50%, rely more on surface color differentiat
 - **Page-level scroll disabled** on web — only content areas scroll; sidebar and top bar remain fixed
 - **Scrollbars** (web): Styled thin, using `--color-border` for thumb (adapts to light/dark theme automatically)
 - **Calendar views do NOT show empty state text** — an empty grid/timeline is sufficient; no "No events" message overlaid
-- **Android bottom nav**: labels only shown on the active/selected item (`alwaysShowLabel = false` on inactive)
-- **Android top bar**: Logo "P" (gradient) + "Planixor" left, notifications bell + user avatar right (mirrors web mobile layout)
+- **Android bottom nav**: icons only, no text labels at all (removed `alwaysShowLabel` entirely)
+- **Mobile web bottom nav**: icons only, no text labels
+- **Android top bar**: Logo "P" (gradient) + "Planixor · {PageTitle}" format left; "+" button (only on Calendar) + notifications bell + user avatar right (mirrors web mobile layout)
+- **Android segmented buttons** (ViewSelector + Reports TimeRangeSelector): no checkmark icon — use `icon = {}` to hide the default selected check indicator
+- **Top bar is global** (defined at route/AppShell level, not per-page): shows page title on the left, actions on the right
+- **Page titles only in top bar** — individual pages (ReportsPage, SettingsPage, etc.) do NOT render their own title heading
+- **"New Event" button**: only visible when the user is on the Calendar page (both web and Android top bar)
+- **Recordatorios (Reminders) icon**: AlarmClock (web: `lucide-react`) / Alarm (Android: `Icons.Outlined.Alarm`). Bell/Notifications icon is reserved exclusively for the top bar notifications button.
+- **Default calendar view**: Day (not Week) on both platforms. Persisted view restores on subsequent launches.
+- **Current time indicator** (Day View): horizontal blue line with circle marker (Google Calendar style) shown on both platforms; view auto-scrolls to center the current hour on open
 - **Android app icon**: White "P" letter on blue→purple gradient background (adaptive icon format)
 - **Android theme/locale switching**: Applied immediately without app restart (AppCompatDelegate for locale, Compose recomposition for theme)
 - **ThemeViewModel shared at Activity scope** (Android): Use `CompositionLocalProvider` so all screens reference the same instance

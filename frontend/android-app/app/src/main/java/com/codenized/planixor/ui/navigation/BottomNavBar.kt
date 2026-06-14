@@ -1,9 +1,9 @@
 package com.codenized.planixor.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
@@ -49,7 +49,7 @@ fun BottomNavBar(
         BottomNavItem(Screen.Calendar, R.string.nav_calendar, Icons.Outlined.CalendarMonth),
         BottomNavItem(Screen.Reports, R.string.nav_reports, Icons.Outlined.BarChart),
         BottomNavItem(Screen.Shifts, R.string.nav_shifts, Icons.Outlined.Schedule),
-        BottomNavItem(Screen.Reminders, R.string.nav_reminders, Icons.Outlined.Notifications),
+        BottomNavItem(Screen.Reminders, R.string.nav_reminders, Icons.Outlined.Alarm),
         BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Outlined.Settings),
     )
 
@@ -69,15 +69,11 @@ fun BottomNavBar(
                         contentDescription = stringResource(item.labelResId),
                     )
                 },
-                label = {
-                    Text(text = stringResource(item.labelResId))
-                },
-                alwaysShowLabel = selected,
+                label = null,
+                alwaysShowLabel = false,
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = PrimaryBlue,
-                    selectedTextColor = PrimaryBlue,
                     unselectedIconColor = TextSecondary,
-                    unselectedTextColor = TextSecondary,
                     indicatorColor = Color.Transparent,
                 ),
             )
