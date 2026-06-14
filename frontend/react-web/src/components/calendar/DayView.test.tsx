@@ -74,4 +74,10 @@ describe('DayView', () => {
     const indicator = screen.queryByLabelText(/current time/i);
     expect(indicator).not.toBeInTheDocument();
   });
+
+  it('should display empty state message', () => {
+    renderDayView();
+
+    expect(screen.getByText('No events scheduled for this period')).toBeInTheDocument();
+  });
 });

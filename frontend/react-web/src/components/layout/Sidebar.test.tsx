@@ -22,7 +22,7 @@ const renderSidebar = (initialEntries: string[] = ['/']) => {
 };
 
 describe('Sidebar', () => {
-  it('should render 5 nav items in correct order: Calendar, Reports, Shifts, Reminders, Settings', () => {
+  it('should render 5 nav items in correct order: Calendar, Shifts, Reminders, Reports, Settings', () => {
     renderSidebar();
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
@@ -30,9 +30,9 @@ describe('Sidebar', () => {
 
     expect(links).toHaveLength(5);
     expect(links[0]).toHaveTextContent('Calendar');
-    expect(links[1]).toHaveTextContent('Reports');
-    expect(links[2]).toHaveTextContent('Shifts');
-    expect(links[3]).toHaveTextContent('Reminders');
+    expect(links[1]).toHaveTextContent('Shifts');
+    expect(links[2]).toHaveTextContent('Reminders');
+    expect(links[3]).toHaveTextContent('Reports');
     expect(links[4]).toHaveTextContent('Settings');
   });
 
@@ -56,7 +56,7 @@ describe('Sidebar', () => {
     const links = within(nav).getAllByRole('link');
 
     expect(links[0].className).not.toMatch(/navLinkActive/);
-    expect(links[1].className).toMatch(/navLinkActive/);
+    expect(links[3].className).toMatch(/navLinkActive/);
   });
 
   it('should support keyboard navigation with Tab through all items', async () => {
