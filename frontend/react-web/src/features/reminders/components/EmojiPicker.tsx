@@ -45,12 +45,12 @@ export const EmojiPicker = ({ value, onChange, theme = 'light' }: EmojiPickerPro
   }, [isOpen]);
 
   return (
-    <div ref={containerRef} style={{ position: 'relative' }}>
+    <div ref={containerRef}>
       <button
         type="button"
         onClick={handleToggle}
         aria-expanded={isOpen}
-        aria-haspopup="dialog"
+        aria-haspopup="grid"
         aria-label={value ? t('reminder.form.changeIcon') : t('reminder.form.selectIcon')}
         style={{
           width: '48px',
@@ -63,23 +63,18 @@ export const EmojiPicker = ({ value, onChange, theme = 'light' }: EmojiPickerPro
           backgroundColor: 'var(--color-surface)',
           fontSize: '24px',
           cursor: 'pointer',
-          transition: 'border-color 0.2s',
         }}
       >
         {value || '➕'}
       </button>
 
       {isOpen && (
-        <div
-          role="dialog"
-          aria-label={t('reminder.form.emojiPickerLabel')}
-          style={{ marginTop: '8px', position: 'absolute', zIndex: 10 }}
-        >
+        <div style={{ marginTop: '8px', position: 'relative', zIndex: 10 }}>
           <EmojiPickerReact
             onEmojiClick={handleEmojiClick}
             theme={theme === 'dark' ? Theme.DARK : Theme.LIGHT}
-            width={320}
-            height={400}
+            width="100%"
+            height={350}
             searchPlaceHolder={t('reminder.form.searchEmoji')}
             lazyLoadEmojis
           />

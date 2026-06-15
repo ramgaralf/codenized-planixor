@@ -49,7 +49,6 @@ describe('EmojiPicker', () => {
     const button = screen.getByRole('button', { name: 'reminder.form.selectIcon' });
     await user.click(button);
 
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByTestId('emoji-picker-react')).toBeInTheDocument();
   });
 
@@ -79,12 +78,12 @@ describe('EmojiPicker', () => {
 
     const trigger = screen.getByRole('button', { name: 'reminder.form.selectIcon' });
     await user.click(trigger);
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('emoji-picker-react')).toBeInTheDocument();
 
     const outsideButton = screen.getByText('Outside');
     await user.click(outsideButton);
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('emoji-picker-react')).not.toBeInTheDocument();
   });
 
   it('should set aria-expanded to true when picker is open', async () => {
@@ -104,9 +103,9 @@ describe('EmojiPicker', () => {
 
     const button = screen.getByRole('button', { name: 'reminder.form.selectIcon' });
     await user.click(button);
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('emoji-picker-react')).toBeInTheDocument();
 
     await user.click(button);
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('emoji-picker-react')).not.toBeInTheDocument();
   });
 });

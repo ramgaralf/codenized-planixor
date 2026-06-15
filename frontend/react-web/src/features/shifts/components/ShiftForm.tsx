@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import type { EmojiClickData } from 'emoji-picker-react';
 
-import { COLOR_FAMILIES, getRecommendedIndices } from '@features/shifts/constants';
+import { ColorPicker } from '@features/reminders/components/ColorPicker';
 import type { ShiftValidationErrors } from '@features/shifts/services/shiftValidation';
 
 import { useTheme } from '@context/useTheme';
@@ -195,51 +195,11 @@ export const ShiftForm = ({
       {/* Background Color field */}
       <div style={fieldGroupStyle}>
         <label style={labelStyle}>{t('shift.form.colorLabel')}</label>
-        <div
-          role="radiogroup"
-          aria-label={t('shift.form.colorLabel')}
-          aria-invalid={!!errors.backgroundColor}
-          aria-describedby={errors.backgroundColor ? 'shift-color-error' : undefined}
-          style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-        >
-          {COLOR_FAMILIES.map((family) => {
-            const recommended = getRecommendedIndices(resolvedTheme);
-            return (
-              <div key={family.name} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                {family.shades.map((color, idx) => {
-                  const isSelected = fields.backgroundColor === color;
-                  const isRecommended = recommended.includes(idx);
-                  return (
-                    <button
-                      key={color}
-                      type="button"
-                      role="radio"
-                      aria-checked={isSelected}
-                      aria-label={`${family.name} shade ${idx + 1}`}
-                      onClick={() => onFieldChange('backgroundColor', color)}
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        backgroundColor: color,
-                        border: isSelected
-                          ? '3px solid var(--color-text-primary)'
-                          : 'none',
-                        cursor: 'pointer',
-                        transform: isSelected ? 'scale(1.2)' : 'scale(1)',
-                        transition: 'transform 0.15s, box-shadow 0.15s',
-                        opacity: isRecommended ? 1 : 0.5,
-                        boxShadow: isRecommended && !isSelected
-                          ? '0 0 0 1px var(--color-border)'
-                          : 'none',
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
+        <ColorPicker
+          value={fields.backgroundColor}
+          onChange={(color) => onFieldChange('backgroundColor', color)}
+          theme={resolvedTheme}
+        />
         <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', margin: 0 }}>
           {t('shift.form.colorHint')}
         </p>

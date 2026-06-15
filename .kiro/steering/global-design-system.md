@@ -277,12 +277,15 @@ Dark mode: reduce shadow opacity by 50%, rely more on surface color differentiat
 - **Calendar views do NOT show empty state text** — an empty grid/timeline is sufficient; no "No events" message overlaid
 - **Android bottom nav**: icons only, no text labels at all (removed `alwaysShowLabel` entirely)
 - **Mobile web bottom nav**: icons only, no text labels
-- **Android top bar**: Logo "P" (gradient) + "Planixor · {PageTitle}" format left; "+" button (only on Calendar) + notifications bell + user avatar right (mirrors web mobile layout)
+- **Android top bar**: Logo "P" (gradient) + "Planixor · {PageTitle}" format left; "+" button (Calendar, Shifts, Reminders pages only) + notifications bell + user avatar right (mirrors web mobile layout)
 - **Android segmented buttons** (ViewSelector + Reports TimeRangeSelector): no checkmark icon — use `icon = {}` to hide the default selected check indicator
 - **Top bar is global** (defined at route/AppShell level, not per-page): shows page title on the left, actions on the right
 - **Page titles only in top bar** — individual pages (ReportsPage, SettingsPage, etc.) do NOT render their own title heading
-- **"New Event" button**: only visible when the user is on the Calendar page (both web and Android top bar)
+- **"New Event" button**: only visible when the user is on the Calendar page (both web and Android top bar). Similarly, "New Shift" on Shifts page and "New Reminder" on Reminders page.
 - **Recordatorios (Reminders) icon**: AlarmClock (web: `lucide-react`) / Alarm (Android: `Icons.Outlined.Alarm`). Bell/Notifications icon is reserved exclusively for the top bar notifications button.
+- **Activate/Deactivate toggle icon**: Use Pause icon (desactivar) when item is active, Play icon (activar) when inactive. Web: `lucide-react` Pause/Play. Android: `Icons.Outlined.Pause` / `Icons.Outlined.PlayArrow`. Never use Power icon for this action.
+- **Color picker pattern**: Button + dropdown/dialog. A circular button shows the selected color (or 🎨 if empty). Clicking opens the full palette grid in a dropdown (web) or dialog (Android). NOT an inline grid directly in the form.
+- **Emoji picker pattern**: A button shows the selected emoji (or ➕ if empty). Clicking opens the picker inline below (web: `emoji-picker-react`, full width, 350px, with search) or as a dialog (Android: category tabs + scrollable grid). Closes on selection or outside click.
 - **Default calendar view**: Day (not Week) on both platforms. Persisted view restores on subsequent launches.
 - **Current time indicator** (Day View): horizontal blue line with circle marker (Google Calendar style) shown on both platforms; view auto-scrolls to center the current hour on open
 - **Android app icon**: White "P" letter on blue→purple gradient background (adaptive icon format)

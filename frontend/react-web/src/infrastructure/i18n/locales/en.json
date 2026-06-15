@@ -189,7 +189,7 @@
     "newReminder": "New Reminder",
     "deactivate": {
       "title": "Deactivate reminder",
-      "confirm": "Deactivate this reminder?"
+      "confirm": "Are you sure you want to deactivate \"{{name}}\"?"
     },
     "delete": {
       "title": "Delete reminder",

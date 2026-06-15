@@ -189,7 +189,7 @@
     "newReminder": "Nuevo Recordatorio",
     "deactivate": {
       "title": "Desactivar recordatorio",
-      "confirm": "¿Desactivar este recordatorio?"
+      "confirm": "¿Estás seguro de desactivar \"{{name}}\"?"
     },
     "delete": {
       "title": "Eliminar recordatorio",

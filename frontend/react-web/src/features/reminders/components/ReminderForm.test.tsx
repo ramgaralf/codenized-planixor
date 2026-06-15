@@ -150,9 +150,9 @@ describe('ReminderForm', () => {
         />,
       );
 
-      // The ColorPicker marks the selected color with aria-checked
-      const selectedColor = screen.getByRole('radio', { checked: true });
-      expect(selectedColor).toBeInTheDocument();
+      // The ColorPicker uses a button+dropdown pattern; the button shows the selected color
+      const colorButton = screen.getByRole('button', { name: /Selected color: #EF4444/i });
+      expect(colorButton).toBeInTheDocument();
     });
 
     it('should display edit title when reminderId is provided', () => {
@@ -390,14 +390,11 @@ describe('ReminderForm', () => {
           // Icon pre-populated (displayed in the EmojiPicker toggle button)
           expect(screen.getByText(icon)).toBeInTheDocument();
 
-          // Background color pre-populated (matching radio is checked)
-          const selectedRadio = screen.getByRole('radio', { checked: true });
-          expect(selectedRadio).toHaveAttribute(
-            'aria-label',
-            expect.stringContaining('shade'),
-          );
-          // Verify the selected radio has the correct background color
-          expect(selectedRadio).toHaveStyle({ backgroundColor });
+          // Background color pre-populated (the color button shows the selected color)
+          const colorButton = screen.getByRole('button', {
+            name: new RegExp(`Selected color: ${backgroundColor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i'),
+          });
+          expect(colorButton).toBeInTheDocument();
 
           unmount();
         }),

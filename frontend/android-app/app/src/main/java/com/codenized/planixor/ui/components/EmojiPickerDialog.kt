@@ -197,18 +197,6 @@ fun EmojiPickerDialog(
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Dismiss button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(onClick = onDismiss) {
-                    Text(text = stringResource(R.string.emoji_picker_dismiss))
-                }
-            }
         }
     }
 }

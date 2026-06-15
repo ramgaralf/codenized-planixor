@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Pencil, Power, Trash2 } from 'lucide-react';
+import { Pencil, Pause, Play, Trash2 } from 'lucide-react';
 import type { Reminder } from '../models';
 
 interface ReminderCardProps {
@@ -120,7 +120,11 @@ export const ReminderCard = ({
             aria-label={`${reminder.isActive ? t('reminder.actions.deactivate') : t('reminder.actions.activate')} ${reminder.name}`}
             style={actionBtnStyle}
           >
-            <Power size={20} aria-hidden="true" />
+            {reminder.isActive ? (
+              <Pause size={20} aria-hidden="true" />
+            ) : (
+              <Play size={20} aria-hidden="true" />
+            )}
           </button>
           <button
             type="button"
