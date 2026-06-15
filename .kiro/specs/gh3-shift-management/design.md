@@ -163,21 +163,26 @@ interface ShiftDao {
 
 ### Shared — Predefined Color Palette
 
-Both platforms use the same set of colors for shift backgrounds:
+Both platforms use an expanded palette of 9 color families × 5 intensity shades (45 colors total) for shift backgrounds. The palette is theme-aware: light mode recommends medium-to-dark shades (indices 2–4) for better contrast on light backgrounds, while dark mode recommends light-to-medium shades (indices 0–2). Non-recommended shades display at 50% opacity but remain selectable.
+
+See `global-design-system.md` → "Expanded Shift Background Palette" for the full color table.
 
 ```typescript
-const PREDEFINED_PALETTE = [
-  '#EF4444', // Red
-  '#F97316', // Orange
-  '#F59E0B', // Amber
-  '#10B981', // Green
-  '#0B86D4', // Teal
-  '#2563EB', // Blue
-  '#7C3AED', // Purple
-  '#EC4899', // Pink
-  '#6B7280', // Gray
-  '#1F2937', // Dark
-] as const;
+// Structure: 9 families × 5 shades each
+const PREDEFINED_PALETTE: ColorFamily[] = [
+  { name: 'Red',    shades: ['#FCA5A5', '#F87171', '#EF4444', '#DC2626', '#991B1B'] },
+  { name: 'Orange', shades: ['#FDBA74', '#FB923C', '#F97316', '#EA580C', '#9A3412'] },
+  { name: 'Amber',  shades: ['#FCD34D', '#FBBF24', '#F59E0B', '#D97706', '#92400E'] },
+  { name: 'Green',  shades: ['#6EE7B7', '#34D399', '#10B981', '#059669', '#065F46'] },
+  { name: 'Teal',   shades: ['#67E8F9', '#22D3EE', '#0B86D4', '#0E7490', '#155E75'] },
+  { name: 'Blue',   shades: ['#93C5FD', '#60A5FA', '#2563EB', '#1D4ED8', '#1E3A8A'] },
+  { name: 'Purple', shades: ['#C4B5FD', '#A78BFA', '#7C3AED', '#6D28D9', '#4C1D95'] },
+  { name: 'Pink',   shades: ['#F9A8D4', '#F472B6', '#EC4899', '#DB2777', '#9D174D'] },
+  { name: 'Gray',   shades: ['#D1D5DB', '#9CA3AF', '#6B7280', '#4B5563', '#1F2937'] },
+];
+
+// Validation accepts any of the 45 hex values as a valid shift background color
+const ALL_VALID_COLORS = PREDEFINED_PALETTE.flatMap(f => f.shades);
 ```
 
 ### Shared — Hours Worked Calculation Logic

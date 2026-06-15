@@ -101,7 +101,9 @@
       "nameLabel": "Nombre",
       "namePlaceholder": "Nombre del turno",
       "iconLabel": "Ícono",
+      "searchEmoji": "Buscar emoji...",
       "colorLabel": "Color de Fondo",
+      "colorHint": "Los colores resaltados son los recomendados para tu tema actual",
       "startTimeLabel": "Hora de Inicio",
       "endTimeLabel": "Hora de Fin",
       "hoursWorkedLabel": "Horas Trabajadas",
@@ -133,12 +135,15 @@
       "loadFailed": "No se pudieron cargar los turnos"
     },
     "empty": "No hay turnos disponibles",
+    "newShift": "Nuevo turno",
     "deactivated": "Desactivado",
     "deactivate": {
-      "confirm": "¿Desactivar este turno?"
+      "title": "Desactivar turno",
+      "confirm": "¿Estás seguro de desactivar \"{{name}}\"?"
     },
     "delete": {
-      "confirm": "Esta acción es permanente y no se puede deshacer. ¿Eliminar este turno?"
+      "title": "Eliminar turno",
+      "confirm": "Esta acción es permanente y no se puede deshacer. ¿Eliminar \"{{name}}\"?"
     },
     "actions": {
       "edit": "Editar",

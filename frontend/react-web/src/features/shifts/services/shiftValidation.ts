@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import {
   PREDEFINED_PALETTE,
+  ALL_PALETTE_COLORS,
   SHIFT_HOURS_WORKED_MAX,
   SHIFT_HOURS_WORKED_MIN,
   SHIFT_I18N_KEYS,
@@ -38,7 +39,8 @@ export const shiftValidationSchema = z.object({
   backgroundColor: z.string().check(
     z.refine(
       (val) =>
-        (PREDEFINED_PALETTE as readonly string[]).includes(val),
+        (PREDEFINED_PALETTE as readonly string[]).includes(val) ||
+        ALL_PALETTE_COLORS.includes(val),
       {
         message: SHIFT_I18N_KEYS.VALIDATION_COLOR_REQUIRED,
       },

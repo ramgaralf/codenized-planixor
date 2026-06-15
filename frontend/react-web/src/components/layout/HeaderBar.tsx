@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Plus, User } from 'lucide-react';
 
 import styles from './HeaderBar.module.css';
@@ -16,8 +16,10 @@ const getPageTitleKey = (pathname: string): string => {
 export const HeaderBar = () => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const pageTitle = t(getPageTitleKey(pathname));
   const isCalendar = pathname === '/';
+  const isShiftsList = pathname === '/shifts';
 
   return (
     <header className={styles.headerBar}>
@@ -36,6 +38,17 @@ export const HeaderBar = () => {
           >
             <Plus size={16} aria-hidden="true" />
             {t('actions.newEvent')}
+          </button>
+        )}
+
+        {isShiftsList && (
+          <button
+            className={styles.newEventButton}
+            type="button"
+            onClick={() => navigate('/shifts/new')}
+          >
+            <Plus size={16} aria-hidden="true" />
+            {t('shift.newShift')}
           </button>
         )}
 

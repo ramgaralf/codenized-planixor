@@ -64,36 +64,76 @@ export const ConfirmationModal = ({
   return (
     <dialog
       ref={dialogRef}
-      className="fixed inset-0 m-auto w-full max-w-sm rounded-[16px] border-0 bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.12),0_2px_4px_rgba(0,0,0,0.06)] backdrop:bg-black/50 dark:bg-[#1A2035]"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        margin: 'auto',
+        width: '100%',
+        maxWidth: '400px',
+        borderRadius: '16px',
+        border: 'none',
+        padding: '24px',
+        backgroundColor: 'var(--color-surface)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.08)',
+        color: 'var(--color-text-primary)',
+      }}
       aria-labelledby="confirmation-modal-title"
       aria-describedby="confirmation-modal-message"
       onCancel={handleCancel}
     >
-      <div className="flex flex-col gap-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <h2
           id="confirmation-modal-title"
-          className="text-lg font-semibold text-[#1A1F3D] dark:text-white"
+          style={{
+            fontSize: '18px',
+            fontWeight: 600,
+            color: 'var(--color-text-primary)',
+            margin: 0,
+          }}
         >
           {title}
         </h2>
         <p
           id="confirmation-modal-message"
-          className="text-sm text-[#6B7280] dark:text-[#9CA3AF]"
+          style={{
+            fontSize: '14px',
+            color: 'var(--color-text-secondary)',
+            margin: 0,
+            lineHeight: 1.5,
+          }}
         >
           {message}
         </p>
-        <div className="flex justify-end gap-3 pt-2">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '8px' }}>
           <button
             type="button"
             onClick={onCancel}
-            className="cursor-pointer rounded-lg border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#6B7280] transition-colors hover:bg-[#F3F4F6] dark:border-[#2D3748] dark:text-[#9CA3AF] dark:hover:bg-[#232B3E]"
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              fontWeight: 600,
+              borderRadius: '8px',
+              border: '1px solid var(--color-border)',
+              backgroundColor: 'transparent',
+              color: 'var(--color-text-secondary)',
+              cursor: 'pointer',
+            }}
           >
             {resolvedCancelLabel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="cursor-pointer rounded-lg bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB]"
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              fontWeight: 600,
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: 'var(--color-primary)',
+              color: '#ffffff',
+              cursor: 'pointer',
+            }}
           >
             {resolvedConfirmLabel}
           </button>

@@ -76,9 +76,9 @@
     <string name="shifts_error_load">No se pudieron cargar los turnos</string>
     <string name="shifts_new_shift">Nuevo turno</string>
     <string name="shifts_deactivate_confirm_title">¿Desactivar este turno?</string>
-    <string name="shifts_deactivate_confirm_text">El turno se marcará como inactivo. Puedes reactivarlo en cualquier momento.</string>
+    <string name="shifts_deactivate_confirm_text">¿Estás seguro de desactivar \"%1$s\"?</string>
     <string name="shifts_delete_confirm_title">¿Eliminar este turno?</string>
-    <string name="shifts_delete_confirm_text">Esta acción es permanente y no se puede deshacer. ¿Eliminar este turno?</string>
+    <string name="shifts_delete_confirm_text">Esta acción es permanente y no se puede deshacer. ¿Eliminar \"%1$s\"?</string>
     <string name="shifts_confirm">Confirmar</string>
     <string name="shifts_cancel">Cancelar</string>
 
@@ -97,6 +97,7 @@
     <string name="shift_form_action_save">Guardar</string>
     <string name="shift_form_action_cancel">Cancelar</string>
     <string name="shift_form_not_set">No establecido</string>
+    <string name="shift_form_color_hint">Los colores resaltados son los recomendados para tu tema actual</string>
 
     <!-- Shift Form Validation -->
     <string name="shift_validation_name_required">El nombre es obligatorio</string>

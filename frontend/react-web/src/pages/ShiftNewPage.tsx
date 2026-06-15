@@ -57,7 +57,7 @@ export const ShiftNewPage = () => {
   };
 
   return (
-    <div className="flex h-full items-start justify-center overflow-auto p-6">
+    <div style={{ height: '100%', overflow: 'auto', padding: '24px 32px' }}>
       <ShiftForm
         fields={formFields}
         errors={errors}

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -58,10 +59,10 @@ fun ShiftCard(
                 .fillMaxWidth()
                 .height(80.dp),
         ) {
-            // Left color indicator strip (4dp wide)
+            // Left color indicator strip (8dp wide)
             Box(
                 modifier = Modifier
-                    .width(4.dp)
+                    .width(8.dp)
                     .fillMaxHeight()
                     .background(
                         color = parseHexColor(shift.backgroundColor),
@@ -140,29 +141,42 @@ fun ShiftCard(
                     }
                 }
 
-                // Action buttons
+                // Action buttons (44x44dp touch targets, 8dp gap, 20dp icons)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    IconButton(onClick = { onEditClick(shift.id) }) {
+                    IconButton(
+                        onClick = { onEditClick(shift.id) },
+                        modifier = Modifier.size(44.dp),
+                    ) {
                         Icon(
                             imageVector = Icons.Outlined.Edit,
                             contentDescription = stringResource(R.string.shift_card_edit),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp),
                         )
                     }
-                    IconButton(onClick = { onToggleActiveClick(shift.id) }) {
+                    IconButton(
+                        onClick = { onToggleActiveClick(shift.id) },
+                        modifier = Modifier.size(44.dp),
+                    ) {
                         Icon(
                             imageVector = Icons.Outlined.PowerSettingsNew,
                             contentDescription = stringResource(R.string.shift_card_toggle_active),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp),
                         )
                     }
-                    IconButton(onClick = { onDeleteClick(shift.id) }) {
+                    IconButton(
+                        onClick = { onDeleteClick(shift.id) },
+                        modifier = Modifier.size(44.dp),
+                    ) {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
                             contentDescription = stringResource(R.string.shift_card_delete),
                             tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp),
                         )
                     }
                 }

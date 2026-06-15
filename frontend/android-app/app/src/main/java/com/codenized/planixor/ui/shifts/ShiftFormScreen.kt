@@ -3,6 +3,7 @@ package com.codenized.planixor.ui.shifts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -59,15 +61,41 @@ import com.codenized.planixor.R
 import com.codenized.planixor.ui.theme.PlanixorTheme
 
 private val PREDEFINED_PALETTE = listOf(
-    "#EF4444", "#F97316", "#F59E0B", "#10B981", "#0B86D4",
-    "#2563EB", "#7C3AED", "#EC4899", "#6B7280", "#1F2937",
+    // Red
+    "#FCA5A5", "#F87171", "#EF4444", "#DC2626", "#991B1B",
+    // Orange
+    "#FDBA74", "#FB923C", "#F97316", "#EA580C", "#9A3412",
+    // Amber
+    "#FCD34D", "#FBBF24", "#F59E0B", "#D97706", "#92400E",
+    // Green
+    "#6EE7B7", "#34D399", "#10B981", "#059669", "#065F46",
+    // Teal
+    "#67E8F9", "#22D3EE", "#0B86D4", "#0E7490", "#155E75",
+    // Blue
+    "#93C5FD", "#60A5FA", "#2563EB", "#1D4ED8", "#1E3A8A",
+    // Purple
+    "#C4B5FD", "#A78BFA", "#7C3AED", "#6D28D9", "#4C1D95",
+    // Pink
+    "#F9A8D4", "#F472B6", "#EC4899", "#DB2777", "#9D174D",
+    // Gray
+    "#D1D5DB", "#9CA3AF", "#6B7280", "#4B5563", "#1F2937",
 )
 
-private val EMOJI_OPTIONS = listOf(
-    "☀️", "🌙", "⭐", "🔥", "💼", "🏠", "🚗", "✈️", "🎯", "📚",
-    "💻", "🎨", "🎵", "⚡", "🌊", "🌿", "❤️", "💜", "💙", "💚",
-    "🏃", "🧘", "👨‍💻", "👩‍⚕️", "👷", "🧑‍🍳", "🧑‍🏫", "🛠️", "📞", "🔔",
+private const val SHADES_PER_FAMILY = 5
+
+private val EMOJI_CATEGORIES = mapOf(
+    "😀" to listOf("😀", "😃", "😄", "😁", "😆", "🥹", "😅", "🤣", "😂", "🙂", "😊", "😇", "🥰", "😍", "🤩", "😘", "😋", "😛", "🤪", "😜", "🤑", "🤗", "🤭", "🤫", "🤔", "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥", "😌", "😔", "😪", "🤤", "😴", "😷", "🤒", "🤕", "🤢", "🤮", "🥵", "🥶", "🥴", "😵", "🤯", "😎", "🥳", "😤", "😡", "🤬", "😈", "👿", "💀", "☠️", "💩", "🤡", "👹"),
+    "👋" to listOf("👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉", "👆", "🖕", "👇", "☝️", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🤝", "🙏", "💪", "🦶", "🦵", "👂", "👃", "🧠", "👀", "👁️", "👅", "👄"),
+    "🌞" to listOf("☀️", "🌙", "🌞", "🌝", "🌛", "🌜", "⭐", "🌟", "✨", "💫", "🌈", "☁️", "⛅", "🌤️", "🌥️", "🌦️", "🌧️", "⛈️", "🌩️", "🌨️", "❄️", "☃️", "⛄", "🌬️", "💨", "🌊", "💧", "💦", "☔", "🔥", "🌺", "🌸", "🌷", "🌹", "🌻", "🌼", "🌿", "🍀", "🍁", "🍂", "🌴", "🌵", "🌳", "🌲", "🪵", "🍄", "🐚", "🪨", "🌍", "🌎"),
+    "🐶" to listOf("🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐻‍❄️", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🙈", "🙉", "🙊", "🐒", "🐔", "🐧", "🐦", "🐤", "🦆", "🦅", "🦉", "🦇", "🐺", "🐗", "🐴", "🦄", "🐝", "🪱", "🐛", "🦋", "🐌", "🐞", "🐜", "🦟"),
+    "🍎" to listOf("🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔", "🍠", "🥐", "🍞", "🥖", "🥨", "🧀", "🍕", "🍔", "🍟", "☕"),
+    "⚽" to listOf("⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱", "🪀", "🏓", "🏸", "🏒", "🥍", "🏏", "🪃", "🥅", "⛳", "🪁", "🏹", "🎣", "🤿", "🥊", "🥋", "🎽", "🛹", "🛼", "🛷", "⛸️", "🥌", "🎿", "⛷️", "🏂", "🪂", "🏋️", "🤸", "🏃", "🧘", "🎯"),
+    "🚗" to listOf("🚗", "🚕", "🚌", "🏎️", "🚓", "🚑", "🚒", "🚐", "🛻", "🚚", "🚛", "🚜", "🛵", "🏍️", "🚲", "🛴", "✈️", "🚀", "🛸", "🚁", "⛵", "🚢", "🛳️", "🏠", "🏢", "🏭", "🏥", "🏪", "🏫", "🏰", "⛪", "🕌", "🗼", "🌉", "🎡", "🎢", "🎠", "⛲", "🗺️", "🧭"),
+    "💡" to listOf("💡", "🔦", "🕯️", "💰", "💳", "💎", "⚖️", "🔧", "🔨", "⛏️", "🛠️", "🔩", "⚙️", "🔑", "🗝️", "🔒", "📱", "💻", "🖥️", "🖨️", "📷", "📹", "🎥", "📞", "☎️", "📺", "📻", "⏰", "🔔", "📚", "📝", "✏️", "📋", "📌", "📎", "🗂️", "📁", "💼", "🎒", "🛒"),
+    "❤️" to listOf("❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❤️‍🔥", "❤️‍🩹", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "✅", "❌", "⚠️", "♻️", "🔴", "🟠", "🟡", "🟢", "🔵", "🟣", "⚫", "⚪", "🟤", "🏆", "🥇", "🥈", "🥉", "🏅", "🎉", "🎊", "🎈"),
 )
+
+private val EMOJI_CATEGORY_LABELS = listOf("😀", "👋", "🌞", "🐶", "🍎", "⚽", "🚗", "💡", "❤️")
 
 /**
  * Shift form screen composable that supports create and edit modes.
@@ -81,54 +109,20 @@ fun ShiftFormScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val title = when (uiState.mode) {
-        is ShiftFormMode.Create -> stringResource(R.string.shift_form_title_create)
-        is ShiftFormMode.Edit -> stringResource(R.string.shift_form_title_edit)
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                        ),
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.shift_form_action_cancel),
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                ),
-            )
-        },
-    ) { innerPadding ->
-        if (uiState.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            ShiftFormContent(
-                uiState = uiState,
-                onFieldChange = viewModel::onFieldChange,
-                onSubmit = { viewModel.onSubmit(onNavigateBack) },
-                onCancel = onNavigateBack,
-                modifier = Modifier.padding(innerPadding),
-            )
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator()
         }
+    } else {
+        ShiftFormContent(
+            uiState = uiState,
+            onFieldChange = viewModel::onFieldChange,
+            onSubmit = { viewModel.onSubmit(onNavigateBack) },
+            onCancel = onNavigateBack,
+        )
     }
 }
 
@@ -290,9 +284,8 @@ private fun IconField(
                 Text(text = value, fontSize = 24.sp)
             } else {
                 Text(
-                    text = stringResource(R.string.shift_form_select_icon),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = "➕",
+                    fontSize = 24.sp,
                 )
             }
         }
@@ -320,24 +313,68 @@ private fun EmojiPickerDialog(
     onEmojiSelected: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    var selectedCategory by remember { mutableStateOf(EMOJI_CATEGORY_LABELS[0]) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val emojisToShow = if (searchQuery.isNotEmpty()) {
+        EMOJI_CATEGORIES.values.flatten().filter { it.contains(searchQuery) }
+    } else {
+        EMOJI_CATEGORIES[selectedCategory] ?: emptyList()
+    }
+
     Dialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(24.dp),
+                .padding(16.dp)
+                .height(420.dp),
         ) {
+            // Title
             Text(
                 text = stringResource(R.string.shift_form_select_icon),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Category tabs
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                EMOJI_OPTIONS.forEach { emoji ->
+                EMOJI_CATEGORY_LABELS.forEach { category ->
+                    val isSelected = category == selectedCategory
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                else Color.Transparent,
+                            )
+                            .clickable {
+                                selectedCategory = category
+                                searchQuery = ""
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(text = category, fontSize = 18.sp)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Emoji grid (scrollable)
+            FlowRow(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                emojisToShow.forEach { emoji ->
                     val isSelected = emoji == selectedEmoji
                     Box(
                         modifier = Modifier
@@ -346,11 +383,6 @@ private fun EmojiPickerDialog(
                             .background(
                                 if (isSelected) MaterialTheme.colorScheme.primaryContainer
                                 else Color.Transparent,
-                            )
-                            .border(
-                                width = if (isSelected) 2.dp else 0.dp,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                shape = RoundedCornerShape(8.dp),
                             )
                             .clickable { onEmojiSelected(emoji) },
                         contentAlignment = Alignment.Center,
@@ -370,6 +402,8 @@ private fun ColorField(
     error: String?,
     onValueChange: (String) -> Unit,
 ) {
+    val isDarkTheme = isSystemInDarkTheme()
+
     Column {
         Text(
             text = stringResource(R.string.shift_form_field_color),
@@ -378,16 +412,24 @@ private fun ColorField(
         )
         Spacer(modifier = Modifier.height(8.dp))
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            PREDEFINED_PALETTE.forEach { hex ->
+            PREDEFINED_PALETTE.forEachIndexed { index, hex ->
+                val shadeIndex = index % SHADES_PER_FAMILY
+                val isRecommended = if (isDarkTheme) {
+                    shadeIndex in 0..2
+                } else {
+                    shadeIndex in 2..4
+                }
                 val color = parseHexColor(hex)
                 val isSelected = hex == value
+                val alpha = if (isRecommended) 1f else 0.5f
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(36.dp)
                         .clip(CircleShape)
+                        .alpha(alpha)
                         .background(color)
                         .border(
                             width = if (isSelected) 3.dp else 0.dp,
@@ -398,6 +440,12 @@ private fun ColorField(
                 )
             }
         }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.shift_form_color_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         if (error != null) {
             ValidationErrorText(error)
         }

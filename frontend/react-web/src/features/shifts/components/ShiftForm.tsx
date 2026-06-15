@@ -1,16 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import EmojiPicker, { Theme } from 'emoji-picker-react';
+import type { EmojiClickData } from 'emoji-picker-react';
 
-import { PREDEFINED_PALETTE } from '@features/shifts/constants';
+import { COLOR_FAMILIES, getRecommendedIndices } from '@features/shifts/constants';
 import type { ShiftValidationErrors } from '@features/shifts/services/shiftValidation';
 
-const COMMON_EMOJIS = [
-  '☀️', '🌙', '⭐', '🌅', '🌃',
-  '💼', '🏥', '🏭', '🏢', '🏪',
-  '🚗', '✈️', '🚀', '🎯', '📋',
-  '🔧', '🖥️', '📞', '🎓', '🏠',
-  '☕', '🍽️', '🏃', '💪', '🎉',
-];
+import { useTheme } from '@context/useTheme';
 
 interface ShiftFormFields {
   name: string;
@@ -31,6 +27,42 @@ interface ShiftFormProps {
   mode: 'create' | 'edit';
 }
 
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '12px 16px',
+  fontSize: '14px',
+  borderRadius: '8px',
+  border: '1px solid var(--color-border)',
+  backgroundColor: 'var(--color-surface)',
+  color: 'var(--color-text-primary)',
+  outline: 'none',
+  transition: 'border-color 0.2s',
+  colorScheme: 'var(--color-scheme, light)' as string,
+};
+
+const inputErrorStyle: React.CSSProperties = {
+  ...inputStyle,
+  borderColor: 'var(--color-error)',
+};
+
+const labelStyle: React.CSSProperties = {
+  fontSize: '14px',
+  fontWeight: 500,
+  color: 'var(--color-text-primary)',
+};
+
+const errorStyle: React.CSSProperties = {
+  fontSize: '12px',
+  color: 'var(--color-error)',
+  marginTop: '4px',
+};
+
+const fieldGroupStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+};
+
 export const ShiftForm = ({
   fields,
   errors,
@@ -41,6 +73,7 @@ export const ShiftForm = ({
   mode,
 }: ShiftFormProps) => {
   const { t } = useTranslation();
+  const { resolvedTheme } = useTheme();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -52,7 +85,6 @@ export const ShiftForm = ({
     [onSubmit],
   );
 
-  // Close emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -79,20 +111,17 @@ export const ShiftForm = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto w-full max-w-lg space-y-6 rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800"
+      style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '640px' }}
       aria-label={title}
       noValidate
     >
-      <h2 className="font-[Poppins] text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', margin: 0 }}>
         {title}
       </h2>
 
       {/* Name field */}
-      <div className="space-y-1">
-        <label
-          htmlFor="shift-name"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+      <div style={fieldGroupStyle}>
+        <label htmlFor="shift-name" style={labelStyle}>
           {t('shift.form.nameLabel')}
         </label>
         <input
@@ -104,127 +133,126 @@ export const ShiftForm = ({
           placeholder={t('shift.form.namePlaceholder')}
           aria-invalid={!!errors.name}
           aria-describedby={errors.name ? 'shift-name-error' : undefined}
-          className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500 ${
-            errors.name
-              ? 'border-red-500 focus:border-red-500'
-              : 'border-gray-300 focus:border-blue-500 dark:border-gray-600'
-          }`}
+          style={errors.name ? inputErrorStyle : inputStyle}
         />
         {errors.name && (
-          <p id="shift-name-error" className="text-xs text-red-500" role="alert">
+          <p id="shift-name-error" style={errorStyle} role="alert">
             {t(errors.name)}
           </p>
         )}
       </div>
 
       {/* Icon field */}
-      <div className="space-y-1" ref={emojiPickerRef}>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          {t('shift.form.iconLabel')}
-        </label>
-        <div
-          aria-invalid={!!errors.icon}
-          aria-describedby={errors.icon ? 'shift-icon-error' : undefined}
-        >
+      <div style={fieldGroupStyle} ref={emojiPickerRef}>
+        <label style={labelStyle}>{t('shift.form.iconLabel')}</label>
+        <div>
           <button
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             aria-expanded={showEmojiPicker}
             aria-haspopup="grid"
-            className={`flex h-12 w-12 items-center justify-center rounded-lg border text-2xl transition-colors focus:ring-2 focus:ring-blue-500 ${
-              errors.icon
-                ? 'border-red-500'
-                : 'border-gray-300 dark:border-gray-600'
-            } ${fields.icon ? 'bg-gray-50 dark:bg-gray-700' : 'bg-white dark:bg-gray-700'}`}
+            aria-describedby={errors.icon ? 'shift-icon-error' : undefined}
+            style={{
+              width: '48px',
+              height: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '8px',
+              border: `1px solid ${errors.icon ? 'var(--color-error)' : 'var(--color-border)'}`,
+              backgroundColor: 'var(--color-surface)',
+              fontSize: '24px',
+              cursor: 'pointer',
+            }}
           >
             {fields.icon || '➕'}
           </button>
         </div>
 
         {showEmojiPicker && (
-          <div
-            role="grid"
-            aria-label={t('shift.form.iconLabel')}
-            className="mt-2 grid grid-cols-5 gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-md dark:border-gray-600 dark:bg-gray-700"
-          >
-            {COMMON_EMOJIS.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                role="gridcell"
-                onClick={() => {
-                  onFieldChange('icon', emoji);
-                  setShowEmojiPicker(false);
-                }}
-                aria-label={emoji}
-                aria-selected={fields.icon === emoji}
-                className={`flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-colors hover:bg-gray-100 dark:hover:bg-gray-600 ${
-                  fields.icon === emoji
-                    ? 'bg-blue-100 ring-2 ring-blue-500 dark:bg-blue-900/30'
-                    : ''
-                }`}
-              >
-                {emoji}
-              </button>
-            ))}
+          <div style={{ marginTop: '8px', position: 'relative', zIndex: 10 }}>
+            <EmojiPicker
+              onEmojiClick={(emojiData: EmojiClickData) => {
+                onFieldChange('icon', emojiData.emoji);
+                setShowEmojiPicker(false);
+              }}
+              theme={resolvedTheme === 'dark' ? Theme.DARK : Theme.LIGHT}
+              width="100%"
+              height={350}
+              searchPlaceHolder={t('shift.form.searchEmoji')}
+              lazyLoadEmojis
+            />
           </div>
         )}
 
         {errors.icon && (
-          <p id="shift-icon-error" className="text-xs text-red-500" role="alert">
+          <p id="shift-icon-error" style={errorStyle} role="alert">
             {t(errors.icon)}
           </p>
         )}
       </div>
 
       {/* Background Color field */}
-      <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          {t('shift.form.colorLabel')}
-        </label>
+      <div style={fieldGroupStyle}>
+        <label style={labelStyle}>{t('shift.form.colorLabel')}</label>
         <div
           role="radiogroup"
           aria-label={t('shift.form.colorLabel')}
           aria-invalid={!!errors.backgroundColor}
-          aria-describedby={
-            errors.backgroundColor ? 'shift-color-error' : undefined
-          }
-          className="flex flex-wrap gap-3"
+          aria-describedby={errors.backgroundColor ? 'shift-color-error' : undefined}
+          style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
         >
-          {PREDEFINED_PALETTE.map((color) => (
-            <button
-              key={color}
-              type="button"
-              role="radio"
-              aria-checked={fields.backgroundColor === color}
-              aria-label={color}
-              onClick={() => onFieldChange('backgroundColor', color)}
-              className={`h-8 w-8 rounded-full transition-transform hover:scale-110 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                fields.backgroundColor === color
-                  ? 'ring-2 ring-blue-500 ring-offset-2 scale-110'
-                  : ''
-              }`}
-              style={{ backgroundColor: color }}
-            />
-          ))}
+          {COLOR_FAMILIES.map((family) => {
+            const recommended = getRecommendedIndices(resolvedTheme);
+            return (
+              <div key={family.name} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {family.shades.map((color, idx) => {
+                  const isSelected = fields.backgroundColor === color;
+                  const isRecommended = recommended.includes(idx);
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      aria-label={`${family.name} shade ${idx + 1}`}
+                      onClick={() => onFieldChange('backgroundColor', color)}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        backgroundColor: color,
+                        border: isSelected
+                          ? '3px solid var(--color-text-primary)'
+                          : 'none',
+                        cursor: 'pointer',
+                        transform: isSelected ? 'scale(1.2)' : 'scale(1)',
+                        transition: 'transform 0.15s, box-shadow 0.15s',
+                        opacity: isRecommended ? 1 : 0.5,
+                        boxShadow: isRecommended && !isSelected
+                          ? '0 0 0 1px var(--color-border)'
+                          : 'none',
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
+        <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', margin: 0 }}>
+          {t('shift.form.colorHint')}
+        </p>
         {errors.backgroundColor && (
-          <p
-            id="shift-color-error"
-            className="text-xs text-red-500"
-            role="alert"
-          >
+          <p id="shift-color-error" style={errorStyle} role="alert">
             {t(errors.backgroundColor)}
           </p>
         )}
       </div>
 
       {/* Start Time field */}
-      <div className="space-y-1">
-        <label
-          htmlFor="shift-start-time"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+      <div style={fieldGroupStyle}>
+        <label htmlFor="shift-start-time" style={labelStyle}>
           {t('shift.form.startTimeLabel')}
         </label>
         <input
@@ -234,29 +262,18 @@ export const ShiftForm = ({
           onChange={(e) => onFieldChange('startTime', e.target.value)}
           aria-invalid={!!errors.startTime}
           aria-describedby={errors.startTime ? 'shift-start-time-error' : undefined}
-          className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 ${
-            errors.startTime
-              ? 'border-red-500 focus:border-red-500'
-              : 'border-gray-300 focus:border-blue-500 dark:border-gray-600'
-          }`}
+          style={errors.startTime ? inputErrorStyle : inputStyle}
         />
         {errors.startTime && (
-          <p
-            id="shift-start-time-error"
-            className="text-xs text-red-500"
-            role="alert"
-          >
+          <p id="shift-start-time-error" style={errorStyle} role="alert">
             {t(errors.startTime)}
           </p>
         )}
       </div>
 
       {/* End Time field */}
-      <div className="space-y-1">
-        <label
-          htmlFor="shift-end-time"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+      <div style={fieldGroupStyle}>
+        <label htmlFor="shift-end-time" style={labelStyle}>
           {t('shift.form.endTimeLabel')}
         </label>
         <input
@@ -266,29 +283,18 @@ export const ShiftForm = ({
           onChange={(e) => onFieldChange('endTime', e.target.value)}
           aria-invalid={!!errors.endTime}
           aria-describedby={errors.endTime ? 'shift-end-time-error' : undefined}
-          className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 ${
-            errors.endTime
-              ? 'border-red-500 focus:border-red-500'
-              : 'border-gray-300 focus:border-blue-500 dark:border-gray-600'
-          }`}
+          style={errors.endTime ? inputErrorStyle : inputStyle}
         />
         {errors.endTime && (
-          <p
-            id="shift-end-time-error"
-            className="text-xs text-red-500"
-            role="alert"
-          >
+          <p id="shift-end-time-error" style={errorStyle} role="alert">
             {t(errors.endTime)}
           </p>
         )}
       </div>
 
       {/* Hours Worked field */}
-      <div className="space-y-1">
-        <label
-          htmlFor="shift-hours-worked"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+      <div style={fieldGroupStyle}>
+        <label htmlFor="shift-hours-worked" style={labelStyle}>
           {t('shift.form.hoursWorkedLabel')}
         </label>
         <input
@@ -297,40 +303,50 @@ export const ShiftForm = ({
           value={fields.hoursWorked}
           onChange={(e) => onFieldChange('hoursWorked', e.target.value)}
           aria-invalid={!!errors.hoursWorked}
-          aria-describedby={
-            errors.hoursWorked ? 'shift-hours-worked-error' : undefined
-          }
-          className={`w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 ${
-            errors.hoursWorked
-              ? 'border-red-500 focus:border-red-500'
-              : 'border-gray-300 focus:border-blue-500 dark:border-gray-600'
-          }`}
+          aria-describedby={errors.hoursWorked ? 'shift-hours-worked-error' : undefined}
+          style={errors.hoursWorked ? inputErrorStyle : inputStyle}
         />
         {errors.hoursWorked && (
-          <p
-            id="shift-hours-worked-error"
-            className="text-xs text-red-500"
-            role="alert"
-          >
+          <p id="shift-hours-worked-error" style={errorStyle} role="alert">
             {t(errors.hoursWorked)}
           </p>
         )}
       </div>
 
       {/* Form actions */}
-      <div className="flex items-center justify-end gap-3 pt-2">
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '8px' }}>
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          style={{
+            padding: '10px 20px',
+            fontSize: '14px',
+            fontWeight: 600,
+            borderRadius: '8px',
+            border: '1px solid var(--color-border)',
+            backgroundColor: 'transparent',
+            color: 'var(--color-text-secondary)',
+            cursor: 'pointer',
+            opacity: isSubmitting ? 0.5 : 1,
+          }}
         >
           {t('shift.form.cancel')}
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          style={{
+            padding: '10px 20px',
+            fontSize: '14px',
+            fontWeight: 600,
+            borderRadius: '8px',
+            border: 'none',
+            backgroundColor: 'var(--color-primary)',
+            color: '#ffffff',
+            cursor: 'pointer',
+            opacity: isSubmitting ? 0.5 : 1,
+          }}
         >
           {t('shift.form.submit')}
         </button>

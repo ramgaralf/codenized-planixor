@@ -287,3 +287,13 @@ import { Shift, ShiftStatus } from './models';
 - Supported locales: `es` (Spanish), `en` (English)
 - Date/time formatting must respect locale settings
 
+## Styling rules (Tailwind v4 + CSS variables)
+
+- **NEVER use `dark:` Tailwind utilities** — the project uses `.theme-dark` / `.theme-light` classes (not the standard `dark` class), so `dark:bg-*` utilities will never activate.
+- **Use CSS custom properties via `style` attribute** for theme-adaptive colors: `style={{ color: 'var(--color-text-primary)', backgroundColor: 'var(--color-surface)' }}`
+- **Available CSS variables** (defined in `src/app/theme/tokens.css`): `--color-primary`, `--color-bg`, `--color-surface`, `--color-text-primary`, `--color-text-secondary`, `--color-border`, `--color-error`, `--color-success`, `--color-scheme`
+- **For native `input[type=time]`**: add `colorScheme: 'var(--color-scheme, light)'` in the style to ensure the browser renders time picker controls in the correct theme
+- **Tailwind classes ARE safe for** layout utilities (`flex`, `gap-*`, `p-*`, `w-full`, `max-w-*`, `rounded-*`, `overflow-*`, `h-full`) but NOT reliable for arbitrary values with CSS variables (`bg-[var(--color-*)]`)
+- **When Tailwind classes don't render**: Use inline `style` attributes with explicit pixel/rem values. This is preferred over debugging Tailwind scanner issues.
+- **Page containers** must have padding (use `style={{ padding: '24px 32px' }}`) to separate content from the viewport edges
+

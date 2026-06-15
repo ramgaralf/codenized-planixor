@@ -26,7 +26,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.codenized.planixor.R
 import com.codenized.planixor.domain.model.Shift
-import com.codenized.planixor.ui.components.PlanixorFAB
 import com.codenized.planixor.ui.components.ShiftCard
 import com.codenized.planixor.ui.theme.PlanixorTheme
 
@@ -57,8 +56,8 @@ internal fun ShiftsScreenContent(
     onActivateClick: (String) -> Unit,
     onDeleteConfirmed: (String) -> Unit,
 ) {
-    var deactivateShiftId by remember { mutableStateOf<String?>(null) }
-    var deleteShiftId by remember { mutableStateOf<String?>(null) }
+    var deactivateShift by remember { mutableStateOf<Shift?>(null) }
+    var deleteShift by remember { mutableStateOf<Shift?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (uiState) {
@@ -102,51 +101,44 @@ internal fun ShiftsScreenContent(
                             onToggleActiveClick = { id ->
                                 val targetShift = uiState.shifts.find { it.id == id }
                                 if (targetShift != null && targetShift.isActive) {
-                                    deactivateShiftId = id
+                                    deactivateShift = targetShift
                                 } else {
                                     onActivateClick(id)
                                 }
                             },
                             onDeleteClick = { id ->
-                                deleteShiftId = id
+                                val targetShift = uiState.shifts.find { it.id == id }
+                                deleteShift = targetShift
                             },
                         )
                     }
                 }
             }
         }
-
-        // FAB for creating a new shift
-        PlanixorFAB(
-            onClick = onNewShiftClick,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-        )
     }
 
     // Deactivation confirmation dialog
-    if (deactivateShiftId != null) {
+    if (deactivateShift != null) {
         AlertDialog(
-            onDismissRequest = { deactivateShiftId = null },
+            onDismissRequest = { deactivateShift = null },
             title = {
                 Text(text = stringResource(R.string.shifts_deactivate_confirm_title))
             },
             text = {
-                Text(text = stringResource(R.string.shifts_deactivate_confirm_text))
+                Text(text = stringResource(R.string.shifts_deactivate_confirm_text, deactivateShift!!.name))
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        deactivateShiftId?.let { onDeactivateConfirmed(it) }
-                        deactivateShiftId = null
+                        deactivateShift?.let { onDeactivateConfirmed(it.id) }
+                        deactivateShift = null
                     },
                 ) {
                     Text(text = stringResource(R.string.shifts_confirm))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { deactivateShiftId = null }) {
+                TextButton(onClick = { deactivateShift = null }) {
                     Text(text = stringResource(R.string.shifts_cancel))
                 }
             },
@@ -154,20 +146,20 @@ internal fun ShiftsScreenContent(
     }
 
     // Deletion confirmation dialog
-    if (deleteShiftId != null) {
+    if (deleteShift != null) {
         AlertDialog(
-            onDismissRequest = { deleteShiftId = null },
+            onDismissRequest = { deleteShift = null },
             title = {
                 Text(text = stringResource(R.string.shifts_delete_confirm_title))
             },
             text = {
-                Text(text = stringResource(R.string.shifts_delete_confirm_text))
+                Text(text = stringResource(R.string.shifts_delete_confirm_text, deleteShift!!.name))
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        deleteShiftId?.let { onDeleteConfirmed(it) }
-                        deleteShiftId = null
+                        deleteShift?.let { onDeleteConfirmed(it.id) }
+                        deleteShift = null
                     },
                 ) {
                     Text(
@@ -177,7 +169,7 @@ internal fun ShiftsScreenContent(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { deleteShiftId = null }) {
+                TextButton(onClick = { deleteShift = null }) {
                     Text(text = stringResource(R.string.shifts_cancel))
                 }
             },

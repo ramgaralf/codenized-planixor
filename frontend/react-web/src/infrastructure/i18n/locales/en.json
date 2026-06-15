@@ -101,7 +101,9 @@
       "nameLabel": "Name",
       "namePlaceholder": "Shift name",
       "iconLabel": "Icon",
+      "searchEmoji": "Search emoji...",
       "colorLabel": "Background Color",
+      "colorHint": "Highlighted colors are recommended for your current theme",
       "startTimeLabel": "Start Time",
       "endTimeLabel": "End Time",
       "hoursWorkedLabel": "Hours Worked",
@@ -133,12 +135,15 @@
       "loadFailed": "Could not load shifts"
     },
     "empty": "No shifts available",
+    "newShift": "New Shift",
     "deactivated": "Deactivated",
     "deactivate": {
-      "confirm": "Deactivate this shift?"
+      "title": "Deactivate shift",
+      "confirm": "Are you sure you want to deactivate \"{{name}}\"?"
     },
     "delete": {
-      "confirm": "This action is permanent and cannot be undone. Delete this shift?"
+      "title": "Delete shift",
+      "confirm": "This action is permanent and cannot be undone. Delete \"{{name}}\"?"
     },
     "actions": {
       "edit": "Edit",

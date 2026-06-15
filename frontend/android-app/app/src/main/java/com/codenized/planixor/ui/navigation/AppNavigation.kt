@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
@@ -65,21 +66,53 @@ fun AppNavigation() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val pageTitle = when (currentRoute) {
-        Screen.Calendar.route -> stringResource(R.string.nav_calendar)
-        Screen.Reports.route -> stringResource(R.string.nav_reports)
-        Screen.Shifts.route -> stringResource(R.string.nav_shifts)
-        Screen.Reminders.route -> stringResource(R.string.nav_reminders)
-        Screen.Settings.route -> stringResource(R.string.settings_title)
+    val pageTitle = when {
+        currentRoute == Screen.Calendar.route -> stringResource(R.string.nav_calendar)
+        currentRoute == Screen.Reports.route -> stringResource(R.string.nav_reports)
+        currentRoute?.startsWith("shifts") == true -> stringResource(R.string.nav_shifts)
+        currentRoute == Screen.Reminders.route -> stringResource(R.string.nav_reminders)
+        currentRoute == Screen.Settings.route -> stringResource(R.string.settings_title)
         else -> stringResource(R.string.nav_calendar)
+    }
+
+    // Determine if we're on a sub-screen that has its own top bar
+    val isSubScreen = currentRoute == Screen.ShiftCreate.route ||
+        currentRoute == Screen.ShiftEdit.route
+
+    // For bottom nav selection, map sub-routes to their parent
+    val bottomNavRoute = when {
+        currentRoute?.startsWith("shifts") == true -> Screen.Shifts.route
+        else -> currentRoute
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    if (isSubScreen) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.content_description_previous),
+                            )
+                        }
+                    }
+                },
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                    if (isSubScreen) {
+                        Text(
+                            text = when (currentRoute) {
+                                Screen.ShiftCreate.route -> stringResource(R.string.shift_form_title_create)
+                                Screen.ShiftEdit.route -> stringResource(R.string.shift_form_title_edit)
+                                else -> ""
+                            },
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                            ),
+                        )
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                     ) {
                         // Logo icon with gradient background
                         Box(
@@ -128,6 +161,7 @@ fun AppNavigation() {
                             )
                         }
                     }
+                    }
                 },
                 actions = {
                     // New event button (only on Calendar screen)
@@ -143,6 +177,25 @@ fun AppNavigation() {
                                 Icon(
                                     imageVector = Icons.Outlined.Add,
                                     contentDescription = stringResource(R.string.action_new_event),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                    }
+                    // New shift button (only on Shifts screen)
+                    if (currentRoute == Screen.Shifts.route) {
+                        IconButton(onClick = { navController.navigate(Screen.ShiftCreate.route) }) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(PrimaryBlue),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Add,
+                                    contentDescription = stringResource(R.string.shifts_new_shift),
                                     tint = Color.White,
                                     modifier = Modifier.size(18.dp),
                                 )
@@ -182,7 +235,7 @@ fun AppNavigation() {
         },
         bottomBar = {
             BottomNavBar(
-                currentRoute = currentRoute,
+                currentRoute = bottomNavRoute,
                 onNavigate = { screen ->
                     navController.navigate(screen.route) {
                         popUpTo(navController.graph.findStartDestination().id) {

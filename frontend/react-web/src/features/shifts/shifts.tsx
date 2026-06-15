@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
 
 import { SHIFT_I18N_KEYS } from '@features/shifts/constants';
 import { ShiftCard } from '@features/shifts/components/ShiftCard';
@@ -112,15 +111,18 @@ export const ShiftsContainer = () => {
     setModal(INITIAL_MODAL_STATE);
   }, []);
 
-  const handleNewShift = useCallback(() => {
-    navigate('/shifts/new');
-  }, [navigate]);
-
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center p-6">
+      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
         <div
-          className="h-8 w-8 animate-spin rounded-full border-4 border-[#E5E7EB] border-t-[#2563EB] dark:border-[#2D3748] dark:border-t-[#3B82F6]"
+          style={{
+            width: '32px',
+            height: '32px',
+            border: '4px solid var(--color-border)',
+            borderTopColor: 'var(--color-primary)',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+          }}
           role="status"
           aria-label={t('common.loading')}
         />
@@ -130,8 +132,8 @@ export const ShiftsContainer = () => {
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center p-6">
-        <p className="text-sm text-[#EF4444] dark:text-[#F87171]" role="alert">
+      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--color-error)' }} role="alert">
           {error}
         </p>
       </div>
@@ -139,26 +141,15 @@ export const ShiftsContainer = () => {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 p-6">
-      <div className="flex items-center justify-end">
-        <button
-          type="button"
-          onClick={handleNewShift}
-          className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB]"
-        >
-          <Plus size={16} aria-hidden="true" />
-          {t('shift.newShift')}
-        </button>
-      </div>
-
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '24px 32px', height: '100%' }}>
       {shifts.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center">
-          <p className="text-sm text-[#6B7280] dark:text-[#9CA3AF]">
+        <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
             {t(SHIFT_I18N_KEYS.EMPTY)}
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {shifts.map((shift) => (
             <ShiftCard
               key={shift.id}
@@ -181,8 +172,8 @@ export const ShiftsContainer = () => {
         }
         message={
           modal.action === 'delete'
-            ? t(SHIFT_I18N_KEYS.DELETE_CONFIRM)
-            : t(SHIFT_I18N_KEYS.DEACTIVATE_CONFIRM)
+            ? t(SHIFT_I18N_KEYS.DELETE_CONFIRM, { name: shifts.find(s => s.id === modal.shiftId)?.name ?? '' })
+            : t(SHIFT_I18N_KEYS.DEACTIVATE_CONFIRM, { name: shifts.find(s => s.id === modal.shiftId)?.name ?? '' })
         }
         onConfirm={handleModalConfirm}
         onCancel={handleModalCancel}

@@ -76,9 +76,9 @@
     <string name="shifts_error_load">Could not load shifts</string>
     <string name="shifts_new_shift">New Shift</string>
     <string name="shifts_deactivate_confirm_title">Deactivate this shift?</string>
-    <string name="shifts_deactivate_confirm_text">The shift will be marked as inactive. You can reactivate it at any time.</string>
+    <string name="shifts_deactivate_confirm_text">Are you sure you want to deactivate \"%1$s\"?</string>
     <string name="shifts_delete_confirm_title">Delete this shift?</string>
-    <string name="shifts_delete_confirm_text">This action is permanent and cannot be undone. Delete this shift?</string>
+    <string name="shifts_delete_confirm_text">This action is permanent and cannot be undone. Delete \"%1$s\"?</string>
     <string name="shifts_confirm">Confirm</string>
     <string name="shifts_cancel">Cancel</string>
 
@@ -97,6 +97,7 @@
     <string name="shift_form_action_save">Save</string>
     <string name="shift_form_action_cancel">Cancel</string>
     <string name="shift_form_not_set">Not set</string>
+    <string name="shift_form_color_hint">Highlighted colors are recommended for your current theme</string>
 
     <!-- Shift Form Validation -->
     <string name="shift_validation_name_required">Name is required</string>

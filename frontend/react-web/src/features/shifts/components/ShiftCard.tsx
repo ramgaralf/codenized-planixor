@@ -10,10 +10,6 @@ interface ShiftCardProps {
   onDelete: (id: string) => void;
 }
 
-/**
- * Formats minutes from midnight to a locale-aware time string (HH:MM).
- * Uses a reference date to produce a time-only representation.
- */
 const formatTime = (minutesFromMidnight: number): string => {
   const hours = Math.floor(minutesFromMidnight / 60);
   const minutes = minutesFromMidnight % 60;
@@ -24,15 +20,25 @@ const formatTime = (minutesFromMidnight: number): string => {
   }).format(date);
 };
 
-/**
- * Formats total minutes as "Xh Ym".
- */
 const formatHoursWorked = (totalMinutes: number): string => {
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   if (hours === 0) return `${minutes}m`;
   if (minutes === 0) return `${hours}h`;
   return `${hours}h ${minutes}m`;
+};
+
+const actionBtnStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '44px',
+  height: '44px',
+  borderRadius: '8px',
+  border: 'none',
+  backgroundColor: 'transparent',
+  color: 'var(--color-text-secondary)',
+  cursor: 'pointer',
 };
 
 export const ShiftCard = ({
@@ -47,51 +53,96 @@ export const ShiftCard = ({
   return (
     <article
       aria-label={shift.name}
-      className={`flex items-stretch rounded-xl border border-gray-200 bg-white shadow-sm transition-opacity dark:border-gray-700 dark:bg-gray-800 ${
-        shift.isActive ? 'opacity-100' : 'opacity-50'
-      }`}
+      style={{
+        display: 'flex',
+        alignItems: 'stretch',
+        borderRadius: '12px',
+        border: '1px solid var(--color-border)',
+        backgroundColor: 'var(--color-surface)',
+        opacity: shift.isActive ? 1 : 0.5,
+        transition: 'opacity 0.2s',
+      }}
     >
       {/* Left color indicator */}
       <div
-        className="w-1 shrink-0 rounded-l-xl"
-        style={{ backgroundColor: shift.backgroundColor }}
+        style={{
+          width: '8px',
+          flexShrink: 0,
+          borderRadius: '12px 0 0 12px',
+          backgroundColor: shift.backgroundColor,
+        }}
         aria-hidden="true"
       />
 
       {/* Content area */}
-      <div className="flex min-w-0 flex-1 items-center justify-between gap-3 px-4 py-3">
-        <div className="min-w-0 flex-1">
+      <div
+        style={{
+          display: 'flex',
+          flex: 1,
+          minWidth: 0,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          padding: '12px 16px',
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
           {/* First line: icon + name + deactivated badge */}
-          <div className="flex items-center gap-2">
-            <span aria-hidden="true" className="text-lg">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span aria-hidden="true" style={{ fontSize: '18px' }}>
               {shift.icon}
             </span>
-            <span className="truncate font-semibold text-gray-900 dark:text-gray-100">
+            <span
+              style={{
+                fontWeight: 600,
+                color: 'var(--color-text-primary)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
               {shift.name}
             </span>
             {!shift.isActive && (
-              <span className="shrink-0 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+              <span
+                style={{
+                  flexShrink: 0,
+                  borderRadius: '9999px',
+                  padding: '2px 8px',
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  backgroundColor: 'var(--color-border)',
+                  color: 'var(--color-text-secondary)',
+                }}
+              >
                 {t('shift.deactivated')}
               </span>
             )}
           </div>
 
-          {/* Second line: start time – end time · hours worked */}
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          {/* Second line: times + hours worked */}
+          <p
+            style={{
+              marginTop: '4px',
+              fontSize: '13px',
+              color: 'var(--color-text-secondary)',
+              margin: '4px 0 0 0',
+            }}
+          >
             {formatTime(shift.startTime)} – {formatTime(shift.endTime)} ·{' '}
             {formatHoursWorked(shift.hoursWorked)}
           </p>
         </div>
 
         {/* Action controls */}
-        <div className="flex shrink-0 items-center gap-1">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           <button
             type="button"
             onClick={() => onEdit(shift.id)}
             aria-label={`${t('shift.actions.edit')} ${shift.name}`}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            style={actionBtnStyle}
           >
-            <Pencil size={16} aria-hidden="true" />
+            <Pencil size={20} aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -99,17 +150,17 @@ export const ShiftCard = ({
               shift.isActive ? onDeactivate(shift.id) : onActivate(shift.id)
             }
             aria-label={`${shift.isActive ? t('shift.actions.deactivate') : t('shift.actions.activate')} ${shift.name}`}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            style={actionBtnStyle}
           >
-            <Power size={16} aria-hidden="true" />
+            <Power size={20} aria-hidden="true" />
           </button>
           <button
             type="button"
             onClick={() => onDelete(shift.id)}
             aria-label={`${t('shift.actions.delete')} ${shift.name}`}
-            className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+            style={{ ...actionBtnStyle, color: 'var(--color-error)' }}
           >
-            <Trash2 size={16} aria-hidden="true" />
+            <Trash2 size={20} aria-hidden="true" />
           </button>
         </div>
       </div>

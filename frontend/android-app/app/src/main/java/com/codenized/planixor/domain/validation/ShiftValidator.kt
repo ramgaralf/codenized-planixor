@@ -33,16 +33,24 @@ data class ShiftValidationInput(
 object ShiftValidator {
 
     private val PREDEFINED_PALETTE = setOf(
-        "#EF4444",
-        "#F97316",
-        "#F59E0B",
-        "#10B981",
-        "#0B86D4",
-        "#2563EB",
-        "#7C3AED",
-        "#EC4899",
-        "#6B7280",
-        "#1F2937",
+        // Red
+        "#FCA5A5", "#F87171", "#EF4444", "#DC2626", "#991B1B",
+        // Orange
+        "#FDBA74", "#FB923C", "#F97316", "#EA580C", "#9A3412",
+        // Amber
+        "#FCD34D", "#FBBF24", "#F59E0B", "#D97706", "#92400E",
+        // Green
+        "#6EE7B7", "#34D399", "#10B981", "#059669", "#065F46",
+        // Teal
+        "#67E8F9", "#22D3EE", "#0B86D4", "#0E7490", "#155E75",
+        // Blue
+        "#93C5FD", "#60A5FA", "#2563EB", "#1D4ED8", "#1E3A8A",
+        // Purple
+        "#C4B5FD", "#A78BFA", "#7C3AED", "#6D28D9", "#4C1D95",
+        // Pink
+        "#F9A8D4", "#F472B6", "#EC4899", "#DB2777", "#9D174D",
+        // Gray
+        "#D1D5DB", "#9CA3AF", "#6B7280", "#4B5563", "#1F2937",
     )
 
     private const val NAME_MIN_LENGTH = 1
