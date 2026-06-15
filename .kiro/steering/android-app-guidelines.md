@@ -244,6 +244,22 @@ Every screen must handle:
 | Drawables | snake_case with prefix | `ic_calendar`, `bg_shift_card` |
 | Dimensions | snake_case with prefix | `margin_medium`, `text_size_title` |
 
+## Navigation patterns for sub-screens (forms, detail views)
+
+- Sub-screens (e.g., ShiftFormScreen) do NOT have their own Scaffold/TopAppBar
+- The global AppNavigation Scaffold handles the top bar for ALL screens
+- For sub-screens: the global top bar shows a back arrow (← ) + screen title (e.g., "Nuevo turno")
+- The `isSubScreen` flag in AppNavigation determines when to show the back arrow vs the brand bar
+- Bottom nav selection uses `bottomNavRoute` which maps sub-routes to their parent (e.g., `shifts/new` → `shifts`)
+- Page title uses `startsWith` matching for sub-routes (e.g., `currentRoute?.startsWith("shifts")` → "Turnos")
+
+## Touch targets (accessibility)
+
+- Action buttons (edit, delete, toggle) must be minimum 44×44dp
+- Icons inside action buttons: 20dp
+- Gap between action buttons: 8dp minimum
+- Color indicator strips on cards: 8dp wide
+
 ---
 
 ## Dependency injection

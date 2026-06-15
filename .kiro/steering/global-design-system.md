@@ -76,6 +76,27 @@ Rules:
 | Meetings | Red | `#EF4444` |
 | Personal | Teal | `#0B86D4` |
 
+### Expanded Shift Background Palette
+
+The predefined palette for shift backgrounds consists of 9 color families × 5 intensity shades:
+
+| Family | Shades (light → dark) |
+|---|---|
+| Red | #FCA5A5, #F87171, #EF4444, #DC2626, #991B1B |
+| Orange | #FDBA74, #FB923C, #F97316, #EA580C, #9A3412 |
+| Amber | #FCD34D, #FBBF24, #F59E0B, #D97706, #92400E |
+| Green | #6EE7B7, #34D399, #10B981, #059669, #065F46 |
+| Teal | #67E8F9, #22D3EE, #0B86D4, #0E7490, #155E75 |
+| Blue | #93C5FD, #60A5FA, #2563EB, #1D4ED8, #1E3A8A |
+| Purple | #C4B5FD, #A78BFA, #7C3AED, #6D28D9, #4C1D95 |
+| Pink | #F9A8D4, #F472B6, #EC4899, #DB2777, #9D174D |
+| Gray | #D1D5DB, #9CA3AF, #6B7280, #4B5563, #1F2937 |
+
+**Theme-aware recommendations:**
+- Light mode: recommend indices 2–4 (medium to dark shades) — better contrast on white/light backgrounds
+- Dark mode: recommend indices 0–2 (light to medium shades) — better contrast on dark backgrounds
+- Non-recommended shades display at 50% opacity but remain selectable
+
 ---
 
 ## Typography

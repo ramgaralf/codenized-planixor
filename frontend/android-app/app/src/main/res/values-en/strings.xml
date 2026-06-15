@@ -64,6 +64,50 @@
     <string name="widget_upcoming">Upcoming</string>
     <string name="widget_summary">Summary</string>
 
+    <!-- Shift Card -->
+    <string name="shift_card_deactivated">Deactivated</string>
+    <string name="shift_card_edit">Edit shift</string>
+    <string name="shift_card_toggle_active">Toggle shift active</string>
+    <string name="shift_card_delete">Delete shift</string>
+    <string name="shift_card_hours_worked_format">%1$dh %2$dm</string>
+
+    <!-- Shifts Screen -->
+    <string name="shifts_empty">No shifts available</string>
+    <string name="shifts_error_load">Could not load shifts</string>
+    <string name="shifts_new_shift">New Shift</string>
+    <string name="shifts_deactivate_confirm_title">Deactivate this shift?</string>
+    <string name="shifts_deactivate_confirm_text">Are you sure you want to deactivate \"%1$s\"?</string>
+    <string name="shifts_delete_confirm_title">Delete this shift?</string>
+    <string name="shifts_delete_confirm_text">This action is permanent and cannot be undone. Delete \"%1$s\"?</string>
+    <string name="shifts_confirm">Confirm</string>
+    <string name="shifts_cancel">Cancel</string>
+
+    <!-- Shift Form -->
+    <string name="shift_form_title_create">New Shift</string>
+    <string name="shift_form_title_edit">Edit Shift</string>
+    <string name="shift_form_field_name">Name</string>
+    <string name="shift_form_field_icon">Icon</string>
+    <string name="shift_form_field_color">Background color</string>
+    <string name="shift_form_field_start_time">Start time</string>
+    <string name="shift_form_field_end_time">End time</string>
+    <string name="shift_form_field_hours_worked">Hours worked</string>
+    <string name="shift_form_select_icon">Select icon</string>
+    <string name="shift_form_select_time">Select time</string>
+    <string name="shift_form_hours_worked_format">%1$dh %2$dm</string>
+    <string name="shift_form_action_save">Save</string>
+    <string name="shift_form_action_cancel">Cancel</string>
+    <string name="shift_form_not_set">Not set</string>
+    <string name="shift_form_color_hint">Highlighted colors are recommended for your current theme</string>
+
+    <!-- Shift Form Validation -->
+    <string name="shift_validation_name_required">Name is required</string>
+    <string name="shift_validation_name_max_length">Name must be 50 characters or less</string>
+    <string name="shift_validation_icon_required">Select an icon</string>
+    <string name="shift_validation_color_required">Select a background color</string>
+    <string name="shift_validation_start_time_required">Start time is required</string>
+    <string name="shift_validation_end_time_required">End time is required</string>
+    <string name="shift_validation_hours_worked_range">Hours worked must be between 1 minute and 24 hours</string>
+
     <!-- Empty States -->
     <string name="empty_no_data">No data available</string>
     <string name="empty_no_events">No events</string>

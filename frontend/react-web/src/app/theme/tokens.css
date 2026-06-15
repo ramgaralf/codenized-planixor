@@ -26,6 +26,9 @@
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
+
+  /* Native input color scheme */
+  --color-scheme: light;
 }
 
 .theme-dark {
@@ -50,6 +53,9 @@
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-error: #f87171;
+
+  /* Native input color scheme */
+  --color-scheme: dark;
 }
 
 /* Spacing tokens (base unit: 4px) */

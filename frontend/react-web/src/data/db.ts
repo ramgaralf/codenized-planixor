@@ -1,6 +1,7 @@
 import Dexie from 'dexie';
 
 import type { CalendarEvent } from './models';
+import type { Shift } from '@features/shifts/models';
 
 /**
  * PlanixorDatabase — Dexie (IndexedDB) database definition.
@@ -11,6 +12,7 @@ import type { CalendarEvent } from './models';
  */
 export class PlanixorDatabase extends Dexie {
   calendarEvents!: Dexie.Table<CalendarEvent, string>;
+  shifts!: Dexie.Table<Shift, string>;
 
   constructor() {
     super('planixor');
@@ -22,6 +24,11 @@ export class PlanixorDatabase extends Dexie {
       // In practice, boolean indexes work in Chrome/Edge but not all IndexedDB
       // implementations — use .filter() as a fallback for isDeleted queries.
       calendarEvents: 'id, startAt, endAt, eventType, isDeleted',
+    });
+
+    this.version(2).stores({
+      calendarEvents: 'id, startAt, endAt, eventType, isDeleted',
+      shifts: 'id, createdAt, isDeleted, isActive',
     });
   }
 }

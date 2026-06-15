@@ -1,4 +1,8 @@
 {
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
   "app": {
     "name": "Planixor",
     "description": "Organize your time. Power your day."
@@ -89,6 +93,64 @@
     "createEvent": "Create new event",
     "signIn": "Sign in",
     "newEvent": "New event"
+  },
+  "shift": {
+    "form": {
+      "createTitle": "New Shift",
+      "editTitle": "Edit Shift",
+      "nameLabel": "Name",
+      "namePlaceholder": "Shift name",
+      "iconLabel": "Icon",
+      "searchEmoji": "Search emoji...",
+      "colorLabel": "Background Color",
+      "colorHint": "Highlighted colors are recommended for your current theme",
+      "startTimeLabel": "Start Time",
+      "endTimeLabel": "End Time",
+      "hoursWorkedLabel": "Hours Worked",
+      "submit": "Save",
+      "cancel": "Cancel"
+    },
+    "validation": {
+      "name": {
+        "required": "Name is required",
+        "maxLength": "Name must be 50 characters or less"
+      },
+      "icon": {
+        "required": "Select an icon"
+      },
+      "color": {
+        "required": "Select a background color"
+      },
+      "startTime": {
+        "required": "Start time is required"
+      },
+      "endTime": {
+        "required": "End time is required"
+      },
+      "hoursWorked": {
+        "range": "Hours worked must be between 1 minute and 24 hours"
+      }
+    },
+    "error": {
+      "loadFailed": "Could not load shifts"
+    },
+    "empty": "No shifts available",
+    "newShift": "New Shift",
+    "deactivated": "Deactivated",
+    "deactivate": {
+      "title": "Deactivate shift",
+      "confirm": "Are you sure you want to deactivate \"{{name}}\"?"
+    },
+    "delete": {
+      "title": "Delete shift",
+      "confirm": "This action is permanent and cannot be undone. Delete \"{{name}}\"?"
+    },
+    "actions": {
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "delete": "Delete"
+    }
   },
   "accessibility": {
     "fabLabel": "Create new event",

@@ -1,31 +1,25 @@
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Plus, User } from 'lucide-react';
 
 import styles from './HeaderBar.module.css';
 
 const getPageTitleKey = (pathname: string): string => {
-  switch (pathname) {
-    case '/':
-      return 'nav.calendar';
-    case '/reports':
-      return 'nav.reports';
-    case '/shifts':
-      return 'nav.shifts';
-    case '/reminders':
-      return 'nav.reminders';
-    case '/settings':
-      return 'settings.title';
-    default:
-      return 'nav.calendar';
-  }
+  if (pathname === '/') return 'nav.calendar';
+  if (pathname === '/reports') return 'nav.reports';
+  if (pathname.startsWith('/shifts')) return 'nav.shifts';
+  if (pathname === '/reminders') return 'nav.reminders';
+  if (pathname === '/settings') return 'settings.title';
+  return 'nav.calendar';
 };
 
 export const HeaderBar = () => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const pageTitle = t(getPageTitleKey(pathname));
   const isCalendar = pathname === '/';
+  const isShiftsList = pathname === '/shifts';
 
   return (
     <header className={styles.headerBar}>
@@ -44,6 +38,17 @@ export const HeaderBar = () => {
           >
             <Plus size={16} aria-hidden="true" />
             {t('actions.newEvent')}
+          </button>
+        )}
+
+        {isShiftsList && (
+          <button
+            className={styles.newEventButton}
+            type="button"
+            onClick={() => navigate('/shifts/new')}
+          >
+            <Plus size={16} aria-hidden="true" />
+            {t('shift.newShift')}
           </button>
         )}
 

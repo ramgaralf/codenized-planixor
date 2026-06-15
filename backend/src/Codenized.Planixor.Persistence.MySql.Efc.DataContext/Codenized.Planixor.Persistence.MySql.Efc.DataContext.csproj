@@ -8,6 +8,10 @@
     <PackageReference Include="Codenized.CleanArchitecture.Abstractions" Version="10.*" />
     <PackageReference Include="Codenized.CleanArchitecture.Persistence.Abstractions" Version="10.*" />
     <PackageReference Include="Codenized.CleanArchitecture.Persistence.MySql" Version="10.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

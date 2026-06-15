@@ -4,8 +4,14 @@
 
 namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 
+using Codenized.Planixor.Core.Entities;
+using Microsoft.EntityFrameworkCore;
+
 /// <summary>Interface for the application context.</summary>
 public interface IApplicationContext
 {
-    // DbSet properties added here as entities are created
+    /// <summary>
+    /// Gets shifts.
+    /// </summary>
+    DbSet<Shift> Shifts { get; }
 }

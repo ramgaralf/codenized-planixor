@@ -1,4 +1,8 @@
 {
+  "common": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
   "app": {
     "name": "Planixor",
     "description": "Organiza tu tiempo. Potencia tu día."
@@ -89,6 +93,64 @@
     "createEvent": "Crear nuevo evento",
     "signIn": "Iniciar sesión",
     "newEvent": "Nuevo evento"
+  },
+  "shift": {
+    "form": {
+      "createTitle": "Nuevo Turno",
+      "editTitle": "Editar Turno",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Nombre del turno",
+      "iconLabel": "Ícono",
+      "searchEmoji": "Buscar emoji...",
+      "colorLabel": "Color de Fondo",
+      "colorHint": "Los colores resaltados son los recomendados para tu tema actual",
+      "startTimeLabel": "Hora de Inicio",
+      "endTimeLabel": "Hora de Fin",
+      "hoursWorkedLabel": "Horas Trabajadas",
+      "submit": "Guardar",
+      "cancel": "Cancelar"
+    },
+    "validation": {
+      "name": {
+        "required": "El nombre es obligatorio",
+        "maxLength": "El nombre debe tener 50 caracteres o menos"
+      },
+      "icon": {
+        "required": "Selecciona un ícono"
+      },
+      "color": {
+        "required": "Selecciona un color de fondo"
+      },
+      "startTime": {
+        "required": "La hora de inicio es obligatoria"
+      },
+      "endTime": {
+        "required": "La hora de fin es obligatoria"
+      },
+      "hoursWorked": {
+        "range": "Las horas trabajadas deben estar entre 1 minuto y 24 horas"
+      }
+    },
+    "error": {
+      "loadFailed": "No se pudieron cargar los turnos"
+    },
+    "empty": "No hay turnos disponibles",
+    "newShift": "Nuevo turno",
+    "deactivated": "Desactivado",
+    "deactivate": {
+      "title": "Desactivar turno",
+      "confirm": "¿Estás seguro de desactivar \"{{name}}\"?"
+    },
+    "delete": {
+      "title": "Eliminar turno",
+      "confirm": "Esta acción es permanente y no se puede deshacer. ¿Eliminar \"{{name}}\"?"
+    },
+    "actions": {
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "activate": "Activar",
+      "delete": "Eliminar"
+    }
   },
   "accessibility": {
     "fabLabel": "Crear nuevo evento",

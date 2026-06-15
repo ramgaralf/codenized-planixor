@@ -1,13 +1,5 @@
-import { useTranslation } from 'react-i18next';
-
-import styles from './StubPage.module.css';
+import { ShiftsContainer } from '@features/shifts/shifts';
 
 export const ShiftsPage = () => {
-  const { t } = useTranslation();
-
-  return (
-    <div className={styles.stubPage}>
-      <p className={styles.placeholder}>{t('nav.shifts')}</p>
-    </div>
-  );
+  return <ShiftsContainer />;
 };
