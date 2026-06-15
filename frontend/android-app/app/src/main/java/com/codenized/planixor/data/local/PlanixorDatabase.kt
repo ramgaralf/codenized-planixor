@@ -7,10 +7,11 @@ import androidx.room.RoomDatabase
  * Room database for the Planixor application.
  */
 @Database(
-    entities = [CalendarEventEntity::class],
-    version = 1,
+    entities = [CalendarEventEntity::class, ShiftEntity::class],
+    version = 2,
     exportSchema = false,
 )
 abstract class PlanixorDatabase : RoomDatabase() {
     abstract fun calendarEventDao(): CalendarEventDao
+    abstract fun shiftDao(): ShiftDao
 }

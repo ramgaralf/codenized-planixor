@@ -36,14 +36,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.codenized.planixor.R
 import com.codenized.planixor.ui.calendar.CalendarScreen
 import com.codenized.planixor.ui.reports.ReportsScreen
 import com.codenized.planixor.ui.settings.SettingsScreen
+import com.codenized.planixor.ui.shifts.ShiftFormScreen
+import com.codenized.planixor.ui.shifts.ShiftsScreen
 import com.codenized.planixor.ui.theme.PrimaryBlue
 import com.codenized.planixor.ui.theme.PrimaryPurple
 import com.codenized.planixor.ui.theme.TextSecondary
@@ -200,7 +204,29 @@ fun AppNavigation() {
                 CalendarScreen()
             }
             composable(Screen.Shifts.route) {
-                ShiftsPlaceholder()
+                ShiftsScreen(
+                    onNavigateToNewShift = {
+                        navController.navigate(Screen.ShiftCreate.route)
+                    },
+                    onNavigateToEditShift = { shiftId ->
+                        navController.navigate(Screen.ShiftEdit.createRoute(shiftId))
+                    },
+                )
+            }
+            composable(Screen.ShiftCreate.route) {
+                ShiftFormScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                )
+            }
+            composable(
+                route = Screen.ShiftEdit.route,
+                arguments = listOf(
+                    navArgument("shiftId") { type = NavType.StringType },
+                ),
+            ) {
+                ShiftFormScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                )
             }
             composable(Screen.Reminders.route) {
                 RemindersPlaceholder()
@@ -212,16 +238,6 @@ fun AppNavigation() {
                 SettingsScreen()
             }
         }
-    }
-}
-
-@Composable
-private fun ShiftsPlaceholder() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(text = stringResource(R.string.nav_shifts))
     }
 }
 

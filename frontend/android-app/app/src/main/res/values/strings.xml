@@ -64,6 +64,49 @@
     <string name="widget_upcoming">Próximos</string>
     <string name="widget_summary">Resumen</string>
 
+    <!-- Shift Card -->
+    <string name="shift_card_deactivated">Desactivado</string>
+    <string name="shift_card_edit">Editar turno</string>
+    <string name="shift_card_toggle_active">Activar o desactivar turno</string>
+    <string name="shift_card_delete">Eliminar turno</string>
+    <string name="shift_card_hours_worked_format">%1$dh %2$dm</string>
+
+    <!-- Shifts Screen -->
+    <string name="shifts_empty">No hay turnos disponibles</string>
+    <string name="shifts_error_load">No se pudieron cargar los turnos</string>
+    <string name="shifts_new_shift">Nuevo turno</string>
+    <string name="shifts_deactivate_confirm_title">¿Desactivar este turno?</string>
+    <string name="shifts_deactivate_confirm_text">El turno se marcará como inactivo. Puedes reactivarlo en cualquier momento.</string>
+    <string name="shifts_delete_confirm_title">¿Eliminar este turno?</string>
+    <string name="shifts_delete_confirm_text">Esta acción es permanente y no se puede deshacer. ¿Eliminar este turno?</string>
+    <string name="shifts_confirm">Confirmar</string>
+    <string name="shifts_cancel">Cancelar</string>
+
+    <!-- Shift Form -->
+    <string name="shift_form_title_create">Nuevo turno</string>
+    <string name="shift_form_title_edit">Editar turno</string>
+    <string name="shift_form_field_name">Nombre</string>
+    <string name="shift_form_field_icon">Ícono</string>
+    <string name="shift_form_field_color">Color de fondo</string>
+    <string name="shift_form_field_start_time">Hora de inicio</string>
+    <string name="shift_form_field_end_time">Hora de fin</string>
+    <string name="shift_form_field_hours_worked">Horas trabajadas</string>
+    <string name="shift_form_select_icon">Seleccionar ícono</string>
+    <string name="shift_form_select_time">Seleccionar hora</string>
+    <string name="shift_form_hours_worked_format">%1$dh %2$dm</string>
+    <string name="shift_form_action_save">Guardar</string>
+    <string name="shift_form_action_cancel">Cancelar</string>
+    <string name="shift_form_not_set">No establecido</string>
+
+    <!-- Shift Form Validation -->
+    <string name="shift_validation_name_required">El nombre es obligatorio</string>
+    <string name="shift_validation_name_max_length">El nombre debe tener 50 caracteres o menos</string>
+    <string name="shift_validation_icon_required">Selecciona un ícono</string>
+    <string name="shift_validation_color_required">Selecciona un color de fondo</string>
+    <string name="shift_validation_start_time_required">La hora de inicio es obligatoria</string>
+    <string name="shift_validation_end_time_required">La hora de fin es obligatoria</string>
+    <string name="shift_validation_hours_worked_range">Las horas trabajadas deben estar entre 1 minuto y 24 horas</string>
+
     <!-- Empty States -->
     <string name="empty_no_data">Sin datos disponibles</string>
     <string name="empty_no_events">No hay eventos</string>

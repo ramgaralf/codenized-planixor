@@ -2,6 +2,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Codenized.Planixor.IoC\Codenized.Planixor.IoC.csproj" />
+    <ProjectReference Include="..\Codenized.Planixor.Core\Codenized.Planixor.Core.csproj" />
+    <ProjectReference Include="..\Codenized.Planixor.Dtos\Codenized.Planixor.Dtos.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -9,6 +11,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="FsCheck.NUnit" Version="3.3.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
     <PackageReference Include="NSubstitute" Version="5.*" />
     <PackageReference Include="NUnit" Version="4.*" />

@@ -13,3 +13,10 @@ indent_size = 2
 
 [*.md]
 trim_trailing_whitespace = false
+
+# EF Core auto-generated migration files — do not edit manually
+[**/Migrations/**]
+dotnet_diagnostic.SA1633.severity = none
+dotnet_diagnostic.SA1200.severity = none
+dotnet_diagnostic.SA1413.severity = none
+dotnet_diagnostic.SA1400.severity = none

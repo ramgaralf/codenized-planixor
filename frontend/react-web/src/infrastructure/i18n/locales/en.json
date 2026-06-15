@@ -1,4 +1,8 @@
 {
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
   "app": {
     "name": "Planixor",
     "description": "Organize your time. Power your day."
@@ -89,6 +93,59 @@
     "createEvent": "Create new event",
     "signIn": "Sign in",
     "newEvent": "New event"
+  },
+  "shift": {
+    "form": {
+      "createTitle": "New Shift",
+      "editTitle": "Edit Shift",
+      "nameLabel": "Name",
+      "namePlaceholder": "Shift name",
+      "iconLabel": "Icon",
+      "colorLabel": "Background Color",
+      "startTimeLabel": "Start Time",
+      "endTimeLabel": "End Time",
+      "hoursWorkedLabel": "Hours Worked",
+      "submit": "Save",
+      "cancel": "Cancel"
+    },
+    "validation": {
+      "name": {
+        "required": "Name is required",
+        "maxLength": "Name must be 50 characters or less"
+      },
+      "icon": {
+        "required": "Select an icon"
+      },
+      "color": {
+        "required": "Select a background color"
+      },
+      "startTime": {
+        "required": "Start time is required"
+      },
+      "endTime": {
+        "required": "End time is required"
+      },
+      "hoursWorked": {
+        "range": "Hours worked must be between 1 minute and 24 hours"
+      }
+    },
+    "error": {
+      "loadFailed": "Could not load shifts"
+    },
+    "empty": "No shifts available",
+    "deactivated": "Deactivated",
+    "deactivate": {
+      "confirm": "Deactivate this shift?"
+    },
+    "delete": {
+      "confirm": "This action is permanent and cannot be undone. Delete this shift?"
+    },
+    "actions": {
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "delete": "Delete"
+    }
   },
   "accessibility": {
     "fabLabel": "Create new event",

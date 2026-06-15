@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 
 using System.Reflection;
+using Codenized.Planixor.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>Application write context.</summary>
@@ -18,6 +19,11 @@ public sealed class ApplicationWriteContext : DbContext, IApplicationContext
         : base(options)
     {
     }
+
+    /// <summary>
+    /// Gets shifts.
+    /// </summary>
+    public DbSet<Shift> Shifts => this.Set<Shift>();
 
     /// <summary>On model creating.</summary>
     /// <param name="modelBuilder">Model builder.</param>

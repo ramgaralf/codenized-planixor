@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.codenized.planixor.data.local.CalendarEventDao
 import com.codenized.planixor.data.local.PlanixorDatabase
+import com.codenized.planixor.data.local.ShiftDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,12 +28,20 @@ object DatabaseModule {
             context,
             PlanixorDatabase::class.java,
             "planixor_database",
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
     @Singleton
     fun provideCalendarEventDao(database: PlanixorDatabase): CalendarEventDao {
         return database.calendarEventDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideShiftDao(database: PlanixorDatabase): ShiftDao {
+        return database.shiftDao()
     }
 }

@@ -5,20 +5,12 @@ import { Bell, Plus, User } from 'lucide-react';
 import styles from './HeaderBar.module.css';
 
 const getPageTitleKey = (pathname: string): string => {
-  switch (pathname) {
-    case '/':
-      return 'nav.calendar';
-    case '/reports':
-      return 'nav.reports';
-    case '/shifts':
-      return 'nav.shifts';
-    case '/reminders':
-      return 'nav.reminders';
-    case '/settings':
-      return 'settings.title';
-    default:
-      return 'nav.calendar';
-  }
+  if (pathname === '/') return 'nav.calendar';
+  if (pathname === '/reports') return 'nav.reports';
+  if (pathname.startsWith('/shifts')) return 'nav.shifts';
+  if (pathname === '/reminders') return 'nav.reminders';
+  if (pathname === '/settings') return 'settings.title';
+  return 'nav.calendar';
 };
 
 export const HeaderBar = () => {

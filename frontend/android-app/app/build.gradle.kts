@@ -92,9 +92,13 @@ dependencies {
     testImplementation(libs.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.mockk)
-    testImplementation(libs.turbine)
+    testImplementation(libs.kotest.property)
+    testImplementation(libs.kotest.runner.junit4)
+    testImplementation(libs.kotest.assertions.core)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
 
     // Debug
     debugImplementation(libs.compose.ui.tooling)
