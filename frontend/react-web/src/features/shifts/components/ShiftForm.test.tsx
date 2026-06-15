@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { PREDEFINED_PALETTE } from '@features/shifts/constants';
+import { COLOR_FAMILIES } from '@features/shifts/constants';
 
 import { ShiftForm } from './ShiftForm';
 
@@ -10,6 +10,27 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
+}));
+
+vi.mock('@context/useTheme', () => ({
+  useTheme: () => ({ mode: 'light', resolvedTheme: 'light', setMode: vi.fn() }),
+}));
+
+vi.mock('emoji-picker-react', () => ({
+  __esModule: true,
+  default: ({ onEmojiClick }: { onEmojiClick: (data: { emoji: string }) => void }) => (
+    <div data-testid="emoji-picker">
+      <button
+        type="button"
+        role="gridcell"
+        aria-label="☀️"
+        onClick={() => onEmojiClick({ emoji: '☀️' })}
+      >
+        ☀️
+      </button>
+    </div>
+  ),
+  Theme: { DARK: 'dark', LIGHT: 'light' },
 }));
 
 const defaultFields = {
@@ -90,7 +111,8 @@ describe('ShiftForm', () => {
 
       const colorGroup = screen.getByRole('radiogroup', { name: 'shift.form.colorLabel' });
       const radios = within(colorGroup).getAllByRole('radio');
-      expect(radios).toHaveLength(PREDEFINED_PALETTE.length);
+      const totalShades = COLOR_FAMILIES.reduce((sum, f) => sum + f.shades.length, 0);
+      expect(radios).toHaveLength(totalShades);
     });
 
     it('should render submit and cancel buttons', () => {
@@ -128,7 +150,7 @@ describe('ShiftForm', () => {
         />,
       );
 
-      const selectedRadio = screen.getByRole('radio', { name: '#2563EB' });
+      const selectedRadio = screen.getByRole('radio', { name: 'Blue shade 3' });
       expect(selectedRadio).toHaveAttribute('aria-checked', 'true');
     });
   });
@@ -285,7 +307,7 @@ describe('ShiftForm', () => {
       const user = userEvent.setup();
       render(<ShiftForm {...createProps({ onFieldChange })} />);
 
-      const colorRadio = screen.getByRole('radio', { name: '#EF4444' });
+      const colorRadio = screen.getByRole('radio', { name: 'Red shade 3' });
       await user.click(colorRadio);
 
       expect(onFieldChange).toHaveBeenCalledWith('backgroundColor', '#EF4444');

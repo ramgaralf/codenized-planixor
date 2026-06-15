@@ -87,7 +87,7 @@ describe('ShiftCard', () => {
     );
 
     const colorIndicator = container.querySelector(
-      '[style*="background-color"]',
+      'article > [aria-hidden="true"]',
     );
     expect(colorIndicator).toHaveStyle({ backgroundColor: '#EF4444' });
   });
@@ -98,7 +98,7 @@ describe('ShiftCard', () => {
     );
 
     const card = screen.getByRole('article');
-    expect(card.className).toContain('opacity-50');
+    expect(card).toHaveStyle({ opacity: '0.5' });
   });
 
   it('should show full opacity when shift is active', () => {
@@ -107,7 +107,7 @@ describe('ShiftCard', () => {
     );
 
     const card = screen.getByRole('article');
-    expect(card.className).toContain('opacity-100');
+    expect(card).toHaveStyle({ opacity: '1' });
   });
 
   it('should display "Deactivated" badge when isActive is false', () => {

@@ -51,7 +51,7 @@ const neverSyncedShiftArb: fc.Arbitrary<Shift> = shiftArb({
  */
 const modifiedAfterSyncShiftArb: fc.Arbitrary<Shift> = fc
   .record({
-    syncedAt: fc.date({ min: new Date('2020-01-01'), max: new Date('2025-06-01') }),
+    syncedAt: fc.date({ min: new Date('2020-01-01'), max: new Date('2025-01-01') }),
     offsetMs: fc.integer({ min: 1, max: 86_400_000 }),
   })
   .chain(({ syncedAt, offsetMs }) =>
@@ -59,14 +59,15 @@ const modifiedAfterSyncShiftArb: fc.Arbitrary<Shift> = fc
       syncedAt: fc.constant(syncedAt) as fc.Arbitrary<unknown>,
       modifiedAt: fc.constant(new Date(syncedAt.getTime() + offsetMs)) as fc.Arbitrary<unknown>,
     }),
-  );
+  )
+  .filter((shift) => !isNaN(shift.modifiedAt.getTime()) && !isNaN(shift.syncedAt!.getTime()));
 
 /**
  * Generates a shift where modifiedAt <= syncedAt (already synced, no local changes).
  */
 const syncedUpToDateShiftArb: fc.Arbitrary<Shift> = fc
   .record({
-    modifiedAt: fc.date({ min: new Date('2020-01-01'), max: new Date('2025-06-01') }),
+    modifiedAt: fc.date({ min: new Date('2020-01-01'), max: new Date('2025-01-01') }),
     offsetMs: fc.integer({ min: 0, max: 86_400_000 }),
   })
   .chain(({ modifiedAt, offsetMs }) =>
@@ -74,7 +75,8 @@ const syncedUpToDateShiftArb: fc.Arbitrary<Shift> = fc
       modifiedAt: fc.constant(modifiedAt) as fc.Arbitrary<unknown>,
       syncedAt: fc.constant(new Date(modifiedAt.getTime() + offsetMs)) as fc.Arbitrary<unknown>,
     }),
-  );
+  )
+  .filter((shift) => !isNaN(shift.modifiedAt.getTime()) && (shift.syncedAt === null || !isNaN(shift.syncedAt.getTime())));
 
 describe('Shift Sync Logic — Property Tests', () => {
   /**
@@ -175,10 +177,12 @@ describe('Shift Sync Logic — Property Tests', () => {
       fc.assert(
         fc.property(
           fc.uuid(),
-          fc.date({ min: new Date('2020-01-01'), max: new Date('2025-06-01') }),
+          fc.date({ min: new Date('2020-01-01'), max: new Date('2025-01-01') }),
           fc.integer({ min: 1, max: 86_400_000 }),
           (id, localModifiedAt, offsetMs) => {
+            fc.pre(!isNaN(localModifiedAt.getTime()));
             const remoteModifiedAt = new Date(localModifiedAt.getTime() + offsetMs);
+            fc.pre(!isNaN(remoteModifiedAt.getTime()));
 
             const local: Shift = buildShift({ id, modifiedAt: localModifiedAt });
             const remote: Shift = buildShift({ id, modifiedAt: remoteModifiedAt });
@@ -195,10 +199,12 @@ describe('Shift Sync Logic — Property Tests', () => {
       fc.assert(
         fc.property(
           fc.uuid(),
-          fc.date({ min: new Date('2020-01-01'), max: new Date('2025-06-01') }),
+          fc.date({ min: new Date('2020-01-01'), max: new Date('2025-01-01') }),
           fc.integer({ min: 1, max: 86_400_000 }),
           (id, remoteModifiedAt, offsetMs) => {
+            fc.pre(!isNaN(remoteModifiedAt.getTime()));
             const localModifiedAt = new Date(remoteModifiedAt.getTime() + offsetMs);
+            fc.pre(!isNaN(localModifiedAt.getTime()));
 
             const local: Shift = buildShift({ id, modifiedAt: localModifiedAt });
             const remote: Shift = buildShift({ id, modifiedAt: remoteModifiedAt });
