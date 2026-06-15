@@ -108,6 +108,51 @@
     <string name="shift_validation_end_time_required">End time is required</string>
     <string name="shift_validation_hours_worked_range">Hours worked must be between 1 minute and 24 hours</string>
 
+    <!-- Reminder Card -->
+    <string name="reminder_card_deactivated">Deactivated</string>
+    <string name="reminder_card_edit">Edit reminder</string>
+    <string name="reminder_card_toggle_active">Toggle reminder active</string>
+    <string name="reminder_card_delete">Delete reminder</string>
+
+    <!-- Reminders Screen -->
+    <string name="reminders_empty">No reminders available</string>
+    <string name="reminders_error_load">Could not load reminders</string>
+    <string name="reminders_new_reminder">New Reminder</string>
+    <string name="reminders_deactivate_confirm_title">Deactivate this reminder?</string>
+    <string name="reminders_deactivate_confirm_text">Are you sure you want to deactivate \"%1$s\"?</string>
+    <string name="reminders_delete_confirm_title">Delete this reminder?</string>
+    <string name="reminders_delete_confirm_text">This action is permanent and cannot be undone. Delete \"%1$s\"?</string>
+    <string name="reminders_confirm">Confirm</string>
+    <string name="reminders_cancel">Cancel</string>
+
+    <!-- Reminder Form -->
+    <string name="reminder_form_title_create">New Reminder</string>
+    <string name="reminder_form_title_edit">Edit Reminder</string>
+    <string name="reminder_form_name_label">Name</string>
+    <string name="reminder_form_name_placeholder">Reminder name</string>
+    <string name="reminder_form_icon_label">Icon</string>
+    <string name="reminder_form_color_label">Background color</string>
+    <string name="reminder_form_save">Save</string>
+    <string name="reminder_form_cancel">Cancel</string>
+    <string name="reminder_form_select_icon">Select icon</string>
+    <string name="reminder_form_color_hint">Highlighted colors are recommended for your current theme</string>
+    <string name="reminder_form_error_save">Could not save the reminder</string>
+
+    <!-- Reminder Form Validation -->
+    <string name="reminder_validation_name_required">Name is required</string>
+    <string name="reminder_validation_name_max_length">Name must be 50 characters or less</string>
+    <string name="reminder_validation_icon_required">Select an icon</string>
+    <string name="reminder_validation_color_required">Select a background color</string>
+
+    <!-- Color Picker Dialog -->
+    <string name="color_picker_title">Select color</string>
+    <string name="color_picker_hint">Highlighted colors are recommended for your current theme</string>
+    <string name="color_picker_dismiss">Close</string>
+
+    <!-- Emoji Picker Dialog -->
+    <string name="emoji_picker_title">Select icon</string>
+    <string name="emoji_picker_dismiss">Close</string>
+
     <!-- Empty States -->
     <string name="empty_no_data">No data available</string>
     <string name="empty_no_events">No events</string>

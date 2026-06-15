@@ -1,7 +1,8 @@
 {
   "common": {
     "confirm": "Confirm",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "loading": "Loading"
   },
   "app": {
     "name": "Planixor",
@@ -144,6 +145,58 @@
     "delete": {
       "title": "Delete shift",
       "confirm": "This action is permanent and cannot be undone. Delete \"{{name}}\"?"
+    },
+    "actions": {
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "delete": "Delete"
+    }
+  },
+  "reminder": {
+    "form": {
+      "createTitle": "New Reminder",
+      "editTitle": "Edit Reminder",
+      "nameLabel": "Name",
+      "namePlaceholder": "Reminder name",
+      "iconLabel": "Icon",
+      "colorLabel": "Background Color",
+      "colorHint": "Highlighted colors are recommended for your current theme",
+      "submit": "Save",
+      "cancel": "Cancel",
+      "selectIcon": "Select an icon",
+      "changeIcon": "Change icon",
+      "searchEmoji": "Search emoji...",
+      "emojiPickerLabel": "Emoji picker"
+    },
+    "validation": {
+      "name": {
+        "required": "Name is required",
+        "maxLength": "Name must be 50 characters or less"
+      },
+      "icon": {
+        "required": "Select an icon"
+      },
+      "color": {
+        "required": "Select a background color"
+      }
+    },
+    "error": {
+      "loadFailed": "Could not load reminders",
+      "saveFailed": "Could not save the reminder"
+    },
+    "empty": "No reminders available",
+    "newReminder": "New Reminder",
+    "deactivate": {
+      "title": "Deactivate reminder",
+      "confirm": "Deactivate this reminder?"
+    },
+    "delete": {
+      "title": "Delete reminder",
+      "confirm": "This action is permanent and cannot be undone. Delete '{{name}}'?"
+    },
+    "badge": {
+      "deactivated": "Deactivated"
     },
     "actions": {
       "edit": "Edit",

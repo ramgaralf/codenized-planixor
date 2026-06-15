@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.codenized.planixor.data.local.CalendarEventDao
 import com.codenized.planixor.data.local.PlanixorDatabase
+import com.codenized.planixor.data.local.ReminderDao
 import com.codenized.planixor.data.local.ShiftDao
 import dagger.Module
 import dagger.Provides
@@ -43,5 +44,11 @@ object DatabaseModule {
     @Singleton
     fun provideShiftDao(database: PlanixorDatabase): ShiftDao {
         return database.shiftDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideReminderDao(database: PlanixorDatabase): ReminderDao {
+        return database.reminderDao()
     }
 }

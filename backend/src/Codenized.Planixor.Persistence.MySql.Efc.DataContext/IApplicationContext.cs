@@ -14,4 +14,9 @@ public interface IApplicationContext
     /// Gets shifts.
     /// </summary>
     DbSet<Shift> Shifts { get; }
+
+    /// <summary>
+    /// Gets reminders.
+    /// </summary>
+    DbSet<Reminder> Reminders { get; }
 }

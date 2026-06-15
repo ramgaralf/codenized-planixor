@@ -9,6 +9,8 @@ import { ShiftsPage } from '@/pages/ShiftsPage';
 import { ShiftNewPage } from '@/pages/ShiftNewPage';
 import { ShiftEditPage } from '@/pages/ShiftEditPage';
 import { RemindersPage } from '@/pages/RemindersPage';
+import { ReminderNewPage } from '@/pages/ReminderNewPage';
+import { ReminderEditPage } from '@/pages/ReminderEditPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 
@@ -66,6 +68,22 @@ export const router = createBrowserRouter([
     element: (
       <AppShell>
         <RemindersPage />
+      </AppShell>
+    ),
+  },
+  {
+    path: '/reminders/new',
+    element: (
+      <AppShell>
+        <ReminderNewPage />
+      </AppShell>
+    ),
+  },
+  {
+    path: '/reminders/:id/edit',
+    element: (
+      <AppShell>
+        <ReminderEditPage />
       </AppShell>
     ),
   },
