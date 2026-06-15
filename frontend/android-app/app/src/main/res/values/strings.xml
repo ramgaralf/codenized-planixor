@@ -108,6 +108,63 @@
     <string name="shift_validation_end_time_required">La hora de fin es obligatoria</string>
     <string name="shift_validation_hours_worked_range">Las horas trabajadas deben estar entre 1 minuto y 24 horas</string>
 
+    <!-- Reminders Screen -->
+    <string name="reminders_empty">No hay recordatorios disponibles</string>
+    <string name="reminders_error_load">No se pudieron cargar los recordatorios</string>
+    <string name="reminders_new_reminder">Nuevo recordatorio</string>
+    <string name="reminders_deactivate_confirm_title">¿Desactivar este recordatorio?</string>
+    <string name="reminders_deactivate_confirm_text">¿Estás seguro de desactivar \"%1$s\"?</string>
+    <string name="reminders_delete_confirm_title">¿Eliminar este recordatorio?</string>
+    <string name="reminders_delete_confirm_text">Esta acción es permanente y no se puede deshacer. ¿Eliminar \"%1$s\"?</string>
+    <string name="reminders_confirm">Confirmar</string>
+    <string name="reminders_cancel">Cancelar</string>
+
+    <!-- Reminder Card -->
+    <string name="reminder_card_deactivated">Desactivado</string>
+    <string name="reminder_card_edit">Editar recordatorio</string>
+    <string name="reminder_card_toggle_active">Activar o desactivar recordatorio</string>
+    <string name="reminder_card_delete">Eliminar recordatorio</string>
+
+    <!-- Reminders Screen -->
+    <string name="reminder_screen_title">Recordatorios</string>
+    <string name="reminder_empty">No hay recordatorios disponibles</string>
+    <string name="reminder_error_load">No se pudieron cargar los recordatorios</string>
+    <string name="reminder_new_reminder">Nuevo recordatorio</string>
+    <string name="reminder_deactivate_confirm_title">¿Desactivar este recordatorio?</string>
+    <string name="reminder_deactivate_confirm_text">¿Estás seguro de desactivar \"%1$s\"?</string>
+    <string name="reminder_delete_confirm_title">¿Eliminar este recordatorio?</string>
+    <string name="reminder_delete_confirm_text">Esta acción es permanente. ¿Eliminar \"%1$s\"?</string>
+    <string name="reminder_confirm">Confirmar</string>
+    <string name="reminder_cancel">Cancelar</string>
+
+    <!-- Reminder Form -->
+    <string name="reminder_form_title_create">Nuevo recordatorio</string>
+    <string name="reminder_form_title_edit">Editar recordatorio</string>
+    <string name="reminder_form_name_label">Nombre</string>
+    <string name="reminder_form_name_placeholder">Nombre del recordatorio</string>
+    <string name="reminder_form_icon_label">Ícono</string>
+    <string name="reminder_form_color_label">Color de fondo</string>
+    <string name="reminder_form_save">Guardar</string>
+    <string name="reminder_form_cancel">Cancelar</string>
+    <string name="reminder_form_select_icon">Seleccionar ícono</string>
+    <string name="reminder_form_color_hint">Los colores resaltados son los recomendados para tu tema actual</string>
+    <string name="reminder_form_error_save">No se pudo guardar el recordatorio</string>
+
+    <!-- Reminder Form Validation -->
+    <string name="reminder_validation_name_required">El nombre es obligatorio</string>
+    <string name="reminder_validation_name_max_length">El nombre debe tener 50 caracteres o menos</string>
+    <string name="reminder_validation_icon_required">Selecciona un ícono</string>
+    <string name="reminder_validation_color_required">Selecciona un color de fondo</string>
+
+    <!-- Color Picker Dialog -->
+    <string name="color_picker_title">Seleccionar color</string>
+    <string name="color_picker_hint">Los colores resaltados son los recomendados para tu tema actual</string>
+    <string name="color_picker_dismiss">Cerrar</string>
+
+    <!-- Emoji Picker Dialog -->
+    <string name="emoji_picker_title">Seleccionar ícono</string>
+    <string name="emoji_picker_dismiss">Cerrar</string>
+
     <!-- Empty States -->
     <string name="empty_no_data">Sin datos disponibles</string>
     <string name="empty_no_events">No hay eventos</string>

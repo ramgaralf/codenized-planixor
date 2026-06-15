@@ -57,15 +57,6 @@ private fun ReportsContent(
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
-        // Screen title
-        Text(
-            text = stringResource(R.string.reports_title),
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Time Range Selector (Day/Week/Month/Year tabs)
         TimeRangeSelector(
             selectedRange = uiState.selectedRange,

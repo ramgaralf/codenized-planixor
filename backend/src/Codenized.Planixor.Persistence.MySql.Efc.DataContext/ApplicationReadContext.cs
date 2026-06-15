@@ -25,6 +25,11 @@ public sealed class ApplicationReadContext : DbContext, IApplicationContext
     /// </summary>
     public DbSet<Shift> Shifts => this.Set<Shift>();
 
+    /// <summary>
+    /// Gets reminders.
+    /// </summary>
+    public DbSet<Reminder> Reminders => this.Set<Reminder>();
+
     /// <summary>On model creating.</summary>
     /// <param name="modelBuilder">Model builder.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)

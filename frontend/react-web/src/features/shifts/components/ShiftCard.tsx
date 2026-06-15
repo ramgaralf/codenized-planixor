@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Pencil, Power, Trash2 } from 'lucide-react';
+import { Pencil, Pause, Play, Trash2 } from 'lucide-react';
 import type { Shift } from '../models';
 
 interface ShiftCardProps {
@@ -152,7 +152,11 @@ export const ShiftCard = ({
             aria-label={`${shift.isActive ? t('shift.actions.deactivate') : t('shift.actions.activate')} ${shift.name}`}
             style={actionBtnStyle}
           >
-            <Power size={20} aria-hidden="true" />
+            {shift.isActive ? (
+              <Pause size={20} aria-hidden="true" />
+            ) : (
+              <Play size={20} aria-hidden="true" />
+            )}
           </button>
           <button
             type="button"

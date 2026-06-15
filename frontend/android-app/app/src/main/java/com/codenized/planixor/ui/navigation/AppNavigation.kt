@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -49,6 +47,8 @@ import com.codenized.planixor.ui.reports.ReportsScreen
 import com.codenized.planixor.ui.settings.SettingsScreen
 import com.codenized.planixor.ui.shifts.ShiftFormScreen
 import com.codenized.planixor.ui.shifts.ShiftsScreen
+import com.codenized.planixor.ui.reminders.ReminderFormScreen
+import com.codenized.planixor.ui.reminders.RemindersScreen
 import com.codenized.planixor.ui.theme.PrimaryBlue
 import com.codenized.planixor.ui.theme.PrimaryPurple
 import com.codenized.planixor.ui.theme.TextSecondary
@@ -70,18 +70,21 @@ fun AppNavigation() {
         currentRoute == Screen.Calendar.route -> stringResource(R.string.nav_calendar)
         currentRoute == Screen.Reports.route -> stringResource(R.string.nav_reports)
         currentRoute?.startsWith("shifts") == true -> stringResource(R.string.nav_shifts)
-        currentRoute == Screen.Reminders.route -> stringResource(R.string.nav_reminders)
+        currentRoute?.startsWith("reminders") == true -> stringResource(R.string.nav_reminders)
         currentRoute == Screen.Settings.route -> stringResource(R.string.settings_title)
         else -> stringResource(R.string.nav_calendar)
     }
 
     // Determine if we're on a sub-screen that has its own top bar
     val isSubScreen = currentRoute == Screen.ShiftCreate.route ||
-        currentRoute == Screen.ShiftEdit.route
+        currentRoute == Screen.ShiftEdit.route ||
+        currentRoute == Screen.ReminderCreate.route ||
+        currentRoute == Screen.ReminderEdit.route
 
     // For bottom nav selection, map sub-routes to their parent
     val bottomNavRoute = when {
         currentRoute?.startsWith("shifts") == true -> Screen.Shifts.route
+        currentRoute?.startsWith("reminders") == true -> Screen.Reminders.route
         else -> currentRoute
     }
 
@@ -104,6 +107,8 @@ fun AppNavigation() {
                             text = when (currentRoute) {
                                 Screen.ShiftCreate.route -> stringResource(R.string.shift_form_title_create)
                                 Screen.ShiftEdit.route -> stringResource(R.string.shift_form_title_edit)
+                                Screen.ReminderCreate.route -> stringResource(R.string.reminder_form_title_create)
+                                Screen.ReminderEdit.route -> stringResource(R.string.reminder_form_title_edit)
                                 else -> ""
                             },
                             style = MaterialTheme.typography.titleMedium.copy(
@@ -202,6 +207,25 @@ fun AppNavigation() {
                             }
                         }
                     }
+                    // New reminder button (only on Reminders screen)
+                    if (currentRoute == Screen.Reminders.route) {
+                        IconButton(onClick = { navController.navigate(Screen.ReminderCreate.route) }) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(PrimaryBlue),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Add,
+                                    contentDescription = stringResource(R.string.reminder_new_reminder),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                    }
                     // Notifications icon button (stub)
                     IconButton(onClick = { /* TODO: notifications */ }) {
                         Icon(
@@ -282,7 +306,29 @@ fun AppNavigation() {
                 )
             }
             composable(Screen.Reminders.route) {
-                RemindersPlaceholder()
+                RemindersScreen(
+                    onNavigateToNewReminder = {
+                        navController.navigate(Screen.ReminderCreate.route)
+                    },
+                    onNavigateToEditReminder = { reminderId ->
+                        navController.navigate(Screen.ReminderEdit.createRoute(reminderId))
+                    },
+                )
+            }
+            composable(Screen.ReminderCreate.route) {
+                ReminderFormScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                )
+            }
+            composable(
+                route = Screen.ReminderEdit.route,
+                arguments = listOf(
+                    navArgument("reminderId") { type = NavType.StringType },
+                ),
+            ) {
+                ReminderFormScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                )
             }
             composable(Screen.Reports.route) {
                 ReportsScreen()
@@ -291,15 +337,5 @@ fun AppNavigation() {
                 SettingsScreen()
             }
         }
-    }
-}
-
-@Composable
-private fun RemindersPlaceholder() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(text = stringResource(R.string.nav_reminders))
     }
 }

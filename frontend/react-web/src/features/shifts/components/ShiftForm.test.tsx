@@ -1,8 +1,6 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-import { COLOR_FAMILIES } from '@features/shifts/constants';
 
 import { ShiftForm } from './ShiftForm';
 
@@ -91,7 +89,7 @@ describe('ShiftForm', () => {
       expect(screen.getByLabelText('shift.form.startTimeLabel')).toBeInTheDocument();
       expect(screen.getByLabelText('shift.form.endTimeLabel')).toBeInTheDocument();
       expect(screen.getByLabelText('shift.form.hoursWorkedLabel')).toBeInTheDocument();
-      expect(screen.getByRole('radiogroup', { name: 'shift.form.colorLabel' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /background color/i })).toBeInTheDocument();
     });
 
     it('should render the create title when mode is create', () => {
@@ -106,13 +104,11 @@ describe('ShiftForm', () => {
       expect(screen.getByRole('heading', { name: 'shift.form.editTitle' })).toBeInTheDocument();
     });
 
-    it('should render all predefined palette colors as radio buttons', () => {
+    it('should render the color picker button', () => {
       render(<ShiftForm {...createProps()} />);
 
-      const colorGroup = screen.getByRole('radiogroup', { name: 'shift.form.colorLabel' });
-      const radios = within(colorGroup).getAllByRole('radio');
-      const totalShades = COLOR_FAMILIES.reduce((sum, f) => sum + f.shades.length, 0);
-      expect(radios).toHaveLength(totalShades);
+      const colorButton = screen.getByRole('button', { name: /background color/i });
+      expect(colorButton).toBeInTheDocument();
     });
 
     it('should render submit and cancel buttons', () => {
@@ -150,8 +146,8 @@ describe('ShiftForm', () => {
         />,
       );
 
-      const selectedRadio = screen.getByRole('radio', { name: 'Blue shade 3' });
-      expect(selectedRadio).toHaveAttribute('aria-checked', 'true');
+      const selectedColor = screen.getByRole('button', { name: /Selected color: #2563EB/i });
+      expect(selectedColor).toBeInTheDocument();
     });
   });
 
@@ -307,7 +303,12 @@ describe('ShiftForm', () => {
       const user = userEvent.setup();
       render(<ShiftForm {...createProps({ onFieldChange })} />);
 
-      const colorRadio = screen.getByRole('radio', { name: 'Red shade 3' });
+      // Open the color picker dropdown
+      const colorButton = screen.getByRole('button', { name: /background color/i });
+      await user.click(colorButton);
+
+      // Select a color from the dropdown
+      const colorRadio = screen.getByRole('radio', { name: 'Red shade 3 (recommended)' });
       await user.click(colorRadio);
 
       expect(onFieldChange).toHaveBeenCalledWith('backgroundColor', '#EF4444');

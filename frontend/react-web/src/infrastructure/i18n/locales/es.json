@@ -1,7 +1,8 @@
 {
   "common": {
     "confirm": "Confirmar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "loading": "Cargando"
   },
   "app": {
     "name": "Planixor",
@@ -144,6 +145,58 @@
     "delete": {
       "title": "Eliminar turno",
       "confirm": "Esta acción es permanente y no se puede deshacer. ¿Eliminar \"{{name}}\"?"
+    },
+    "actions": {
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "activate": "Activar",
+      "delete": "Eliminar"
+    }
+  },
+  "reminder": {
+    "form": {
+      "createTitle": "Nuevo Recordatorio",
+      "editTitle": "Editar Recordatorio",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Nombre del recordatorio",
+      "iconLabel": "Ícono",
+      "colorLabel": "Color de fondo",
+      "colorHint": "Los colores resaltados son los recomendados para tu tema actual",
+      "submit": "Guardar",
+      "cancel": "Cancelar",
+      "selectIcon": "Selecciona un ícono",
+      "changeIcon": "Cambiar ícono",
+      "searchEmoji": "Buscar emoji...",
+      "emojiPickerLabel": "Selector de emojis"
+    },
+    "validation": {
+      "name": {
+        "required": "El nombre es obligatorio",
+        "maxLength": "El nombre debe tener 50 caracteres o menos"
+      },
+      "icon": {
+        "required": "Selecciona un ícono"
+      },
+      "color": {
+        "required": "Selecciona un color de fondo"
+      }
+    },
+    "error": {
+      "loadFailed": "No se pudieron cargar los recordatorios",
+      "saveFailed": "No se pudo guardar el recordatorio"
+    },
+    "empty": "No hay recordatorios disponibles",
+    "newReminder": "Nuevo Recordatorio",
+    "deactivate": {
+      "title": "Desactivar recordatorio",
+      "confirm": "¿Estás seguro de desactivar \"{{name}}\"?"
+    },
+    "delete": {
+      "title": "Eliminar recordatorio",
+      "confirm": "Esta acción es permanente y no se puede deshacer. ¿Eliminar '{{name}}'?"
+    },
+    "badge": {
+      "deactivated": "Desactivado"
     },
     "actions": {
       "edit": "Editar",

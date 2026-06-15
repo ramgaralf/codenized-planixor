@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.Api.Endpoints;
 
 using Codenized.HealthChecks.AspNetCore;
+using Codenized.Planixor.Api.Endpoints.Reminder;
 using Codenized.Planixor.Api.Endpoints.Shift;
 
 /// <summary>Register endpoints.</summary>
@@ -22,6 +23,7 @@ internal static class RegisterEndpoints
     {
         app.MapHealthChecksEndpoint(configuration, apiBasePath);
         app.MapShiftEndpoints(apiBasePath);
+        app.MapReminderEndpoints(apiBasePath);
         return app;
     }
 }

@@ -2,6 +2,7 @@ import Dexie from 'dexie';
 
 import type { CalendarEvent } from './models';
 import type { Shift } from '@features/shifts/models';
+import type { Reminder } from '@features/reminders/models';
 
 /**
  * PlanixorDatabase — Dexie (IndexedDB) database definition.
@@ -13,6 +14,7 @@ import type { Shift } from '@features/shifts/models';
 export class PlanixorDatabase extends Dexie {
   calendarEvents!: Dexie.Table<CalendarEvent, string>;
   shifts!: Dexie.Table<Shift, string>;
+  reminders!: Dexie.Table<Reminder, string>;
 
   constructor() {
     super('planixor');
@@ -29,6 +31,12 @@ export class PlanixorDatabase extends Dexie {
     this.version(2).stores({
       calendarEvents: 'id, startAt, endAt, eventType, isDeleted',
       shifts: 'id, createdAt, isDeleted, isActive',
+    });
+
+    this.version(3).stores({
+      calendarEvents: 'id, startAt, endAt, eventType, isDeleted',
+      shifts: 'id, createdAt, isDeleted, isActive',
+      reminders: 'id, createdAt, isDeleted, isActive',
     });
   }
 }

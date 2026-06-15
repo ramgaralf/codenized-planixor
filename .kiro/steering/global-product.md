@@ -9,6 +9,7 @@ Planixor unifies work shift management, calendar (appointments, reminders, meeti
 ## Core features
 
 - **Shift management** — create, assign, and visualize work shifts (daily, weekly, monthly views)
+- **Reminder management** — create, view, edit, deactivate, and delete reusable reminder templates (name, emoji icon, color from 45-color palette); cross-device sync for subscribed users; reminders serve as assignable templates for calendar events
 - **Calendar / Agenda** — appointments, reminders, meetings, personal events
 - **Notifications** — push, email, and in-app alerts for upcoming shifts, events, and reminders
 - **Reports** — hours worked per day/week/month/year, shift summaries, exportable data

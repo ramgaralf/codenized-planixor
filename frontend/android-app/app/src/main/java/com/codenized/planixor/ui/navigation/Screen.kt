@@ -11,6 +11,10 @@ sealed class Screen(val route: String) {
         fun createRoute(shiftId: String): String = "shifts/$shiftId/edit"
     }
     data object Reminders : Screen("reminders")
+    data object ReminderCreate : Screen("reminders/new")
+    data object ReminderEdit : Screen("reminders/{reminderId}/edit") {
+        fun createRoute(reminderId: String): String = "reminders/$reminderId/edit"
+    }
     data object Reports : Screen("reports")
     data object Settings : Screen("settings")
 }

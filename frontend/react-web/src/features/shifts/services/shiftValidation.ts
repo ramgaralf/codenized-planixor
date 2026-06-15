@@ -46,17 +46,17 @@ export const shiftValidationSchema = z.object({
       },
     ),
   ),
-  startTime: z.number().check(
+  startTime: z.number({ error: SHIFT_I18N_KEYS.VALIDATION_START_TIME_REQUIRED }).check(
     z.refine((val) => Number.isInteger(val) && val >= SHIFT_TIME_MIN && val <= SHIFT_TIME_MAX, {
       message: SHIFT_I18N_KEYS.VALIDATION_START_TIME_REQUIRED,
     }),
   ),
-  endTime: z.number().check(
+  endTime: z.number({ error: SHIFT_I18N_KEYS.VALIDATION_END_TIME_REQUIRED }).check(
     z.refine((val) => Number.isInteger(val) && val >= SHIFT_TIME_MIN && val <= SHIFT_TIME_MAX, {
       message: SHIFT_I18N_KEYS.VALIDATION_END_TIME_REQUIRED,
     }),
   ),
-  hoursWorked: z.number().check(
+  hoursWorked: z.number({ error: SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE }).check(
     z.refine(
       (val) => Number.isInteger(val) && val >= SHIFT_HOURS_WORKED_MIN && val <= SHIFT_HOURS_WORKED_MAX,
       {
