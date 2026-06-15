@@ -8,7 +8,7 @@ const getPageTitleKey = (pathname: string): string => {
   if (pathname === '/') return 'nav.calendar';
   if (pathname === '/reports') return 'nav.reports';
   if (pathname.startsWith('/shifts')) return 'nav.shifts';
-  if (pathname === '/reminders') return 'nav.reminders';
+  if (pathname.startsWith('/reminders')) return 'nav.reminders';
   if (pathname === '/settings') return 'settings.title';
   return 'nav.calendar';
 };
@@ -20,6 +20,7 @@ export const HeaderBar = () => {
   const pageTitle = t(getPageTitleKey(pathname));
   const isCalendar = pathname === '/';
   const isShiftsList = pathname === '/shifts';
+  const isRemindersList = pathname === '/reminders';
 
   return (
     <header className={styles.headerBar}>
@@ -49,6 +50,17 @@ export const HeaderBar = () => {
           >
             <Plus size={16} aria-hidden="true" />
             {t('shift.newShift')}
+          </button>
+        )}
+
+        {isRemindersList && (
+          <button
+            className={styles.newEventButton}
+            type="button"
+            onClick={() => navigate('/reminders/new')}
+          >
+            <Plus size={16} aria-hidden="true" />
+            {t('reminder.newReminder')}
           </button>
         )}
 

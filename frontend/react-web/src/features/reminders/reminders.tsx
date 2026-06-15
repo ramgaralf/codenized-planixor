@@ -29,10 +29,6 @@ export const RemindersContainer = () => {
   const { reminders, isLoading, error, deactivate, activate, softDelete } = useReminders();
   const [modal, setModal] = useState<ModalState>(INITIAL_MODAL_STATE);
 
-  const handleNewReminder = useCallback(() => {
-    navigate('/reminders/new');
-  }, [navigate]);
-
   const handleEdit = useCallback(
     async (id: string) => {
       try {
@@ -112,25 +108,6 @@ export const RemindersContainer = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '24px 32px', height: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button
-          type="button"
-          onClick={handleNewReminder}
-          style={{
-            padding: '8px 16px',
-            fontSize: '14px',
-            fontWeight: 600,
-            borderRadius: '8px',
-            border: 'none',
-            backgroundColor: 'var(--color-primary)',
-            color: '#ffffff',
-            cursor: 'pointer',
-          }}
-        >
-          {t('reminder.actions.new')}
-        </button>
-      </div>
-
       {reminders.length === 0 ? (
         <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
