@@ -65,7 +65,10 @@ export const getDateRangeForDay = (date: string): { start: string; end: string }
  * @returns Object with start (Monday) and end (Sunday) as ISO date strings
  */
 export const getDateRangeForWeek = (date: string): { start: string; end: string } => {
-  const [year, month, day] = date.split('-').map(Number);
+  const parts = date.split('-');
+  const year = Number(parts[0]);
+  const month = Number(parts[1]);
+  const day = Number(parts[2]);
   const d = new Date(year, month - 1, day);
 
   // getDay() returns 0 for Sunday, 1 for Monday, ..., 6 for Saturday
@@ -90,7 +93,9 @@ export const getDateRangeForWeek = (date: string): { start: string; end: string 
  * @returns Object with start (first day) and end (last day) as ISO date strings
  */
 export const getDateRangeForMonth = (date: string): { start: string; end: string } => {
-  const [year, month] = date.split('-').map(Number);
+  const parts = date.split('-');
+  const year = Number(parts[0]);
+  const month = Number(parts[1]);
 
   const firstDay = new Date(year, month - 1, 1);
   // Day 0 of next month = last day of current month
@@ -110,7 +115,8 @@ export const getDateRangeForMonth = (date: string): { start: string; end: string
  * @returns Object with start (Jan 1) and end (Dec 31) as ISO date strings
  */
 export const getDateRangeForYear = (date: string): { start: string; end: string } => {
-  const year = parseInt(date.split('-')[0], 10);
+  const parts = date.split('-');
+  const year = parseInt(parts[0] ?? '0', 10);
 
   return {
     start: `${year}-01-01`,

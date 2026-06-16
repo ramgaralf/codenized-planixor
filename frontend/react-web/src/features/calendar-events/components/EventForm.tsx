@@ -45,14 +45,18 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel }: EventFormProps
   };
 
   const handleStartTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const [hours, minutes] = e.target.value.split(':').map(Number);
+    const parts = e.target.value.split(':');
+    const hours = Number(parts[0]);
+    const minutes = Number(parts[1]);
     if (!isNaN(hours) && !isNaN(minutes)) {
       setField('startTime', hours * 60 + minutes);
     }
   };
 
   const handleEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const [hours, minutes] = e.target.value.split(':').map(Number);
+    const parts = e.target.value.split(':');
+    const hours = Number(parts[0]);
+    const minutes = Number(parts[1]);
     if (!isNaN(hours) && !isNaN(minutes)) {
       setField('endTime', hours * 60 + minutes);
     }
@@ -86,7 +90,7 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel }: EventFormProps
             : null
         }
         onChange={handleEventTypeChange}
-        error={fieldErrors.eventType || fieldErrors.eventTypeId ? t(fieldErrors.eventType || fieldErrors.eventTypeId) : undefined}
+        error={fieldErrors.eventType || fieldErrors.eventTypeId ? t(fieldErrors.eventType ?? fieldErrors.eventTypeId ?? '') : undefined}
       />
 
       {/* Day picker */}

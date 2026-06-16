@@ -100,11 +100,11 @@ export const WeekView = ({ events, currentDate, onEventClick }: WeekViewProps) =
       if (!map[event.day]) {
         map[event.day] = [];
       }
-      map[event.day].push(event);
+      map[event.day]!.push(event);
     }
     // Sort each day's events by startTime
     for (const day of Object.keys(map)) {
-      map[day].sort((a, b) => a.startTime - b.startTime);
+      map[day]!.sort((a, b) => a.startTime - b.startTime);
     }
     return map;
   }, [filteredEvents]);

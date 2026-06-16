@@ -96,7 +96,7 @@ const getDayEventsInfo = (events: CalendarEventDisplay[]): DayEventsInfo => {
 
   // Determine container background from shift
   let shiftBackgroundColor: string | null = null;
-  if (shifts.length > 0 && shifts[0].backgroundColor) {
+  if (shifts.length > 0 && shifts[0]?.backgroundColor) {
     shiftBackgroundColor = shifts[0].backgroundColor;
   }
 

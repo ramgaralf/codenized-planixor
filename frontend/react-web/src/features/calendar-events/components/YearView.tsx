@@ -109,7 +109,7 @@ const getDayIndicators = (
     .sort((a, b) => a.startTime - b.startTime);
 
   const shiftColor = shiftEvent ? shiftEvent.backgroundColor : null;
-  const reminderEmoji = reminderEvents.length > 0 ? reminderEvents[0].icon : null;
+  const reminderEmoji = reminderEvents.length > 0 ? reminderEvents[0]?.icon ?? null : null;
 
   return { shiftColor, reminderEmoji };
 };

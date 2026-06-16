@@ -43,9 +43,9 @@ const ORPHANED_FALLBACK = {
 const deriveDisplayFields = async (
   event: CalendarEvent,
 ): Promise<CalendarEventDisplay> => {
-  let name = ORPHANED_FALLBACK.name;
-  let icon = ORPHANED_FALLBACK.icon;
-  let backgroundColor = ORPHANED_FALLBACK.backgroundColor;
+  let name: string = ORPHANED_FALLBACK.name;
+  let icon: string = ORPHANED_FALLBACK.icon;
+  let backgroundColor: string = ORPHANED_FALLBACK.backgroundColor;
 
   if (event.eventType === 'shift') {
     const shift = await db.shifts.get(event.eventTypeId);

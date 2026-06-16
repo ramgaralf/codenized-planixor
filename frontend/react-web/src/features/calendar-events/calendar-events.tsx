@@ -75,7 +75,10 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
   const handleMonthDayClick = useCallback(
     (day: string) => {
       // Navigate to day view for the selected date
-      const [year, month, dayNum] = day.split('-').map(Number);
+      const parts = day.split('-');
+      const year = Number(parts[0]);
+      const month = Number(parts[1]);
+      const dayNum = Number(parts[2]);
       const targetDate = new Date(year, month - 1, dayNum);
       useCalendarStore.setState({ currentDate: targetDate });
       setView('day');
@@ -86,7 +89,10 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
   const handleYearDayClick = useCallback(
     (day: string) => {
       // Navigate to day view for the clicked date
-      const [year, month, dayNum] = day.split('-').map(Number);
+      const parts = day.split('-');
+      const year = Number(parts[0]);
+      const month = Number(parts[1]);
+      const dayNum = Number(parts[2]);
       const targetDate = new Date(year, month - 1, dayNum);
       useCalendarStore.setState({ currentDate: targetDate });
       setView('day');

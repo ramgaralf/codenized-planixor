@@ -33,19 +33,23 @@ interface PositionedEvent {
   totalColumns: number;
 }
 
-const computeEventPositions = (events: CalendarEventDisplay[]): PositionedEvent[] => {
-  if (events.length === 0) return [];
-
-  const sorted = [...events].sort((a, b) => a.startTime - b.startTime || a.endTime - b.endTime);
-
+/**
+ * Places events into non-overlapping columns using a greedy approach.
+ */
+const placeEventsInColumns = (
+  sorted: CalendarEventDisplay[],
+): { endTime: number; event: CalendarEventDisplay }[][] => {
   const columns: { endTime: number; event: CalendarEventDisplay }[][] = [];
 
   for (const event of sorted) {
     let placed = false;
     for (let col = 0; col < columns.length; col++) {
-      const lastInCol = columns[col][columns[col].length - 1];
+      const column = columns[col];
+      if (!column) continue;
+      const lastInCol = column[column.length - 1];
+      if (!lastInCol) continue;
       if (lastInCol.endTime <= event.startTime) {
-        columns[col].push({ endTime: event.endTime, event });
+        column.push({ endTime: event.endTime, event });
         placed = true;
         break;
       }
@@ -55,33 +59,38 @@ const computeEventPositions = (events: CalendarEventDisplay[]): PositionedEvent[
     }
   }
 
-  const result: PositionedEvent[] = [];
+  return columns;
+};
 
-  // Build overlap groups to determine totalColumns per event
+const computeEventPositions = (events: CalendarEventDisplay[]): PositionedEvent[] => {
+  if (events.length === 0) return [];
+
+  const sorted = [...events].sort((a, b) => a.startTime - b.startTime || a.endTime - b.endTime);
+  const columns = placeEventsInColumns(sorted);
+
+  // Build column index map
   const eventColumns = new Map<string, number>();
   for (let col = 0; col < columns.length; col++) {
-    for (const entry of columns[col]) {
+    const column = columns[col];
+    if (!column) continue;
+    for (const entry of column) {
       eventColumns.set(entry.event.id, col);
     }
   }
 
-  // Determine overlap groups: events that share any time overlap get the same totalColumns
-  for (const event of sorted) {
-    // Find all events that overlap with this event
+  // Determine overlap groups
+  return sorted.map((event) => {
     const overlapping = sorted.filter(
       (other) => other.startTime < event.endTime && other.endTime > event.startTime
     );
     const maxCol = Math.max(...overlapping.map((e) => eventColumns.get(e.id) ?? 0));
-    const totalColumns = maxCol + 1;
 
-    result.push({
+    return {
       event,
       column: eventColumns.get(event.id) ?? 0,
-      totalColumns,
-    });
-  }
-
-  return result;
+      totalColumns: maxCol + 1,
+    };
+  });
 };
 
 /**
@@ -119,7 +128,7 @@ export const DayView = ({ events, currentDate, onEventClick }: DayViewProps) => 
     const containerHeight = container.clientHeight;
     const scrollTarget = currentHourOffset - containerHeight / 2;
 
-    container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
+    container.scrollTo?.({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
   }, [isToday]);
 
   return (

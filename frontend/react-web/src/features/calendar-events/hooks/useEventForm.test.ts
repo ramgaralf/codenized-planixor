@@ -705,15 +705,16 @@ describe('useEventForm', () => {
       });
 
       let submitPromise: Promise<void>;
-      act(() => {
+      await act(async () => {
         submitPromise = result.current.handleSubmit();
       });
 
+      // After validation passes and create is called (but not resolved), isSubmitting should be true
       expect(result.current.isSubmitting).toBe(true);
 
       await act(async () => {
         rejectFn!(new Error('fail'));
-        await submitPromise;
+        await submitPromise!;
       });
 
       expect(result.current.isSubmitting).toBe(false);
