@@ -1,13 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import type { CalendarEventDisplay } from '../models';
 import { formatTimeFromMinutes } from '../utils';
 
 import { CurrentTimeIndicator } from './CurrentTimeIndicator';
-import { DayNavigator } from './DayNavigator';
-import { MonthNavigator } from './MonthNavigator';
-import { YearNavigator } from './YearNavigator';
 import { EventCard } from './EventCard';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -102,10 +98,8 @@ const computeEventPositions = (events: CalendarEventDisplay[]): PositionedEvent[
  * **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7**
  */
 export const DayView = ({ events, currentDate, onEventClick }: DayViewProps) => {
-  const { i18n } = useTranslation();
   const timelineRef = useRef<HTMLDivElement>(null);
 
-  const locale = i18n.language;
   const isToday = isSameDay(currentDate, new Date());
 
   const hourLabels = useMemo(() => {
@@ -128,47 +122,14 @@ export const DayView = ({ events, currentDate, onEventClick }: DayViewProps) => 
     container.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' });
   }, [isToday]);
 
-  // Format date label for display
-  const dateLabel = useMemo(() => {
-    const formatter = new Intl.DateTimeFormat(locale, {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-    return formatter.format(currentDate);
-  }, [currentDate, locale]);
-
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Navigation controls */}
-      <div
-        className="flex items-center justify-between gap-2 shrink-0"
-        style={{ padding: '8px 0' }}
-      >
-        <span
-          style={{
-            fontSize: '16px',
-            fontWeight: 600,
-            color: 'var(--color-text-primary)',
-            textTransform: 'capitalize',
-          }}
-        >
-          {dateLabel}
-        </span>
-        <div className="flex items-center gap-2">
-          <DayNavigator />
-          <MonthNavigator />
-          <YearNavigator />
-        </div>
-      </div>
-
       {/* Timeline */}
       <div
         ref={timelineRef}
         className="flex-1 overflow-y-auto"
         role="grid"
-        aria-label={dateLabel}
+        aria-label={currentDate.toLocaleDateString()}
       >
         <div
           style={{

@@ -19,7 +19,7 @@ export const ViewSelector = () => {
 
   return (
     <div
-      className="view-selector"
+      className="view-selector w-full md:w-auto"
       role="tablist"
       aria-label={t('accessibility.calendarNavigation')}
       style={{
@@ -30,7 +30,6 @@ export const ViewSelector = () => {
         padding: '4px',
         backgroundColor: 'var(--color-surface)',
         borderRadius: '8px',
-        width: 'fit-content',
       }}
     >
       {VIEW_OPTIONS.map((view) => (
@@ -42,6 +41,7 @@ export const ViewSelector = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            flex: 1,
             padding: '8px 16px',
             border: 'none',
             borderRadius: '6px',

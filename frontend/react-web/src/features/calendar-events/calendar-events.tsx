@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { useCalendarStore } from '@/stores/calendarStore';
 
 import { ConfirmationModal } from './components/ConfirmationModal';
+import { DayDateNavigator } from './components/DayDateNavigator';
 import { DayView } from './components/DayView';
 import { EventDetailPage } from './components/EventDetailPage';
 import { EventForm } from './components/EventForm';
@@ -109,8 +110,30 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
     <div className="flex flex-col h-full overflow-hidden">
       {effectiveMode === 'calendar' && (
         <>
-          <div className="shrink-0" style={{ padding: '8px 16px' }}>
-            <ViewSelector />
+          <div
+            className="shrink-0"
+            style={{ padding: '8px 16px' }}
+          >
+            {/* Mobile: stack vertically; Desktop: same row */}
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+              }}
+            >
+              <ViewSelector />
+              {activeView === 'day' && (
+                <div
+                  className="day-date-nav-wrapper justify-center md:justify-end"
+                  style={{ flexGrow: 1, display: 'flex' }}
+                >
+                  <DayDateNavigator />
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex-1 overflow-hidden">
             {activeView === 'day' && (
