@@ -156,6 +156,69 @@ const buildInitialState = (
   };
 };
 
+/**
+ * Runs all form validation checks and returns field-level and form-level errors.
+ * Extracted to reduce cognitive complexity of handleSubmit.
+ */
+const runValidation = async (
+  formState: EventFormState,
+  isEditMode: boolean,
+  existingEvent: CalendarEvent | null | undefined,
+): Promise<{ fieldErrors: Record<string, string>; formError: string | null }> => {
+  const fieldErrors: Record<string, string> = {};
+  let formError: string | null = null;
+
+  // 1. Validate required fields
+  const requiredResult = validateRequiredFields({
+    eventType: formState.eventType ?? undefined,
+    eventTypeId: formState.eventTypeId ?? undefined,
+    day: formState.day || undefined,
+    startTime: formState.startTime ?? undefined,
+    endTime: formState.endTime ?? undefined,
+  });
+
+  if (!requiredResult.isValid) {
+    Object.assign(fieldErrors, requiredResult.errors);
+  }
+
+  // 2. Validate time range (only if both times are provided)
+  if (formState.startTime !== null && formState.endTime !== null) {
+    if (!validateTimeRange(formState.startTime, formState.endTime)) {
+      fieldErrors.endTime = CALENDAR_EVENT_I18N_KEYS.VALIDATION_END_TIME_AFTER_START;
+    }
+  }
+
+  // 3. Validate notes length
+  if (!validateNotes(formState.notes || null)) {
+    fieldErrors.notes = CALENDAR_EVENT_I18N_KEYS.VALIDATION_NOTES_MAX_LENGTH;
+  }
+
+  // 4. Check one-shift-per-day constraint (only if no field errors so far)
+  if (
+    formState.eventType === 'shift' &&
+    formState.day &&
+    Object.keys(fieldErrors).length === 0
+  ) {
+    const existingShifts = await calendarEventService.getShiftsForDate(
+      formState.day,
+      isEditMode ? existingEvent!.id : undefined,
+    );
+
+    if (
+      !checkOneShiftPerDay(
+        formState.day,
+        formState.eventType,
+        existingShifts,
+        isEditMode ? existingEvent!.id : undefined,
+      )
+    ) {
+      formError = CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY;
+    }
+  }
+
+  return { fieldErrors, formError };
+};
+
 export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn => {
   const { existingEvent, onSuccess, onCancel } = options ?? {};
 
@@ -192,66 +255,16 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
   );
 
   const handleSubmit = useCallback(async (): Promise<void> => {
-    const errors: Record<string, string> = {};
-    let hasFormError = false;
+    const { fieldErrors: validationErrors, formError: validationFormError } =
+      await runValidation(formState, isEditMode, existingEvent);
 
-    // 1. Validate required fields
-    const requiredResult = validateRequiredFields({
-      eventType: formState.eventType ?? undefined,
-      eventTypeId: formState.eventTypeId ?? undefined,
-      day: formState.day || undefined,
-      startTime: formState.startTime ?? undefined,
-      endTime: formState.endTime ?? undefined,
-    });
-
-    if (!requiredResult.isValid) {
-      Object.assign(errors, requiredResult.errors);
-    }
-
-    // 2. Validate time range (only if both times are provided)
-    if (formState.startTime !== null && formState.endTime !== null) {
-      if (!validateTimeRange(formState.startTime, formState.endTime)) {
-        errors.endTime = CALENDAR_EVENT_I18N_KEYS.VALIDATION_END_TIME_AFTER_START;
-      }
-    }
-
-    // 3. Validate notes length
-    if (!validateNotes(formState.notes || null)) {
-      errors.notes = CALENDAR_EVENT_I18N_KEYS.VALIDATION_NOTES_MAX_LENGTH;
-    }
-
-    // 4. Check one-shift-per-day constraint
-    if (
-      formState.eventType === 'shift' &&
-      formState.day &&
-      Object.keys(errors).length === 0
-    ) {
-      const existingShifts = await calendarEventService.getShiftsForDate(
-        formState.day,
-        isEditMode ? existingEvent!.id : undefined,
-      );
-
-      if (
-        !checkOneShiftPerDay(
-          formState.day,
-          formState.eventType,
-          existingShifts,
-          isEditMode ? existingEvent!.id : undefined,
-        )
-      ) {
-        setFormError(CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY);
-        hasFormError = true;
-      }
-    }
-
-    // If any field-level errors, set them and prevent submission
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
       return;
     }
 
-    // If form-level error, prevent submission
-    if (hasFormError) {
+    if (validationFormError) {
+      setFormError(validationFormError);
       return;
     }
 

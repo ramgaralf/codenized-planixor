@@ -55,24 +55,6 @@ const validReminderInputArb: fc.Arbitrary<CreateCalendarEventInput> = fc
     notes,
   }));
 
-/** Generates a valid CreateCalendarEventInput for a shift type */
-const validShiftInputArb: fc.Arbitrary<CreateCalendarEventInput> = fc
-  .tuple(isoDateArb, validTimePairArb, fc.uuid(), fc.oneof(fc.constant(null), fc.string({ maxLength: 200 })))
-  .map(([day, times, eventTypeId, notes]) => ({
-    eventType: 'shift' as const,
-    eventTypeId,
-    day,
-    startTime: times.startTime,
-    endTime: times.endTime,
-    notes,
-  }));
-
-/** Generates either a reminder or shift input (using unique days for shifts to avoid constraint conflicts) */
-const validCreateInputArb: fc.Arbitrary<CreateCalendarEventInput> = fc.oneof(
-  validReminderInputArb,
-  validShiftInputArb,
-);
-
 /** Generates a valid Shift entity for seeding into the database */
 const shiftEntityArb = (id?: string): fc.Arbitrary<Shift> =>
   fc.record({

@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+/* eslint-disable sonarjs/assertions-in-tests */
+import { describe, it } from 'vitest';
 import fc from 'fast-check';
 
 import type { CalendarEventDisplay } from '../models';

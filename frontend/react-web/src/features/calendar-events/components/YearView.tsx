@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 
 import type { CalendarEventDisplay } from '../models';
 
-import { YearNavigator } from './YearNavigator';
-
 interface YearViewProps {
   events: CalendarEventDisplay[];
   currentDate: Date;
@@ -280,6 +278,13 @@ const DayCell = ({ day, indicators, locale, year, month, onDayClick }: DayCellPr
   const hasShift = indicators.shiftColor !== null;
   const hasReminder = indicators.reminderEmoji !== null;
 
+  // Border: indicates reminder exists
+  const borderStyle = hasReminder ? '2px solid var(--color-primary)' : 'none';
+  // Fill: shift color if shift exists, transparent otherwise
+  const fillColor = hasShift ? indicators.shiftColor! : 'transparent';
+  // Text color: white on colored fill, primary on transparent
+  const textColor = hasShift ? '#ffffff' : 'var(--color-text-primary)';
+
   return (
     <button
       type="button"
@@ -295,65 +300,19 @@ const DayCell = ({ day, indicators, locale, year, month, onDayClick }: DayCellPr
         minWidth: '24px',
         minHeight: '24px',
         aspectRatio: '1',
-        fontSize: '11px',
-        fontWeight: day.isToday ? 600 : 400,
-        color: day.isToday ? '#ffffff' : 'var(--color-text-primary)',
-        border: 'none',
-        background: 'none',
+        fontSize: day.isToday ? '13px' : '11px',
+        fontWeight: day.isToday ? 700 : 400,
+        color: textColor,
+        border: borderStyle,
+        backgroundColor: fillColor,
         borderRadius: '50%',
         cursor: 'pointer',
         padding: 0,
         lineHeight: '1',
       }}
     >
-      {/* Shift colored circle indicator (background) */}
-      {hasShift && (
-        <span
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: '2px',
-            borderRadius: '50%',
-            backgroundColor: indicators.shiftColor ?? undefined,
-            opacity: day.isToday ? 0.7 : 0.6,
-            zIndex: 0,
-          }}
-        />
-      )}
-
-      {/* Today indicator */}
-      {day.isToday && !hasShift && (
-        <span
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: '2px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--color-primary)',
-            zIndex: 0,
-          }}
-        />
-      )}
-
       {/* Day number */}
       <span style={{ position: 'relative', zIndex: 1 }}>{day.dayNumber}</span>
-
-      {/* Reminder emoji indicator (upper-right) */}
-      {hasReminder && (
-        <span
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: '0',
-            right: '0',
-            fontSize: '8px',
-            lineHeight: '1',
-            zIndex: 2,
-          }}
-        >
-          {indicators.reminderEmoji}
-        </span>
-      )}
     </button>
   );
 };
@@ -424,25 +383,6 @@ export const YearView = ({ events, currentDate, onDayClick }: YearViewProps) => 
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Navigation controls */}
-      <div
-        className="flex items-center justify-between gap-2 shrink-0"
-        style={{ padding: '8px 0' }}
-      >
-        <span
-          style={{
-            fontSize: '16px',
-            fontWeight: 600,
-            color: 'var(--color-text-primary)',
-          }}
-        >
-          {year}
-        </span>
-        <div className="flex items-center gap-2">
-          <YearNavigator />
-        </div>
-      </div>
-
       {/* Error message with retry */}
       {error && (
         <div

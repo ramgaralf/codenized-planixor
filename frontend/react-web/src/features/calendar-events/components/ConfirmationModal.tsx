@@ -119,8 +119,14 @@ export const ConfirmationModal = ({
   return (
     <div
       className="fixed inset-0 flex items-center justify-center"
+      role="presentation"
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 1000 }}
       onClick={handleOverlayClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleOverlayClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+        }
+      }}
     >
       <div
         ref={modalRef}

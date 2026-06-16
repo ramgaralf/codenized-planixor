@@ -87,21 +87,6 @@ vi.mock('./components/ViewSelector', () => ({
 
 const TEST_DATE = new Date(2024, 5, 15); // June 15, 2024
 
-const createTestShift = (overrides?: Partial<{ id: string; name: string; icon: string; backgroundColor: string; isActive: boolean; isDeleted: boolean }>) => ({
-  id: crypto.randomUUID(),
-  name: 'Morning Shift',
-  icon: '☀️',
-  backgroundColor: '#10B981',
-  isActive: true,
-  isDeleted: false,
-  createdAt: new Date(),
-  modifiedAt: new Date(),
-  syncedAt: null,
-  startTime: 480,
-  endTime: 960,
-  ...overrides,
-});
-
 const createTestReminder = (overrides?: Partial<{ id: string; name: string; icon: string; backgroundColor: string; isActive: boolean; isDeleted: boolean }>) => ({
   id: crypto.randomUUID(),
   name: 'Take Medicine',

@@ -28,8 +28,6 @@ const dayArb = fc
 
 const eventTypeArb = fc.constantFrom('shift', 'reminder') as fc.Arbitrary<'shift' | 'reminder'>;
 
-const validTimeArb = fc.integer({ min: 0, max: 1439 });
-
 const notesArb = fc.option(
   fc.string({ minLength: 1, maxLength: 200, unit: 'grapheme-ascii' }),
   { nil: null },
