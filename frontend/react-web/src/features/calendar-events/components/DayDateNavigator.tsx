@@ -41,6 +41,7 @@ export const DayDateNavigator = () => {
   const navigateDay = useCalendarStore((state) => state.navigateDay);
   const navigateMonth = useCalendarStore((state) => state.navigateMonth);
   const navigateYear = useCalendarStore((state) => state.navigateYear);
+  const goToToday = useCalendarStore((state) => state.goToToday);
 
   const locale = i18n.language;
 
@@ -127,6 +128,25 @@ export const DayDateNavigator = () => {
         style={NAV_BUTTON_STYLE}
       >
         <ChevronRight size={16} aria-hidden="true" />
+      </button>
+
+      {/* Today button */}
+      <button
+        type="button"
+        onClick={goToToday}
+        style={{
+          marginLeft: '8px',
+          padding: '4px 12px',
+          fontSize: '12px',
+          fontWeight: 600,
+          border: '1px solid var(--color-border)',
+          borderRadius: '4px',
+          backgroundColor: 'transparent',
+          color: 'var(--color-primary)',
+          cursor: 'pointer',
+        }}
+      >
+        {t('calendar.today', { defaultValue: 'Hoy' })}
       </button>
     </nav>
   );
