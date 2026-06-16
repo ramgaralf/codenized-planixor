@@ -30,6 +30,7 @@ object DatabaseModule {
             PlanixorDatabase::class.java,
             "planixor_database",
         )
+            .addMigrations(PlanixorDatabase.MIGRATION_3_4)
             .fallbackToDestructiveMigration()
             .build()
     }

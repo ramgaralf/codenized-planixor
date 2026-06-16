@@ -2,7 +2,10 @@
   "common": {
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "loading": "Loading"
+    "loading": "Loading",
+    "save": "Save",
+    "saving": "Saving...",
+    "retry": "Retry"
   },
   "app": {
     "name": "Planixor",
@@ -26,7 +29,11 @@
     "weekNumber": "Week {{week}}, {{year}}",
     "noEvents": "No events scheduled for this period",
     "allDay": "All day",
-    "currentTime": "Current time"
+    "currentTime": "Current time",
+    "yearView": {
+      "label": "Year view {{year}}",
+      "navigationError": "Failed to navigate. Please try again."
+    }
   },
   "dates": {
     "monday": "Monday",
@@ -205,10 +212,79 @@
       "delete": "Delete"
     }
   },
+  "calendarEvent": {
+    "eventTypeSelector": {
+      "label": "Event Type",
+      "placeholder": "Select a shift or reminder...",
+      "shiftPrefix": "Shift",
+      "reminderPrefix": "Reminder",
+      "selectedDetails": "Selected event type details"
+    },
+    "form": {
+      "dayLabel": "Day",
+      "day": "Day",
+      "startTimeLabel": "Start Time",
+      "startTime": "Start Time",
+      "endTimeLabel": "End Time",
+      "endTime": "End Time",
+      "notesLabel": "Notes (optional)",
+      "notes": "Notes (optional)",
+      "notesPlaceholder": "Add notes...",
+      "submit": "Save",
+      "cancel": "Cancel",
+      "submitting": "Saving..."
+    },
+    "validation": {
+      "eventType": {
+        "required": "Event type is required"
+      },
+      "eventTypeId": {
+        "required": "Event type selection is required"
+      },
+      "day": {
+        "required": "Day is required"
+      },
+      "startTime": {
+        "required": "Start time is required"
+      },
+      "endTime": {
+        "required": "End time is required",
+        "afterStart": "End time must be after start time"
+      },
+      "notes": {
+        "maxLength": "Notes must be 200 characters or less"
+      },
+      "oneShiftPerDay": "Only one shift is allowed per day"
+    },
+    "error": {
+      "loadFailed": "Could not load calendar events",
+      "saveFailed": "Could not save the event. Please try again.",
+      "deleteFailed": "Could not delete the event. Please try again."
+    },
+    "delete": {
+      "title": "Delete '{{name}}'?",
+      "message": "This action is permanent and cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "detail": {
+      "delete": "Delete",
+      "deleteAriaLabel": "Delete {{name}}"
+    }
+  },
   "accessibility": {
     "fabLabel": "Create new event",
     "previousPeriod": "Previous period",
     "nextPeriod": "Next period",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "previousYear": "Previous year",
+    "nextYear": "Next year",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "dayNavigation": "Day navigation",
+    "monthNavigation": "Month navigation",
+    "yearNavigation": "Year navigation",
     "notifications": "Notifications",
     "userMenu": "User menu",
     "mainNavigation": "Main navigation",

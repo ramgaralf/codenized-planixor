@@ -153,6 +153,46 @@
     <string name="emoji_picker_title">Select icon</string>
     <string name="emoji_picker_dismiss">Close</string>
 
+    <!-- Calendar Event Form -->
+    <string name="event_form_title_create">New event</string>
+    <string name="event_form_title_edit">Edit event</string>
+    <string name="event_form_field_event_type">Event Type</string>
+    <string name="event_form_field_day">Day</string>
+    <string name="event_form_field_start_time">Start time</string>
+    <string name="event_form_field_end_time">End time</string>
+    <string name="event_form_field_notes">Notes</string>
+    <string name="event_form_notes_counter">%1$d / 200</string>
+    <string name="event_form_action_save">Save</string>
+    <string name="event_form_action_cancel">Cancel</string>
+    <string name="event_form_action_delete">Delete</string>
+    <string name="event_form_select_type">Select type</string>
+    <string name="event_form_select_date">Select date</string>
+    <string name="event_form_select_time">Select time</string>
+    <string name="event_form_not_set">Not set</string>
+    <string name="event_form_type_shift">Shift</string>
+    <string name="event_form_type_reminder">Reminder</string>
+
+    <!-- Calendar Event Validation -->
+    <string name="event_validation_type_required">Select an event type</string>
+    <string name="event_validation_day_required">Day is required</string>
+    <string name="event_validation_start_time_required">Start time is required</string>
+    <string name="event_validation_end_time_required">End time is required</string>
+    <string name="event_validation_end_before_start">End time must be after start time</string>
+    <string name="event_validation_notes_max_length">Notes must be 200 characters or less</string>
+    <string name="event_validation_one_shift_per_day">Only one shift is allowed per day</string>
+
+    <!-- Calendar Event Detail -->
+    <string name="event_detail_title">Event detail</string>
+    <string name="event_detail_delete_title">Delete this event?</string>
+    <string name="event_detail_delete_text">This action is permanent and cannot be undone. Delete \"%1$s\"?</string>
+    <string name="event_detail_confirm">Confirm</string>
+    <string name="event_detail_cancel">Cancel</string>
+    <string name="event_detail_error_delete">Could not delete the event</string>
+    <string name="event_detail_error_save">Could not save the event</string>
+
+    <!-- Calendar Event Card -->
+    <string name="event_card_duration_format">%1$s – %2$s · %3$s</string>
+
     <!-- Empty States -->
     <string name="empty_no_data">No data available</string>
     <string name="empty_no_events">No events</string>

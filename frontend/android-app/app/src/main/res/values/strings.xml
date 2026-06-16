@@ -165,6 +165,46 @@
     <string name="emoji_picker_title">Seleccionar ícono</string>
     <string name="emoji_picker_dismiss">Cerrar</string>
 
+    <!-- Calendar Event Form -->
+    <string name="event_form_title_create">Nuevo evento</string>
+    <string name="event_form_title_edit">Editar evento</string>
+    <string name="event_form_field_event_type">Tipo de evento</string>
+    <string name="event_form_field_day">Día</string>
+    <string name="event_form_field_start_time">Hora de inicio</string>
+    <string name="event_form_field_end_time">Hora de fin</string>
+    <string name="event_form_field_notes">Notas</string>
+    <string name="event_form_notes_counter">%1$d / 200</string>
+    <string name="event_form_action_save">Guardar</string>
+    <string name="event_form_action_cancel">Cancelar</string>
+    <string name="event_form_action_delete">Eliminar</string>
+    <string name="event_form_select_type">Seleccionar tipo</string>
+    <string name="event_form_select_date">Seleccionar fecha</string>
+    <string name="event_form_select_time">Seleccionar hora</string>
+    <string name="event_form_not_set">No establecido</string>
+    <string name="event_form_type_shift">Turno</string>
+    <string name="event_form_type_reminder">Recordatorio</string>
+
+    <!-- Calendar Event Validation -->
+    <string name="event_validation_type_required">Selecciona un tipo de evento</string>
+    <string name="event_validation_day_required">El día es obligatorio</string>
+    <string name="event_validation_start_time_required">La hora de inicio es obligatoria</string>
+    <string name="event_validation_end_time_required">La hora de fin es obligatoria</string>
+    <string name="event_validation_end_before_start">La hora de fin debe ser posterior a la hora de inicio</string>
+    <string name="event_validation_notes_max_length">Las notas deben tener 200 caracteres o menos</string>
+    <string name="event_validation_one_shift_per_day">Solo se permite un turno por día</string>
+
+    <!-- Calendar Event Detail -->
+    <string name="event_detail_title">Detalle del evento</string>
+    <string name="event_detail_delete_title">¿Eliminar este evento?</string>
+    <string name="event_detail_delete_text">Esta acción es permanente y no se puede deshacer. ¿Eliminar \"%1$s\"?</string>
+    <string name="event_detail_confirm">Confirmar</string>
+    <string name="event_detail_cancel">Cancelar</string>
+    <string name="event_detail_error_delete">No se pudo eliminar el evento</string>
+    <string name="event_detail_error_save">No se pudo guardar el evento</string>
+
+    <!-- Calendar Event Card -->
+    <string name="event_card_duration_format">%1$s – %2$s · %3$s</string>
+
     <!-- Empty States -->
     <string name="empty_no_data">Sin datos disponibles</string>
     <string name="empty_no_events">No hay eventos</string>

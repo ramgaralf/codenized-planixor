@@ -1,0 +1,217 @@
+package com.codenized.planixor.ui.calendar.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.codenized.planixor.domain.model.CalendarEventDisplay
+import com.codenized.planixor.ui.theme.PlanixorTheme
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.TextStyle
+import java.time.temporal.WeekFields
+import java.util.Locale
+
+/**
+ * Month view composable displaying a day grid with emoji indicators.
+ * Shift events set the container background color. All event icons are displayed.
+ * Current day is highlighted with primary theme color circle.
+ * Tapping a day navigates to Day view.
+ *
+ * @param currentDate Anchor date within the month being displayed.
+ * @param events Events for this month (already filtered).
+ * @param onDayClick Callback when a day block is tapped (navigates to Day view).
+ * @param modifier Optional modifier.
+ */
+@Composable
+fun MonthView(
+    currentDate: LocalDate,
+    events: List<CalendarEventDisplay>,
+    onDayClick: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val yearMonth = YearMonth.from(currentDate)
+    val locale = Locale.getDefault()
+    val firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
+    val today = LocalDate.now()
+
+    val daysOfWeek = buildDaysOfWeekList(firstDayOfWeek)
+    val calendarDays = buildMonthCalendarDays(yearMonth, firstDayOfWeek)
+
+    // Group events by day string for quick lookup
+    val eventsByDay = events.groupBy { it.day }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 8.dp),
+    ) {
+        // Day-of-week headers
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            daysOfWeek.forEach { dayOfWeek ->
+                Text(
+                    text = dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+
+        // Day grid
+        calendarDays.chunked(7).forEach { week ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                week.forEach { day ->
+                    val dayEvents = eventsByDay[day.toString()] ?: emptyList()
+                    MonthDayCell(
+                        date = day,
+                        isCurrentMonth = day.month == yearMonth.month,
+                        isToday = day == today,
+                        events = dayEvents,
+                        onClick = { onDayClick(day) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MonthDayCell(
+    date: LocalDate,
+    isCurrentMonth: Boolean,
+    isToday: Boolean,
+    events: List<CalendarEventDisplay>,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // Determine background color from shift event (if any)
+    val shiftEvent = events.find { it.eventType == "shift" }
+    val containerBg = if (shiftEvent != null && shiftEvent.backgroundColor.isNotBlank() && shiftEvent.backgroundColor != "transparent") {
+        parseHexColorSafe(shiftEvent.backgroundColor).copy(alpha = 0.2f)
+    } else {
+        Color.Transparent
+    }
+
+    // Emojis: shifts first, then reminders, max 5
+    val sortedEvents = events.sortedWith(compareBy({ it.eventType != "shift" }, { it.startTime }))
+    val emojisToShow = sortedEvents.take(5).map { it.icon }
+    val overflow = events.size - 5
+
+    Box(
+        modifier = modifier
+            .aspectRatio(1f)
+            .padding(2.dp)
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+            .background(containerBg)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(2.dp),
+        ) {
+            // Day number
+            if (isToday) {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = date.dayOfMonth.toString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White,
+                        fontSize = 10.sp,
+                    )
+                }
+            } else {
+                Text(
+                    text = date.dayOfMonth.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isCurrentMonth) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    fontSize = 10.sp,
+                )
+            }
+
+            // Emoji indicators
+            if (emojisToShow.isNotEmpty()) {
+                Text(
+                    text = emojisToShow.joinToString(""),
+                    fontSize = 8.sp,
+                    maxLines = 1,
+                )
+                if (overflow > 0) {
+                    Text(
+                        text = "+$overflow",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 7.sp,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun buildDaysOfWeekList(firstDayOfWeek: DayOfWeek): List<DayOfWeek> {
+    val days = DayOfWeek.entries.toMutableList()
+    while (days.first() != firstDayOfWeek) {
+        days.add(days.removeFirst())
+    }
+    return days
+}
+
+private fun buildMonthCalendarDays(
+    yearMonth: YearMonth,
+    firstDayOfWeek: DayOfWeek,
+): List<LocalDate> {
+    val firstOfMonth = yearMonth.atDay(1)
+    val daysBefore = (firstOfMonth.dayOfWeek.value - firstDayOfWeek.value + 7) % 7
+    val startDate = firstOfMonth.minusDays(daysBefore.toLong())
+    val totalDays = if (daysBefore + yearMonth.lengthOfMonth() > 35) 42 else 35
+    return (0 until totalDays).map { startDate.plusDays(it.toLong()) }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun MonthViewPreview() {
+    PlanixorTheme {
+        MonthView(
+            currentDate = LocalDate.of(2024, 6, 15),
+            events = emptyList(),
+            onDayClick = {},
+        )
+    }
+}

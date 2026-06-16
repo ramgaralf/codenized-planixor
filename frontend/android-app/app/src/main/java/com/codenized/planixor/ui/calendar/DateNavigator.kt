@@ -20,7 +20,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.codenized.planixor.R
 import com.codenized.planixor.model.CalendarView
 import com.codenized.planixor.ui.theme.PlanixorTheme
-import com.codenized.planixor.ui.theme.PrimaryBlue
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
@@ -83,7 +82,7 @@ fun DateNavigator(
         TextButton(onClick = onTodayClick) {
             Text(
                 text = stringResource(R.string.calendar_today),
-                color = PrimaryBlue,
+                color = MaterialTheme.colorScheme.primary,
             )
         }
     }

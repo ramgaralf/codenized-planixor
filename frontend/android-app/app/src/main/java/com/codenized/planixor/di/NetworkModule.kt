@@ -1,5 +1,6 @@
 package com.codenized.planixor.di
 
+import com.codenized.planixor.data.sync.CalendarEventSyncApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,5 +46,14 @@ object NetworkModule {
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
+
+    /**
+     * Provides the CalendarEventSyncApiService Retrofit interface.
+     */
+    @Provides
+    @Singleton
+    fun provideCalendarEventSyncApiService(retrofit: Retrofit): CalendarEventSyncApiService {
+        return retrofit.create(CalendarEventSyncApiService::class.java)
     }
 }

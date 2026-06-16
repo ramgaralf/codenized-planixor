@@ -3,6 +3,7 @@ package com.codenized.planixor.ui.calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.codenized.planixor.data.local.PreferencesRepository
+import com.codenized.planixor.domain.model.CalendarEventDisplay
 import com.codenized.planixor.model.CalendarView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,8 +15,9 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 /**
- * ViewModel responsible for managing calendar navigation state.
- * Exposes the active view (persisted to DataStore) and the current date (not persisted).
+ * ViewModel responsible for managing calendar navigation state and event data.
+ * Exposes the active view (persisted to DataStore), the current date (not persisted),
+ * and filtered calendar events for the current view's date range.
  * Provides navigation functions that adjust the date based on the active view.
  */
 @HiltViewModel
@@ -28,6 +30,9 @@ class CalendarViewModel @Inject constructor(
 
     private val _currentDate = MutableStateFlow(LocalDate.now())
     val currentDate: StateFlow<LocalDate> = _currentDate.asStateFlow()
+
+    private val _events = MutableStateFlow<List<CalendarEventDisplay>>(emptyList())
+    val events: StateFlow<List<CalendarEventDisplay>> = _events.asStateFlow()
 
     init {
         loadPersistedView()
@@ -60,6 +65,13 @@ class CalendarViewModel @Inject constructor(
 
     fun goToToday() {
         _currentDate.value = LocalDate.now()
+    }
+
+    /**
+     * Navigate to a specific date. Used when tapping a day in Month/Year views.
+     */
+    fun navigateToDate(date: LocalDate) {
+        _currentDate.value = date
     }
 
     private fun loadPersistedView() {

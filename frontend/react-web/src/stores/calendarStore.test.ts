@@ -25,6 +25,112 @@ describe('calendarStore', () => {
     });
   });
 
+  describe('navigateDay', () => {
+    it('should add 1 day when direction is +1', () => {
+      useCalendarStore.getState().navigateDay(1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getDate()).toBe(16);
+      expect(result.getMonth()).toBe(5);
+    });
+
+    it('should subtract 1 day when direction is -1', () => {
+      useCalendarStore.getState().navigateDay(-1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getDate()).toBe(14);
+      expect(result.getMonth()).toBe(5);
+    });
+
+    it('should cross month boundary forward', () => {
+      useCalendarStore.setState({ currentDate: new Date(2024, 5, 30) }); // June 30
+      useCalendarStore.getState().navigateDay(1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getDate()).toBe(1);
+      expect(result.getMonth()).toBe(6); // July
+    });
+
+    it('should cross month boundary backward', () => {
+      useCalendarStore.setState({ currentDate: new Date(2024, 5, 1) }); // June 1
+      useCalendarStore.getState().navigateDay(-1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getDate()).toBe(31);
+      expect(result.getMonth()).toBe(4); // May
+    });
+  });
+
+  describe('navigateWeek', () => {
+    it('should add 7 days when direction is +1', () => {
+      useCalendarStore.getState().navigateWeek(1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getDate()).toBe(22);
+      expect(result.getMonth()).toBe(5);
+    });
+
+    it('should subtract 7 days when direction is -1', () => {
+      useCalendarStore.getState().navigateWeek(-1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getDate()).toBe(8);
+      expect(result.getMonth()).toBe(5);
+    });
+
+    it('should cross month boundary forward', () => {
+      useCalendarStore.setState({ currentDate: new Date(2024, 5, 28) }); // June 28
+      useCalendarStore.getState().navigateWeek(1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getDate()).toBe(5);
+      expect(result.getMonth()).toBe(6); // July
+    });
+  });
+
+  describe('navigateMonth', () => {
+    it('should add 1 month when direction is +1', () => {
+      useCalendarStore.getState().navigateMonth(1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getMonth()).toBe(6); // July
+      expect(result.getDate()).toBe(15);
+    });
+
+    it('should subtract 1 month when direction is -1', () => {
+      useCalendarStore.getState().navigateMonth(-1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getMonth()).toBe(4); // May
+      expect(result.getDate()).toBe(15);
+    });
+
+    it('should cross year boundary forward', () => {
+      useCalendarStore.setState({ currentDate: new Date(2024, 11, 15) }); // December 15
+      useCalendarStore.getState().navigateMonth(1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getMonth()).toBe(0); // January
+      expect(result.getFullYear()).toBe(2025);
+    });
+
+    it('should cross year boundary backward', () => {
+      useCalendarStore.setState({ currentDate: new Date(2024, 0, 15) }); // January 15
+      useCalendarStore.getState().navigateMonth(-1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getMonth()).toBe(11); // December
+      expect(result.getFullYear()).toBe(2023);
+    });
+  });
+
+  describe('navigateYear', () => {
+    it('should add 1 year when direction is +1', () => {
+      useCalendarStore.getState().navigateYear(1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getFullYear()).toBe(2025);
+      expect(result.getMonth()).toBe(5);
+      expect(result.getDate()).toBe(15);
+    });
+
+    it('should subtract 1 year when direction is -1', () => {
+      useCalendarStore.getState().navigateYear(-1);
+      const result = useCalendarStore.getState().currentDate;
+      expect(result.getFullYear()).toBe(2023);
+      expect(result.getMonth()).toBe(5);
+      expect(result.getDate()).toBe(15);
+    });
+  });
+
   describe('navigateForward', () => {
     it('should add 1 day when activeView is day', () => {
       useCalendarStore.setState({ activeView: 'day' });

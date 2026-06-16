@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Plus, User } from 'lucide-react';
 
+import { useCalendarStore } from '@/stores/calendarStore';
+
 import styles from './HeaderBar.module.css';
 
 const getPageTitleKey = (pathname: string): string => {
@@ -17,6 +19,7 @@ export const HeaderBar = () => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const openCreateForm = useCalendarStore((state) => state.openCreateForm);
   const pageTitle = t(getPageTitleKey(pathname));
   const isCalendar = pathname === '/';
   const isShiftsList = pathname === '/shifts';
@@ -36,6 +39,7 @@ export const HeaderBar = () => {
           <button
             className={styles.newEventButton}
             type="button"
+            onClick={openCreateForm}
           >
             <Plus size={16} aria-hidden="true" />
             {t('actions.newEvent')}

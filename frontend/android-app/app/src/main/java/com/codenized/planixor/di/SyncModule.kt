@@ -1,5 +1,8 @@
 package com.codenized.planixor.di
 
+import com.codenized.planixor.data.local.CalendarEventDao
+import com.codenized.planixor.data.sync.CalendarEventSyncAdapter
+import com.codenized.planixor.data.sync.CalendarEventSyncApiService
 import com.codenized.planixor.data.sync.ReminderSyncManager
 import com.codenized.planixor.data.sync.ShiftSyncManager
 import dagger.Module
@@ -26,5 +29,14 @@ object SyncModule {
     @Singleton
     fun provideReminderSyncManager(): ReminderSyncManager {
         return ReminderSyncManager()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCalendarEventSyncAdapter(
+        calendarEventDao: CalendarEventDao,
+        syncApiService: CalendarEventSyncApiService,
+    ): CalendarEventSyncAdapter {
+        return CalendarEventSyncAdapter(calendarEventDao, syncApiService)
     }
 }
