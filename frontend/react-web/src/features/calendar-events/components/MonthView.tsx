@@ -3,9 +3,6 @@ import { useTranslation } from 'react-i18next';
 
 import type { CalendarEventDisplay } from '../models';
 
-import { MonthNavigator } from './MonthNavigator';
-import { YearNavigator } from './YearNavigator';
-
 const MAX_VISIBLE_EMOJIS = 5;
 
 interface MonthDay {
@@ -135,31 +132,8 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
     return map;
   }, [events]);
 
-  // Format the month/year label
-  const monthLabel = useMemo(() => {
-    const formatter = new Intl.DateTimeFormat(locale, {
-      year: 'numeric',
-      month: 'long',
-    });
-    return formatter.format(currentDate);
-  }, [currentDate, locale]);
-
   return (
     <div className="flex flex-col w-full h-full" style={{ padding: 'var(--spacing-md, 16px)' }}>
-      {/* Navigation header */}
-      <div className="flex items-center justify-between" style={{ marginBottom: '12px' }}>
-        <span
-          className="text-base font-semibold capitalize"
-          style={{ color: 'var(--color-text-primary)' }}
-        >
-          {monthLabel}
-        </span>
-        <div className="flex items-center gap-2">
-          <MonthNavigator />
-          <YearNavigator />
-        </div>
-      </div>
-
       {/* Weekday headers */}
       <div
         className="grid grid-cols-7"
@@ -190,7 +164,7 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
       </div>
 
       {/* Day grid */}
-      <div className="grid grid-cols-7 flex-1" role="grid" aria-label={monthLabel}>
+      <div className="grid grid-cols-7 flex-1" role="grid" aria-label="month-grid">
         {monthDays.map((day, index) => {
           const dayEvents = eventsByDay.get(day.isoDate) ?? [];
           const eventsInfo = getDayEventsInfo(dayEvents);
@@ -210,13 +184,12 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
               onClick={() => onDayClick(day.isoDate)}
               style={{
                 minHeight: '64px',
-                borderBottom: '1px solid var(--color-border)',
                 opacity: day.isCurrentMonth ? 1 : 0.4,
                 color: day.isCurrentMonth
                   ? 'var(--color-text-primary)'
                   : 'var(--color-text-secondary)',
                 cursor: 'pointer',
-                background: 'transparent',
+                background: eventsInfo.shiftBackgroundColor ?? 'transparent',
                 border: 'none',
                 borderBottomStyle: 'solid',
                 borderBottomWidth: '1px',
@@ -225,19 +198,15 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
             >
               {/* Day number */}
               <span
-                className="flex items-center justify-center rounded-full"
+                className="flex items-center justify-center"
                 style={{
-                  width: '28px',
-                  height: '28px',
+                  width: '100%',
+                  padding: '4px 0',
                   fontSize: '13px',
                   fontWeight: day.isToday ? 600 : 400,
                   lineHeight: 1,
-                  ...(day.isToday
-                    ? {
-                        border: '2px solid var(--color-primary)',
-                        color: 'var(--color-primary)',
-                      }
-                    : {}),
+                  backgroundColor: day.isToday ? 'var(--color-primary)' : 'transparent',
+                  color: day.isToday ? '#ffffff' : undefined,
                 }}
                 aria-current={day.isToday ? 'date' : undefined}
               >
@@ -247,10 +216,9 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
               {/* Event container */}
               {eventsInfo.totalCount > 0 && (
                 <div
-                  className="flex flex-wrap items-center justify-center gap-0.5 mt-1 rounded"
+                  className="flex flex-wrap items-center justify-center gap-0.5 rounded"
                   style={{
-                    backgroundColor: eventsInfo.shiftBackgroundColor ?? 'transparent',
-                    padding: '2px',
+                    padding: '6px 2px',
                     minHeight: '20px',
                     width: '100%',
                   }}
@@ -259,7 +227,7 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
                     <span
                       key={emojiIndex}
                       aria-hidden="true"
-                      style={{ fontSize: '12px', lineHeight: 1 }}
+                      style={{ fontSize: '24px', lineHeight: 1 }}
                     >
                       {emoji}
                     </span>

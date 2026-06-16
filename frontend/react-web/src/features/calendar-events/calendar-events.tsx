@@ -7,8 +7,10 @@ import { DayDateNavigator } from './components/DayDateNavigator';
 import { DayView } from './components/DayView';
 import { EventDetailPage } from './components/EventDetailPage';
 import { EventForm } from './components/EventForm';
+import { MonthDateNavigator } from './components/MonthDateNavigator';
 import { MonthView } from './components/MonthView';
 import { ViewSelector } from './components/ViewSelector';
+import { WeekDateNavigator } from './components/WeekDateNavigator';
 import { WeekView } from './components/WeekView';
 import { YearView } from './components/YearView';
 import { useCalendarEvents } from './hooks/useCalendarEvents';
@@ -131,6 +133,22 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
                   style={{ flexGrow: 1, display: 'flex' }}
                 >
                   <DayDateNavigator />
+                </div>
+              )}
+              {activeView === 'week' && (
+                <div
+                  className="week-date-nav-wrapper justify-center md:justify-end"
+                  style={{ flexGrow: 1, display: 'flex' }}
+                >
+                  <WeekDateNavigator />
+                </div>
+              )}
+              {activeView === 'month' && (
+                <div
+                  className="month-date-nav-wrapper justify-center md:justify-end"
+                  style={{ flexGrow: 1, display: 'flex' }}
+                >
+                  <MonthDateNavigator />
                 </div>
               )}
             </div>

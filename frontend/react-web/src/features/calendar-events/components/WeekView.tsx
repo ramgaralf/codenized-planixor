@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import type { CalendarEventDisplay } from '@features/calendar-events/models';
 import { formatDuration, formatTimeFromMinutes, getDateRangeForWeek } from '@features/calendar-events/utils';
@@ -33,11 +34,10 @@ const getWeekDates = (currentDate: Date): Date[] => {
 };
 
 /**
- * Returns the abbreviated day name for a given Date.
+ * Returns the abbreviated day name for a given Date, localized.
  */
-const getDayName = (date: Date): string => {
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  return days[date.getDay()];
+const getLocalizedDayName = (date: Date, locale: string): string => {
+  return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date);
 };
 
 /**
@@ -73,6 +73,8 @@ interface WeekViewProps {
  * non-deleted events within the Mon–Sun date range.
  */
 export const WeekView = ({ events, currentDate, onEventClick }: WeekViewProps) => {
+  const { i18n } = useTranslation();
+  const locale = i18n.language;
   const today = useMemo(() => new Date(), []);
   const weekDates = useMemo(() => getWeekDates(currentDate), [currentDate]);
 
@@ -136,7 +138,7 @@ export const WeekView = ({ events, currentDate, onEventClick }: WeekViewProps) =
                     color: isToday ? '#ffffff' : 'var(--color-text-secondary)',
                   }}
                 >
-                  {getDayName(date)}
+                  {getLocalizedDayName(date, locale)}
                 </span>
                 <span className="text-sm font-semibold">
                   {date.getDate()}
@@ -144,7 +146,10 @@ export const WeekView = ({ events, currentDate, onEventClick }: WeekViewProps) =
               </div>
 
               {/* Events container */}
-              <div className="flex-1 overflow-y-auto p-1 flex flex-col gap-1">
+              <div
+                className="flex-1 overflow-y-auto flex flex-col"
+                style={{ padding: 0, gap: '1px' }}
+              >
                 {dayEvents.map((event) => (
                   <WeekEventCard
                     key={event.id}
@@ -173,7 +178,7 @@ interface WeekEventCardProps {
  * Line 2: startTime HH:mm – endTime HH:mm + total hours
  */
 const WeekEventCard = ({ event, onClick }: WeekEventCardProps) => {
-  const nameWithNotes = event.notes ? `${event.name}📝` : event.name;
+  const nameWithNotes = event.name;
   const displayName = truncateName(nameWithNotes, MAX_NAME_LENGTH);
 
   const timeRange = `${formatTimeFromMinutes(event.startTime)} – ${formatTimeFromMinutes(event.endTime)}`;
@@ -182,18 +187,39 @@ const WeekEventCard = ({ event, onClick }: WeekEventCardProps) => {
   return (
     <button
       type="button"
-      className="w-full text-left rounded-lg p-1.5 cursor-pointer"
-      style={{ backgroundColor: event.backgroundColor }}
+      className="w-full text-left cursor-pointer"
+      style={{ backgroundColor: event.backgroundColor, padding: '8px 10px', borderRadius: '6px' }}
       onClick={() => onClick(event)}
       aria-label={`${event.name}, ${timeRange}`}
     >
+      {/* Line 1: icon + name */}
       <div className="text-xs font-medium text-white truncate">
         <span aria-hidden="true">{event.icon}</span>{' '}
         {displayName}
       </div>
+      {/* Line 2: time range */}
       <div className="text-xs text-white opacity-90">
-        {timeRange} · {duration}
+        {timeRange}
       </div>
+      {/* Line 3: total hours */}
+      <div className="text-xs text-white opacity-90">
+        {duration}
+      </div>
+      {/* Line 4: notes (max 2 lines with ellipsis) */}
+      {event.notes && (
+        <div
+          className="text-xs text-white opacity-75"
+          style={{
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            marginTop: '2px',
+          }}
+        >
+          {event.notes}
+        </div>
+      )}
     </button>
   );
 };
