@@ -6,7 +6,7 @@ Calendar Event Management enables users to create, view, modify, and delete cale
 
 ## Glossary
 
-- **Calendar_Event**: A scheduled occurrence on a specific day and time, linked to either a Shift or Reminder type. Contains event type, reference ID, day, start time, end time, and optional notes.
+- **Calendar_Event**: A scheduled occurrence spanning one or more days and a time range, linked to either a Shift or Reminder type. Contains event type, reference ID, start day, end day, start time, end time, total hours, and optional notes.
 - **Event_Store**: The local persistence layer (IndexedDB on Web, SQLite on Android) that stores all calendar event records on the device.
 - **Sync_Service**: The cross-cutting synchronization module responsible for pushing and pulling calendar event records to/from the backend API for subscribed users.
 - **Calendar_Page**: The main calendar UI page accessible via the "Calendar" navigation item that displays events in the selected view mode.
@@ -23,25 +23,30 @@ Calendar Event Management enables users to create, view, modify, and delete cale
 - **Shift**: A previously created work shift definition (from Shift Management) that is active and not deleted.
 - **Reminder**: A previously created reminder definition (from Reminder Management) that is active and not deleted.
 - **Backend_API**: The .NET 10 REST API that serves as the synchronization hub for subscribed users, enforcing authorization and data ownership.
+- **Crossing_Midnight_Shift**: A shift definition where `endTime` is less than `startTime`, indicating the shift ends on the following day. When assigned to a calendar event, `endDay` is automatically set to `startDay + 1`.
+- **Total_Hours**: A read-only computed field representing the total duration of an event in minutes. For shifts, derived from the shift's `hoursWorked` field. For reminders, calculated from the time and day difference between start and end.
 
 ## Requirements
 
 ### Requirement 1: Create a Calendar Event
 
-**User Story:** As a user, I want to create a calendar event by selecting a shift or reminder type, choosing a day, and setting a time range, so that I can schedule work shifts and reminders on my calendar.
+**User Story:** As a user, I want to create a calendar event by selecting a shift or reminder type, choosing a start day, end day, and setting a time range, so that I can schedule work shifts and reminders on my calendar.
 
 #### Acceptance Criteria
 
-1. WHEN the user submits the Event_Form with all required fields populated, THE Event_Store SHALL persist a new calendar event record with a client-generated UUID, the provided field values, `modifiedAt` set to the current UTC timestamp, `syncedAt` set to null, and `isDeleted` set to false.
-2. THE Event_Form SHALL require all of the following fields before allowing submission: event type selection from the Event_Type_Selector (which stores both `eventType` as "shift" or "reminder" and `eventTypeId` as the UUID of the selected item), day (date), start time (hours and minutes), and end time (hours and minutes).
-3. THE Event_Form SHALL include an optional notes field with a maximum of 200 characters.
+1. WHEN the user submits the Event_Form with all required fields populated, THE Event_Store SHALL persist a new calendar event record with a client-generated UUID, the provided field values, `totalHours` computed according to the event type rules, `modifiedAt` set to the current UTC timestamp, `syncedAt` set to null, and `isDeleted` set to false.
+2. THE Event_Form SHALL require all of the following fields before allowing submission: event type selection from the Event_Type_Selector (which stores both `eventType` as "shift" or "reminder" and `eventTypeId` as the UUID of the selected item), start day (date in YYYY-MM-DD format), end day (date in YYYY-MM-DD format), start time (minutes from midnight, 0-1439), and end time (minutes from midnight, 0-1439).
+3. THE Event_Form SHALL include an optional notes field with a maximum of 250 characters.
 4. WHEN the user selects a value from the Event_Type_Selector, THE Event_Form SHALL automatically populate the name, icon, and background color fields as read-only values derived from the selected shift or reminder definition.
-5. WHEN the user selects a value from the Event_Type_Selector, THE Event_Form SHALL display only shifts and reminders that have `isActive` set to true and `isDeleted` set to false, formatted as `{type}: {name}` and ordered alphabetically by display name; inactive event types SHALL be completely hidden from the selector interface and not displayed in any disabled or dimmed state.
-6. WHEN the user cancels event creation, THE Event_Form SHALL discard all entered data and navigate back to the Calendar_Page without persisting any record, preserving the previous calendar view state.
-7. WHEN a new event is successfully created, THE Event_Form SHALL clear all form fields, then navigate back to the Calendar_Page which SHALL display the newly created event in the current view.
-8. IF the user sets an end time that is equal to or earlier than the start time, THEN THE Event_Form SHALL prevent submission and display an error message indicating that the end time must be later than the start time; WHEN the user corrects the end time to a valid value, THE Event_Form SHALL immediately clear the time validation error message.
-9. IF the user attempts to submit the Event_Form with one or more required fields empty, THEN THE Event_Form SHALL prevent submission and visually indicate each field that requires input; additionally, THE Backend_API SHALL reject any sync push containing an incomplete calendar event record (missing required fields) and return a validation error response.
-10. WHEN the user corrects a previously indicated required field, THE Event_Form SHALL immediately remove the visual error indicator for that field.
+5. WHEN the user selects a shift from the Event_Type_Selector, THE Event_Form SHALL auto-populate `startTime` and `endTime` from the shift definition as read-only fields (not editable by the user), and SHALL auto-populate `totalHours` from the shift's `hoursWorked` field as a read-only value; WHEN the user selects a reminder, THE Event_Form SHALL allow the user to edit `startTime` and `endTime` via timepickers, and SHALL auto-calculate `totalHours` based on the time and day difference as a read-only value.
+6. WHEN the user selects a shift from the Event_Type_Selector where `endTime` is less than `startTime` (Crossing_Midnight_Shift), THE Event_Form SHALL automatically set `endDay` to `startDay + 1` day.
+7. WHEN the user selects a value from the Event_Type_Selector, THE Event_Form SHALL display only shifts and reminders that have `isActive` set to true and `isDeleted` set to false, formatted as `{type}: {name}` and ordered alphabetically by display name; inactive event types SHALL be completely hidden from the selector interface and not displayed in any disabled or dimmed state.
+8. WHEN the user cancels event creation, THE Event_Form SHALL discard all entered data and navigate back to the Calendar_Page without persisting any record, preserving the previous calendar view state.
+9. WHEN a new event is successfully created, THE Event_Form SHALL clear all form fields, then navigate back to the Calendar_Page which SHALL display the newly created event in the current view.
+10. THE Event_Form SHALL enforce the following time validation: for reminder events where `endDay` equals `startDay`, `endTime` MUST be strictly greater than `startTime`; for reminder events where `endDay` is greater than `startDay`, any combination of `startTime` and `endTime` is valid; for shift events, no time validation is applied (times are read-only from the shift definition). IF the validation fails, THEN THE Event_Form SHALL prevent submission and display an error message; WHEN the user corrects the values, THE Event_Form SHALL immediately clear the validation error.
+11. THE Event_Form SHALL enforce that `endDay` is greater than or equal to `startDay`; IF the user sets `endDay` earlier than `startDay`, THEN THE Event_Form SHALL prevent submission and display a validation error.
+12. IF the user attempts to submit the Event_Form with one or more required fields empty, THEN THE Event_Form SHALL prevent submission and visually indicate each field that requires input; additionally, THE Backend_API SHALL reject any sync push containing an incomplete calendar event record (missing required fields) and return a validation error response.
+13. WHEN the user corrects a previously indicated required field, THE Event_Form SHALL immediately remove the visual error indicator for that field.
 
 ### Requirement 2: One Shift Per Day Constraint
 
@@ -49,11 +54,11 @@ Calendar Event Management enables users to create, view, modify, and delete cale
 
 #### Acceptance Criteria
 
-1. WHEN the user attempts to create a calendar event with `eventType` set to "shift" for a specific calendar date, THE Event_Store SHALL verify that no other non-deleted calendar event with `eventType` "shift" exists for that same calendar date.
-2. IF a non-deleted calendar event with `eventType` "shift" already exists for the selected calendar date, or IF any other field validation error exists (including time validation or missing required fields), THEN THE Event_Form SHALL prevent submission and display the applicable localized validation messages, blocking the entire save operation until all errors are resolved.
-3. WHEN the user attempts to modify a calendar event by changing its day and the `eventType` is "shift", THE Event_Store SHALL verify that no other non-deleted calendar event with `eventType` "shift" exists for the target calendar date, excluding the event being modified; IF a conflict exists on the target date, THEN THE Event_Form SHALL block the entire save operation (including any other modified fields) and display a validation message; IF no conflict exists on the target date, THEN THE Event_Store SHALL allow the day change.
-4. THE Event_Form SHALL allow multiple calendar events with `eventType` set to "reminder" on the same calendar date without restriction.
-5. WHEN the user changes the event type from "reminder" to "shift" in the Event_Form, THE Event_Store SHALL validate the one-shift-per-day constraint against the selected calendar date before allowing submission.
+1. WHEN the user attempts to create a calendar event with `eventType` set to "shift" for a specific `startDay`, THE Event_Store SHALL verify that no other non-deleted calendar event with `eventType` "shift" exists with the same `startDay`.
+2. IF a non-deleted calendar event with `eventType` "shift" already exists for the selected `startDay`, or IF any other field validation error exists (including time validation or missing required fields), THEN THE Event_Form SHALL prevent submission and display the applicable localized validation messages, blocking the entire save operation until all errors are resolved.
+3. WHEN the user attempts to modify a calendar event by changing its `startDay` and the `eventType` is "shift", THE Event_Store SHALL verify that no other non-deleted calendar event with `eventType` "shift" exists for the target `startDay`, excluding the event being modified; IF a conflict exists on the target date, THEN THE Event_Form SHALL block the entire save operation (including any other modified fields) and display a validation message; IF no conflict exists on the target date, THEN THE Event_Store SHALL allow the `startDay` change.
+4. THE Event_Form SHALL allow multiple calendar events with `eventType` set to "reminder" on the same `startDay` without restriction.
+5. WHEN the user changes the event type from "reminder" to "shift" in the Event_Form, THE Event_Store SHALL validate the one-shift-per-day constraint against the selected `startDay` before allowing submission.
 
 ### Requirement 3: View Calendar Events in Day Mode
 
@@ -111,12 +116,13 @@ Calendar Event Management enables users to create, view, modify, and delete cale
 
 #### Acceptance Criteria
 
-1. WHEN the user opens the Event_Detail_Page for a calendar event, THE Event_Detail_Page SHALL display all event fields with the following editability: event type selection (editable via Event_Type_Selector), day (editable), start time (editable), end time (editable), and notes (editable); and the following as read-only derived values from the selected shift or reminder: name, icon, and background color.
-2. WHEN the user modifies event fields and saves, THE Event_Store SHALL update the existing calendar event record with the new field values, set `modifiedAt` to the current UTC timestamp, and set `syncedAt` to null, preserving the existing `id` and `isDeleted` values unchanged.
+1. WHEN the user opens the Event_Detail_Page for a calendar event, THE Event_Detail_Page SHALL display all event fields with the following editability: event type selection (editable via Event_Type_Selector), `startDay` (editable), `endDay` (editable), and notes (editable); for shift events: `startTime` and `endTime` SHALL be displayed as read-only (auto-populated from the shift definition); for reminder events: `startTime` and `endTime` SHALL be editable via timepickers; and the following as read-only derived values from the selected shift or reminder: name, icon, and background color.
+2. WHEN the user modifies event fields and saves, THE Event_Store SHALL update the existing calendar event record with the new field values, recompute `totalHours` according to the event type rules, set `modifiedAt` to the current UTC timestamp, and set `syncedAt` to null, preserving the existing `id` and `isDeleted` values unchanged.
 3. WHEN the user navigates away from the Event_Detail_Page without saving (via cancel action, back navigation, or any exit other than the save action), THE Event_Detail_Page SHALL discard all unsaved changes and navigate back to the Calendar_Page preserving the previous view state (selected View_Mode and navigated date).
-4. WHILE the Event_Detail_Page is in edit mode, THE Event_Detail_Page SHALL enforce the same field validation rules as during event creation (required event type, day, start time, end time; notes maximum 200 characters; one-shift-per-day constraint for shift type events, excluding the event currently being edited from the constraint check).
-5. WHEN modifications are successfully saved, THE Event_Detail_Page SHALL navigate back to the Calendar_Page which SHALL display the updated event data.
-6. IF the calendar event's referenced shift or reminder has been deleted or deactivated since the event was created, THEN THE Event_Detail_Page SHALL still display the event for editing, show the current type reference as the selected value in the Event_Type_Selector, and allow the user to change the event type to any active, non-deleted shift or reminder.
+4. WHILE the Event_Detail_Page is in edit mode, THE Event_Detail_Page SHALL enforce the same field validation rules as during event creation (required event type, startDay, endDay, start time, end time; `endDay >= startDay`; for reminders where `endDay == startDay`: `endTime > startTime`; notes maximum 250 characters; one-shift-per-day constraint for shift type events on `startDay`, excluding the event currently being edited from the constraint check).
+5. WHEN the user changes the event type from reminder to shift, THE Event_Detail_Page SHALL auto-populate `startTime`, `endTime`, and `totalHours` from the new shift definition as read-only values, and SHALL apply the Crossing_Midnight_Shift rule to automatically set `endDay` to `startDay + 1` if the shift's `endTime < startTime`.
+6. WHEN modifications are successfully saved, THE Event_Detail_Page SHALL navigate back to the Calendar_Page which SHALL display the updated event data.
+7. IF the calendar event's referenced shift or reminder has been deleted or deactivated since the event was created, THEN THE Event_Detail_Page SHALL still display the event for editing, show the current type reference as the selected value in the Event_Type_Selector, and allow the user to change the event type to any active, non-deleted shift or reminder.
 
 ### Requirement 8: Delete a Calendar Event
 
@@ -132,16 +138,17 @@ Calendar Event Management enables users to create, view, modify, and delete cale
 
 ### Requirement 9: Event Creation Day Pre-Selection
 
-**User Story:** As a user, I want the day field to be pre-selected based on my current calendar context when creating a new event, so that I save time and avoid selecting the wrong date.
+**User Story:** As a user, I want the startDay and endDay fields to be pre-selected based on my current calendar context when creating a new event, so that I save time and avoid selecting the wrong date.
 
 #### Acceptance Criteria
 
-1. WHEN the user creates a new event from Day View_Mode, THE Event_Form SHALL pre-select the day field with the day currently being displayed on the Calendar_Page.
-2. WHEN the user creates a new event from Week View_Mode and the current device date falls within the displayed week, THE Event_Form SHALL pre-select the day field with the current device date.
-3. WHEN the user creates a new event from Week View_Mode and the current device date does not fall within the displayed week, THE Event_Form SHALL pre-select the day field with the first day (Monday) of the displayed week.
-4. WHEN the user creates a new event from Month View_Mode and the current device date falls within the displayed month, THE Event_Form SHALL pre-select the day field with the current device date.
-5. WHEN the user creates a new event from Month View_Mode and the current device date does not fall within the displayed month, THE Event_Form SHALL pre-select the day field with the first day of the displayed month.
-6. WHEN the user creates a new event from Year View_Mode, THE Event_Form SHALL pre-select the day field with the current device date.
+1. WHEN the user creates a new event from Day View_Mode, THE Event_Form SHALL pre-select both `startDay` and `endDay` fields with the day currently being displayed on the Calendar_Page.
+2. WHEN the user creates a new event from Week View_Mode and the current device date falls within the displayed week, THE Event_Form SHALL pre-select both `startDay` and `endDay` fields with the current device date.
+3. WHEN the user creates a new event from Week View_Mode and the current device date does not fall within the displayed week, THE Event_Form SHALL pre-select both `startDay` and `endDay` fields with the first day (Monday) of the displayed week.
+4. WHEN the user creates a new event from Month View_Mode and the current device date falls within the displayed month, THE Event_Form SHALL pre-select both `startDay` and `endDay` fields with the current device date.
+5. WHEN the user creates a new event from Month View_Mode and the current device date does not fall within the displayed month, THE Event_Form SHALL pre-select both `startDay` and `endDay` fields with the first day of the displayed month.
+6. WHEN the user creates a new event from Year View_Mode and the current device date falls within the displayed year, THE Event_Form SHALL pre-select both `startDay` and `endDay` fields with the current device date.
+7. WHEN the user creates a new event from Year View_Mode and the current device date does not fall within the displayed year, THE Event_Form SHALL pre-select both `startDay` and `endDay` fields with the first day (January 1st) of the displayed year.
 
 ### Requirement 10: Calendar Event Data Synchronization
 
@@ -165,11 +172,13 @@ Calendar Event Management enables users to create, view, modify, and delete cale
 
 #### Acceptance Criteria
 
-1. THE Event_Store SHALL persist each calendar event with the following fields: `id` (UUID, client-generated, required), `eventType` (string, either "shift" or "reminder", required), `eventTypeId` (UUID referencing the shift or reminder, required), `day` (date, required), `startTime` (time as hours and minutes, required), `endTime` (time as hours and minutes, required), `notes` (string, maximum 200 characters, optional), `modifiedAt` (DateTime UTC, required), `syncedAt` (DateTime UTC or null), and `isDeleted` (boolean, required, defaults to false).
+1. THE Event_Store SHALL persist each calendar event with the following fields: `id` (UUID, client-generated, required), `eventType` (string, either "shift" or "reminder", required, modifiable), `eventTypeId` (UUID referencing the shift or reminder, required, modifiable), `startDay` (date in YYYY-MM-DD format, required, modifiable), `endDay` (date in YYYY-MM-DD format, required, modifiable), `startTime` (integer, minutes from midnight 0-1439, required; read-only for shifts, modifiable for reminders), `endTime` (integer, minutes from midnight 0-1439, required; read-only for shifts, modifiable for reminders), `totalHours` (integer, minutes, required, read-only — derived from shift's `hoursWorked` for shift events or calculated from startTime/endTime + day difference for reminder events), `notes` (string, maximum 250 characters, optional), `modifiedAt` (DateTime UTC, required), `syncedAt` (DateTime UTC or null), and `isDeleted` (boolean, required, defaults to false).
 2. THE Event_Store SHALL derive the following display fields from the referenced shift or reminder at read time: `name` (string, maximum 50 characters), `icon` (single emoji), and `backgroundColor` (hex color from Predefined_Palette).
 3. THE Event_Store SHALL generate the `id` field client-side as a UUID at the moment of record creation.
 4. THE Event_Store SHALL update the `modifiedAt` field to the current UTC timestamp on every local write operation (create, update, or soft-delete).
-5. THE Event_Store SHALL enforce that `endTime` is strictly greater than `startTime` for every calendar event record, allowing any duration (including as short as 1 minute) as long as the end time is after the start time.
+5. THE Event_Store SHALL enforce that `endDay` is greater than or equal to `startDay` for every calendar event record.
+6. THE Event_Store SHALL enforce the following time validation: for reminder events where `endDay` equals `startDay`, `endTime` MUST be strictly greater than `startTime`; for reminder events where `endDay` is greater than `startDay`, any combination of `startTime` and `endTime` values (0-1439) is valid; for shift events, no time validation is applied as times are derived from the shift definition.
+7. WHEN a calendar event references a shift definition where `endTime` is less than `startTime` (Crossing_Midnight_Shift), THE Event_Store SHALL automatically set `endDay` to `startDay + 1` day.
 
 ### Requirement 12: Cross-Platform Consistency
 
