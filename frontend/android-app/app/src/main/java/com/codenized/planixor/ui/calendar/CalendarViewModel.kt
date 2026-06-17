@@ -56,6 +56,22 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
+    fun navigateDay(delta: Int) {
+        _currentDate.value = _currentDate.value.plusDays(delta.toLong())
+    }
+
+    fun navigateWeek(delta: Int) {
+        _currentDate.value = _currentDate.value.plusWeeks(delta.toLong())
+    }
+
+    fun navigateMonth(delta: Int) {
+        _currentDate.value = _currentDate.value.plusMonths(delta.toLong())
+    }
+
+    fun navigateYear(delta: Int) {
+        _currentDate.value = _currentDate.value.plusYears(delta.toLong())
+    }
+
     fun switchView(view: CalendarView) {
         _activeView.value = view
         viewModelScope.launch {

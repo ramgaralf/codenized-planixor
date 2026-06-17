@@ -23,6 +23,16 @@
     <string name="calendar_week_format">Week %1$d, %2$d</string>
     <string name="calendar_empty_state">No events scheduled for this period</string>
 
+    <!-- Date Navigator Accessibility -->
+    <string name="content_description_previous_day">Previous day</string>
+    <string name="content_description_next_day">Next day</string>
+    <string name="content_description_previous_month">Previous month</string>
+    <string name="content_description_next_month">Next month</string>
+    <string name="content_description_previous_year">Previous year</string>
+    <string name="content_description_next_year">Next year</string>
+    <string name="content_description_previous_week">Previous week</string>
+    <string name="content_description_next_week">Next week</string>
+
     <!-- Reports -->
     <string name="reports_title">Reports</string>
     <string name="reports_empty_state">No records available for the selected period</string>

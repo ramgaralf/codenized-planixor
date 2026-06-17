@@ -1,6 +1,7 @@
 package com.codenized.planixor.ui.calendar.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,8 +39,11 @@ import java.util.Locale
 
 /**
  * Year view composable displaying 12 mini-month calendars.
- * Shows colored circles for shifts and emoji indicators for reminders.
- * Tapping a day navigates to EventDetailPage for that day.
+ * Day indicators use:
+ * - Fill color = shift color (transparent if no shift)
+ * - Border around circle = has reminder
+ * - No separate "today" dot — today's font is slightly larger (13sp vs 11sp)
+ * - No border for days without reminders
  *
  * @param currentDate Anchor date within the year being displayed.
  * @param events Events for this year (already filtered).
@@ -58,7 +63,6 @@ fun YearView(
     val firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
     val scrollState = rememberScrollState()
 
-    // Group events by day for quick lookup
     val eventsByDay = events.groupBy { it.day }
 
     Column(
@@ -138,6 +142,13 @@ private fun MiniMonth(
     }
 }
 
+/**
+ * Mini day cell for year view.
+ * - Fill: shift background color (transparent if no shift)
+ * - Border: primary color if has reminder, none otherwise
+ * - Today: slightly larger font (13sp vs 11sp), bold
+ * - No separate today dot indicator
+ */
 @Composable
 private fun MiniDayCell(
     date: LocalDate,
@@ -148,8 +159,14 @@ private fun MiniDayCell(
     modifier: Modifier = Modifier,
 ) {
     val shiftEvent = events.find { it.eventType == "shift" }
-    val reminderEvents = events.filter { it.eventType == "reminder" }.sortedBy { it.startTime }
-    val firstReminder = reminderEvents.firstOrNull()
+    val hasReminder = events.any { it.eventType == "reminder" }
+
+    val hasShift = shiftEvent != null && shiftEvent.backgroundColor.isNotBlank() && shiftEvent.backgroundColor != "transparent"
+    val fillColor = if (hasShift) parseHexColorSafe(shiftEvent!!.backgroundColor) else Color.Transparent
+    val textColor = if (hasShift) Color.White else MaterialTheme.colorScheme.onSurface
+
+    val fontSize = if (isToday) 13.sp else 11.sp
+    val fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
 
     Box(
         modifier = modifier
@@ -160,61 +177,26 @@ private fun MiniDayCell(
     ) {
         if (!isCurrentMonth) return@Box
 
-        // Shift indicator: colored circle behind the day number
-        if (shiftEvent != null) {
-            val shiftColor = parseHexColorSafe(shiftEvent.backgroundColor)
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .clip(CircleShape)
-                    .background(shiftColor.copy(alpha = 0.6f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = date.dayOfMonth.toString(),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = MaterialTheme.typography.labelSmall.fontSize * 0.7f,
-                    ),
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                )
-            }
-        } else if (isToday) {
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = date.dayOfMonth.toString(),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = MaterialTheme.typography.labelSmall.fontSize * 0.7f,
-                    ),
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                )
-            }
-        } else {
+        Box(
+            modifier = Modifier
+                .size(20.dp)
+                .clip(CircleShape)
+                .background(fillColor)
+                .then(
+                    if (hasReminder) Modifier.border(
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = CircleShape,
+                    ) else Modifier,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
                 text = date.dayOfMonth.toString(),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = MaterialTheme.typography.labelSmall.fontSize * 0.7f,
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = fontSize,
+                fontWeight = fontWeight,
+                color = textColor,
                 textAlign = TextAlign.Center,
-            )
-        }
-
-        // Reminder emoji indicator (upper-right corner)
-        if (firstReminder != null) {
-            Text(
-                text = firstReminder.icon,
-                fontSize = 6.sp,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(1.dp),
             )
         }
     }

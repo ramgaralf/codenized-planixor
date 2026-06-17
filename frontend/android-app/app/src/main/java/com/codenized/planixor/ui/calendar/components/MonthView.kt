@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -34,8 +36,9 @@ import java.util.Locale
 
 /**
  * Month view composable displaying a day grid with emoji indicators.
- * Shift events set the container background color. All event icons are displayed.
- * Current day is highlighted with primary theme color circle.
+ * Shift events fill the entire day cell with their background color.
+ * Day number header: transparent for normal days, primary circle for today.
+ * Emojis are ~24sp (doubled from previous ~12sp). Padding between header and content.
  * Tapping a day navigates to Day view.
  *
  * @param currentDate Anchor date within the month being displayed.
@@ -58,7 +61,6 @@ fun MonthView(
     val daysOfWeek = buildDaysOfWeekList(firstDayOfWeek)
     val calendarDays = buildMonthCalendarDays(yearMonth, firstDayOfWeek)
 
-    // Group events by day string for quick lookup
     val eventsByDay = events.groupBy { it.day }
 
     Column(
@@ -113,10 +115,10 @@ private fun MonthDayCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Determine background color from shift event (if any)
+    // Shift background fills the entire cell
     val shiftEvent = events.find { it.eventType == "shift" }
-    val containerBg = if (shiftEvent != null && shiftEvent.backgroundColor.isNotBlank() && shiftEvent.backgroundColor != "transparent") {
-        parseHexColorSafe(shiftEvent.backgroundColor).copy(alpha = 0.2f)
+    val cellBg = if (shiftEvent != null && shiftEvent.backgroundColor.isNotBlank() && shiftEvent.backgroundColor != "transparent") {
+        parseHexColorSafe(shiftEvent.backgroundColor)
     } else {
         Color.Transparent
     }
@@ -126,12 +128,17 @@ private fun MonthDayCell(
     val emojisToShow = sortedEvents.take(5).map { it.icon }
     val overflow = events.size - 5
 
+    // Text color: white on colored background, normal otherwise
+    val hasShiftBg = shiftEvent != null && shiftEvent.backgroundColor.isNotBlank() && shiftEvent.backgroundColor != "transparent"
+    val textColor = if (hasShiftBg) Color.White else {
+        if (isCurrentMonth) MaterialTheme.colorScheme.onSurface
+        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+    }
+
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .padding(2.dp)
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
-            .background(containerBg)
+            .background(cellBg)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.TopCenter,
     ) {
@@ -139,11 +146,11 @@ private fun MonthDayCell(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(2.dp),
         ) {
-            // Day number
+            // Day number header
             if (isToday) {
                 Box(
                     modifier = Modifier
-                        .size(20.dp)
+                        .size(22.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary),
                     contentAlignment = Alignment.Center,
@@ -156,27 +163,36 @@ private fun MonthDayCell(
                     )
                 }
             } else {
-                Text(
-                    text = date.dayOfMonth.toString(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isCurrentMonth) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    fontSize = 10.sp,
-                )
+                // Transparent background for normal days
+                Box(
+                    modifier = Modifier.size(22.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = date.dayOfMonth.toString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = textColor,
+                        fontSize = 10.sp,
+                    )
+                }
             }
 
-            // Emoji indicators
+            // Padding between header and emoji content
+            Spacer(modifier = Modifier.height(2.dp))
+
+            // Emoji indicators — doubled size (~24sp from ~12sp)
             if (emojisToShow.isNotEmpty()) {
                 Text(
                     text = emojisToShow.joinToString(""),
-                    fontSize = 8.sp,
+                    fontSize = 16.sp,
                     maxLines = 1,
                 )
                 if (overflow > 0) {
                     Text(
                         text = "+$overflow",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (hasShiftBg) Color.White.copy(alpha = 0.8f)
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 7.sp,
                     )
                 }

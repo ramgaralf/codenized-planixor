@@ -24,7 +24,7 @@ import java.time.LocalDate
 
 /**
  * Main calendar screen composable.
- * Displays ViewSelector, DateNavigator, and the active view component (Day/Week/Month/Year).
+ * Displays ViewSelector, DateNavigator (per-view with segment controls), and the active view.
  * Observes CalendarViewModel state for navigation and event data.
  *
  * @param onNavigateToEventDetail Callback to navigate to event detail page.
@@ -48,8 +48,10 @@ fun CalendarScreen(
         currentDate = currentDate,
         events = events,
         onViewSelected = viewModel::switchView,
-        onNavigateBackward = viewModel::navigateBackward,
-        onNavigateForward = viewModel::navigateForward,
+        onNavigateDay = viewModel::navigateDay,
+        onNavigateWeek = viewModel::navigateWeek,
+        onNavigateMonth = viewModel::navigateMonth,
+        onNavigateYear = viewModel::navigateYear,
         onTodayClick = viewModel::goToToday,
         onEventClick = onNavigateToEventDetail,
         onDayClick = { date ->
@@ -71,8 +73,10 @@ fun CalendarScreenContent(
     currentDate: LocalDate,
     events: List<CalendarEventDisplay>,
     onViewSelected: (CalendarView) -> Unit,
-    onNavigateBackward: () -> Unit,
-    onNavigateForward: () -> Unit,
+    onNavigateDay: (Int) -> Unit,
+    onNavigateWeek: (Int) -> Unit,
+    onNavigateMonth: (Int) -> Unit,
+    onNavigateYear: (Int) -> Unit,
     onTodayClick: () -> Unit,
     onEventClick: (String) -> Unit,
     onDayClick: (LocalDate) -> Unit,
@@ -95,8 +99,10 @@ fun CalendarScreenContent(
         DateNavigator(
             currentDate = currentDate,
             activeView = activeView,
-            onNavigateBackward = onNavigateBackward,
-            onNavigateForward = onNavigateForward,
+            onNavigateDay = onNavigateDay,
+            onNavigateWeek = onNavigateWeek,
+            onNavigateMonth = onNavigateMonth,
+            onNavigateYear = onNavigateYear,
             onTodayClick = onTodayClick,
         )
 
@@ -141,8 +147,10 @@ private fun CalendarScreenContentPreview() {
             currentDate = LocalDate.of(2024, 6, 15),
             events = emptyList(),
             onViewSelected = {},
-            onNavigateBackward = {},
-            onNavigateForward = {},
+            onNavigateDay = {},
+            onNavigateWeek = {},
+            onNavigateMonth = {},
+            onNavigateYear = {},
             onTodayClick = {},
             onEventClick = {},
             onDayClick = {},

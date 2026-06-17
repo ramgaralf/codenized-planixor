@@ -1,6 +1,7 @@
 package com.codenized.planixor.ui.calendar.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -118,17 +121,22 @@ private fun WeekDayColumn(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Event cards
+        // Event cards with 1dp gap
         events.forEach { event ->
             WeekEventCard(
                 event = event,
                 onClick = { onEventClick(event.id) },
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(1.dp))
         }
     }
 }
 
+/**
+ * Compact event card for week view.
+ * 4 lines: icon+name, time range, duration, notes (max 2 lines with ellipsis).
+ * No 📝 emoji appended. Subtle 6dp corners. 8dp vertical + 10dp horizontal padding.
+ */
 @Composable
 private fun WeekEventCard(
     event: CalendarEventDisplay,
@@ -136,50 +144,63 @@ private fun WeekEventCard(
     modifier: Modifier = Modifier,
 ) {
     val bgColor = parseHexColorSafe(event.backgroundColor)
-    val nameDisplay = buildString {
-        val truncated = if (event.name.length > 25) event.name.take(25) + "…" else event.name
-        append(truncated)
-        if (!event.notes.isNullOrBlank()) append(" 📝")
-    }
+    val displayName = if (event.name.length > 25) event.name.take(25) + "…" else event.name
+    val startFormatted = formatMinutesToTime(event.startTime)
+    val endFormatted = formatMinutesToTime(event.endTime)
+    val timeRange = "$startFormatted – $endFormatted"
+    val duration = formatDuration(event.startTime, event.endTime)
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(bgColor.copy(alpha = 0.15f))
-            .padding(horizontal = 8.dp, vertical = 6.dp)
-            .let { it },
+            .clip(RoundedCornerShape(6.dp))
+            .background(bgColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
     ) {
-        // Line 1: icon + name (+ 📝 if notes)
+        // Line 1: icon + name
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = event.icon, style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.padding(start = 4.dp))
             Text(
-                text = nameDisplay,
+                text = event.icon,
                 style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = displayName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
 
-        // Line 2: start – end · duration
-        val startFormatted = formatMinutesToTime(event.startTime)
-        val endFormatted = formatMinutesToTime(event.endTime)
-        val duration = formatDuration(event.startTime, event.endTime)
-
+        // Line 2: time range
         Text(
-            text = "$startFormatted – $endFormatted · $duration",
+            text = timeRange,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color.White.copy(alpha = 0.9f),
         )
-    }
 
-    // Make the whole card clickable
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .let { it },
-    ) { /* clickable applied via parent */ }
+        // Line 3: duration
+        Text(
+            text = duration,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.White.copy(alpha = 0.9f),
+        )
+
+        // Line 4: notes (max 2 lines with ellipsis)
+        if (!event.notes.isNullOrBlank()) {
+            Text(
+                text = event.notes,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.75f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true)
