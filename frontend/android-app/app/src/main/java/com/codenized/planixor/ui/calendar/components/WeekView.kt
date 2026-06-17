@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,8 +59,19 @@ fun WeekView(
         modifier = modifier.fillMaxSize(),
     ) {
         items(weekDays) { day ->
+            val dayStr = day.toString()
+            // Shift events: only shown on their startDay (even if multi-day)
+            // Reminder events: shown on all days they span (range intersection)
             val dayEvents = events
-                .filter { it.day == day.toString() }
+                .filter { event ->
+                    if (event.eventType == "shift") {
+                        // Shifts only appear on their startDay
+                        event.startDay == dayStr
+                    } else {
+                        // Reminders appear on all days they span
+                        event.startDay <= dayStr && event.endDay >= dayStr
+                    }
+                }
                 .sortedBy { it.startTime }
             val isToday = day == today
 
@@ -132,11 +143,6 @@ private fun WeekDayColumn(
     }
 }
 
-/**
- * Compact event card for week view.
- * 4 lines: icon+name, time range, duration, notes (max 2 lines with ellipsis).
- * No 📝 emoji appended. Subtle 6dp corners. 8dp vertical + 10dp horizontal padding.
- */
 @Composable
 private fun WeekEventCard(
     event: CalendarEventDisplay,
@@ -144,11 +150,6 @@ private fun WeekEventCard(
     modifier: Modifier = Modifier,
 ) {
     val bgColor = parseHexColorSafe(event.backgroundColor)
-    val displayName = if (event.name.length > 25) event.name.take(25) + "…" else event.name
-    val startFormatted = formatMinutesToTime(event.startTime)
-    val endFormatted = formatMinutesToTime(event.endTime)
-    val timeRange = "$startFormatted – $endFormatted"
-    val duration = formatDuration(event.startTime, event.endTime)
 
     Column(
         modifier = modifier
@@ -156,50 +157,28 @@ private fun WeekEventCard(
             .clip(RoundedCornerShape(6.dp))
             .background(bgColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Line 1: icon + name
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = event.icon,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White,
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = displayName,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-
-        // Line 2: time range
+        // Line 1: icon centered
         Text(
-            text = timeRange,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.White.copy(alpha = 0.9f),
+            text = event.icon,
+            style = MaterialTheme.typography.titleMedium,
+            color = Color.White,
         )
 
-        // Line 3: duration
-        Text(
-            text = duration,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.White.copy(alpha = 0.9f),
-        )
+        Spacer(modifier = Modifier.height(2.dp))
 
-        // Line 4: notes (max 2 lines with ellipsis)
-        if (!event.notes.isNullOrBlank()) {
-            Text(
-                text = event.notes,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.75f),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
-            )
-        }
+        // Line 2: name centered
+        Text(
+            text = event.name,
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.White,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 

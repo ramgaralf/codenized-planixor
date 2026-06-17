@@ -106,6 +106,70 @@ const getDayEventsInfo = (events: CalendarEventDisplay[]): DayEventsInfo => {
   return { shiftBackgroundColor, emojis, totalCount };
 };
 
+/**
+ * Advances an ISO date string (YYYY-MM-DD) by one day.
+ */
+const nextDayISO = (current: string): string => {
+  const [y, m, d] = current.split('-').map(Number) as [number, number, number];
+  const nextDate = new Date(y, m - 1, d + 1);
+  const ny = nextDate.getFullYear();
+  const nm = String(nextDate.getMonth() + 1).padStart(2, '0');
+  const nd = String(nextDate.getDate()).padStart(2, '0');
+  return `${ny}-${nm}-${nd}`;
+};
+
+/**
+ * Adds an event to the map for a given day key.
+ */
+const addEventToMap = (map: Map<string, CalendarEventDisplay[]>, day: string, event: CalendarEventDisplay): void => {
+  const existing = map.get(day) ?? [];
+  existing.push(event);
+  map.set(day, existing);
+};
+
+/**
+ * Expands a reminder event to all days it spans within the given range, adding it to the map.
+ */
+const expandReminderToDays = (
+  map: Map<string, CalendarEventDisplay[]>,
+  event: CalendarEventDisplay,
+  rangeStart: string,
+  rangeEnd: string,
+): void => {
+  const eventStart = event.startDay < rangeStart ? rangeStart : event.startDay;
+  const eventEnd = event.endDay > rangeEnd ? rangeEnd : event.endDay;
+  let current = eventStart;
+  while (current <= eventEnd) {
+    addEventToMap(map, current, event);
+    current = nextDayISO(current);
+  }
+};
+
+/**
+ * Groups events by day for the month grid.
+ * Shifts: only on startDay. Reminders: expanded to all spanned days within range.
+ */
+const buildEventsByDay = (
+  events: CalendarEventDisplay[],
+  rangeStart: string,
+  rangeEnd: string,
+): Map<string, CalendarEventDisplay[]> => {
+  const map = new Map<string, CalendarEventDisplay[]>();
+  for (const event of events) {
+    if (event.isDeleted) continue;
+    if (event.startDay > rangeEnd || event.endDay < rangeStart) continue;
+
+    if (event.eventType === 'shift') {
+      if (event.startDay >= rangeStart && event.startDay <= rangeEnd) {
+        addEventToMap(map, event.startDay, event);
+      }
+    } else {
+      expandReminderToDays(map, event, rangeStart, rangeEnd);
+    }
+  }
+  return map;
+};
+
 interface MonthViewProps {
   events: CalendarEventDisplay[];
   currentDate: Date;
@@ -120,17 +184,21 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
 
   const monthDays = useMemo(() => getMonthGrid(currentDate), [currentDate]);
 
-  // Group events by day for quick lookup
-  const eventsByDay = useMemo(() => {
-    const map = new Map<string, CalendarEventDisplay[]>();
-    for (const event of events) {
-      if (event.isDeleted) continue;
-      const existing = map.get(event.day) ?? [];
-      existing.push(event);
-      map.set(event.day, existing);
-    }
-    return map;
-  }, [events]);
+  // Compute the displayed month range for intersection filtering
+  const monthRange = useMemo(() => {
+    const firstDay = monthDays[0];
+    const lastDay = monthDays[monthDays.length - 1];
+    return {
+      start: firstDay?.isoDate ?? '',
+      end: lastDay?.isoDate ?? '',
+    };
+  }, [monthDays]);
+
+  // Group events by each day they span within the displayed month grid
+  const eventsByDay = useMemo(
+    () => buildEventsByDay(events, monthRange.start, monthRange.end),
+    [events, monthRange],
+  );
 
   return (
     <div className="flex flex-col w-full h-full" style={{ padding: 'var(--spacing-md, 16px)' }}>
@@ -216,7 +284,7 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
               {/* Event container */}
               {eventsInfo.totalCount > 0 && (
                 <div
-                  className="flex flex-wrap items-center justify-center gap-0.5 rounded"
+                  className="flex flex-wrap items-center justify-center gap-1.5 rounded"
                   style={{
                     padding: '6px 2px',
                     minHeight: '20px',

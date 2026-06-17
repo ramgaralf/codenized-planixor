@@ -1,6 +1,7 @@
 package com.codenized.planixor.domain.validation
 
 import com.codenized.planixor.domain.model.CalendarEvent
+import java.time.LocalDate
 
 /**
  * Result of calendar event validation.
@@ -22,23 +23,97 @@ object CalendarEventValidation {
 
     private const val MIN_MINUTES = 0
     private const val MAX_MINUTES = 1439
-    private const val MAX_NOTES_LENGTH = 200
+    private const val MAX_NOTES_LENGTH = 250
 
     /**
-     * Validates that the end time is strictly after the start time.
-     * Both values are minutes from midnight (0–1439).
+     * Validates that endDay is on or after startDay.
+     * Both values are ISO date strings (YYYY-MM-DD).
+     * String comparison works correctly for this format.
      *
-     * Validates: Requirements 1.8, 11.5
+     * Validates: Requirements 1.11, 11.5
      */
-    fun validateTimeRange(startTime: Int, endTime: Int): Boolean {
+    fun validateDayRange(startDay: String, endDay: String): Boolean {
+        return endDay >= startDay
+    }
+
+    /**
+     * Validates time range for reminder events.
+     *
+     * Returns true if:
+     * - endDay > startDay (any times are valid for multi-day reminders), OR
+     * - endDay == startDay AND endTime > startTime
+     *
+     * For shift events this function is not applicable (shifts always pass
+     * time validation since their times are read-only from the definition).
+     *
+     * Validates: Requirements 1.10, 11.6
+     */
+    fun validateTimeForReminder(
+        startDay: String,
+        endDay: String,
+        startTime: Int,
+        endTime: Int,
+    ): Boolean {
+        if (endDay > startDay) {
+            return true
+        }
         return endTime > startTime
+    }
+
+    /**
+     * Computes the total duration in minutes for a calendar event.
+     *
+     * For shifts: returns the shift's hoursWorked value (passed as shiftHoursWorked).
+     * For reminders: calculates from day difference × 1440 + (endTime - startTime).
+     *
+     * Validates: Requirements 1.5, 11.7
+     */
+    fun computeTotalHours(
+        eventType: String,
+        startDay: String,
+        endDay: String,
+        startTime: Int,
+        endTime: Int,
+        shiftHoursWorked: Int? = null,
+    ): Int {
+        if (eventType == "shift") {
+            return shiftHoursWorked ?: 0
+        }
+
+        val start = LocalDate.parse(startDay)
+        val end = LocalDate.parse(endDay)
+        val dayDifference = (end.toEpochDay() - start.toEpochDay()).toInt()
+
+        return dayDifference * 1440 + (endTime - startTime)
+    }
+
+    /**
+     * Computes the endDay for a shift event based on crossing midnight.
+     *
+     * If endTime < startTime (crossing midnight): returns startDay + 1 day.
+     * Otherwise: returns startDay.
+     *
+     * Validates: Requirements 1.6, 11.7
+     */
+    fun computeEndDayForShift(
+        startDay: String,
+        startTime: Int,
+        endTime: Int,
+    ): String {
+        if (endTime < startTime) {
+            val date = LocalDate.parse(startDay)
+            return date.plusDays(1).toString()
+        }
+        return startDay
     }
 
     /**
      * Validates all required fields on a calendar event.
      * Returns field-level errors keyed by field name with i18n message keys.
      *
-     * Validates: Requirements 1.2, 1.9, 2.1
+     * Checks: eventType, eventTypeId, startDay, endDay, startTime, endTime.
+     *
+     * Validates: Requirements 1.2, 1.12
      */
     fun validateRequiredFields(event: CalendarEvent): CalendarEventValidationResult {
         val errors = mutableMapOf<String, String>()
@@ -51,8 +126,12 @@ object CalendarEventValidation {
             errors["eventTypeId"] = "calendarEvent.validation.eventTypeId.required"
         }
 
-        if (event.day.isBlank()) {
-            errors["day"] = "calendarEvent.validation.day.required"
+        if (event.startDay.isBlank()) {
+            errors["startDay"] = "calendarEvent.validation.startDay.required"
+        }
+
+        if (event.endDay.isBlank()) {
+            errors["endDay"] = "calendarEvent.validation.endDay.required"
         }
 
         if (event.startTime < MIN_MINUTES || event.startTime > MAX_MINUTES) {
@@ -68,7 +147,7 @@ object CalendarEventValidation {
 
     /**
      * Validates that notes are within the allowed length.
-     * Returns true if notes is null or within MAX_NOTES_LENGTH (200).
+     * Returns true if notes is null or within MAX_NOTES_LENGTH (250).
      *
      * Validates: Requirement 1.3
      */
@@ -81,7 +160,7 @@ object CalendarEventValidation {
      * Checks the one-shift-per-day constraint.
      * Returns true (allowed) if:
      * - eventType is "reminder" (no constraint applies), OR
-     * - no other non-deleted shift event exists for the given day
+     * - no other non-deleted shift event exists with the same startDay
      *   (excluding the event with excludeEventId if provided).
      *
      * Returns false (constraint violated) if a duplicate shift exists.
@@ -89,7 +168,7 @@ object CalendarEventValidation {
      * Validates: Requirements 2.1, 2.3, 2.4, 2.5
      */
     fun checkOneShiftPerDay(
-        day: String,
+        startDay: String,
         eventType: String,
         existingEvents: List<CalendarEvent>,
         excludeEventId: String? = null,
@@ -97,7 +176,7 @@ object CalendarEventValidation {
         if (eventType == "reminder") return true
 
         val conflictingShift = existingEvents.any { event ->
-            event.day == day &&
+            event.startDay == startDay &&
                 event.eventType == "shift" &&
                 !event.isDeleted &&
                 event.id != excludeEventId

@@ -221,8 +221,14 @@
       "selectedDetails": "Detalles del tipo de evento seleccionado"
     },
     "form": {
-      "dayLabel": "Día",
-      "day": "Día",
+      "createTitle": "Nuevo Evento",
+      "editTitle": "Editar Evento",
+      "startDayLabel": "Día de Inicio",
+      "startDay": "Día de Inicio",
+      "endDayLabel": "Día de Fin",
+      "endDay": "Día de Fin",
+      "totalHoursLabel": "Horas Totales",
+      "totalHours": "Horas Totales",
       "startTimeLabel": "Hora de Inicio",
       "startTime": "Hora de Inicio",
       "endTimeLabel": "Hora de Fin",
@@ -241,18 +247,32 @@
       "eventTypeId": {
         "required": "La selección del tipo de evento es obligatoria"
       },
-      "day": {
-        "required": "El día es obligatorio"
+      "startDay": {
+        "required": "El día de inicio es obligatorio"
+      },
+      "endDay": {
+        "required": "El día de fin es obligatorio"
+      },
+      "totalHours": {
+        "required": "Las horas totales son obligatorias"
       },
       "startTime": {
         "required": "La hora de inicio es obligatoria"
       },
       "endTime": {
-        "required": "La hora de fin es obligatoria",
-        "afterStart": "La hora de fin debe ser posterior a la hora de inicio"
+        "required": "La hora de fin es obligatoria"
+      },
+      "dayRange": {
+        "invalid": "El día de fin debe ser igual o posterior al día de inicio"
+      },
+      "timeForReminder": {
+        "invalid": "La hora de fin debe ser posterior a la hora de inicio para recordatorios del mismo día"
+      },
+      "crossingMidnight": {
+        "info": "Este turno cruza la medianoche — el día de fin se ha establecido al día siguiente"
       },
       "notes": {
-        "maxLength": "Las notas deben tener 200 caracteres o menos"
+        "maxLength": "Las notas deben tener 250 caracteres o menos"
       },
       "oneShiftPerDay": "Solo se permite un turno por día"
     },

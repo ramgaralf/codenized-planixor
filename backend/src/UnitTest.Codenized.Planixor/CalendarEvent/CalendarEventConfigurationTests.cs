@@ -66,11 +66,25 @@ public sealed class CalendarEventConfigurationTests
         => Assert.That(this.entityType.FindProperty(nameof(CalendarEventEntity.EventTypeId))!.IsNullable, Is.False);
 
     /// <summary>
-    /// Verifies Day is required.
+    /// Verifies StartDay is required.
     /// </summary>
     [Test]
-    public void Configure_Day_IsRequired()
-        => Assert.That(this.entityType.FindProperty(nameof(CalendarEventEntity.Day))!.IsNullable, Is.False);
+    public void Configure_StartDay_IsRequired()
+        => Assert.That(this.entityType.FindProperty(nameof(CalendarEventEntity.StartDay))!.IsNullable, Is.False);
+
+    /// <summary>
+    /// Verifies EndDay is required.
+    /// </summary>
+    [Test]
+    public void Configure_EndDay_IsRequired()
+        => Assert.That(this.entityType.FindProperty(nameof(CalendarEventEntity.EndDay))!.IsNullable, Is.False);
+
+    /// <summary>
+    /// Verifies TotalHours is required.
+    /// </summary>
+    [Test]
+    public void Configure_TotalHours_IsRequired()
+        => Assert.That(this.entityType.FindProperty(nameof(CalendarEventEntity.TotalHours))!.IsNullable, Is.False);
 
     /// <summary>
     /// Verifies StartTime is required.

@@ -6,6 +6,11 @@
  * (Day, Week, Month, Year). All fields are persisted locally in
  * IndexedDB via Dexie (offline-first).
  *
+ * Events can span one or more days via startDay/endDay. For shift events,
+ * times are read-only (from the shift definition) and endDay is auto-set
+ * when crossing midnight. For reminder events, times are editable and
+ * totalHours is computed from the time/day difference.
+ *
  * Change tracking fields (id, modifiedAt, syncedAt, isDeleted) support
  * the offline-first sync strategy defined in global-sync-strategy.md.
  */
@@ -19,16 +24,26 @@ export interface CalendarEvent {
   /** UUID referencing the Shift or Reminder definition */
   eventTypeId: string;
 
-  /** Calendar date of the event (ISO date string YYYY-MM-DD) */
-  day: string;
+  /** Start calendar date of the event (ISO date string YYYY-MM-DD) */
+  startDay: string;
+
+  /** End calendar date of the event (ISO date string YYYY-MM-DD, >= startDay) */
+  endDay: string;
 
   /** Start time as minutes from midnight (0–1439) */
   startTime: number;
 
-  /** End time as minutes from midnight (0–1439), must be > startTime */
+  /** End time as minutes from midnight (0–1439) */
   endTime: number;
 
-  /** Optional notes (max 200 characters). null = no notes */
+  /**
+   * Total duration in minutes (read-only, computed).
+   * For shifts: derived from the shift's hoursWorked field.
+   * For reminders: calculated from day difference + time difference.
+   */
+  totalHours: number;
+
+  /** Optional notes (max 250 characters). null = no notes */
   notes: string | null;
 
   /** Last local modification timestamp (UTC) — updated on every local write */

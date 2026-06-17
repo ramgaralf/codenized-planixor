@@ -202,7 +202,9 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
       )}
 
       {effectiveMode === 'create' && (
-        <EventForm onSuccess={backToCalendar} onCancel={backToCalendar} />
+        <div style={{ height: '100%', overflow: 'auto', padding: '24px 32px' }}>
+          <EventForm onSuccess={backToCalendar} onCancel={backToCalendar} />
+        </div>
       )}
 
       {effectiveMode === 'detail' && viewState.mode === 'detail' && (

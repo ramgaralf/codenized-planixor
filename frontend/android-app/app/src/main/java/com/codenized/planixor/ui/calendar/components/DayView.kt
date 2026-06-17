@@ -79,6 +79,21 @@ fun DayView(
         }
     }
 
+    // Range intersection: show events where startDay <= currentDay <= endDay
+    val currentDayStr = currentDate.toString()
+    val dayEvents = events.filter { it.startDay <= currentDayStr && it.endDay >= currentDayStr }
+
+    /**
+     * Returns the effective start hour for an event on the current day.
+     * On the start day, uses the event's startTime. On intermediate/end days, uses hour 0.
+     */
+    fun getEffectiveStartHour(event: CalendarEventDisplay): Int {
+        val isMultiDay = event.startDay != event.endDay
+        if (!isMultiDay) return event.startTime / 60
+        val isStartDay = event.startDay == currentDayStr
+        return if (isStartDay) event.startTime / 60 else 0
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
             state = listState,
@@ -89,7 +104,7 @@ fun DayView(
                     HourSlot(
                         hour = hour,
                         timeFormatter = timeFormatter,
-                        events = events.filter { it.startTime / 60 == hour },
+                        events = dayEvents.filter { getEffectiveStartHour(it) == hour },
                         onEventClick = onEventClick,
                     )
 

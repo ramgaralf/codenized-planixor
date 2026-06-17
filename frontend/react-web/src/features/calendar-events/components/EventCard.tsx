@@ -1,5 +1,5 @@
 import type { CalendarEventDisplay } from '../models';
-import { formatTimeFromMinutes, formatDuration } from '../utils';
+import { formatTimeFromMinutes } from '../utils';
 
 interface EventCardProps {
   event: CalendarEventDisplay;
@@ -9,17 +9,35 @@ interface EventCardProps {
 }
 
 /**
- * EventCard — renders a calendar event card for Day view.
+ * Formats totalHours (stored in minutes) as "Xh Ym".
+ */
+const formatTotalHours = (totalMinutes: number): string => {
+  if (totalMinutes <= 0) return '0m';
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}m`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h ${minutes}m`;
+};
+
+/**
+ * EventCard — renders a calendar event card for Day and Week views.
  *
- * Shows: icon + name (line 1), time range + duration (line 2), notes (line 3).
- * Background uses the event's backgroundColor.
+ * Layout:
+ * - Line 1: Icon (larger) + Name
+ * - Line 2: startDay + startTime
+ * - Line 3: endDay + endTime
+ * - Line 4: Total hours (from stored totalHours, not computed)
+ * - Line 5: Notes (max 2 lines, ellipsis on overflow, only if present)
+ *
+ * If the card height causes overflow, bottom lines are hidden via overflow: hidden.
  *
  * **Validates: Requirements 3.2, 3.5**
  */
 export const EventCard = ({ event, onClick, height }: EventCardProps) => {
-  const startLabel = formatTimeFromMinutes(event.startTime);
-  const endLabel = formatTimeFromMinutes(event.endTime);
-  const durationLabel = formatDuration(event.startTime, event.endTime);
+  const startTimeLabel = formatTimeFromMinutes(event.startTime);
+  const endTimeLabel = formatTimeFromMinutes(event.endTime);
+  const totalHoursLabel = formatTotalHours(event.totalHours);
 
   const handleClick = () => {
     onClick(event);
@@ -38,7 +56,7 @@ export const EventCard = ({ event, onClick, height }: EventCardProps) => {
       tabIndex={0}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      aria-label={`${event.name}, ${startLabel} – ${endLabel}`}
+      aria-label={`${event.name}, ${event.startDay} ${startTimeLabel} – ${event.endDay} ${endTimeLabel}`}
       style={{
         backgroundColor: event.backgroundColor,
         borderRadius: '8px',
@@ -52,7 +70,7 @@ export const EventCard = ({ event, onClick, height }: EventCardProps) => {
         boxSizing: 'border-box',
       }}
     >
-      {/* Line 1: icon + name */}
+      {/* Line 1: icon (50% larger) + name */}
       <div
         style={{
           display: 'flex',
@@ -61,7 +79,7 @@ export const EventCard = ({ event, onClick, height }: EventCardProps) => {
           minWidth: 0,
         }}
       >
-        <span aria-hidden="true" style={{ fontSize: '14px', flexShrink: 0 }}>
+        <span aria-hidden="true" style={{ fontSize: '18px', flexShrink: 0, lineHeight: 1 }}>
           {event.icon}
         </span>
         <span
@@ -79,7 +97,7 @@ export const EventCard = ({ event, onClick, height }: EventCardProps) => {
         </span>
       </div>
 
-      {/* Line 2: time range + duration */}
+      {/* Line 2: startDay + startTime */}
       <div
         style={{
           fontSize: '11px',
@@ -90,19 +108,46 @@ export const EventCard = ({ event, onClick, height }: EventCardProps) => {
           textOverflow: 'ellipsis',
         }}
       >
-        {startLabel} – {endLabel} · {durationLabel}
+        {event.startDay} {startTimeLabel}
       </div>
 
-      {/* Line 3: notes (if space allows and notes exist) */}
-      {event.notes && height >= 60 && (
+      {/* Line 3: endDay + endTime */}
+      <div
+        style={{
+          fontSize: '11px',
+          fontWeight: 500,
+          color: 'rgba(255, 255, 255, 0.85)',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {event.endDay} {endTimeLabel}
+      </div>
+
+      {/* Line 4: totalHours (stored value, not computed) */}
+      <div
+        style={{
+          fontSize: '11px',
+          fontWeight: 600,
+          color: 'rgba(255, 255, 255, 0.9)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {totalHoursLabel}
+      </div>
+
+      {/* Line 5: notes (only if present, max 2 lines with ellipsis) */}
+      {event.notes && (
         <div
           style={{
             fontSize: '11px',
             fontWeight: 400,
             color: 'rgba(255, 255, 255, 0.7)',
-            whiteSpace: 'nowrap',
             overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
           }}
         >
           {event.notes}

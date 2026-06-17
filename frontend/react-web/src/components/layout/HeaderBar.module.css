@@ -134,6 +134,10 @@
     display: flex;
   }
 
+  .mobileLogoText {
+    display: none;
+  }
+
   .pageTitle {
     margin-right: auto;
     font-size: 14px;

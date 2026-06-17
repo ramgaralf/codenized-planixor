@@ -93,6 +93,68 @@ interface DayIndicators {
   reminderEmoji: string | null;
 }
 
+/**
+ * Advances an ISO date string by one day.
+ */
+const nextDayISO = (current: string): string => {
+  const [y, m, d] = current.split('-').map(Number) as [number, number, number];
+  const nextDate = new Date(y, m - 1, d + 1);
+  return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(nextDate.getDate()).padStart(2, '0')}`;
+};
+
+/**
+ * Adds an event to a Map-based day grouping.
+ */
+const addEventToDayMap = (map: Map<string, CalendarEventDisplay[]>, day: string, event: CalendarEventDisplay): void => {
+  const existing = map.get(day);
+  if (existing) {
+    existing.push(event);
+  } else {
+    map.set(day, [event]);
+  }
+};
+
+/**
+ * Expands a reminder event to all days it spans within the given range, adding to map.
+ */
+const expandReminderToDayMap = (
+  map: Map<string, CalendarEventDisplay[]>,
+  event: CalendarEventDisplay,
+  rangeStart: string,
+  rangeEnd: string,
+): void => {
+  const eventStart = event.startDay < rangeStart ? rangeStart : event.startDay;
+  const eventEnd = event.endDay > rangeEnd ? rangeEnd : event.endDay;
+  let current = eventStart;
+  while (current <= eventEnd) {
+    addEventToDayMap(map, current, event);
+    current = nextDayISO(current);
+  }
+};
+
+/**
+ * Groups events by day for Year view.
+ * Shifts: only on startDay. Reminders: expanded to all spanned days within range.
+ */
+const buildEventsByDayMap = (
+  events: CalendarEventDisplay[],
+  rangeStart: string,
+  rangeEnd: string,
+): Map<string, CalendarEventDisplay[]> => {
+  const map = new Map<string, CalendarEventDisplay[]>();
+  for (const event of events) {
+    if (event.startDay > rangeEnd || event.endDay < rangeStart) continue;
+    if (event.eventType === 'shift') {
+      if (event.startDay >= rangeStart && event.startDay <= rangeEnd) {
+        addEventToDayMap(map, event.startDay, event);
+      }
+    } else {
+      expandReminderToDayMap(map, event, rangeStart, rangeEnd);
+    }
+  }
+  return map;
+};
+
 const getDayIndicators = (
   dayISO: string,
   eventsByDay: Map<string, CalendarEventDisplay[]>
@@ -278,8 +340,8 @@ const DayCell = ({ day, indicators, locale, year, month, onDayClick }: DayCellPr
   const hasShift = indicators.shiftColor !== null;
   const hasReminder = indicators.reminderEmoji !== null;
 
-  // Border: indicates reminder exists
-  const borderStyle = hasReminder ? '2px solid var(--color-primary)' : 'none';
+  // Border: indicates reminder exists — thicker, black in light / white in dark
+  const borderStyle = hasReminder ? '3px solid var(--color-text-primary)' : 'none';
   // Fill: shift color if shift exists, transparent otherwise
   const fillColor = hasShift ? indicators.shiftColor! : 'transparent';
   // Text color: white on colored fill, primary on transparent
@@ -347,18 +409,10 @@ export const YearView = ({ events, currentDate, onDayClick }: YearViewProps) => 
   );
 
   // Build events-by-day lookup map for O(1) access per day
-  const eventsByDay = useMemo(() => {
-    const map = new Map<string, CalendarEventDisplay[]>();
-    for (const event of events) {
-      const existing = map.get(event.day);
-      if (existing) {
-        existing.push(event);
-      } else {
-        map.set(event.day, [event]);
-      }
-    }
-    return map;
-  }, [events]);
+  const eventsByDay = useMemo(
+    () => buildEventsByDayMap(events, `${year}-01-01`, `${year}-12-31`),
+    [events, year],
+  );
 
   const handleDayClick = useCallback(
     (dayISO: string) => {

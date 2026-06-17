@@ -45,11 +45,12 @@ const validTimePairArb = fc
 
 /** Generates a valid CreateCalendarEventInput for a reminder type (no one-shift-per-day constraint) */
 const validReminderInputArb: fc.Arbitrary<CreateCalendarEventInput> = fc
-  .tuple(isoDateArb, validTimePairArb, fc.uuid(), fc.oneof(fc.constant(null), fc.string({ maxLength: 200 })))
-  .map(([day, times, eventTypeId, notes]) => ({
+  .tuple(isoDateArb, validTimePairArb, fc.uuid(), fc.oneof(fc.constant(null), fc.string({ maxLength: 250 })))
+  .map(([startDay, times, eventTypeId, notes]) => ({
     eventType: 'reminder' as const,
     eventTypeId,
-    day,
+    startDay,
+    endDay: startDay,
     startTime: times.startTime,
     endTime: times.endTime,
     notes,
@@ -130,7 +131,7 @@ describe('calendarEventService — Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           validReminderInputArb,
-          fc.oneof(fc.constant(null), fc.string({ maxLength: 200 })),
+          fc.oneof(fc.constant(null), fc.string({ maxLength: 250 })),
           async (input, newNotes) => {
             await db.calendarEvents.clear();
 
@@ -212,7 +213,7 @@ describe('calendarEventService — Property Tests', () => {
           shiftEntityArb(),
           validTimePairArb,
           isoDateArb,
-          async (eventTypeId, shiftTemplate, times, day) => {
+          async (eventTypeId, shiftTemplate, times, startDay) => {
             await db.calendarEvents.clear();
             await db.shifts.clear();
 
@@ -222,13 +223,14 @@ describe('calendarEventService — Property Tests', () => {
             await create({
               eventType: 'shift',
               eventTypeId,
-              day,
+              startDay,
+              endDay: startDay,
               startTime: times.startTime,
               endTime: times.endTime,
               notes: null,
             });
 
-            const results = await getByDate(day);
+            const results = await getByDate(startDay);
 
             expect(results.length).toBe(1);
             expect(results[0].name).toBe(shift.name);
@@ -247,7 +249,7 @@ describe('calendarEventService — Property Tests', () => {
           reminderEntityArb(),
           validTimePairArb,
           isoDateArb,
-          async (eventTypeId, reminderTemplate, times, day) => {
+          async (eventTypeId, reminderTemplate, times, startDay) => {
             await db.calendarEvents.clear();
             await db.reminders.clear();
 
@@ -257,13 +259,14 @@ describe('calendarEventService — Property Tests', () => {
             await create({
               eventType: 'reminder',
               eventTypeId,
-              day,
+              startDay,
+              endDay: startDay,
               startTime: times.startTime,
               endTime: times.endTime,
               notes: null,
             });
 
-            const results = await getByDate(day);
+            const results = await getByDate(startDay);
 
             expect(results.length).toBe(1);
             expect(results[0].name).toBe(reminder.name);
@@ -282,7 +285,7 @@ describe('calendarEventService — Property Tests', () => {
           fc.uuid(),
           validTimePairArb,
           isoDateArb,
-          async (eventType, orphanedId, times, day) => {
+          async (eventType, orphanedId, times, startDay) => {
             await db.calendarEvents.clear();
             await db.shifts.clear();
             await db.reminders.clear();
@@ -290,13 +293,14 @@ describe('calendarEventService — Property Tests', () => {
             await create({
               eventType,
               eventTypeId: orphanedId,
-              day,
+              startDay,
+              endDay: startDay,
               startTime: times.startTime,
               endTime: times.endTime,
               notes: null,
             });
 
-            const results = await getByDate(day);
+            const results = await getByDate(startDay);
 
             expect(results.length).toBe(1);
             expect(results[0].name).toBe('Unknown');
@@ -316,7 +320,7 @@ describe('calendarEventService — Property Tests', () => {
           shiftEntityArb(),
           validTimePairArb,
           isoDateArb,
-          async (eventTypeId, originalShift, updatedShiftTemplate, times, day) => {
+          async (eventTypeId, originalShift, updatedShiftTemplate, times, startDay) => {
             await db.calendarEvents.clear();
             await db.shifts.clear();
 
@@ -326,7 +330,8 @@ describe('calendarEventService — Property Tests', () => {
             await create({
               eventType: 'shift',
               eventTypeId,
-              day,
+              startDay,
+              endDay: startDay,
               startTime: times.startTime,
               endTime: times.endTime,
               notes: null,
@@ -336,7 +341,7 @@ describe('calendarEventService — Property Tests', () => {
             const updatedShift: Shift = { ...updatedShiftTemplate, id: eventTypeId };
             await db.shifts.put(updatedShift);
 
-            const results = await getByDate(day);
+            const results = await getByDate(startDay);
 
             expect(results.length).toBe(1);
             expect(results[0].name).toBe(updatedShift.name);
@@ -373,7 +378,7 @@ describe('calendarEventService — Property Tests', () => {
           reminderEntityArb(),
           validTimePairArb,
           isoDateArb,
-          async (entityId, eventType, shiftData, reminderData, times, day) => {
+          async (entityId, eventType, shiftData, reminderData, times, startDay) => {
             await db.calendarEvents.clear();
             await db.shifts.clear();
             await db.reminders.clear();
@@ -389,13 +394,14 @@ describe('calendarEventService — Property Tests', () => {
             await create({
               eventType,
               eventTypeId: entityId,
-              day,
+              startDay,
+              endDay: startDay,
               startTime: times.startTime,
               endTime: times.endTime,
               notes: null,
             });
 
-            const results = await getByDate(day);
+            const results = await getByDate(startDay);
             expect(results.length).toBe(1);
 
             if (eventType === 'shift') {
@@ -422,7 +428,7 @@ describe('calendarEventService — Property Tests', () => {
           reminderEntityArb(),
           validTimePairArb,
           isoDateArb,
-          async (entityId, eventType, shiftData, reminderData, times, day) => {
+          async (entityId, eventType, shiftData, reminderData, times, startDay) => {
             await db.calendarEvents.clear();
             await db.shifts.clear();
             await db.reminders.clear();
@@ -439,7 +445,8 @@ describe('calendarEventService — Property Tests', () => {
             await create({
               eventType,
               eventTypeId: entityId,
-              day,
+              startDay,
+              endDay: startDay,
               startTime: times.startTime,
               endTime: times.endTime,
               notes: null,
@@ -452,7 +459,7 @@ describe('calendarEventService — Property Tests', () => {
               await db.reminders.delete(entityId);
             }
 
-            const results = await getByDate(day);
+            const results = await getByDate(startDay);
             expect(results.length).toBe(1);
             expect(results[0].name).toBe('Unknown');
             expect(results[0].icon).toBe('❓');
@@ -473,14 +480,15 @@ describe('calendarEventService — Property Tests', () => {
             await db.calendarEvents.clear();
             await db.shifts.clear();
 
-            const day = '2024-06-15';
+            const startDay = '2024-06-15';
             const shift: Shift = { ...shiftData, id: entityId };
             await db.shifts.add(shift);
 
             await create({
               eventType: 'shift',
               eventTypeId: entityId,
-              day,
+              startDay,
+              endDay: startDay,
               startTime: times.startTime,
               endTime: times.endTime,
               notes: null,

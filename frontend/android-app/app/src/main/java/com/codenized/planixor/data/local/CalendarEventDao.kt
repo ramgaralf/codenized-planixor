@@ -21,25 +21,27 @@ interface CalendarEventDao {
     suspend fun update(event: CalendarEventEntity)
 
     /**
-     * Returns non-deleted events within a date range (inclusive).
+     * Returns non-deleted events whose [startDay, endDay] range intersects with the
+     * given date range [startDate, endDate].
      * Used by Week, Month, and Year views.
      */
-    @Query("SELECT * FROM calendar_events WHERE day BETWEEN :startDate AND :endDate AND isDeleted = 0")
+    @Query("SELECT * FROM calendar_events WHERE startDay <= :endDate AND endDay >= :startDate AND isDeleted = 0")
     fun getByDateRange(startDate: String, endDate: String): Flow<List<CalendarEventEntity>>
 
     /**
-     * Returns non-deleted events for a specific day.
+     * Returns non-deleted events that span a specific day.
+     * An event spans a day if startDay <= day <= endDay.
      * Used by Day view.
      */
-    @Query("SELECT * FROM calendar_events WHERE day = :day AND isDeleted = 0")
+    @Query("SELECT * FROM calendar_events WHERE startDay <= :day AND endDay >= :day AND isDeleted = 0")
     fun getByDate(day: String): Flow<List<CalendarEventEntity>>
 
     /**
-     * Returns non-deleted shift events for a specific day, excluding a given event ID.
+     * Returns non-deleted shift events for a specific startDay, excluding a given event ID.
      * Used for one-shift-per-day constraint validation.
      */
-    @Query("SELECT * FROM calendar_events WHERE day = :day AND eventType = 'shift' AND isDeleted = 0 AND id != :excludeId")
-    suspend fun getShiftsForDate(day: String, excludeId: String = ""): List<CalendarEventEntity>
+    @Query("SELECT * FROM calendar_events WHERE startDay = :startDay AND eventType = 'shift' AND isDeleted = 0 AND id != :excludeId")
+    suspend fun getShiftsForDate(startDay: String, excludeId: String = ""): List<CalendarEventEntity>
 
     /**
      * Returns all events that need to be pushed to the remote server.

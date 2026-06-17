@@ -49,9 +49,11 @@ public sealed class CalendarEventSyncPullService : IInteractorService<CalendarEv
             calendarEvent.Id,
             calendarEvent.EventType,
             calendarEvent.EventTypeId,
-            calendarEvent.Day.ToString("yyyy-MM-dd"),
+            calendarEvent.StartDay.ToString("yyyy-MM-dd"),
+            calendarEvent.EndDay.ToString("yyyy-MM-dd"),
             calendarEvent.StartTime,
             calendarEvent.EndTime,
+            calendarEvent.TotalHours,
             calendarEvent.Notes,
             calendarEvent.ModifiedAt,
             calendarEvent.IsDeleted)).ToList();

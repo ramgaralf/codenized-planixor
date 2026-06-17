@@ -1,269 +1,369 @@
-/* eslint-disable sonarjs/assertions-in-tests */
-import { describe, it } from 'vitest';
-import fc from 'fast-check';
+import { describe, it, expect } from 'vitest';
+import * as fc from 'fast-check';
 import {
-  validateTimeRange,
-  validateRequiredFields,
+  validateDayRange,
+  validateTimeForReminder,
+  computeEndDayForShift,
   checkOneShiftPerDay,
+  validateRequiredFields,
 } from './validation';
 import type { CalendarEvent } from './models';
 
 /**
- * Property-based tests for calendar event validation functions.
- * Feature: gh8-calendar-event-management
+ * Helper: format a Date object as an ISO date string (YYYY-MM-DD).
  */
+const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
-/** Generates a valid ISO date string (YYYY-MM-DD) */
-const isoDateArb = fc
-  .integer({ min: 2020, max: 2030 })
-  .chain((year) =>
-    fc.integer({ min: 1, max: 12 }).chain((month) =>
-      fc.integer({ min: 1, max: 28 }).map((day) => {
-        const m = String(month).padStart(2, '0');
-        const d = String(day).padStart(2, '0');
-        return `${year}-${m}-${d}`;
-      }),
-    ),
-  );
+/**
+ * Arbitrary: generates a valid ISO date string (YYYY-MM-DD).
+ * Constrains to dates between 2000-01-01 and 2099-12-31 for practical ranges.
+ */
+const dateArb = fc
+  .date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') })
+  .map(formatDate);
 
-describe('Calendar Event Validation Properties', () => {
-  // Feature: gh8-calendar-event-management, Property 2: Time range validation rejects invalid intervals
-  // **Validates: Requirements 1.8, 11.5**
-  it('Property 2: Time range validation rejects invalid intervals', () => {
+/**
+ * Arbitrary: generates valid minutes from midnight (0–1439).
+ */
+const minutesArb = fc.integer({ min: 0, max: 1439 });
+
+/**
+ * Arbitrary: generates event types.
+ */
+const eventTypeArb = fc.constantFrom('shift', 'reminder') as fc.Arbitrary<
+  'shift' | 'reminder'
+>;
+
+describe('Property 16: Day range validation rejects invalid intervals', () => {
+  /**
+   * Validates: Requirements 1.11, 11.5
+   *
+   * For any pair of startDay/endDay where endDay < startDay,
+   * validateDayRange returns false. For endDay >= startDay, returns true.
+   */
+
+  it('should return false for any endDay strictly before startDay', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 1439 }),
-        fc.integer({ min: 0, max: 1439 }),
-        (startTime, endTime) => {
-          const result = validateTimeRange(startTime, endTime);
-          return result === (endTime > startTime);
-        },
-      ),
-      { numRuns: 100 },
+      fc.property(dateArb, fc.integer({ min: 1, max: 365 }), (startDay, daysBack) => {
+        const startDate = new Date(startDay);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() - daysBack);
+        const endDay = formatDate(endDate);
+
+        expect(validateDayRange(startDay, endDay)).toBe(false);
+      }),
     );
   });
 
-  // Feature: gh8-calendar-event-management, Property 3: One-shift-per-day constraint enforcement
-  // **Validates: Requirements 2.1, 2.3, 2.4, 2.5**
-  describe('Property 3: One-shift-per-day constraint enforcement', () => {
-    const calendarEventArb = (dayOverride?: string): fc.Arbitrary<CalendarEvent> =>
-      fc.record({
-        id: fc.uuid(),
-        eventType: fc.constantFrom('shift' as const, 'reminder' as const),
-        eventTypeId: fc.uuid(),
-        day: dayOverride ? fc.constant(dayOverride) : isoDateArb,
-        startTime: fc.integer({ min: 0, max: 1438 }),
-        endTime: fc.integer({ min: 1, max: 1439 }),
-        notes: fc.oneof(fc.constant(null), fc.string({ maxLength: 200 })),
-        modifiedAt: fc.constant(new Date('2024-01-01T00:00:00Z')),
-        syncedAt: fc.oneof(
-          fc.constant(null),
-          fc.constant(new Date('2024-01-01T00:00:00Z')),
-        ),
-        isDeleted: fc.boolean(),
-      });
+  it('should return true for any endDay on or after startDay', () => {
+    fc.assert(
+      fc.property(dateArb, fc.integer({ min: 0, max: 365 }), (startDay, daysForward) => {
+        const startDate = new Date(startDay);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + daysForward);
+        const endDay = formatDate(endDate);
 
-    it('should allow any reminder regardless of existing shifts', () => {
-      fc.assert(
-        fc.property(
-          fc.array(calendarEventArb(), { minLength: 0, maxLength: 10 }),
-          isoDateArb,
-          (existingEvents, day) => {
-            const result = checkOneShiftPerDay(day, 'reminder', existingEvents);
-            return result === true;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
+        expect(validateDayRange(startDay, endDay)).toBe(true);
+      }),
+    );
+  });
+});
 
-    it('should allow a shift when no other non-deleted shift exists for the same day', () => {
-      fc.assert(
-        fc.property(
-          isoDateArb,
-          fc.array(calendarEventArb(), { minLength: 0, maxLength: 10 }),
-          (day, existingEvents) => {
-            // Filter to only events that DON'T have a non-deleted shift on this day
-            const eventsWithoutConflict = existingEvents.filter(
-              (e) => !(e.day === day && e.eventType === 'shift' && !e.isDeleted),
-            );
+describe('Property 2: Time validation for reminders rejects invalid intervals on same day', () => {
+  /**
+   * Validates: Requirements 1.10, 11.6
+   *
+   * For same-day reminders (endDay == startDay), if endTime <= startTime
+   * then validateTimeForReminder returns false. If endTime > startTime, returns true.
+   * For multi-day (endDay > startDay), always returns true regardless of time values.
+   */
 
-            const result = checkOneShiftPerDay(day, 'shift', eventsWithoutConflict);
-            return result === true;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
+  it('should return false for same-day reminder with endTime <= startTime', () => {
+    fc.assert(
+      fc.property(dateArb, minutesArb, (day, startTime) => {
+        // endTime can be 0..startTime (i.e. endTime <= startTime)
+        const endTime = fc.sample(fc.integer({ min: 0, max: startTime }), 1)[0];
 
-    it('should reject a shift when a non-deleted shift already exists for the same day', () => {
-      fc.assert(
-        fc.property(
-          isoDateArb,
-          fc.uuid(),
-          fc.array(calendarEventArb(), { minLength: 0, maxLength: 5 }),
-          (day, shiftId, otherEvents) => {
-            // Create a non-deleted shift for the target day
-            const conflictingShift: CalendarEvent = {
-              id: shiftId,
-              eventType: 'shift',
-              eventTypeId: 'type-id',
-              day,
-              startTime: 480,
-              endTime: 960,
-              notes: null,
-              modifiedAt: new Date(),
-              syncedAt: null,
-              isDeleted: false,
-            };
-
-            const allEvents = [conflictingShift, ...otherEvents];
-            const result = checkOneShiftPerDay(day, 'shift', allEvents);
-            return result === false;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
-
-    it('should allow a shift when conflicting shift is excluded by excludeEventId', () => {
-      fc.assert(
-        fc.property(
-          isoDateArb,
-          fc.uuid(),
-          (day, eventId) => {
-            // The only shift for that day is the one being excluded
-            const existingEvents: CalendarEvent[] = [
-              {
-                id: eventId,
-                eventType: 'shift',
-                eventTypeId: 'type-id',
-                day,
-                startTime: 480,
-                endTime: 960,
-                notes: null,
-                modifiedAt: new Date(),
-                syncedAt: null,
-                isDeleted: false,
-              },
-            ];
-
-            const result = checkOneShiftPerDay(day, 'shift', existingEvents, eventId);
-            return result === true;
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
+        expect(validateTimeForReminder(day, day, startTime, endTime)).toBe(false);
+      }),
+    );
   });
 
-  // Feature: gh8-calendar-event-management, Property 14: Required fields validation rejects incomplete events
-  // **Validates: Requirements 1.2, 1.9**
-  describe('Property 14: Required fields validation rejects incomplete events', () => {
-    it('should reject events with at least one required field missing', () => {
-      // Generate a subset of required fields where at least one is missing
-      const incompleteEventArb = fc
-        .record({
-          includeEventType: fc.boolean(),
-          includeEventTypeId: fc.boolean(),
-          includeDay: fc.boolean(),
-          includeStartTime: fc.boolean(),
-          includeEndTime: fc.boolean(),
-          eventType: fc.constantFrom('shift' as const, 'reminder' as const),
-          eventTypeId: fc.uuid(),
-          day: isoDateArb,
-          startTime: fc.integer({ min: 0, max: 1439 }),
-          endTime: fc.integer({ min: 0, max: 1439 }),
-        })
-        .filter(
-          (gen) =>
-            // At least one required field must be missing
-            !gen.includeEventType ||
-            !gen.includeEventTypeId ||
-            !gen.includeDay ||
-            !gen.includeStartTime ||
-            !gen.includeEndTime,
-        )
-        .map((gen) => {
-          const event: Partial<CalendarEvent> = {};
-          if (gen.includeEventType) event.eventType = gen.eventType;
-          if (gen.includeEventTypeId) event.eventTypeId = gen.eventTypeId;
-          if (gen.includeDay) event.day = gen.day;
-          if (gen.includeStartTime) event.startTime = gen.startTime;
-          if (gen.includeEndTime) event.endTime = gen.endTime;
-          return event;
-        });
+  it('should return true for same-day reminder with endTime > startTime', () => {
+    fc.assert(
+      fc.property(
+        dateArb,
+        fc.integer({ min: 0, max: 1438 }),
+        (day, startTime) => {
+          // endTime must be strictly greater than startTime (startTime+1..1439)
+          const endTime = fc.sample(
+            fc.integer({ min: startTime + 1, max: 1439 }),
+            1,
+          )[0];
 
-      fc.assert(
-        fc.property(incompleteEventArb, (event) => {
+          expect(validateTimeForReminder(day, day, startTime, endTime)).toBe(true);
+        },
+      ),
+    );
+  });
+
+  it('should always return true for multi-day reminder regardless of times', () => {
+    fc.assert(
+      fc.property(
+        dateArb,
+        fc.integer({ min: 1, max: 365 }),
+        minutesArb,
+        minutesArb,
+        (startDay, daysForward, startTime, endTime) => {
+          const startDate = new Date(startDay);
+          const endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + daysForward);
+          const endDay = formatDate(endDate);
+
+          expect(validateTimeForReminder(startDay, endDay, startTime, endTime)).toBe(
+            true,
+          );
+        },
+      ),
+    );
+  });
+});
+
+describe('Property 17: Crossing midnight shift auto-sets endDay', () => {
+  /**
+   * Validates: Requirements 1.6, 11.7
+   *
+   * For any startDay and times where endTime < startTime,
+   * computeEndDayForShift returns a day that is exactly 1 day after startDay.
+   * Where endTime >= startTime, returns startDay itself.
+   */
+
+  it('should return startDay + 1 when endTime < startTime (crossing midnight)', () => {
+    fc.assert(
+      fc.property(
+        dateArb,
+        fc.integer({ min: 1, max: 1439 }),
+        (startDay, startTime) => {
+          // endTime must be strictly less than startTime (0..startTime-1)
+          const endTime = fc.sample(
+            fc.integer({ min: 0, max: startTime - 1 }),
+            1,
+          )[0];
+
+          const result = computeEndDayForShift(startDay, startTime, endTime);
+
+          const expectedDate = new Date(startDay);
+          expectedDate.setDate(expectedDate.getDate() + 1);
+          const expectedEndDay = formatDate(expectedDate);
+
+          expect(result).toBe(expectedEndDay);
+        },
+      ),
+    );
+  });
+
+  it('should return startDay when endTime >= startTime (no crossing midnight)', () => {
+    fc.assert(
+      fc.property(
+        dateArb,
+        fc.integer({ min: 0, max: 1438 }),
+        (startDay, startTime) => {
+          // endTime >= startTime (startTime..1439)
+          const endTime = fc.sample(
+            fc.integer({ min: startTime, max: 1439 }),
+            1,
+          )[0];
+
+          const result = computeEndDayForShift(startDay, startTime, endTime);
+
+          expect(result).toBe(startDay);
+        },
+      ),
+    );
+  });
+});
+
+describe('Property 3: One-shift-per-day constraint enforcement', () => {
+  /**
+   * Validates: Requirements 2.1
+   *
+   * For any existing events list with a non-deleted shift on a given startDay,
+   * checkOneShiftPerDay with eventType "shift" and the same startDay returns false.
+   * With eventType "reminder" always returns true.
+   * With excludeEventId matching the existing shift, returns true.
+   */
+
+  const createEvent = (overrides: Partial<CalendarEvent>): CalendarEvent => ({
+    id: 'existing-shift-id',
+    eventType: 'shift',
+    eventTypeId: 'shift-type-1',
+    startDay: '2024-01-15',
+    endDay: '2024-01-15',
+    startTime: 480,
+    endTime: 960,
+    totalHours: 480,
+    notes: null,
+    modifiedAt: new Date(),
+    syncedAt: null,
+    isDeleted: false,
+    ...overrides,
+  });
+
+  it('should return false when a non-deleted shift exists for the same startDay', () => {
+    fc.assert(
+      fc.property(dateArb, fc.uuid(), (startDay, shiftId) => {
+        const existingEvents = [
+          createEvent({ id: shiftId, startDay, isDeleted: false }),
+        ];
+
+        expect(checkOneShiftPerDay(startDay, 'shift', existingEvents)).toBe(false);
+      }),
+    );
+  });
+
+  it('should always return true for reminder eventType regardless of existing shifts', () => {
+    fc.assert(
+      fc.property(dateArb, fc.uuid(), (startDay, shiftId) => {
+        const existingEvents = [
+          createEvent({ id: shiftId, startDay, isDeleted: false }),
+        ];
+
+        expect(checkOneShiftPerDay(startDay, 'reminder', existingEvents)).toBe(true);
+      }),
+    );
+  });
+
+  it('should return true when the conflicting shift is excluded by excludeEventId', () => {
+    fc.assert(
+      fc.property(dateArb, fc.uuid(), (startDay, shiftId) => {
+        const existingEvents = [
+          createEvent({ id: shiftId, startDay, isDeleted: false }),
+        ];
+
+        expect(checkOneShiftPerDay(startDay, 'shift', existingEvents, shiftId)).toBe(
+          true,
+        );
+      }),
+    );
+  });
+
+  it('should return true when existing shift on that day is soft-deleted', () => {
+    fc.assert(
+      fc.property(dateArb, fc.uuid(), (startDay, shiftId) => {
+        const existingEvents = [
+          createEvent({ id: shiftId, startDay, isDeleted: true }),
+        ];
+
+        expect(checkOneShiftPerDay(startDay, 'shift', existingEvents)).toBe(true);
+      }),
+    );
+  });
+});
+
+describe('Property 14: Required fields validation rejects incomplete events', () => {
+  /**
+   * Validates: Requirements 1.2, 1.12
+   *
+   * For any event missing at least one required field
+   * (eventType, eventTypeId, startDay, endDay, totalHours, startTime, endTime),
+   * validateRequiredFields returns isValid=false.
+   */
+
+  const requiredFieldKeys = [
+    'eventType',
+    'eventTypeId',
+    'startDay',
+    'endDay',
+    'totalHours',
+    'startTime',
+    'endTime',
+  ] as const;
+
+  it('should return isValid=false when at least one required field is removed', () => {
+    fc.assert(
+      fc.property(
+        eventTypeArb,
+        fc.uuid(),
+        dateArb,
+        fc.integer({ min: 0, max: 365 }),
+        minutesArb,
+        minutesArb,
+        fc.integer({ min: 0, max: 1440 }),
+        fc.subarray(requiredFieldKeys.slice(), { minLength: 1 }),
+        (
+          eventType,
+          eventTypeId,
+          startDay,
+          dayOffset,
+          startTime,
+          endTime,
+          totalHours,
+          fieldsToRemove,
+        ) => {
+          const startDate = new Date(startDay);
+          const endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + dayOffset);
+          const endDay = formatDate(endDate);
+
+          const event: Record<string, unknown> = {
+            eventType,
+            eventTypeId,
+            startDay,
+            endDay,
+            totalHours,
+            startTime,
+            endTime,
+          };
+
+          // Remove at least one required field
+          for (const field of fieldsToRemove) {
+            delete event[field];
+          }
+
           const result = validateRequiredFields(event);
-          return result.isValid === false;
-        }),
-        { numRuns: 100 },
-      );
-    });
+          expect(result.isValid).toBe(false);
+          expect(Object.keys(result.errors).length).toBeGreaterThan(0);
+        },
+      ),
+    );
+  });
 
-    it('should accept events with all required fields present and valid', () => {
-      const completeEventArb = fc.record({
-        eventType: fc.constantFrom('shift' as const, 'reminder' as const),
-        eventTypeId: fc.uuid(),
-        day: isoDateArb,
-        startTime: fc.integer({ min: 0, max: 1439 }),
-        endTime: fc.integer({ min: 0, max: 1439 }),
-      });
+  it('should return isValid=true when all required fields are present and valid', () => {
+    fc.assert(
+      fc.property(
+        eventTypeArb,
+        fc.uuid(),
+        dateArb,
+        fc.integer({ min: 0, max: 365 }),
+        fc.integer({ min: 0, max: 1439 }),
+        fc.integer({ min: 0, max: 1439 }),
+        fc.integer({ min: 0, max: 9999 }),
+        (eventType, eventTypeId, startDay, dayOffset, startTime, endTime, totalHours) => {
+          const startDate = new Date(startDay);
+          const endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + dayOffset);
+          const endDay = formatDate(endDate);
 
-      fc.assert(
-        fc.property(completeEventArb, (event) => {
+          const event = {
+            eventType,
+            eventTypeId,
+            startDay,
+            endDay,
+            totalHours,
+            startTime,
+            endTime,
+          };
+
           const result = validateRequiredFields(event);
-          return result.isValid === true;
-        }),
-        { numRuns: 100 },
-      );
-    });
-
-    it('should report errors only for the specific missing fields', () => {
-      fc.assert(
-        fc.property(
-          fc.record({
-            includeEventType: fc.boolean(),
-            includeEventTypeId: fc.boolean(),
-            includeDay: fc.boolean(),
-            includeStartTime: fc.boolean(),
-            includeEndTime: fc.boolean(),
-            eventType: fc.constantFrom('shift' as const, 'reminder' as const),
-            eventTypeId: fc.uuid(),
-            day: isoDateArb,
-            startTime: fc.integer({ min: 0, max: 1439 }),
-            endTime: fc.integer({ min: 0, max: 1439 }),
-          }),
-          (gen) => {
-            const event: Partial<CalendarEvent> = {};
-            if (gen.includeEventType) event.eventType = gen.eventType;
-            if (gen.includeEventTypeId) event.eventTypeId = gen.eventTypeId;
-            if (gen.includeDay) event.day = gen.day;
-            if (gen.includeStartTime) event.startTime = gen.startTime;
-            if (gen.includeEndTime) event.endTime = gen.endTime;
-
-            const result = validateRequiredFields(event);
-
-            // Check each field's error matches its inclusion
-            const hasEventTypeError = 'eventType' in result.errors;
-            const hasEventTypeIdError = 'eventTypeId' in result.errors;
-            const hasDayError = 'day' in result.errors;
-            const hasStartTimeError = 'startTime' in result.errors;
-            const hasEndTimeError = 'endTime' in result.errors;
-
-            return (
-              hasEventTypeError === !gen.includeEventType &&
-              hasEventTypeIdError === !gen.includeEventTypeId &&
-              hasDayError === !gen.includeDay &&
-              hasStartTimeError === !gen.includeStartTime &&
-              hasEndTimeError === !gen.includeEndTime
-            );
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
+          expect(result.isValid).toBe(true);
+          expect(Object.keys(result.errors)).toHaveLength(0);
+        },
+      ),
+    );
   });
 });

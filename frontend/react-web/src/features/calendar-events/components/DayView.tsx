@@ -35,37 +35,60 @@ interface PositionedEvent {
 
 /**
  * Places events into non-overlapping columns using a greedy approach.
+ * Uses effective start/end times (adjusted for multi-day events on intermediate days).
  */
 const placeEventsInColumns = (
-  sorted: CalendarEventDisplay[],
+  sorted: { effectiveStart: number; effectiveEnd: number; event: CalendarEventDisplay }[],
 ): { endTime: number; event: CalendarEventDisplay }[][] => {
   const columns: { endTime: number; event: CalendarEventDisplay }[][] = [];
 
-  for (const event of sorted) {
+  for (const { effectiveStart, effectiveEnd, event } of sorted) {
     let placed = false;
     for (let col = 0; col < columns.length; col++) {
       const column = columns[col];
       if (!column) continue;
       const lastInCol = column[column.length - 1];
       if (!lastInCol) continue;
-      if (lastInCol.endTime <= event.startTime) {
-        column.push({ endTime: event.endTime, event });
+      if (lastInCol.endTime <= effectiveStart) {
+        column.push({ endTime: effectiveEnd, event });
         placed = true;
         break;
       }
     }
     if (!placed) {
-      columns.push([{ endTime: event.endTime, event }]);
+      columns.push([{ endTime: effectiveEnd, event }]);
     }
   }
 
   return columns;
 };
 
-const computeEventPositions = (events: CalendarEventDisplay[]): PositionedEvent[] => {
+/**
+ * Returns the effective start/end minutes for an event on a given day.
+ * Multi-day events span 00:00–23:59 on intermediate days.
+ */
+const getEffectiveTimes = (event: CalendarEventDisplay, currentDayStr: string): { effectiveStart: number; effectiveEnd: number } => {
+  const isMultiDay = event.startDay !== event.endDay;
+  if (!isMultiDay) {
+    return { effectiveStart: event.startTime, effectiveEnd: event.endTime };
+  }
+  const isStartDay = event.startDay === currentDayStr;
+  const isEndDay = event.endDay === currentDayStr;
+  return {
+    effectiveStart: isStartDay ? event.startTime : 0,
+    effectiveEnd: isEndDay ? event.endTime : 1439,
+  };
+};
+
+const computeEventPositions = (events: CalendarEventDisplay[], currentDayStr: string): PositionedEvent[] => {
   if (events.length === 0) return [];
 
-  const sorted = [...events].sort((a, b) => a.startTime - b.startTime || a.endTime - b.endTime);
+  const withEffective = events.map((event) => ({
+    ...getEffectiveTimes(event, currentDayStr),
+    event,
+  }));
+
+  const sorted = [...withEffective].sort((a, b) => a.effectiveStart - b.effectiveStart || a.effectiveEnd - b.effectiveEnd);
   const columns = placeEventsInColumns(sorted);
 
   // Build column index map
@@ -78,12 +101,15 @@ const computeEventPositions = (events: CalendarEventDisplay[]): PositionedEvent[
     }
   }
 
-  // Determine overlap groups
-  return sorted.map((event) => {
+  // Determine overlap groups using effective times
+  const effectiveMap = new Map(sorted.map((s) => [s.event.id, s]));
+
+  return sorted.map(({ event }) => {
+    const current = effectiveMap.get(event.id)!;
     const overlapping = sorted.filter(
-      (other) => other.startTime < event.endTime && other.endTime > event.startTime
+      (other) => other.effectiveStart < current.effectiveEnd && other.effectiveEnd > current.effectiveStart
     );
-    const maxCol = Math.max(...overlapping.map((e) => eventColumns.get(e.id) ?? 0));
+    const maxCol = Math.max(...overlapping.map((e) => eventColumns.get(e.event.id) ?? 0));
 
     return {
       event,
@@ -115,8 +141,15 @@ export const DayView = ({ events, currentDate, onEventClick }: DayViewProps) => 
     return HOURS.map((hour) => formatTimeFromMinutes(hour * 60));
   }, []);
 
-  // Memoize positioned events
-  const positionedEvents = useMemo(() => computeEventPositions(events), [events]);
+  // Memoize positioned events with current day context for multi-day handling
+  const currentDayStr = useMemo(() => {
+    const y = currentDate.getFullYear();
+    const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const d = String(currentDate.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }, [currentDate]);
+
+  const positionedEvents = useMemo(() => computeEventPositions(events, currentDayStr), [events, currentDayStr]);
 
   // Auto-scroll to center current hour on mount (today only)
   useEffect(() => {
@@ -197,8 +230,10 @@ export const DayView = ({ events, currentDate, onEventClick }: DayViewProps) => 
             }}
           >
             {positionedEvents.map(({ event, column, totalColumns }) => {
-              const topOffset = (event.startTime / 60) * HOUR_SLOT_HEIGHT;
-              const height = ((event.endTime - event.startTime) / 60) * HOUR_SLOT_HEIGHT;
+              const { effectiveStart, effectiveEnd } = getEffectiveTimes(event, currentDayStr);
+
+              const topOffset = (effectiveStart / 60) * HOUR_SLOT_HEIGHT;
+              const height = Math.max(((effectiveEnd - effectiveStart) / 60) * HOUR_SLOT_HEIGHT, 30);
               const widthPercent = 100 / totalColumns;
               const leftPercent = column * widthPercent;
 

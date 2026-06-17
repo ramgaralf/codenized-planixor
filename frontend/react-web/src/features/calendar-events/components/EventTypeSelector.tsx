@@ -1,18 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useTranslation } from 'react-i18next';
+import { ChevronDown } from 'lucide-react';
 
 import { db } from '@/data/db';
 
 import type { Shift } from '@features/shifts/models';
 import type { Reminder } from '@features/reminders/models';
+import { formatTimeFromMinutes } from '../utils';
 
 interface EventTypeSelectorProps {
-  /** Currently selected event type ("shift" | "reminder" | null) */
   value: { eventType: 'shift' | 'reminder'; eventTypeId: string } | null;
-  /** Callback when user selects an option */
   onChange: (selection: { eventType: 'shift' | 'reminder'; eventTypeId: string }) => void;
-  /** Optional error message to display */
   error?: string;
 }
 
@@ -23,25 +22,18 @@ interface EventTypeOption {
   name: string;
   icon: string;
   backgroundColor: string;
+  startTime?: number;
+  endTime?: number;
 }
 
 /**
- * EventTypeSelector — dropdown component displaying available shifts and reminders.
- *
- * Queries IndexedDB (Dexie) for active, non-deleted shifts and reminders,
- * formats them as "{type}: {name}" sorted alphabetically by display name.
- * On selection, emits eventType and eventTypeId. Displays derived read-only
- * fields (name, icon, backgroundColor) from the selected item.
- *
- * Uses `useLiveQuery` for reactive updates when shifts/reminders change.
- *
- * Data Isolation (Req 13.4): Only queries local db.shifts and db.reminders.
- * No cross-user data is ever accessible — ownership is implicit via local storage.
- *
- * **Validates: Requirements 1.4, 1.5, 13.4**
+ * EventTypeSelector — custom dropdown displaying available shifts and reminders
+ * with rich option rendering: backgroundColor, icon, name, and time range for shifts.
  */
 export const EventTypeSelector = ({ value, onChange, error }: EventTypeSelectorProps) => {
   const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const activeShifts = useLiveQuery(
     () =>
@@ -67,6 +59,8 @@ export const EventTypeSelector = ({ value, onChange, error }: EventTypeSelectorP
       name: shift.name,
       icon: shift.icon,
       backgroundColor: shift.backgroundColor,
+      startTime: shift.startTime,
+      endTime: shift.endTime,
     }));
 
     const reminderOptions: EventTypeOption[] = (activeReminders ?? []).map(
@@ -80,9 +74,14 @@ export const EventTypeSelector = ({ value, onChange, error }: EventTypeSelectorP
       }),
     );
 
-    return [...shiftOptions, ...reminderOptions].sort((a, b) =>
-      a.displayName.localeCompare(b.displayName),
-    );
+    return [...shiftOptions, ...reminderOptions].sort((a, b) => {
+      // First group by type: shifts first, then reminders
+      if (a.eventType !== b.eventType) {
+        return a.eventType === 'shift' ? -1 : 1;
+      }
+      // Within same type, sort alphabetically by name
+      return a.name.localeCompare(b.name);
+    });
   }, [activeShifts, activeReminders, t]);
 
   const selectedOption = useMemo(() => {
@@ -94,96 +93,182 @@ export const EventTypeSelector = ({ value, onChange, error }: EventTypeSelectorP
     );
   }, [value, options]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedValue = e.target.value;
-    if (!selectedValue) return;
+  const handleSelect = useCallback((option: EventTypeOption) => {
+    onChange({ eventType: option.eventType, eventTypeId: option.eventTypeId });
+    setIsOpen(false);
+  }, [onChange]);
 
-    const option = options.find(
-      (opt) => `${opt.eventType}:${opt.eventTypeId}` === selectedValue,
-    );
-    if (option) {
-      onChange({ eventType: option.eventType, eventTypeId: option.eventTypeId });
+  // Close on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
-  };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
 
-  const currentSelectValue = value
-    ? `${value.eventType}:${value.eventTypeId}`
-    : '';
+  // Close on Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} ref={containerRef}>
       <label
-        htmlFor="event-type-selector"
-        style={{ color: 'var(--color-text-primary)', fontSize: '14px', fontWeight: 500 }}
+        id="event-type-selector-label"
+        style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-text-primary)' }}
       >
         {t('calendarEvent.eventTypeSelector.label')}
       </label>
 
-      <select
-        id="event-type-selector"
-        value={currentSelectValue}
-        onChange={handleChange}
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-labelledby="event-type-selector-label"
         aria-describedby={error ? 'event-type-error' : undefined}
-        aria-invalid={!!error}
         style={{
-          padding: '8px 12px',
+          width: '100%',
+          padding: '10px 16px',
+          fontSize: '14px',
           borderRadius: '8px',
           border: `1px solid ${error ? 'var(--color-error)' : 'var(--color-border)'}`,
           backgroundColor: 'var(--color-surface)',
-          color: 'var(--color-text-primary)',
-          fontSize: '14px',
-          width: '100%',
           cursor: 'pointer',
-          appearance: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          textAlign: 'left',
         }}
       >
-        <option value="">
-          {t('calendarEvent.eventTypeSelector.placeholder')}
-        </option>
-        {options.map((option) => (
-          <option
-            key={`${option.eventType}:${option.eventTypeId}`}
-            value={`${option.eventType}:${option.eventTypeId}`}
-          >
-            {option.displayName}
-          </option>
-        ))}
-      </select>
+        {selectedOption ? (
+          <>
+            <span
+              aria-hidden="true"
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '6px',
+                backgroundColor: selectedOption.backgroundColor,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '16px',
+                flexShrink: 0,
+              }}
+            >
+              {selectedOption.icon}
+            </span>
+            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+              <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {selectedOption.name}
+              </span>
+              {selectedOption.eventType === 'shift' && selectedOption.startTime !== undefined && selectedOption.endTime !== undefined && (
+                <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                  {formatTimeFromMinutes(selectedOption.startTime)} – {formatTimeFromMinutes(selectedOption.endTime)}
+                </span>
+              )}
+            </div>
+          </>
+        ) : (
+          <span style={{ flex: 1, color: 'var(--color-text-secondary)' }}>{t('calendarEvent.eventTypeSelector.placeholder')}</span>
+        )}
+        <ChevronDown size={16} style={{ flexShrink: 0, color: 'var(--color-text-secondary)' }} aria-hidden="true" />
+      </button>
 
-      {error && (
-        <p
-          id="event-type-error"
-          role="alert"
-          style={{ color: 'var(--color-error)', fontSize: '12px', margin: 0 }}
+      {/* Dropdown list */}
+      {isOpen && (
+        <div
+          role="listbox"
+          aria-labelledby="event-type-selector-label"
+          style={{
+            border: '1px solid var(--color-border)',
+            borderRadius: '8px',
+            backgroundColor: 'var(--color-surface)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+            maxHeight: '280px',
+            overflowY: 'auto',
+            zIndex: 20,
+          }}
         >
-          {error}
-        </p>
+          {options.map((option) => (
+            <button
+              key={`${option.eventType}:${option.eventTypeId}`}
+              type="button"
+              role="option"
+              aria-selected={value?.eventTypeId === option.eventTypeId && value?.eventType === option.eventType}
+              onClick={() => handleSelect(option)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 16px',
+                border: 'none',
+                borderBottom: '1px solid var(--color-border)',
+                backgroundColor: 'transparent',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'background-color 0.1s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-bg)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+            >
+              {/* Color indicator */}
+              <span
+                aria-hidden="true"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '6px',
+                  backgroundColor: option.backgroundColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px',
+                  flexShrink: 0,
+                }}
+              >
+                {option.icon}
+              </span>
+
+              {/* Name + time info */}
+              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {option.name}
+                </span>
+                {option.eventType === 'shift' && option.startTime !== undefined && option.endTime !== undefined && (
+                  <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                    {formatTimeFromMinutes(option.startTime)} – {formatTimeFromMinutes(option.endTime)}
+                  </span>
+                )}
+              </div>
+            </button>
+          ))}
+          {options.length === 0 && (
+            <div style={{ padding: '16px', fontSize: '13px', color: 'var(--color-text-secondary)', textAlign: 'center' }}>
+              {t('calendarEvent.eventTypeSelector.noOptions', { defaultValue: 'No shifts or reminders available' })}
+            </div>
+          )}
+        </div>
       )}
 
-      {selectedOption && (
-        <div
-          className="flex items-center gap-3"
-          style={{
-            padding: '8px 12px',
-            borderRadius: '8px',
-            backgroundColor: selectedOption.backgroundColor,
-            marginTop: '4px',
-          }}
-          aria-label={t('calendarEvent.eventTypeSelector.selectedDetails')}
-        >
-          <span aria-hidden="true" style={{ fontSize: '20px' }}>
-            {selectedOption.icon}
-          </span>
-          <span
-            style={{
-              fontSize: '14px',
-              fontWeight: 500,
-              color: '#FFFFFF',
-            }}
-          >
-            {selectedOption.name}
-          </span>
-        </div>
+      {error && (
+        <p id="event-type-error" role="alert" style={{ fontSize: '12px', color: 'var(--color-error)', margin: 0 }}>
+          {error}
+        </p>
       )}
     </div>
   );

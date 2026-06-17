@@ -5,7 +5,7 @@
 namespace Codenized.Planixor.Core.Entities;
 
 /// <summary>
-/// Represents a calendar event linking a shift or reminder to a specific day and time range.
+/// Represents a calendar event linking a shift or reminder to a date range and time range.
 /// </summary>
 public sealed class CalendarEvent
 {
@@ -34,9 +34,14 @@ public sealed class CalendarEvent
     public Guid EventTypeId { get; private set; }
 
     /// <summary>
-    /// Gets the calendar day for this event.
+    /// Gets the start calendar day for this event.
     /// </summary>
-    public DateOnly Day { get; private set; }
+    public DateOnly StartDay { get; private set; }
+
+    /// <summary>
+    /// Gets the end calendar day for this event (greater than or equal to StartDay).
+    /// </summary>
+    public DateOnly EndDay { get; private set; }
 
     /// <summary>
     /// Gets the start time in minutes from midnight (0–1439).
@@ -49,7 +54,12 @@ public sealed class CalendarEvent
     public int EndTime { get; private set; }
 
     /// <summary>
-    /// Gets the optional notes for this event.
+    /// Gets the total duration in minutes (computed, read-only).
+    /// </summary>
+    public int TotalHours { get; private set; }
+
+    /// <summary>
+    /// Gets the optional notes for this event (max 250 characters).
     /// </summary>
     public string? Notes { get; private set; }
 
@@ -75,10 +85,12 @@ public sealed class CalendarEvent
     /// <param name="userId">The user identifier.</param>
     /// <param name="eventType">The event type ("shift" or "reminder").</param>
     /// <param name="eventTypeId">The referenced shift or reminder identifier.</param>
-    /// <param name="day">The calendar day.</param>
+    /// <param name="startDay">The start calendar day.</param>
+    /// <param name="endDay">The end calendar day.</param>
     /// <param name="startTime">The start time in minutes from midnight.</param>
     /// <param name="endTime">The end time in minutes from midnight.</param>
-    /// <param name="notes">Optional notes.</param>
+    /// <param name="totalHours">The total duration in minutes.</param>
+    /// <param name="notes">Optional notes (max 250 characters).</param>
     /// <param name="modifiedAt">The modification timestamp (UTC).</param>
     /// <param name="isDeleted">Whether the event is soft-deleted.</param>
     /// <returns>A new <see cref="CalendarEvent"/> instance.</returns>
@@ -87,9 +99,11 @@ public sealed class CalendarEvent
         Guid userId,
         string eventType,
         Guid eventTypeId,
-        DateOnly day,
+        DateOnly startDay,
+        DateOnly endDay,
         int startTime,
         int endTime,
+        int totalHours,
         string? notes,
         DateTime modifiedAt,
         bool isDeleted)
@@ -100,9 +114,11 @@ public sealed class CalendarEvent
             UserId = userId,
             EventType = eventType,
             EventTypeId = eventTypeId,
-            Day = day,
+            StartDay = startDay,
+            EndDay = endDay,
             StartTime = startTime,
             EndTime = endTime,
+            TotalHours = totalHours,
             Notes = notes,
             ModifiedAt = modifiedAt,
             IsDeleted = isDeleted,
@@ -115,27 +131,33 @@ public sealed class CalendarEvent
     /// </summary>
     /// <param name="eventType">The event type ("shift" or "reminder").</param>
     /// <param name="eventTypeId">The referenced shift or reminder identifier.</param>
-    /// <param name="day">The calendar day.</param>
+    /// <param name="startDay">The start calendar day.</param>
+    /// <param name="endDay">The end calendar day.</param>
     /// <param name="startTime">The start time in minutes from midnight.</param>
     /// <param name="endTime">The end time in minutes from midnight.</param>
-    /// <param name="notes">Optional notes.</param>
+    /// <param name="totalHours">The total duration in minutes.</param>
+    /// <param name="notes">Optional notes (max 250 characters).</param>
     /// <param name="modifiedAt">The modification timestamp (UTC).</param>
     /// <param name="isDeleted">Whether the event is soft-deleted.</param>
     public void ApplySync(
         string eventType,
         Guid eventTypeId,
-        DateOnly day,
+        DateOnly startDay,
+        DateOnly endDay,
         int startTime,
         int endTime,
+        int totalHours,
         string? notes,
         DateTime modifiedAt,
         bool isDeleted)
     {
         this.EventType = eventType;
         this.EventTypeId = eventTypeId;
-        this.Day = day;
+        this.StartDay = startDay;
+        this.EndDay = endDay;
         this.StartTime = startTime;
         this.EndTime = endTime;
+        this.TotalHours = totalHours;
         this.Notes = notes;
         this.ModifiedAt = modifiedAt;
         this.IsDeleted = isDeleted;

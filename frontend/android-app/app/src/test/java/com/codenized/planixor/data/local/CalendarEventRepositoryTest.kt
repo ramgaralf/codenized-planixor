@@ -36,19 +36,19 @@ class FakeCalendarEventDao : CalendarEventDao {
 
     override fun getByDateRange(startDate: String, endDate: String): Flow<List<CalendarEventEntity>> {
         return flow.map { events ->
-            events.filter { it.day in startDate..endDate && !it.isDeleted }
+            events.filter { it.startDay <= endDate && it.endDay >= startDate && !it.isDeleted }
         }
     }
 
     override fun getByDate(day: String): Flow<List<CalendarEventEntity>> {
         return flow.map { events ->
-            events.filter { it.day == day && !it.isDeleted }
+            events.filter { it.startDay <= day && it.endDay >= day && !it.isDeleted }
         }
     }
 
-    override suspend fun getShiftsForDate(day: String, excludeId: String): List<CalendarEventEntity> {
+    override suspend fun getShiftsForDate(startDay: String, excludeId: String): List<CalendarEventEntity> {
         return store.values.filter {
-            it.day == day && it.eventType == "shift" && !it.isDeleted && it.id != excludeId
+            it.startDay == startDay && it.eventType == "shift" && !it.isDeleted && it.id != excludeId
         }
     }
 
@@ -74,8 +74,10 @@ class FakeCalendarEventDao : CalendarEventDao {
 
 /**
  * Unit tests for CalendarEventRepository CRUD operations with change tracking.
+ * Tests new multi-day model with startDay/endDay, totalHours, conditional time validation,
+ * and crossing midnight auto-set for shifts.
  *
- * Validates: Requirements 1.8, 2.1, 11.4, 11.5
+ * Validates: Requirements 1.1, 1.6, 2.1, 7.2, 11.4, 11.5, 11.6, 11.7
  */
 class CalendarEventRepositoryTest {
 
@@ -95,10 +97,12 @@ class CalendarEventRepositoryTest {
         val result = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
+            shiftHoursWorked = 540,
         )
         assertTrue(result is CalendarEventResult.Success)
         val event = (result as CalendarEventResult.Success).event
@@ -112,10 +116,12 @@ class CalendarEventRepositoryTest {
         val result = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
+            shiftHoursWorked = 540,
         )
         val after = System.currentTimeMillis()
         val event = (result as CalendarEventResult.Success).event
@@ -127,10 +133,12 @@ class CalendarEventRepositoryTest {
         val result = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
+            shiftHoursWorked = 540,
         )
         val event = (result as CalendarEventResult.Success).event
         assertNull(event.syncedAt)
@@ -141,40 +149,95 @@ class CalendarEventRepositoryTest {
         val result = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
+            shiftHoursWorked = 540,
         )
         val event = (result as CalendarEventResult.Success).event
         assertFalse(event.isDeleted)
     }
 
-    // --- Create: rejects when endTime <= startTime ---
-
     @Test
-    fun `create should reject when endTime equals startTime`() = runTest {
+    fun `create should compute totalHours from shiftHoursWorked for shift events`() = runTest {
         val result = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 480,
+            endTime = 1020,
+            notes = null,
+            shiftHoursWorked = 540,
+        )
+        val event = (result as CalendarEventResult.Success).event
+        assertEquals(540, event.totalHours)
+    }
+
+    @Test
+    fun `create should compute totalHours from day and time difference for reminders`() = runTest {
+        val result = repository.create(
+            eventType = "reminder",
+            eventTypeId = "reminder-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 480,
+            endTime = 1020,
+            notes = null,
+        )
+        val event = (result as CalendarEventResult.Success).event
+        assertEquals(540, event.totalHours)
+    }
+
+    // --- Create: day range validation ---
+
+    @Test
+    fun `create should reject when endDay is before startDay`() = runTest {
+        val result = repository.create(
+            eventType = "reminder",
+            eventTypeId = "reminder-1",
+            startDay = "2024-01-16",
+            endDay = "2024-01-15",
+            startTime = 480,
+            endTime = 1020,
+            notes = null,
+        )
+        assertTrue(result is CalendarEventResult.ValidationError)
+        assertEquals(
+            "End day must be on or after start day",
+            (result as CalendarEventResult.ValidationError).message,
+        )
+    }
+
+    // --- Create: time validation for reminders (same day only) ---
+
+    @Test
+    fun `create should reject reminder when endTime equals startTime on same day`() = runTest {
+        val result = repository.create(
+            eventType = "reminder",
+            eventTypeId = "reminder-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 480,
             notes = null,
         )
         assertTrue(result is CalendarEventResult.ValidationError)
         assertEquals(
-            "End time must be after start time",
+            "End time must be after start time for same-day reminders",
             (result as CalendarEventResult.ValidationError).message,
         )
     }
 
     @Test
-    fun `create should reject when endTime is less than startTime`() = runTest {
+    fun `create should reject reminder when endTime is less than startTime on same day`() = runTest {
         val result = repository.create(
-            eventType = "shift",
-            eventTypeId = "shift-1",
-            day = "2024-01-15",
+            eventType = "reminder",
+            eventTypeId = "reminder-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 1020,
             endTime = 480,
             notes = null,
@@ -182,28 +245,97 @@ class CalendarEventRepositoryTest {
         assertTrue(result is CalendarEventResult.ValidationError)
     }
 
-    // --- Create: rejects shift when another shift exists on same day ---
+    @Test
+    fun `create should allow reminder when endTime less than startTime on different days`() = runTest {
+        val result = repository.create(
+            eventType = "reminder",
+            eventTypeId = "reminder-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-16",
+            startTime = 1020,
+            endTime = 480,
+            notes = null,
+        )
+        assertTrue(result is CalendarEventResult.Success)
+    }
 
     @Test
-    fun `create should reject shift when another shift exists on same day`() = runTest {
-        // First shift creation succeeds
-        repository.create(
+    fun `create should not apply time validation to shift events`() = runTest {
+        // Shifts with endTime < startTime should be allowed (crossing midnight)
+        val result = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 1320,
+            endTime = 360,
+            notes = null,
+            shiftHoursWorked = 480,
+        )
+        assertTrue(result is CalendarEventResult.Success)
+        // Crossing midnight auto-sets endDay = startDay + 1
+        val event = (result as CalendarEventResult.Success).event
+        assertEquals("2024-01-16", event.endDay)
+    }
+
+    // --- Create: crossing midnight auto-sets endDay ---
+
+    @Test
+    fun `create should auto-set endDay to startDay plus 1 for crossing midnight shift`() = runTest {
+        val result = repository.create(
+            eventType = "shift",
+            eventTypeId = "shift-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 1320,
+            endTime = 360,
+            notes = null,
+            shiftHoursWorked = 480,
+        )
+        val event = (result as CalendarEventResult.Success).event
+        assertEquals("2024-01-16", event.endDay)
+    }
+
+    @Test
+    fun `create should keep endDay as startDay when shift does not cross midnight`() = runTest {
+        val result = repository.create(
+            eventType = "shift",
+            eventTypeId = "shift-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
+            shiftHoursWorked = 540,
+        )
+        val event = (result as CalendarEventResult.Success).event
+        assertEquals("2024-01-15", event.endDay)
+    }
+
+    // --- Create: rejects shift when another shift exists on same startDay ---
+
+    @Test
+    fun `create should reject shift when another shift exists on same startDay`() = runTest {
+        repository.create(
+            eventType = "shift",
+            eventTypeId = "shift-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 480,
+            endTime = 1020,
+            notes = null,
+            shiftHoursWorked = 540,
         )
 
-        // Second shift on same day fails
         val result = repository.create(
             eventType = "shift",
             eventTypeId = "shift-2",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 1080,
             endTime = 1200,
             notes = null,
+            shiftHoursWorked = 120,
         )
         assertTrue(result is CalendarEventResult.ValidationError)
         assertEquals(
@@ -213,20 +345,23 @@ class CalendarEventRepositoryTest {
     }
 
     @Test
-    fun `create should allow reminder when shift exists on same day`() = runTest {
+    fun `create should allow reminder when shift exists on same startDay`() = runTest {
         repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
+            shiftHoursWorked = 540,
         )
 
         val result = repository.create(
             eventType = "reminder",
             eventTypeId = "reminder-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 600,
             endTime = 660,
             notes = null,
@@ -241,10 +376,12 @@ class CalendarEventRepositoryTest {
         val createResult = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
+            shiftHoursWorked = 540,
         )
         val created = (createResult as CalendarEventResult.Success).event
 
@@ -253,10 +390,12 @@ class CalendarEventRepositoryTest {
             id = created.id,
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1080,
             notes = "Updated notes",
+            shiftHoursWorked = 600,
         )
         val after = System.currentTimeMillis()
 
@@ -269,10 +408,12 @@ class CalendarEventRepositoryTest {
         val createResult = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
+            shiftHoursWorked = 540,
         )
         val created = (createResult as CalendarEventResult.Success).event
 
@@ -280,23 +421,26 @@ class CalendarEventRepositoryTest {
             id = created.id,
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1080,
             notes = null,
+            shiftHoursWorked = 600,
         )
         val updated = (updateResult as CalendarEventResult.Success).event
         assertNull(updated.syncedAt)
     }
 
-    // --- Update: validates time range ---
+    // --- Update: validates day range ---
 
     @Test
-    fun `update should reject when endTime is not greater than startTime`() = runTest {
+    fun `update should reject when endDay is before startDay`() = runTest {
         val createResult = repository.create(
-            eventType = "shift",
-            eventTypeId = "shift-1",
-            day = "2024-01-15",
+            eventType = "reminder",
+            eventTypeId = "reminder-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
@@ -305,16 +449,49 @@ class CalendarEventRepositoryTest {
 
         val updateResult = repository.update(
             id = created.id,
-            eventType = "shift",
-            eventTypeId = "shift-1",
-            day = "2024-01-15",
+            eventType = "reminder",
+            eventTypeId = "reminder-1",
+            startDay = "2024-01-16",
+            endDay = "2024-01-15",
+            startTime = 480,
+            endTime = 1020,
+            notes = null,
+        )
+        assertTrue(updateResult is CalendarEventResult.ValidationError)
+        assertEquals(
+            "End day must be on or after start day",
+            (updateResult as CalendarEventResult.ValidationError).message,
+        )
+    }
+
+    // --- Update: validates time for reminders (same day only) ---
+
+    @Test
+    fun `update should reject reminder when endTime not greater than startTime on same day`() = runTest {
+        val createResult = repository.create(
+            eventType = "reminder",
+            eventTypeId = "reminder-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 480,
+            endTime = 1020,
+            notes = null,
+        )
+        val created = (createResult as CalendarEventResult.Success).event
+
+        val updateResult = repository.update(
+            id = created.id,
+            eventType = "reminder",
+            eventTypeId = "reminder-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 1020,
             endTime = 480,
             notes = null,
         )
         assertTrue(updateResult is CalendarEventResult.ValidationError)
         assertEquals(
-            "End time must be after start time",
+            "End time must be after start time for same-day reminders",
             (updateResult as CalendarEventResult.ValidationError).message,
         )
     }
@@ -322,11 +499,114 @@ class CalendarEventRepositoryTest {
     // --- Update: validates one-shift-per-day (excluding self) ---
 
     @Test
-    fun `update should allow updating a shift on the same day when it is the only shift`() = runTest {
+    fun `update should allow updating a shift on the same startDay when it is the only shift`() = runTest {
         val createResult = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 480,
+            endTime = 1020,
+            notes = null,
+            shiftHoursWorked = 540,
+        )
+        val created = (createResult as CalendarEventResult.Success).event
+
+        val updateResult = repository.update(
+            id = created.id,
+            eventType = "shift",
+            eventTypeId = "shift-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 540,
+            endTime = 1080,
+            notes = "Updated",
+            shiftHoursWorked = 540,
+        )
+        assertTrue(updateResult is CalendarEventResult.Success)
+    }
+
+    @Test
+    fun `update should reject shift move to startDay with existing shift`() = runTest {
+        repository.create(
+            eventType = "shift",
+            eventTypeId = "shift-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 480,
+            endTime = 1020,
+            notes = null,
+            shiftHoursWorked = 540,
+        )
+
+        val createResult = repository.create(
+            eventType = "shift",
+            eventTypeId = "shift-2",
+            startDay = "2024-01-16",
+            endDay = "2024-01-16",
+            startTime = 480,
+            endTime = 1020,
+            notes = null,
+            shiftHoursWorked = 540,
+        )
+        val shiftB = (createResult as CalendarEventResult.Success).event
+
+        val updateResult = repository.update(
+            id = shiftB.id,
+            eventType = "shift",
+            eventTypeId = "shift-2",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 1080,
+            endTime = 1200,
+            notes = null,
+            shiftHoursWorked = 120,
+        )
+        assertTrue(updateResult is CalendarEventResult.ValidationError)
+        assertEquals(
+            "Only one shift per day is allowed",
+            (updateResult as CalendarEventResult.ValidationError).message,
+        )
+    }
+
+    // --- Update: recomputes totalHours ---
+
+    @Test
+    fun `update should recompute totalHours for shift from shiftHoursWorked`() = runTest {
+        val createResult = repository.create(
+            eventType = "shift",
+            eventTypeId = "shift-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 480,
+            endTime = 1020,
+            notes = null,
+            shiftHoursWorked = 540,
+        )
+        val created = (createResult as CalendarEventResult.Success).event
+
+        val updateResult = repository.update(
+            id = created.id,
+            eventType = "shift",
+            eventTypeId = "shift-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
+            startTime = 480,
+            endTime = 1020,
+            notes = null,
+            shiftHoursWorked = 480,
+        )
+        val updated = (updateResult as CalendarEventResult.Success).event
+        assertEquals(480, updated.totalHours)
+    }
+
+    @Test
+    fun `update should recompute totalHours for reminder from time difference`() = runTest {
+        val createResult = repository.create(
+            eventType = "reminder",
+            eventTypeId = "reminder-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
@@ -335,54 +615,17 @@ class CalendarEventRepositoryTest {
 
         val updateResult = repository.update(
             id = created.id,
-            eventType = "shift",
-            eventTypeId = "shift-1",
-            day = "2024-01-15",
-            startTime = 540,
-            endTime = 1080,
-            notes = "Updated",
-        )
-        assertTrue(updateResult is CalendarEventResult.Success)
-    }
-
-    @Test
-    fun `update should reject shift move to day with existing shift`() = runTest {
-        // Create shift on day A
-        repository.create(
-            eventType = "shift",
-            eventTypeId = "shift-1",
-            day = "2024-01-15",
+            eventType = "reminder",
+            eventTypeId = "reminder-1",
+            startDay = "2024-01-15",
+            endDay = "2024-01-16",
             startTime = 480,
             endTime = 1020,
             notes = null,
         )
-
-        // Create shift on day B
-        val createResult = repository.create(
-            eventType = "shift",
-            eventTypeId = "shift-2",
-            day = "2024-01-16",
-            startTime = 480,
-            endTime = 1020,
-            notes = null,
-        )
-        val shiftB = (createResult as CalendarEventResult.Success).event
-
-        // Try to move shift B to day A (which already has a shift)
-        val updateResult = repository.update(
-            id = shiftB.id,
-            eventType = "shift",
-            eventTypeId = "shift-2",
-            day = "2024-01-15",
-            startTime = 1080,
-            endTime = 1200,
-            notes = null,
-        )
-        assertTrue(updateResult is CalendarEventResult.ValidationError)
-        assertEquals(
-            "Only one shift per day is allowed",
-            (updateResult as CalendarEventResult.ValidationError).message,
-        )
+        val updated = (updateResult as CalendarEventResult.Success).event
+        // 1 day difference + (1020 - 480) = 1440 + 540 = 1980
+        assertEquals(1980, updated.totalHours)
     }
 
     // --- SoftDelete: sets isDeleted=true, updates modifiedAt, resets syncedAt ---
@@ -392,10 +635,12 @@ class CalendarEventRepositoryTest {
         val createResult = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
+            shiftHoursWorked = 540,
         )
         val created = (createResult as CalendarEventResult.Success).event
 
@@ -409,10 +654,12 @@ class CalendarEventRepositoryTest {
         val createResult = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
+            shiftHoursWorked = 540,
         )
         val created = (createResult as CalendarEventResult.Success).event
 
@@ -429,10 +676,12 @@ class CalendarEventRepositoryTest {
         val createResult = repository.create(
             eventType = "shift",
             eventTypeId = "shift-1",
-            day = "2024-01-15",
+            startDay = "2024-01-15",
+            endDay = "2024-01-15",
             startTime = 480,
             endTime = 1020,
             notes = null,
+            shiftHoursWorked = 540,
         )
         val created = (createResult as CalendarEventResult.Success).event
 

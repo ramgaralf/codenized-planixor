@@ -53,6 +53,8 @@ public sealed class CalendarEventSyncPushServiceTests
             string.Empty,
             Guid.Empty,
             string.Empty,
+            string.Empty,
+            0,
             0,
             0,
             null,
@@ -119,8 +121,10 @@ public sealed class CalendarEventSyncPushServiceTests
             "shift",
             Guid.NewGuid(),
             "2024-06-15",
+            "2024-06-15",
             480,
             960,
+            480,
             "Updated notes",
             newerTimestamp,
             false);
@@ -131,8 +135,10 @@ public sealed class CalendarEventSyncPushServiceTests
             "shift",
             Guid.NewGuid(),
             DateOnly.Parse("2024-06-15"),
+            DateOnly.Parse("2024-06-15"),
             480,
             960,
+            480,
             "Old notes",
             olderTimestamp,
             false);
@@ -171,8 +177,10 @@ public sealed class CalendarEventSyncPushServiceTests
             "shift",
             Guid.NewGuid(),
             "2024-06-15",
+            "2024-06-15",
             480,
             960,
+            480,
             "Old notes",
             olderTimestamp,
             false);
@@ -183,8 +191,10 @@ public sealed class CalendarEventSyncPushServiceTests
             "shift",
             Guid.NewGuid(),
             DateOnly.Parse("2024-06-15"),
+            DateOnly.Parse("2024-06-15"),
             480,
             960,
+            480,
             "Current notes",
             newerTimestamp,
             false);
@@ -232,6 +242,222 @@ public sealed class CalendarEventSyncPushServiceTests
         await this.commands.Received(1).UpsertBatchAsync(
             Arg.Is<IReadOnlyList<CalendarEventEntity>>(list =>
                 list.Count == 1 && list[0].Id == recordId && list[0].UserId == userId));
+    }
+
+    /// <summary>
+    /// Run with EndDay before StartDay rejects record.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Test]
+    public async Task Run_WithEndDayBeforeStartDay_RejectsRecord()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        Guid recordId = Guid.NewGuid();
+        var record = new CalendarEventSyncRecord(
+            recordId,
+            "shift",
+            Guid.NewGuid(),
+            "2024-06-20",
+            "2024-06-15",
+            480,
+            960,
+            480,
+            null,
+            DateTime.UtcNow,
+            false);
+
+        var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
+
+        // Act
+        CalendarEventSyncPushResponse response = await this.service.Run(request);
+
+        // Assert
+        Assert.That(response.AcknowledgedIds, Is.Empty);
+        Assert.That(response.RejectedIds, Has.Count.EqualTo(1));
+        Assert.That(response.RejectedIds[0].Id, Is.EqualTo(recordId));
+        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("Missing required fields"));
+    }
+
+    /// <summary>
+    /// Run with EndDay equal to StartDay accepts record for shifts regardless of times.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Test]
+    public async Task Run_WithShiftSameDayEndTimeLessThanStartTime_AcceptsRecord()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        Guid recordId = Guid.NewGuid();
+        var record = new CalendarEventSyncRecord(
+            recordId,
+            "shift",
+            Guid.NewGuid(),
+            "2024-06-15",
+            "2024-06-15",
+            960,
+            480,
+            480,
+            null,
+            DateTime.UtcNow,
+            false);
+
+        var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
+
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+            .Returns(new HashSet<Guid>());
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+            .Returns(new List<CalendarEventEntity>());
+
+        // Act
+        CalendarEventSyncPushResponse response = await this.service.Run(request);
+
+        // Assert
+        Assert.That(response.AcknowledgedIds, Contains.Item(recordId));
+        Assert.That(response.RejectedIds, Is.Empty);
+    }
+
+    /// <summary>
+    /// Run with reminder same day and EndTime less than or equal to StartTime rejects record.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Test]
+    public async Task Run_WithReminderSameDayEndTimeLessOrEqualStartTime_RejectsRecord()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        Guid recordId = Guid.NewGuid();
+        var record = new CalendarEventSyncRecord(
+            recordId,
+            "reminder",
+            Guid.NewGuid(),
+            "2024-06-15",
+            "2024-06-15",
+            960,
+            480,
+            0,
+            null,
+            DateTime.UtcNow,
+            false);
+
+        var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
+
+        // Act
+        CalendarEventSyncPushResponse response = await this.service.Run(request);
+
+        // Assert
+        Assert.That(response.AcknowledgedIds, Is.Empty);
+        Assert.That(response.RejectedIds, Has.Count.EqualTo(1));
+        Assert.That(response.RejectedIds[0].Id, Is.EqualTo(recordId));
+        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("Missing required fields"));
+    }
+
+    /// <summary>
+    /// Run with reminder same day and EndTime equal to StartTime rejects record.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Test]
+    public async Task Run_WithReminderSameDayEndTimeEqualStartTime_RejectsRecord()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        Guid recordId = Guid.NewGuid();
+        var record = new CalendarEventSyncRecord(
+            recordId,
+            "reminder",
+            Guid.NewGuid(),
+            "2024-06-15",
+            "2024-06-15",
+            480,
+            480,
+            0,
+            null,
+            DateTime.UtcNow,
+            false);
+
+        var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
+
+        // Act
+        CalendarEventSyncPushResponse response = await this.service.Run(request);
+
+        // Assert
+        Assert.That(response.AcknowledgedIds, Is.Empty);
+        Assert.That(response.RejectedIds, Has.Count.EqualTo(1));
+        Assert.That(response.RejectedIds[0].Id, Is.EqualTo(recordId));
+        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("Missing required fields"));
+    }
+
+    /// <summary>
+    /// Run with reminder different days and any time combination accepts record.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Test]
+    public async Task Run_WithReminderDifferentDaysEndTimeLessThanStartTime_AcceptsRecord()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        Guid recordId = Guid.NewGuid();
+        var record = new CalendarEventSyncRecord(
+            recordId,
+            "reminder",
+            Guid.NewGuid(),
+            "2024-06-15",
+            "2024-06-16",
+            960,
+            480,
+            1440,
+            null,
+            DateTime.UtcNow,
+            false);
+
+        var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
+
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+            .Returns(new HashSet<Guid>());
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+            .Returns(new List<CalendarEventEntity>());
+
+        // Act
+        CalendarEventSyncPushResponse response = await this.service.Run(request);
+
+        // Assert
+        Assert.That(response.AcknowledgedIds, Contains.Item(recordId));
+        Assert.That(response.RejectedIds, Is.Empty);
+    }
+
+    /// <summary>
+    /// Run with negative TotalHours rejects record.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Test]
+    public async Task Run_WithNegativeTotalHours_RejectsRecord()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        Guid recordId = Guid.NewGuid();
+        var record = new CalendarEventSyncRecord(
+            recordId,
+            "shift",
+            Guid.NewGuid(),
+            "2024-06-15",
+            "2024-06-15",
+            480,
+            960,
+            -1,
+            null,
+            DateTime.UtcNow,
+            false);
+
+        var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
+
+        // Act
+        CalendarEventSyncPushResponse response = await this.service.Run(request);
+
+        // Assert
+        Assert.That(response.AcknowledgedIds, Is.Empty);
+        Assert.That(response.RejectedIds, Has.Count.EqualTo(1));
+        Assert.That(response.RejectedIds[0].Id, Is.EqualTo(recordId));
+        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("Missing required fields"));
     }
 
     /// <summary>
@@ -308,6 +534,8 @@ public sealed class CalendarEventSyncPushServiceTests
             string.Empty,
             Guid.Empty,
             string.Empty,
+            string.Empty,
+            0,
             0,
             0,
             null,
@@ -338,8 +566,10 @@ public sealed class CalendarEventSyncPushServiceTests
             "shift",
             Guid.NewGuid(),
             "2024-06-15",
+            "2024-06-15",
             480,
             960,
+            480,
             "Test notes",
             DateTime.UtcNow,
             false);

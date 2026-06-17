@@ -53,8 +53,10 @@ public sealed class CalendarEventSyncPullServiceTests
             "shift",
             Guid.NewGuid(),
             DateOnly.Parse("2024-06-15"),
+            DateOnly.Parse("2024-06-15"),
             480,
             960,
+            480,
             "Test notes",
             lastSyncedAt,
             false);
@@ -148,8 +150,10 @@ public sealed class CalendarEventSyncPullServiceTests
             "reminder",
             Guid.NewGuid(),
             DateOnly.Parse("2024-06-20"),
+            DateOnly.Parse("2024-06-20"),
             120,
             180,
+            60,
             null,
             DateTime.UtcNow,
             false);
@@ -190,8 +194,10 @@ public sealed class CalendarEventSyncPullServiceTests
             "shift",
             eventTypeId,
             DateOnly.Parse("2024-06-15"),
+            DateOnly.Parse("2024-06-15"),
             480,
             960,
+            480,
             "Meeting notes",
             modifiedAt,
             false);
@@ -215,11 +221,120 @@ public sealed class CalendarEventSyncPullServiceTests
         Assert.That(record.Id, Is.EqualTo(eventId));
         Assert.That(record.EventType, Is.EqualTo("shift"));
         Assert.That(record.EventTypeId, Is.EqualTo(eventTypeId));
-        Assert.That(record.Day, Is.EqualTo("2024-06-15"));
+        Assert.That(record.StartDay, Is.EqualTo("2024-06-15"));
+        Assert.That(record.EndDay, Is.EqualTo("2024-06-15"));
+        Assert.That(record.TotalHours, Is.EqualTo(480));
         Assert.That(record.StartTime, Is.EqualTo(480));
         Assert.That(record.EndTime, Is.EqualTo(960));
         Assert.That(record.Notes, Is.EqualTo("Meeting notes"));
         Assert.That(record.ModifiedAt, Is.EqualTo(modifiedAt));
         Assert.That(record.IsDeleted, Is.False);
+    }
+
+    /// <summary>
+    /// Run maps multi-day event correctly with StartDay and EndDay.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Test]
+    public async Task Run_WithMultiDayEvent_MapsStartDayAndEndDayCorrectly()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        Guid eventId = Guid.NewGuid();
+        Guid eventTypeId = Guid.NewGuid();
+        DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
+        DateTime modifiedAt = new DateTime(2024, 7, 1, 9, 0, 0, DateTimeKind.Utc);
+
+        CalendarEventEntity entity = CalendarEventEntity.CreateFromSync(
+            eventId,
+            userId,
+            "reminder",
+            eventTypeId,
+            DateOnly.Parse("2024-07-01"),
+            DateOnly.Parse("2024-07-03"),
+            600,
+            720,
+            3000,
+            "Multi-day reminder",
+            modifiedAt,
+            false);
+
+        var request = new CalendarEventSyncPullRequest(userId, lastSyncedAt, null);
+
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+            .Returns(new CalendarEventSyncPullResult
+            {
+                CalendarEvents = [entity],
+                Cursor = null,
+                HasMore = false,
+            });
+
+        // Act
+        CalendarEventSyncPullResponse response = await this.service.Run(request);
+
+        // Assert
+        Assert.That(response.Records, Has.Count.EqualTo(1));
+        CalendarEventSyncRecord record = response.Records[0];
+        Assert.That(record.Id, Is.EqualTo(eventId));
+        Assert.That(record.EventType, Is.EqualTo("reminder"));
+        Assert.That(record.EventTypeId, Is.EqualTo(eventTypeId));
+        Assert.That(record.StartDay, Is.EqualTo("2024-07-01"));
+        Assert.That(record.EndDay, Is.EqualTo("2024-07-03"));
+        Assert.That(record.TotalHours, Is.EqualTo(3000));
+        Assert.That(record.StartTime, Is.EqualTo(600));
+        Assert.That(record.EndTime, Is.EqualTo(720));
+        Assert.That(record.Notes, Is.EqualTo("Multi-day reminder"));
+        Assert.That(record.ModifiedAt, Is.EqualTo(modifiedAt));
+        Assert.That(record.IsDeleted, Is.False);
+    }
+
+    /// <summary>
+    /// Run maps deleted event with new fields correctly.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Test]
+    public async Task Run_WithDeletedEvent_MapsIsDeletedAndFieldsCorrectly()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        Guid eventId = Guid.NewGuid();
+        Guid eventTypeId = Guid.NewGuid();
+        DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
+        DateTime modifiedAt = new DateTime(2024, 8, 10, 14, 30, 0, DateTimeKind.Utc);
+
+        CalendarEventEntity entity = CalendarEventEntity.CreateFromSync(
+            eventId,
+            userId,
+            "shift",
+            eventTypeId,
+            DateOnly.Parse("2024-08-10"),
+            DateOnly.Parse("2024-08-11"),
+            1380,
+            360,
+            480,
+            null,
+            modifiedAt,
+            true);
+
+        var request = new CalendarEventSyncPullRequest(userId, lastSyncedAt, null);
+
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+            .Returns(new CalendarEventSyncPullResult
+            {
+                CalendarEvents = [entity],
+                Cursor = null,
+                HasMore = false,
+            });
+
+        // Act
+        CalendarEventSyncPullResponse response = await this.service.Run(request);
+
+        // Assert
+        Assert.That(response.Records, Has.Count.EqualTo(1));
+        CalendarEventSyncRecord record = response.Records[0];
+        Assert.That(record.StartDay, Is.EqualTo("2024-08-10"));
+        Assert.That(record.EndDay, Is.EqualTo("2024-08-11"));
+        Assert.That(record.TotalHours, Is.EqualTo(480));
+        Assert.That(record.IsDeleted, Is.True);
     }
 }

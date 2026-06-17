@@ -2,9 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { CalendarEventDisplay } from '@features/calendar-events/models';
-import { formatDuration, formatTimeFromMinutes, getDateRangeForWeek } from '@features/calendar-events/utils';
-
-const MAX_NAME_LENGTH = 25;
+import { getDateRangeForWeek } from '@features/calendar-events/utils';
 
 /**
  * Returns a formatted ISO date string (YYYY-MM-DD) from a Date object.
@@ -52,11 +50,68 @@ const isSameDay = (a: Date, b: Date): boolean => {
 };
 
 /**
- * Truncates text to maxLength characters with ellipsis if needed.
+ * Advances an ISO date string by one day.
  */
-const truncateName = (text: string, maxLength: number): string => {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + '…';
+const nextDayISO = (current: string): string => {
+  const [y, m, d] = current.split('-').map(Number) as [number, number, number];
+  const nextDate = new Date(y, m - 1, d + 1);
+  const ny = nextDate.getFullYear();
+  const nm = String(nextDate.getMonth() + 1).padStart(2, '0');
+  const nd = String(nextDate.getDate()).padStart(2, '0');
+  return `${ny}-${nm}-${nd}`;
+};
+
+/**
+ * Adds an event to the map for a specific day.
+ */
+const addEventToDay = (map: Record<string, CalendarEventDisplay[]>, day: string, event: CalendarEventDisplay): void => {
+  if (!map[day]) {
+    map[day] = [];
+  }
+  map[day]!.push(event);
+};
+
+/**
+ * Expands a reminder event to all days it spans within the given range.
+ */
+const expandReminderToDays = (
+  map: Record<string, CalendarEventDisplay[]>,
+  event: CalendarEventDisplay,
+  rangeStart: string,
+  rangeEnd: string,
+): void => {
+  const eventStart = event.startDay < rangeStart ? rangeStart : event.startDay;
+  const eventEnd = event.endDay > rangeEnd ? rangeEnd : event.endDay;
+  let current = eventStart;
+  while (current <= eventEnd) {
+    addEventToDay(map, current, event);
+    current = nextDayISO(current);
+  }
+};
+
+/**
+ * Groups events by day for Week/Month/Year views.
+ * Shifts: only on startDay. Reminders: expanded to all spanned days.
+ */
+const groupEventsByDay = (
+  events: CalendarEventDisplay[],
+  rangeStart: string,
+  rangeEnd: string,
+): Record<string, CalendarEventDisplay[]> => {
+  const map: Record<string, CalendarEventDisplay[]> = {};
+  for (const event of events) {
+    if (event.eventType === 'shift') {
+      if (event.startDay >= rangeStart && event.startDay <= rangeEnd) {
+        addEventToDay(map, event.startDay, event);
+      }
+    } else {
+      expandReminderToDays(map, event, rangeStart, rangeEnd);
+    }
+  }
+  for (const day of Object.keys(map)) {
+    map[day]!.sort((a, b) => a.startTime - b.startTime);
+  }
+  return map;
 };
 
 interface WeekViewProps {
@@ -83,31 +138,23 @@ export const WeekView = ({ events, currentDate, onEventClick }: WeekViewProps) =
     [currentDate]
   );
 
-  // Filter: isDeleted === false AND day within Mon–Sun range
+  // Filter: isDeleted === false AND [startDay, endDay] intersects [start, end]
   const filteredEvents = useMemo(
     () =>
       events.filter(
         (event) =>
-          !event.isDeleted && event.day >= start && event.day <= end
+          !event.isDeleted && event.startDay <= end && event.endDay >= start
       ),
     [events, start, end]
   );
 
-  // Group events by day and sort by startTime
-  const eventsByDay = useMemo(() => {
-    const map: Record<string, CalendarEventDisplay[]> = {};
-    for (const event of filteredEvents) {
-      if (!map[event.day]) {
-        map[event.day] = [];
-      }
-      map[event.day]!.push(event);
-    }
-    // Sort each day's events by startTime
-    for (const day of Object.keys(map)) {
-      map[day]!.sort((a, b) => a.startTime - b.startTime);
-    }
-    return map;
-  }, [filteredEvents]);
+  // Group events by each day they span within the week, sorted by startTime
+  // Shift events: only shown on their startDay (even if multi-day)
+  // Reminder events: shown on all days they span
+  const eventsByDay = useMemo(
+    () => groupEventsByDay(filteredEvents, start, end),
+    [filteredEvents, start, end],
+  );
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -172,54 +219,30 @@ interface WeekEventCardProps {
 }
 
 /**
- * WeekEventCard — compact event card for the week view.
+ * WeekEventCard — minimal event card for the week view.
  *
- * Line 1: icon + name (📝 appended if notes, truncated at 25 chars with ellipsis)
- * Line 2: startTime HH:mm – endTime HH:mm + total hours
+ * Layout:
+ * - Line 1: Icon (centered horizontally)
+ * - Line 2: Name (centered, truncated with ellipsis)
+ * Nothing else.
  */
 const WeekEventCard = ({ event, onClick }: WeekEventCardProps) => {
-  const nameWithNotes = event.name;
-  const displayName = truncateName(nameWithNotes, MAX_NAME_LENGTH);
-
-  const timeRange = `${formatTimeFromMinutes(event.startTime)} – ${formatTimeFromMinutes(event.endTime)}`;
-  const duration = formatDuration(event.startTime, event.endTime);
-
   return (
     <button
       type="button"
-      className="w-full text-left cursor-pointer"
-      style={{ backgroundColor: event.backgroundColor, padding: '8px 10px', borderRadius: '6px' }}
+      className="w-full cursor-pointer"
+      style={{ backgroundColor: event.backgroundColor, padding: '6px 8px', borderRadius: '6px', overflow: 'hidden', textAlign: 'center' }}
       onClick={() => onClick(event)}
-      aria-label={`${event.name}, ${timeRange}`}
+      aria-label={event.name}
     >
-      {/* Line 1: icon + name */}
-      <div className="text-xs font-medium text-white truncate">
-        <span aria-hidden="true">{event.icon}</span>{' '}
-        {displayName}
+      {/* Line 1: icon centered */}
+      <div style={{ fontSize: '18px', lineHeight: 1 }}>
+        <span aria-hidden="true">{event.icon}</span>
       </div>
-      {/* Line 2: time range */}
-      <div className="text-xs text-white opacity-90">
-        {timeRange}
+      {/* Line 2: name centered */}
+      <div style={{ fontSize: '11px', fontWeight: 600, color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
+        {event.name}
       </div>
-      {/* Line 3: total hours */}
-      <div className="text-xs text-white opacity-90">
-        {duration}
-      </div>
-      {/* Line 4: notes (max 2 lines with ellipsis) */}
-      {event.notes && (
-        <div
-          className="text-xs text-white opacity-75"
-          style={{
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            marginTop: '2px',
-          }}
-        >
-          {event.notes}
-        </div>
-      )}
     </button>
   );
 };

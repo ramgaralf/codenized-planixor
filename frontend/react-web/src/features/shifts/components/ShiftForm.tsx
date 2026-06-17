@@ -111,7 +111,7 @@ export const ShiftForm = ({
   return (
     <form
       onSubmit={handleSubmit}
-      style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '640px' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '640px', paddingBottom: '64px' }}
       aria-label={title}
       noValidate
     >

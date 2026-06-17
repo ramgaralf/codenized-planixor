@@ -20,9 +20,11 @@ class CalendarEventSyncManagerTest {
         id: String = "event-1",
         eventType: String = "shift",
         eventTypeId: String = "shift-type-1",
-        day: String = "2024-01-15",
+        startDay: String = "2024-01-15",
+        endDay: String = "2024-01-15",
         startTime: Int = 480,
         endTime: Int = 1020,
+        totalHours: Int = 540,
         notes: String? = null,
         modifiedAt: Long = 1_600_000_000_000L,
         syncedAt: Long? = null,
@@ -31,9 +33,11 @@ class CalendarEventSyncManagerTest {
         id = id,
         eventType = eventType,
         eventTypeId = eventTypeId,
-        day = day,
+        startDay = startDay,
+        endDay = endDay,
         startTime = startTime,
         endTime = endTime,
+        totalHours = totalHours,
         notes = notes,
         modifiedAt = modifiedAt,
         syncedAt = syncedAt,
@@ -186,9 +190,11 @@ class CalendarEventSyncManagerTest {
             id = "event-1",
             eventType = "reminder",
             eventTypeId = "reminder-type-1",
-            day = "2024-03-20",
+            startDay = "2024-03-20",
+            endDay = "2024-03-21",
             startTime = 600,
             endTime = 660,
+            totalHours = 1500,
             notes = "Important meeting",
             modifiedAt = 1_650_000_000_000L,
             isDeleted = false,
@@ -200,9 +206,11 @@ class CalendarEventSyncManagerTest {
         assertEquals("event-1", inserted.id)
         assertEquals("reminder", inserted.eventType)
         assertEquals("reminder-type-1", inserted.eventTypeId)
-        assertEquals("2024-03-20", inserted.day)
+        assertEquals("2024-03-20", inserted.startDay)
+        assertEquals("2024-03-21", inserted.endDay)
         assertEquals(600, inserted.startTime)
         assertEquals(660, inserted.endTime)
+        assertEquals(1500, inserted.totalHours)
         assertEquals("Important meeting", inserted.notes)
         assertEquals(1_650_000_000_000L, inserted.modifiedAt)
         assertEquals(false, inserted.isDeleted)

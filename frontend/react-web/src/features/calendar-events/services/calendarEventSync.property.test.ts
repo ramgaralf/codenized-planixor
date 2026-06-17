@@ -29,7 +29,7 @@ const dayArb = fc
 const eventTypeArb = fc.constantFrom('shift', 'reminder') as fc.Arbitrary<'shift' | 'reminder'>;
 
 const notesArb = fc.option(
-  fc.string({ minLength: 1, maxLength: 200, unit: 'grapheme-ascii' }),
+  fc.string({ minLength: 1, maxLength: 250, unit: 'grapheme-ascii' }),
   { nil: null },
 );
 
@@ -43,14 +43,16 @@ const calendarEventArb = (
     id: (overrides?.id as fc.Arbitrary<string>) ?? uuidArb,
     eventType: (overrides?.eventType as fc.Arbitrary<'shift' | 'reminder'>) ?? eventTypeArb,
     eventTypeId: (overrides?.eventTypeId as fc.Arbitrary<string>) ?? uuidArb,
-    day: (overrides?.day as fc.Arbitrary<string>) ?? dayArb,
-    startTime: (overrides?.startTime as fc.Arbitrary<number>) ?? fc.integer({ min: 0, max: 1438 }),
-    endTime: (overrides?.endTime as fc.Arbitrary<number>) ?? fc.integer({ min: 1, max: 1439 }),
+    startDay: (overrides?.startDay as fc.Arbitrary<string>) ?? dayArb,
+    endDay: (overrides?.endDay as fc.Arbitrary<string>) ?? dayArb,
+    startTime: (overrides?.startTime as fc.Arbitrary<number>) ?? fc.integer({ min: 0, max: 1439 }),
+    endTime: (overrides?.endTime as fc.Arbitrary<number>) ?? fc.integer({ min: 0, max: 1439 }),
+    totalHours: (overrides?.totalHours as fc.Arbitrary<number>) ?? fc.integer({ min: 0, max: 1440 * 31 }),
     notes: (overrides?.notes as fc.Arbitrary<string | null>) ?? notesArb,
     modifiedAt: (overrides?.modifiedAt as fc.Arbitrary<Date>) ?? dateArb,
     syncedAt: (overrides?.syncedAt as fc.Arbitrary<Date | null>) ?? fc.option(dateArb, { nil: null }),
     isDeleted: (overrides?.isDeleted as fc.Arbitrary<boolean>) ?? fc.boolean(),
-  }).filter((e) => e.endTime > e.startTime) as unknown as fc.Arbitrary<CalendarEvent>;
+  }) as unknown as fc.Arbitrary<CalendarEvent>;
 
 /**
  * Generates a CalendarEventSyncRecord (wire DTO) for pull tests.
@@ -62,13 +64,15 @@ const syncRecordArb = (
     id: (overrides?.id as fc.Arbitrary<string>) ?? uuidArb,
     eventType: (overrides?.eventType as fc.Arbitrary<'shift' | 'reminder'>) ?? eventTypeArb,
     eventTypeId: (overrides?.eventTypeId as fc.Arbitrary<string>) ?? uuidArb,
-    day: (overrides?.day as fc.Arbitrary<string>) ?? dayArb,
-    startTime: (overrides?.startTime as fc.Arbitrary<number>) ?? fc.integer({ min: 0, max: 1438 }),
-    endTime: (overrides?.endTime as fc.Arbitrary<number>) ?? fc.integer({ min: 1, max: 1439 }),
+    startDay: (overrides?.startDay as fc.Arbitrary<string>) ?? dayArb,
+    endDay: (overrides?.endDay as fc.Arbitrary<string>) ?? dayArb,
+    startTime: (overrides?.startTime as fc.Arbitrary<number>) ?? fc.integer({ min: 0, max: 1439 }),
+    endTime: (overrides?.endTime as fc.Arbitrary<number>) ?? fc.integer({ min: 0, max: 1439 }),
+    totalHours: (overrides?.totalHours as fc.Arbitrary<number>) ?? fc.integer({ min: 0, max: 1440 * 31 }),
     notes: (overrides?.notes as fc.Arbitrary<string | null>) ?? notesArb,
     modifiedAt: (overrides?.modifiedAt as fc.Arbitrary<string>) ?? dateArb.map((d) => d.toISOString()),
     isDeleted: (overrides?.isDeleted as fc.Arbitrary<boolean>) ?? fc.boolean(),
-  }).filter((r) => r.endTime > r.startTime) as unknown as fc.Arbitrary<CalendarEventSyncRecord>;
+  }) as unknown as fc.Arbitrary<CalendarEventSyncRecord>;
 
 describe('Calendar Event Sync Logic — Property Tests', () => {
   /**
@@ -283,9 +287,11 @@ describe('Calendar Event Sync Logic — Property Tests', () => {
               expect(inserted.id).toBe(remote.id);
               expect(inserted.eventType).toBe(remote.eventType);
               expect(inserted.eventTypeId).toBe(remote.eventTypeId);
-              expect(inserted.day).toBe(remote.day);
+              expect(inserted.startDay).toBe(remote.startDay);
+              expect(inserted.endDay).toBe(remote.endDay);
               expect(inserted.startTime).toBe(remote.startTime);
               expect(inserted.endTime).toBe(remote.endTime);
+              expect(inserted.totalHours).toBe(remote.totalHours);
               expect(inserted.notes).toBe(remote.notes);
               expect(inserted.isDeleted).toBe(remote.isDeleted);
               expect(inserted.syncedAt).not.toBeNull();
@@ -306,9 +312,11 @@ describe('Calendar Event Sync Logic — Property Tests', () => {
               id: e.id,
               eventType: e.eventType,
               eventTypeId: e.eventTypeId,
-              day: e.day,
+              startDay: e.startDay,
+              endDay: e.endDay,
               startTime: e.startTime,
               endTime: e.endTime,
+              totalHours: e.totalHours,
               notes: e.notes,
               modifiedAt: e.modifiedAt.toISOString(),
               isDeleted: e.isDeleted,
@@ -353,9 +361,11 @@ describe('Calendar Event Sync Logic — Property Tests', () => {
               id: e.id,
               eventType: e.eventType,
               eventTypeId: e.eventTypeId,
-              day: e.day,
+              startDay: e.startDay,
+              endDay: e.endDay,
               startTime: e.startTime,
               endTime: e.endTime,
+              totalHours: e.totalHours,
               notes: e.notes,
               modifiedAt: new Date(baseDate.getTime() + 5000).toISOString(),
               isDeleted: e.isDeleted,
@@ -393,9 +403,11 @@ describe('Calendar Event Sync Logic — Property Tests', () => {
               id: e.id,
               eventType: e.eventType,
               eventTypeId: e.eventTypeId,
-              day: e.day,
+              startDay: e.startDay,
+              endDay: e.endDay,
               startTime: e.startTime,
               endTime: e.endTime,
+              totalHours: e.totalHours,
               notes: e.notes,
               modifiedAt: new Date(baseDate.getTime() + 5000).toISOString(),
               isDeleted: e.isDeleted,
@@ -427,9 +439,11 @@ describe('Calendar Event Sync Logic — Property Tests', () => {
               id: e.id,
               eventType: e.eventType,
               eventTypeId: e.eventTypeId,
-              day: e.day,
+              startDay: e.startDay,
+              endDay: e.endDay,
               startTime: e.startTime,
               endTime: e.endTime,
+              totalHours: e.totalHours,
               notes: e.notes,
               modifiedAt: new Date(baseDate.getTime() + 5000).toISOString(),
               isDeleted: e.isDeleted,
@@ -459,9 +473,11 @@ describe('Calendar Event Sync Logic — Property Tests', () => {
               id: e.id,
               eventType: e.eventType,
               eventTypeId: e.eventTypeId,
-              day: e.day,
+              startDay: e.startDay,
+              endDay: e.endDay,
               startTime: e.startTime,
               endTime: e.endTime,
+              totalHours: e.totalHours,
               notes: e.notes,
               modifiedAt: new Date(baseDate.getTime() + 5000).toISOString(),
               isDeleted: e.isDeleted,

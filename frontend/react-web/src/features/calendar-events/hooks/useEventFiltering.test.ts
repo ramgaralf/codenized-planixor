@@ -18,9 +18,11 @@ const createEvent = (overrides: Partial<CalendarEventDisplay> = {}): CalendarEve
   id: crypto.randomUUID(),
   eventType: 'shift',
   eventTypeId: 'type-1',
-  day: '2025-01-15',
+  startDay: '2025-01-15',
+  endDay: '2025-01-15',
   startTime: 480,
   endTime: 570,
+  totalHours: 90,
   notes: null,
   modifiedAt: new Date(),
   syncedAt: null,
@@ -39,8 +41,8 @@ describe('useEventFiltering', () => {
 
   it('should filter out deleted events', () => {
     const events = [
-      createEvent({ day: '2025-01-15', isDeleted: false }),
-      createEvent({ day: '2025-01-15', isDeleted: true }),
+      createEvent({ startDay: '2025-01-15', endDay: '2025-01-15', isDeleted: false }),
+      createEvent({ startDay: '2025-01-15', endDay: '2025-01-15', isDeleted: true }),
     ];
 
     const { result } = renderHook(() => useEventFiltering(events));
@@ -51,15 +53,15 @@ describe('useEventFiltering', () => {
 
   it('should filter events outside the day range', () => {
     const events = [
-      createEvent({ day: '2025-01-14' }),
-      createEvent({ day: '2025-01-15' }),
-      createEvent({ day: '2025-01-16' }),
+      createEvent({ startDay: '2025-01-14', endDay: '2025-01-14' }),
+      createEvent({ startDay: '2025-01-15', endDay: '2025-01-15' }),
+      createEvent({ startDay: '2025-01-16', endDay: '2025-01-16' }),
     ];
 
     const { result } = renderHook(() => useEventFiltering(events));
 
     expect(result.current.filteredEvents).toHaveLength(1);
-    expect(result.current.filteredEvents[0].day).toBe('2025-01-15');
+    expect(result.current.filteredEvents[0].startDay).toBe('2025-01-15');
   });
 
   it('should return correct date range for day view', () => {
@@ -73,11 +75,11 @@ describe('useEventFiltering', () => {
     mockState.activeView = 'week';
     // 2025-01-15 is a Wednesday, so the week is Mon 2025-01-13 to Sun 2025-01-19
     const events = [
-      createEvent({ day: '2025-01-12' }), // Sunday before — out of range
-      createEvent({ day: '2025-01-13' }), // Monday — in range
-      createEvent({ day: '2025-01-15' }), // Wednesday — in range
-      createEvent({ day: '2025-01-19' }), // Sunday — in range
-      createEvent({ day: '2025-01-20' }), // Monday next — out of range
+      createEvent({ startDay: '2025-01-12', endDay: '2025-01-12' }), // Sunday before — out of range
+      createEvent({ startDay: '2025-01-13', endDay: '2025-01-13' }), // Monday — in range
+      createEvent({ startDay: '2025-01-15', endDay: '2025-01-15' }), // Wednesday — in range
+      createEvent({ startDay: '2025-01-19', endDay: '2025-01-19' }), // Sunday — in range
+      createEvent({ startDay: '2025-01-20', endDay: '2025-01-20' }), // Monday next — out of range
     ];
 
     const { result } = renderHook(() => useEventFiltering(events));
@@ -90,10 +92,10 @@ describe('useEventFiltering', () => {
   it('should filter events within month range', () => {
     mockState.activeView = 'month';
     const events = [
-      createEvent({ day: '2024-12-31' }), // out of range
-      createEvent({ day: '2025-01-01' }), // in range
-      createEvent({ day: '2025-01-31' }), // in range
-      createEvent({ day: '2025-02-01' }), // out of range
+      createEvent({ startDay: '2024-12-31', endDay: '2024-12-31' }), // out of range
+      createEvent({ startDay: '2025-01-01', endDay: '2025-01-01' }), // in range
+      createEvent({ startDay: '2025-01-31', endDay: '2025-01-31' }), // in range
+      createEvent({ startDay: '2025-02-01', endDay: '2025-02-01' }), // out of range
     ];
 
     const { result } = renderHook(() => useEventFiltering(events));
@@ -106,11 +108,11 @@ describe('useEventFiltering', () => {
   it('should filter events within year range', () => {
     mockState.activeView = 'year';
     const events = [
-      createEvent({ day: '2024-12-31' }), // out of range
-      createEvent({ day: '2025-01-01' }), // in range
-      createEvent({ day: '2025-06-15' }), // in range
-      createEvent({ day: '2025-12-31' }), // in range
-      createEvent({ day: '2026-01-01' }), // out of range
+      createEvent({ startDay: '2024-12-31', endDay: '2024-12-31' }), // out of range
+      createEvent({ startDay: '2025-01-01', endDay: '2025-01-01' }), // in range
+      createEvent({ startDay: '2025-06-15', endDay: '2025-06-15' }), // in range
+      createEvent({ startDay: '2025-12-31', endDay: '2025-12-31' }), // in range
+      createEvent({ startDay: '2026-01-01', endDay: '2026-01-01' }), // out of range
     ];
 
     const { result } = renderHook(() => useEventFiltering(events));
@@ -122,10 +124,10 @@ describe('useEventFiltering', () => {
 
   it('should exclude both deleted and out-of-range events simultaneously', () => {
     const events = [
-      createEvent({ day: '2025-01-15', isDeleted: false }), // ✓ in range, not deleted
-      createEvent({ day: '2025-01-15', isDeleted: true }), // ✗ deleted
-      createEvent({ day: '2025-01-16', isDeleted: false }), // ✗ out of range
-      createEvent({ day: '2025-01-16', isDeleted: true }), // ✗ both
+      createEvent({ startDay: '2025-01-15', endDay: '2025-01-15', isDeleted: false }), // ✓ in range, not deleted
+      createEvent({ startDay: '2025-01-15', endDay: '2025-01-15', isDeleted: true }), // ✗ deleted
+      createEvent({ startDay: '2025-01-16', endDay: '2025-01-16', isDeleted: false }), // ✗ out of range
+      createEvent({ startDay: '2025-01-16', endDay: '2025-01-16', isDeleted: true }), // ✗ both
     ];
 
     const { result } = renderHook(() => useEventFiltering(events));
@@ -135,8 +137,8 @@ describe('useEventFiltering', () => {
 
   it('should return empty array when no events match', () => {
     const events = [
-      createEvent({ day: '2025-01-14', isDeleted: false }),
-      createEvent({ day: '2025-01-15', isDeleted: true }),
+      createEvent({ startDay: '2025-01-14', endDay: '2025-01-14', isDeleted: false }),
+      createEvent({ startDay: '2025-01-15', endDay: '2025-01-15', isDeleted: true }),
     ];
 
     const { result } = renderHook(() => useEventFiltering(events));
@@ -146,9 +148,9 @@ describe('useEventFiltering', () => {
 
   it('should return all non-deleted events when all are in range', () => {
     const events = [
-      createEvent({ day: '2025-01-15', isDeleted: false }),
-      createEvent({ day: '2025-01-15', isDeleted: false }),
-      createEvent({ day: '2025-01-15', isDeleted: false }),
+      createEvent({ startDay: '2025-01-15', endDay: '2025-01-15', isDeleted: false }),
+      createEvent({ startDay: '2025-01-15', endDay: '2025-01-15', isDeleted: false }),
+      createEvent({ startDay: '2025-01-15', endDay: '2025-01-15', isDeleted: false }),
     ];
 
     const { result } = renderHook(() => useEventFiltering(events));

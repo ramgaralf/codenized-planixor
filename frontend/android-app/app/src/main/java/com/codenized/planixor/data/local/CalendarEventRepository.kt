@@ -1,5 +1,6 @@
 package com.codenized.planixor.data.local
 
+import com.codenized.planixor.domain.validation.CalendarEventValidation
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 import javax.inject.Inject
@@ -16,8 +17,11 @@ sealed class CalendarEventResult {
 /**
  * Repository wrapping CalendarEventDao with business logic for calendar event CRUD operations.
  * Handles UUID generation, change tracking (modifiedAt/syncedAt), and dual validation:
- * - Time range: endTime must be strictly greater than startTime
- * - One-shift-per-day: only one non-deleted shift event allowed per calendar date
+ * - Day range: endDay must be on or after startDay
+ * - Time validation: for reminders where endDay == startDay, endTime > startTime
+ * - Crossing midnight: for shifts where endTime < startTime, auto-sets endDay = startDay + 1
+ * - One-shift-per-day: only one non-deleted shift event allowed per startDay
+ * - TotalHours computation: shifts use shiftHoursWorked, reminders use day/time difference
  */
 /**
  * Data Isolation (Req 13.1, 13.2):
@@ -35,25 +39,25 @@ class CalendarEventRepository @Inject constructor(
 ) {
 
     /**
-     * Observes non-deleted events within a date range (inclusive).
+     * Observes non-deleted events within a date range (inclusive) using range intersection.
      */
     fun getByDateRange(startDate: String, endDate: String): Flow<List<CalendarEventEntity>> {
         return calendarEventDao.getByDateRange(startDate, endDate)
     }
 
     /**
-     * Observes non-deleted events for a specific day.
+     * Observes non-deleted events for a specific day using range intersection.
      */
     fun getByDate(day: String): Flow<List<CalendarEventEntity>> {
         return calendarEventDao.getByDate(day)
     }
 
     /**
-     * Returns non-deleted shift events for a specific day, excluding a given event ID.
+     * Returns non-deleted shift events for a specific startDay, excluding a given event ID.
      * Used for one-shift-per-day constraint checking.
      */
-    suspend fun getShiftsForDate(day: String, excludeId: String = ""): List<CalendarEventEntity> {
-        return calendarEventDao.getShiftsForDate(day, excludeId)
+    suspend fun getShiftsForDate(startDay: String, excludeId: String = ""): List<CalendarEventEntity> {
+        return calendarEventDao.getShiftsForDate(startDay, excludeId)
     }
 
     /**
@@ -72,40 +76,73 @@ class CalendarEventRepository @Inject constructor(
 
     /**
      * Creates a new calendar event with dual validation:
-     * 1. Time range validation: endTime > startTime
-     * 2. One-shift-per-day constraint: no other non-deleted shift on the same day
+     * 1. Day range validation: endDay >= startDay
+     * 2. Crossing midnight for shifts: auto-sets endDay = startDay + 1 if endTime < startTime
+     * 3. Time validation for reminders: endTime > startTime when endDay == startDay
+     * 4. One-shift-per-day constraint: no other non-deleted shift on the same startDay
+     * 5. Computes totalHours based on event type rules
      *
      * On success, generates a UUID, sets modifiedAt to now, syncedAt to null, isDeleted to false.
+     *
+     * Validates: Requirements 1.1, 1.6, 2.1, 7.2, 11.5, 11.6, 11.7
      */
     suspend fun create(
         eventType: String,
         eventTypeId: String,
-        day: String,
+        startDay: String,
+        endDay: String,
         startTime: Int,
         endTime: Int,
         notes: String?,
+        shiftHoursWorked: Int? = null,
     ): CalendarEventResult {
-        // Validate time range
-        if (endTime <= startTime) {
-            return CalendarEventResult.ValidationError("End time must be after start time")
+        // For shift events, auto-compute endDay based on crossing midnight
+        val computedEndDay = if (eventType == "shift") {
+            CalendarEventValidation.computeEndDayForShift(startDay, startTime, endTime)
+        } else {
+            endDay
         }
 
-        // Validate one-shift-per-day constraint
+        // Validate day range: endDay >= startDay
+        if (!CalendarEventValidation.validateDayRange(startDay, computedEndDay)) {
+            return CalendarEventResult.ValidationError("End day must be on or after start day")
+        }
+
+        // Validate time for reminders: endTime > startTime when endDay == startDay
+        if (eventType == "reminder" &&
+            !CalendarEventValidation.validateTimeForReminder(startDay, computedEndDay, startTime, endTime)
+        ) {
+            return CalendarEventResult.ValidationError("End time must be after start time for same-day reminders")
+        }
+
+        // Validate notes length
+        if (!CalendarEventValidation.validateNotes(notes)) {
+            return CalendarEventResult.ValidationError("Notes must not exceed $MAX_NOTES_LENGTH characters")
+        }
+
+        // Validate one-shift-per-day constraint using startDay
         if (eventType == "shift") {
-            val existingShifts = calendarEventDao.getShiftsForDate(day)
+            val existingShifts = calendarEventDao.getShiftsForDate(startDay)
             if (existingShifts.isNotEmpty()) {
                 return CalendarEventResult.ValidationError("Only one shift per day is allowed")
             }
         }
+
+        // Compute totalHours based on event type
+        val totalHours = CalendarEventValidation.computeTotalHours(
+            eventType, startDay, computedEndDay, startTime, endTime, shiftHoursWorked,
+        )
 
         val now = System.currentTimeMillis()
         val entity = CalendarEventEntity(
             id = UUID.randomUUID().toString(),
             eventType = eventType,
             eventTypeId = eventTypeId,
-            day = day,
+            startDay = startDay,
+            endDay = computedEndDay,
             startTime = startTime,
             endTime = endTime,
+            totalHours = totalHours,
             notes = notes?.take(MAX_NOTES_LENGTH),
             modifiedAt = now,
             syncedAt = null,
@@ -117,42 +154,75 @@ class CalendarEventRepository @Inject constructor(
 
     /**
      * Updates an existing calendar event with dual validation:
-     * 1. Time range validation: endTime > startTime
-     * 2. One-shift-per-day constraint (excludes the event being edited)
+     * 1. Day range validation: endDay >= startDay
+     * 2. Crossing midnight for shifts: auto-sets endDay = startDay + 1 if endTime < startTime
+     * 3. Time validation for reminders: endTime > startTime when endDay == startDay
+     * 4. One-shift-per-day constraint (excludes the event being edited) using startDay
+     * 5. Recomputes totalHours based on event type rules
      *
      * Sets modifiedAt to now and syncedAt to null on every update.
+     *
+     * Validates: Requirements 1.1, 1.6, 2.1, 7.2, 11.5, 11.6, 11.7
      */
     suspend fun update(
         id: String,
         eventType: String,
         eventTypeId: String,
-        day: String,
+        startDay: String,
+        endDay: String,
         startTime: Int,
         endTime: Int,
         notes: String?,
+        shiftHoursWorked: Int? = null,
     ): CalendarEventResult {
         val existing = calendarEventDao.getById(id)
             ?: return CalendarEventResult.ValidationError("Event not found")
 
-        // Validate time range
-        if (endTime <= startTime) {
-            return CalendarEventResult.ValidationError("End time must be after start time")
+        // For shift events, auto-compute endDay based on crossing midnight
+        val computedEndDay = if (eventType == "shift") {
+            CalendarEventValidation.computeEndDayForShift(startDay, startTime, endTime)
+        } else {
+            endDay
         }
 
-        // Validate one-shift-per-day constraint (exclude self)
+        // Validate day range: endDay >= startDay
+        if (!CalendarEventValidation.validateDayRange(startDay, computedEndDay)) {
+            return CalendarEventResult.ValidationError("End day must be on or after start day")
+        }
+
+        // Validate time for reminders: endTime > startTime when endDay == startDay
+        if (eventType == "reminder" &&
+            !CalendarEventValidation.validateTimeForReminder(startDay, computedEndDay, startTime, endTime)
+        ) {
+            return CalendarEventResult.ValidationError("End time must be after start time for same-day reminders")
+        }
+
+        // Validate notes length
+        if (!CalendarEventValidation.validateNotes(notes)) {
+            return CalendarEventResult.ValidationError("Notes must not exceed $MAX_NOTES_LENGTH characters")
+        }
+
+        // Validate one-shift-per-day constraint (exclude self) using startDay
         if (eventType == "shift") {
-            val existingShifts = calendarEventDao.getShiftsForDate(day, excludeId = id)
+            val existingShifts = calendarEventDao.getShiftsForDate(startDay, excludeId = id)
             if (existingShifts.isNotEmpty()) {
                 return CalendarEventResult.ValidationError("Only one shift per day is allowed")
             }
         }
 
+        // Recompute totalHours based on event type
+        val totalHours = CalendarEventValidation.computeTotalHours(
+            eventType, startDay, computedEndDay, startTime, endTime, shiftHoursWorked,
+        )
+
         val updated = existing.copy(
             eventType = eventType,
             eventTypeId = eventTypeId,
-            day = day,
+            startDay = startDay,
+            endDay = computedEndDay,
             startTime = startTime,
             endTime = endTime,
+            totalHours = totalHours,
             notes = notes?.take(MAX_NOTES_LENGTH),
             modifiedAt = System.currentTimeMillis(),
             syncedAt = null,
@@ -178,6 +248,6 @@ class CalendarEventRepository @Inject constructor(
     }
 
     companion object {
-        private const val MAX_NOTES_LENGTH = 200
+        private const val MAX_NOTES_LENGTH = 250
     }
 }

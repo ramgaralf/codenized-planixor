@@ -19,6 +19,13 @@ vi.mock('../services/calendarEventService', () => ({
   getShiftsForDate: vi.fn(),
 }));
 
+vi.mock('@/data/db', () => ({
+  db: {
+    shifts: { get: vi.fn() },
+    reminders: { get: vi.fn() },
+  },
+}));
+
 import { useCalendarStore } from '@/stores/calendarStore';
 
 import * as calendarEventService from '../services/calendarEventService';
@@ -53,9 +60,11 @@ describe('useEventForm', () => {
       expect(result.current.formState).toEqual({
         eventType: null,
         eventTypeId: null,
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
         startTime: null,
         endTime: null,
+        totalHours: 0,
         notes: '',
       });
       expect(result.current.fieldErrors).toEqual({});
@@ -69,9 +78,11 @@ describe('useEventForm', () => {
         id: 'evt-1',
         eventType: 'shift',
         eventTypeId: 'shift-1',
-        day: '2024-06-20',
+        startDay: '2024-06-20',
+        endDay: '2024-06-20',
         startTime: 480,
         endTime: 960,
+        totalHours: 480,
         notes: 'Test note',
         modifiedAt: new Date(),
         syncedAt: null,
@@ -83,9 +94,11 @@ describe('useEventForm', () => {
       expect(result.current.formState).toEqual({
         eventType: 'shift',
         eventTypeId: 'shift-1',
-        day: '2024-06-20',
+        startDay: '2024-06-20',
+        endDay: '2024-06-20',
         startTime: 480,
         endTime: 960,
+        totalHours: 480,
         notes: 'Test note',
       });
       expect(result.current.isEditMode).toBe(true);
@@ -96,9 +109,11 @@ describe('useEventForm', () => {
         id: 'evt-1',
         eventType: 'reminder',
         eventTypeId: 'rem-1',
-        day: '2024-06-20',
+        startDay: '2024-06-20',
+        endDay: '2024-06-20',
         startTime: 540,
         endTime: 600,
+        totalHours: 60,
         notes: null,
         modifiedAt: new Date(),
         syncedAt: null,
@@ -122,7 +137,8 @@ describe('useEventForm', () => {
 
       const { result } = renderHook(() => useEventForm());
 
-      expect(result.current.formState.day).toBe('2024-08-20');
+      expect(result.current.formState.startDay).toBe('2024-08-20');
+      expect(result.current.formState.endDay).toBe('2024-08-20');
     });
 
     it('should pre-select today in week view when today is within displayed week (Req 9.2)', () => {
@@ -139,7 +155,7 @@ describe('useEventForm', () => {
       const year = today.getFullYear();
       const month = String(today.getMonth() + 1).padStart(2, '0');
       const day = String(today.getDate()).padStart(2, '0');
-      expect(result.current.formState.day).toBe(`${year}-${month}-${day}`);
+      expect(result.current.formState.startDay).toBe(`${year}-${month}-${day}`);
     });
 
     it('should pre-select Monday of displayed week when today is NOT within it (Req 9.3)', () => {
@@ -153,8 +169,8 @@ describe('useEventForm', () => {
 
       const { result } = renderHook(() => useEventForm());
 
-      // Monday of the week containing Jan 7, 2030 is Jan 6, 2030
-      expect(result.current.formState.day).toBe('2030-01-07');
+      // Jan 7, 2030 is a Monday, so Monday of that week is Jan 7
+      expect(result.current.formState.startDay).toBe('2030-01-07');
     });
 
     it('should pre-select today in month view when today is within displayed month (Req 9.4)', () => {
@@ -171,7 +187,7 @@ describe('useEventForm', () => {
       const year = today.getFullYear();
       const month = String(today.getMonth() + 1).padStart(2, '0');
       const day = String(today.getDate()).padStart(2, '0');
-      expect(result.current.formState.day).toBe(`${year}-${month}-${day}`);
+      expect(result.current.formState.startDay).toBe(`${year}-${month}-${day}`);
     });
 
     it('should pre-select first day of displayed month when today is NOT within it (Req 9.5)', () => {
@@ -185,24 +201,24 @@ describe('useEventForm', () => {
 
       const { result } = renderHook(() => useEventForm());
 
-      expect(result.current.formState.day).toBe('2030-06-01');
+      expect(result.current.formState.startDay).toBe('2030-06-01');
     });
 
-    it('should pre-select current device date in year view (Req 9.6)', () => {
+    it('should pre-select current device date in year view when today is within displayed year (Req 9.6)', () => {
+      const today = new Date();
       mockedUseCalendarStore.mockImplementation((selector) =>
         selector({
           activeView: 'year',
-          currentDate: new Date(2030, 0, 1), // Far future year
+          currentDate: today,
         } as never),
       );
 
       const { result } = renderHook(() => useEventForm());
 
-      const today = new Date();
       const year = today.getFullYear();
       const month = String(today.getMonth() + 1).padStart(2, '0');
       const day = String(today.getDate()).padStart(2, '0');
-      expect(result.current.formState.day).toBe(`${year}-${month}-${day}`);
+      expect(result.current.formState.startDay).toBe(`${year}-${month}-${day}`);
     });
   });
 
@@ -235,16 +251,18 @@ describe('useEventForm', () => {
       expect(result.current.fieldErrors.eventType).toBeUndefined();
     });
 
-    it('should clear form-level error when day field changes', async () => {
+    it('should clear form-level error when startDay field changes', async () => {
       // Set up a shift conflict
       mockedGetShiftsForDate.mockResolvedValue([
         {
           id: 'existing-shift',
           eventType: 'shift',
           eventTypeId: 'shift-1',
-          day: '2024-06-15',
+          startDay: '2024-06-15',
+          endDay: '2024-06-15',
           startTime: 480,
           endTime: 960,
+          totalHours: 480,
           notes: null,
           modifiedAt: new Date(),
           syncedAt: null,
@@ -271,9 +289,9 @@ describe('useEventForm', () => {
         CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY,
       );
 
-      // Change day to clear form error
+      // Change startDay to clear form error
       act(() => {
-        result.current.setField('day', '2024-06-16');
+        result.current.setField('startDay', '2024-06-16');
       });
 
       expect(result.current.formError).toBeNull();
@@ -285,9 +303,11 @@ describe('useEventForm', () => {
           id: 'existing-shift',
           eventType: 'shift',
           eventTypeId: 'shift-1',
-          day: '2024-06-15',
+          startDay: '2024-06-15',
+          endDay: '2024-06-15',
           startTime: 480,
           endTime: 960,
+          totalHours: 480,
           notes: null,
           modifiedAt: new Date(),
           syncedAt: null,
@@ -334,14 +354,14 @@ describe('useEventForm', () => {
       expect(result.current.fieldErrors.endTime).toBeDefined();
     });
 
-    it('should set endTime error when end time is not after start time', async () => {
+    it('should set endTime error when time is invalid for same-day reminder', async () => {
       const { result } = renderHook(() => useEventForm());
 
       act(() => {
         result.current.setField('eventType', 'reminder');
         result.current.setField('eventTypeId', 'rem-1');
         result.current.setField('startTime', 960);
-        result.current.setField('endTime', 480); // Before start
+        result.current.setField('endTime', 480); // Before start on same day
       });
 
       await act(async () => {
@@ -349,11 +369,11 @@ describe('useEventForm', () => {
       });
 
       expect(result.current.fieldErrors.endTime).toBe(
-        CALENDAR_EVENT_I18N_KEYS.VALIDATION_END_TIME_AFTER_START,
+        CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER,
       );
     });
 
-    it('should set notes error when notes exceed 200 characters', async () => {
+    it('should set notes error when notes exceed 250 characters', async () => {
       const { result } = renderHook(() => useEventForm());
 
       act(() => {
@@ -361,7 +381,7 @@ describe('useEventForm', () => {
         result.current.setField('eventTypeId', 'rem-1');
         result.current.setField('startTime', 480);
         result.current.setField('endTime', 960);
-        result.current.setField('notes', 'x'.repeat(201));
+        result.current.setField('notes', 'x'.repeat(251));
       });
 
       await act(async () => {
@@ -379,9 +399,11 @@ describe('useEventForm', () => {
           id: 'existing-shift',
           eventType: 'shift',
           eventTypeId: 'shift-1',
-          day: '2024-06-15',
+          startDay: '2024-06-15',
+          endDay: '2024-06-15',
           startTime: 480,
           endTime: 960,
+          totalHours: 480,
           notes: null,
           modifiedAt: new Date(),
           syncedAt: null,
@@ -414,9 +436,11 @@ describe('useEventForm', () => {
         id: 'new-id',
         eventType: 'reminder',
         eventTypeId: 'rem-1',
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
         startTime: 480,
         endTime: 960,
+        totalHours: 480,
         notes: null,
         modifiedAt: new Date(),
         syncedAt: null,
@@ -447,9 +471,11 @@ describe('useEventForm', () => {
         id: 'new-id',
         eventType: 'shift',
         eventTypeId: 'shift-1',
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
         startTime: 480,
         endTime: 960,
+        totalHours: 480,
         notes: 'Morning shift',
         modifiedAt: new Date(),
         syncedAt: null,
@@ -474,7 +500,8 @@ describe('useEventForm', () => {
       expect(mockedCreate).toHaveBeenCalledWith({
         eventType: 'shift',
         eventTypeId: 'shift-1',
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
         startTime: 480,
         endTime: 960,
         notes: 'Morning shift',
@@ -487,9 +514,11 @@ describe('useEventForm', () => {
         id: 'new-id',
         eventType: 'shift',
         eventTypeId: 'shift-1',
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
         startTime: 480,
         endTime: 960,
+        totalHours: 480,
         notes: null,
         modifiedAt: new Date(),
         syncedAt: null,
@@ -521,9 +550,11 @@ describe('useEventForm', () => {
         id: 'new-id',
         eventType: 'reminder',
         eventTypeId: 'rem-1',
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
         startTime: 480,
         endTime: 960,
+        totalHours: 480,
         notes: null,
         modifiedAt: new Date(),
         syncedAt: null,
@@ -554,9 +585,11 @@ describe('useEventForm', () => {
       id: 'evt-1',
       eventType: 'shift',
       eventTypeId: 'shift-1',
-      day: '2024-06-15',
+      startDay: '2024-06-15',
+      endDay: '2024-06-15',
       startTime: 480,
       endTime: 960,
+      totalHours: 480,
       notes: null,
       modifiedAt: new Date(),
       syncedAt: null,
@@ -586,7 +619,8 @@ describe('useEventForm', () => {
       expect(mockedUpdate).toHaveBeenCalledWith('evt-1', {
         eventType: 'shift',
         eventTypeId: 'shift-1',
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
         startTime: 480,
         endTime: 1020,
         notes: null,
@@ -641,7 +675,7 @@ describe('useEventForm', () => {
 
     it('should set field error for time range error from service', async () => {
       mockedCreate.mockRejectedValue(
-        new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_END_TIME_AFTER_START),
+        new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER),
       );
       mockedGetShiftsForDate.mockResolvedValue([]);
 
@@ -659,7 +693,7 @@ describe('useEventForm', () => {
       });
 
       expect(result.current.fieldErrors.endTime).toBe(
-        CALENDAR_EVENT_I18N_KEYS.VALIDATION_END_TIME_AFTER_START,
+        CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER,
       );
     });
 

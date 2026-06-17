@@ -57,6 +57,16 @@ export class PlanixorDatabase extends Dexie {
       // No user data exists in any deployed environment. Clear and start fresh.
       return tx.table('calendarEvents').clear();
     });
+
+    this.version(5).stores({
+      calendarEvents: 'id, startDay, endDay, [startDay+eventType+isDeleted], eventType, isDeleted, modifiedAt',
+      shifts: 'id, createdAt, isDeleted, isActive',
+      reminders: 'id, createdAt, isDeleted, isActive',
+    }).upgrade(tx => {
+      // v4 calendarEvents schema used `day` field (single day). v5 introduces `startDay`, `endDay`, `totalHours`.
+      // No user data exists in any deployed environment. Clear and start fresh.
+      return tx.table('calendarEvents').clear();
+    });
   }
 }
 

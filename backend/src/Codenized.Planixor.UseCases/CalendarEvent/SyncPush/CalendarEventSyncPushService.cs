@@ -121,13 +121,16 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
                 }
 
                 // Incoming record is newer — apply sync to existing entity
-                DateOnly day = DateOnly.Parse(record.Day);
+                DateOnly startDay = DateOnly.Parse(record.StartDay);
+                DateOnly endDay = DateOnly.Parse(record.EndDay);
                 existing.ApplySync(
                     record.EventType,
                     record.EventTypeId,
-                    day,
+                    startDay,
+                    endDay,
                     record.StartTime,
                     record.EndTime,
+                    record.TotalHours,
                     record.Notes,
                     record.ModifiedAt,
                     record.IsDeleted);
@@ -138,15 +141,18 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
             else
             {
                 // New record — insert with the authenticated UserId
-                DateOnly day = DateOnly.Parse(record.Day);
+                DateOnly startDay = DateOnly.Parse(record.StartDay);
+                DateOnly endDay = DateOnly.Parse(record.EndDay);
                 CalendarEventEntity newEvent = CalendarEventEntity.CreateFromSync(
                     record.Id,
                     request.UserId,
                     record.EventType,
                     record.EventTypeId,
-                    day,
+                    startDay,
+                    endDay,
                     record.StartTime,
                     record.EndTime,
+                    record.TotalHours,
                     record.Notes,
                     record.ModifiedAt,
                     record.IsDeleted);
@@ -183,12 +189,27 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(record.Day))
+        if (string.IsNullOrWhiteSpace(record.StartDay))
         {
             return false;
         }
 
-        if (!DateOnly.TryParse(record.Day, out _))
+        if (!DateOnly.TryParse(record.StartDay, out DateOnly startDay))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(record.EndDay))
+        {
+            return false;
+        }
+
+        if (!DateOnly.TryParse(record.EndDay, out DateOnly endDay))
+        {
+            return false;
+        }
+
+        if (endDay < startDay)
         {
             return false;
         }
@@ -203,7 +224,12 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
             return false;
         }
 
-        if (record.EndTime <= record.StartTime)
+        if (record.EventType == "reminder" && endDay == startDay && record.EndTime <= record.StartTime)
+        {
+            return false;
+        }
+
+        if (record.TotalHours < 0)
         {
             return false;
         }

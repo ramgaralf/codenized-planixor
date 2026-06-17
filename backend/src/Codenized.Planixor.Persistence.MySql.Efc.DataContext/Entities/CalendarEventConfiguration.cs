@@ -24,7 +24,6 @@ public sealed class CalendarEventConfiguration : IEntityTypeConfiguration<Calend
             t.HasCheckConstraint("CK_CalendarEvents_EventType", "EventType IN ('shift', 'reminder')");
             t.HasCheckConstraint("CK_CalendarEvents_StartTime", "StartTime >= 0 AND StartTime <= 1439");
             t.HasCheckConstraint("CK_CalendarEvents_EndTime", "EndTime >= 0 AND EndTime <= 1439");
-            t.HasCheckConstraint("CK_CalendarEvents_EndTimeAfterStartTime", "EndTime > StartTime");
         });
 
         builder.HasKey(e => e.Id);
@@ -45,7 +44,11 @@ public sealed class CalendarEventConfiguration : IEntityTypeConfiguration<Calend
             .HasColumnType("char(36)")
             .IsRequired();
 
-        builder.Property(e => e.Day)
+        builder.Property(e => e.StartDay)
+            .HasColumnType("date")
+            .IsRequired();
+
+        builder.Property(e => e.EndDay)
             .HasColumnType("date")
             .IsRequired();
 
@@ -57,8 +60,12 @@ public sealed class CalendarEventConfiguration : IEntityTypeConfiguration<Calend
             .HasColumnType("int")
             .IsRequired();
 
+        builder.Property(e => e.TotalHours)
+            .HasColumnType("int")
+            .IsRequired();
+
         builder.Property(e => e.Notes)
-            .HasColumnType("varchar(200)");
+            .HasColumnType("varchar(250)");
 
         builder.Property(e => e.ModifiedAt)
             .HasColumnType("datetime(6)")
@@ -75,8 +82,11 @@ public sealed class CalendarEventConfiguration : IEntityTypeConfiguration<Calend
         builder.HasIndex(e => e.UserId)
             .HasDatabaseName("IX_CalendarEvents_UserId");
 
-        builder.HasIndex(e => e.Day)
-            .HasDatabaseName("IX_CalendarEvents_Day");
+        builder.HasIndex(e => e.StartDay)
+            .HasDatabaseName("IX_CalendarEvents_StartDay");
+
+        builder.HasIndex(e => e.EndDay)
+            .HasDatabaseName("IX_CalendarEvents_EndDay");
 
         builder.HasIndex(e => new { e.UserId, e.ModifiedAt })
             .HasDatabaseName("IX_CalendarEvents_UserId_ModifiedAt");

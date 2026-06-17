@@ -63,8 +63,6 @@ fun YearView(
     val firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
     val scrollState = rememberScrollState()
 
-    val eventsByDay = events.groupBy { it.day }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -78,12 +76,17 @@ fun YearView(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 monthRow.forEach { month ->
+                    val monthYm = YearMonth.of(year, month)
+                    val monthStartStr = monthYm.atDay(1).toString()
+                    val monthEndStr = monthYm.atEndOfMonth().toString()
+                    // Range intersection: event visible if startDay <= monthEnd AND endDay >= monthStart
+                    val monthEvents = events.filter { it.startDay <= monthEndStr && it.endDay >= monthStartStr }
                     MiniMonth(
-                        yearMonth = YearMonth.of(year, month),
+                        yearMonth = monthYm,
                         today = today,
                         firstDayOfWeek = firstDayOfWeek,
                         locale = locale,
-                        eventsByDay = eventsByDay,
+                        events = monthEvents,
                         onDayClick = onDayClick,
                         modifier = Modifier.weight(1f),
                     )
@@ -99,7 +102,7 @@ private fun MiniMonth(
     today: LocalDate,
     firstDayOfWeek: DayOfWeek,
     locale: Locale,
-    eventsByDay: Map<String, List<CalendarEventDisplay>>,
+    events: List<CalendarEventDisplay>,
     onDayClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -124,7 +127,16 @@ private fun MiniMonth(
             ) {
                 week.forEach { day ->
                     val dayEvents = if (day.month == yearMonth.month) {
-                        eventsByDay[day.toString()] ?: emptyList()
+                        val dayStr = day.toString()
+                        // Shift events: only shown on their startDay (even if multi-day)
+                        // Reminder events: shown on all days they span (range intersection)
+                        events.filter { event ->
+                            if (event.eventType == "shift") {
+                                event.startDay == dayStr
+                            } else {
+                                event.startDay <= dayStr && event.endDay >= dayStr
+                            }
+                        }
                     } else {
                         emptyList()
                     }
@@ -184,8 +196,8 @@ private fun MiniDayCell(
                 .background(fillColor)
                 .then(
                     if (hasReminder) Modifier.border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.primary,
+                        width = 3.dp,
+                        color = MaterialTheme.colorScheme.onSurface,
                         shape = CircleShape,
                     ) else Modifier,
                 ),

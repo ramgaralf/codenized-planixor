@@ -27,11 +27,12 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-// Mock lucide-react icons used in EventDetailPage
+// Mock lucide-react icons used in EventDetailPage and EventTypeSelector
 vi.mock('lucide-react', () => ({
   Trash2: (props: Record<string, unknown>) => <svg data-testid="trash-icon" {...props} />,
   ChevronLeft: (props: Record<string, unknown>) => <svg data-testid="chevron-left" {...props} />,
   ChevronRight: (props: Record<string, unknown>) => <svg data-testid="chevron-right" {...props} />,
+  ChevronDown: (props: Record<string, unknown>) => <svg data-testid="chevron-down" {...props} />,
 }));
 
 // Mock view components with simple stubs that expose the events they receive
@@ -104,9 +105,11 @@ const createTestEvent = (overrides?: Partial<CalendarEvent>): CalendarEvent => (
   id: crypto.randomUUID(),
   eventType: 'reminder',
   eventTypeId: 'reminder-1',
-  day: '2024-06-15',
+  startDay: '2024-06-15',
+  endDay: '2024-06-15',
   startTime: 480,
   endTime: 540,
+  totalHours: 60,
   notes: null,
   modifiedAt: new Date(),
   syncedAt: null,
@@ -209,8 +212,8 @@ describe('CalendarEvents Container Integration', () => {
 
       // The form should be visible (EventForm renders form controls)
       expect(screen.queryByTestId('day-view')).not.toBeInTheDocument();
-      // EventForm renders labels like "calendarEvent.form.day"
-      expect(screen.getByLabelText('calendarEvent.form.day')).toBeInTheDocument();
+      // EventForm renders labels like "calendarEvent.form.startDay"
+      expect(screen.getByLabelText('calendarEvent.form.startDay')).toBeInTheDocument();
     });
 
     it('should return to calendar view when create form is cancelled', async () => {
@@ -242,24 +245,28 @@ describe('CalendarEvents Container Integration', () => {
       );
 
       // Wait for the useLiveQuery in EventTypeSelector to populate options
-      const select = screen.getByLabelText('calendarEvent.eventTypeSelector.label');
+      // Open the custom dropdown and select the reminder option
+      const selectorButton = screen.getByRole('button', { name: 'calendarEvent.eventTypeSelector.label' });
       await waitFor(() => {
-        const options = select.querySelectorAll('option');
-        // Should have more than just the placeholder option
-        expect(options.length).toBeGreaterThan(1);
+        expect(selectorButton).toBeInTheDocument();
       });
+      await user.click(selectorButton);
 
-      // Select the event type
-      await user.selectOptions(select, `reminder:${reminder.id}`);
+      // Wait for dropdown options to appear and click the reminder
+      await waitFor(() => {
+        expect(screen.getByRole('listbox')).toBeInTheDocument();
+      });
+      const reminderOption = screen.getByRole('option', { name: new RegExp(reminder.name) });
+      await user.click(reminderOption);
 
-      // Fill in day using fireEvent for reliable value setting on date inputs
-      const dayInput = screen.getByLabelText('calendarEvent.form.day');
+      // Fill in startDay using fireEvent for reliable value setting on date inputs
+      const startDayInput = screen.getByLabelText('calendarEvent.form.startDay');
       await act(async () => {
         Object.getOwnPropertyDescriptor(
           HTMLInputElement.prototype,
           'value',
-        )!.set!.call(dayInput, '2024-06-15');
-        dayInput.dispatchEvent(new Event('change', { bubbles: true }));
+        )!.set!.call(startDayInput, '2024-06-15');
+        startDayInput.dispatchEvent(new Event('change', { bubbles: true }));
       });
 
       // Fill in start time
@@ -296,7 +303,7 @@ describe('CalendarEvents Container Integration', () => {
       expect(events).toHaveLength(1);
       expect(events[0].eventType).toBe('reminder');
       expect(events[0].eventTypeId).toBe(reminder.id);
-      expect(events[0].day).toBe('2024-06-15');
+      expect(events[0].startDay).toBe('2024-06-15');
       expect(events[0].startTime).toBe(540); // 9:00 = 9*60
       expect(events[0].endTime).toBe(600); // 10:00 = 10*60
       expect(events[0].isDeleted).toBe(false);
@@ -313,7 +320,8 @@ describe('CalendarEvents Container Integration', () => {
       const event = createTestEvent({
         id: 'event-edit-1',
         eventTypeId: reminder.id,
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
       });
       await db.calendarEvents.add(event);
 
@@ -345,7 +353,8 @@ describe('CalendarEvents Container Integration', () => {
       const event = createTestEvent({
         id: 'event-back-1',
         eventTypeId: reminder.id,
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
       });
       await db.calendarEvents.add(event);
 
@@ -381,7 +390,8 @@ describe('CalendarEvents Container Integration', () => {
       const event = createTestEvent({
         id: 'event-update-1',
         eventTypeId: reminder.id,
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
         startTime: 480,
         endTime: 540,
         notes: null,
@@ -436,7 +446,8 @@ describe('CalendarEvents Container Integration', () => {
       const event = createTestEvent({
         id: 'event-del-1',
         eventTypeId: reminder.id,
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
       });
       await db.calendarEvents.add(event);
 
@@ -474,7 +485,8 @@ describe('CalendarEvents Container Integration', () => {
       const event = createTestEvent({
         id: 'event-confirm-del-1',
         eventTypeId: reminder.id,
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
       });
       await db.calendarEvents.add(event);
 
@@ -525,7 +537,8 @@ describe('CalendarEvents Container Integration', () => {
       const event = createTestEvent({
         id: 'event-cancel-del-1',
         eventTypeId: reminder.id,
-        day: '2024-06-15',
+        startDay: '2024-06-15',
+        endDay: '2024-06-15',
       });
       await db.calendarEvents.add(event);
 

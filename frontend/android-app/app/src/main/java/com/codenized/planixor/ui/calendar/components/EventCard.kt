@@ -24,13 +24,18 @@ import com.codenized.planixor.domain.model.CalendarEventDisplay
 import com.codenized.planixor.ui.theme.PlanixorTheme
 
 /**
- * Card composable representing a calendar event.
- * Displays icon, name, time range with duration, and notes.
- * Uses the event's background color as the card background.
+ * Card composable representing a calendar event (Day and Week views).
+ *
+ * Layout:
+ * - Line 1: Icon (50% larger) + Name
+ * - Line 2: startDay + startTime
+ * - Line 3: endDay + endTime
+ * - Line 4: Total hours (stored value, not computed)
+ * - Line 5: Notes (max 2 lines with ellipsis, only if present)
+ * Overflow is hidden — bottom lines are clipped if card is too small.
  *
  * @param event The calendar event display model with derived fields.
  * @param onClick Callback when the card is tapped.
- * @param showNotes Whether to show the notes line (Day view shows notes, Week view does not).
  * @param modifier Optional modifier.
  */
 @Composable
@@ -41,6 +46,9 @@ fun EventCard(
     modifier: Modifier = Modifier,
 ) {
     val bgColor = parseHexColorSafe(event.backgroundColor)
+    val startTimeLabel = formatMinutesToTime(event.startTime)
+    val endTimeLabel = formatMinutesToTime(event.endTime)
+    val totalHoursLabel = formatTotalHoursStored(event.totalHours)
 
     Column(
         modifier = modifier
@@ -50,13 +58,13 @@ fun EventCard(
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 6.dp),
     ) {
-        // Line 1: icon + name
+        // Line 1: icon (50% larger) + name
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = event.icon,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.titleMedium,
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
@@ -70,25 +78,36 @@ fun EventCard(
 
         Spacer(modifier = Modifier.height(2.dp))
 
-        // Line 2: start time – end time · duration
-        val startFormatted = formatMinutesToTime(event.startTime)
-        val endFormatted = formatMinutesToTime(event.endTime)
-        val duration = formatDuration(event.startTime, event.endTime)
-
+        // Line 2: startDay + startTime
         Text(
-            text = "$startFormatted – $endFormatted · $duration",
+            text = "${event.startDay} $startTimeLabel",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        // Line 3: notes (only in Day view)
+        // Line 3: endDay + endTime
+        Text(
+            text = "${event.endDay} $endTimeLabel",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        // Line 4: totalHours (stored value)
+        Text(
+            text = totalHoursLabel,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+        )
+
+        // Line 5: notes (only if present, max 2 lines with ellipsis)
         if (showNotes && !event.notes.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = event.notes,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
         }
@@ -102,6 +121,20 @@ internal fun formatMinutesToTime(minutes: Int): String {
     val h = minutes / 60
     val m = minutes % 60
     return String.format(java.util.Locale.getDefault(), "%02d:%02d", h, m)
+}
+
+/**
+ * Formats stored totalHours (in minutes) as "Xh Ym".
+ */
+internal fun formatTotalHoursStored(totalMinutes: Int): String {
+    if (totalMinutes <= 0) return "0m"
+    val hours = totalMinutes / 60
+    val mins = totalMinutes % 60
+    return when {
+        hours > 0 && mins > 0 -> "${hours}h ${mins}m"
+        hours > 0 -> "${hours}h"
+        else -> "${mins}m"
+    }
 }
 
 /**
@@ -143,9 +176,11 @@ private fun EventCardPreview() {
                 id = "1",
                 eventType = "shift",
                 eventTypeId = "s1",
-                day = "2024-06-15",
+                startDay = "2024-06-15",
+                endDay = "2024-06-15",
                 startTime = 480,
                 endTime = 960,
+                totalHours = 480,
                 notes = "Morning shift with team lead",
                 modifiedAt = System.currentTimeMillis(),
                 syncedAt = null,

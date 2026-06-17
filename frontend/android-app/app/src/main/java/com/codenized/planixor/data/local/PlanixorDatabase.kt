@@ -18,7 +18,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  */
 @Database(
     entities = [CalendarEventEntity::class, ShiftEntity::class, ReminderEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class PlanixorDatabase : RoomDatabase() {
@@ -62,6 +62,65 @@ abstract class PlanixorDatabase : RoomDatabase() {
                 )
                 db.execSQL(
                     "CREATE INDEX IF NOT EXISTS `index_calendar_events_day` ON `calendar_events` (`day`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_calendar_events_isDeleted` ON `calendar_events` (`isDeleted`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_calendar_events_eventType` ON `calendar_events` (`eventType`)"
+                )
+            }
+        }
+
+        /**
+         * Migration from version 4 to 5:
+         * Migrates calendar_events from single-day model (day) to multi-day model
+         * (startDay, endDay, totalHours).
+         *
+         * No user data exists in any deployed environment, so we drop and recreate
+         * the table with the new schema rather than performing data transformation.
+         *
+         * Schema changes:
+         * - Renamed: day → startDay
+         * - Added: endDay (TEXT NOT NULL)
+         * - Added: totalHours (INTEGER NOT NULL)
+         * - Updated indices for new column names
+         */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Drop old table — no user data exists in deployed environments
+                db.execSQL("DROP TABLE IF EXISTS `calendar_events`")
+
+                // Create new table with multi-day schema
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `calendar_events` (
+                        `id` TEXT NOT NULL,
+                        `eventType` TEXT NOT NULL,
+                        `eventTypeId` TEXT NOT NULL,
+                        `startDay` TEXT NOT NULL,
+                        `endDay` TEXT NOT NULL,
+                        `startTime` INTEGER NOT NULL,
+                        `endTime` INTEGER NOT NULL,
+                        `totalHours` INTEGER NOT NULL,
+                        `notes` TEXT,
+                        `modifiedAt` INTEGER NOT NULL,
+                        `syncedAt` INTEGER,
+                        `isDeleted` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent()
+                )
+
+                // Create indexes for new schema
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_calendar_events_startDay_eventType_isDeleted` ON `calendar_events` (`startDay`, `eventType`, `isDeleted`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_calendar_events_startDay` ON `calendar_events` (`startDay`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_calendar_events_endDay` ON `calendar_events` (`endDay`)"
                 )
                 db.execSQL(
                     "CREATE INDEX IF NOT EXISTS `index_calendar_events_isDeleted` ON `calendar_events` (`isDeleted`)"

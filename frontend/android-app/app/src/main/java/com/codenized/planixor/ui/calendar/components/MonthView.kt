@@ -61,8 +61,6 @@ fun MonthView(
     val daysOfWeek = buildDaysOfWeekList(firstDayOfWeek)
     val calendarDays = buildMonthCalendarDays(yearMonth, firstDayOfWeek)
 
-    val eventsByDay = events.groupBy { it.day }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -91,7 +89,16 @@ fun MonthView(
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 week.forEach { day ->
-                    val dayEvents = eventsByDay[day.toString()] ?: emptyList()
+                    val dayStr = day.toString()
+                    // Shift events: only shown on their startDay (even if multi-day)
+                    // Reminder events: shown on all days they span (range intersection)
+                    val dayEvents = events.filter { event ->
+                        if (event.eventType == "shift") {
+                            event.startDay == dayStr
+                        } else {
+                            event.startDay <= dayStr && event.endDay >= dayStr
+                        }
+                    }
                     MonthDayCell(
                         date = day,
                         isCurrentMonth = day.month == yearMonth.month,
@@ -180,13 +187,19 @@ private fun MonthDayCell(
             // Padding between header and emoji content
             Spacer(modifier = Modifier.height(2.dp))
 
-            // Emoji indicators — doubled size (~24sp from ~12sp)
+            // Emoji indicators with spacing between them
             if (emojisToShow.isNotEmpty()) {
-                Text(
-                    text = emojisToShow.joinToString(""),
-                    fontSize = 16.sp,
-                    maxLines = 1,
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    emojisToShow.forEach { emoji ->
+                        Text(
+                            text = emoji,
+                            fontSize = 16.sp,
+                        )
+                    }
+                }
                 if (overflow > 0) {
                     Text(
                         text = "+$overflow",

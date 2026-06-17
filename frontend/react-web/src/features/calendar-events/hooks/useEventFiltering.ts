@@ -70,7 +70,8 @@ export const useEventFiltering = (events: CalendarEventDisplay[]): UseEventFilte
   const filteredEvents = useMemo(
     () =>
       events.filter(
-        (event) => !event.isDeleted && event.day >= startDate && event.day <= endDate
+        (event) =>
+          !event.isDeleted && event.startDay <= endDate && event.endDay >= startDate
       ),
     [events, startDate, endDate]
   );

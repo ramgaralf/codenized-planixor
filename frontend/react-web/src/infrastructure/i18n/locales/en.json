@@ -221,8 +221,14 @@
       "selectedDetails": "Selected event type details"
     },
     "form": {
-      "dayLabel": "Day",
-      "day": "Day",
+      "createTitle": "New Event",
+      "editTitle": "Edit Event",
+      "startDayLabel": "Start Day",
+      "startDay": "Start Day",
+      "endDayLabel": "End Day",
+      "endDay": "End Day",
+      "totalHoursLabel": "Total Hours",
+      "totalHours": "Total Hours",
       "startTimeLabel": "Start Time",
       "startTime": "Start Time",
       "endTimeLabel": "End Time",
@@ -241,18 +247,32 @@
       "eventTypeId": {
         "required": "Event type selection is required"
       },
-      "day": {
-        "required": "Day is required"
+      "startDay": {
+        "required": "Start day is required"
+      },
+      "endDay": {
+        "required": "End day is required"
+      },
+      "totalHours": {
+        "required": "Total hours is required"
       },
       "startTime": {
         "required": "Start time is required"
       },
       "endTime": {
-        "required": "End time is required",
-        "afterStart": "End time must be after start time"
+        "required": "End time is required"
+      },
+      "dayRange": {
+        "invalid": "End day must be on or after start day"
+      },
+      "timeForReminder": {
+        "invalid": "End time must be after start time for same-day reminders"
+      },
+      "crossingMidnight": {
+        "info": "This shift crosses midnight — end day has been set to the next day"
       },
       "notes": {
-        "maxLength": "Notes must be 200 characters or less"
+        "maxLength": "Notes must be 250 characters or less"
       },
       "oneShiftPerDay": "Only one shift is allowed per day"
     },

@@ -1,7 +1,15 @@
 import { db } from '@/data/db';
 
 import type { CalendarEvent, CalendarEventDisplay } from '../models';
-import { validateTimeRange, checkOneShiftPerDay } from '../validation';
+import {
+  validateDayRange,
+  validateTimeForReminder,
+  computeTotalHours,
+  computeEndDayForShift,
+  checkOneShiftPerDay,
+  validateNotes,
+  validateRequiredFields,
+} from '../validation';
 import { CALENDAR_EVENT_I18N_KEYS } from '../constants';
 
 /**
@@ -17,12 +25,12 @@ import { CALENDAR_EVENT_I18N_KEYS } from '../constants';
 
 /**
  * Input type for creating a new calendar event.
- * System-managed fields (id, modifiedAt, syncedAt, isDeleted)
+ * System-managed fields (id, modifiedAt, syncedAt, isDeleted, totalHours)
  * are generated automatically.
  */
 export type CreateCalendarEventInput = Omit<
   CalendarEvent,
-  'id' | 'modifiedAt' | 'syncedAt' | 'isDeleted'
+  'id' | 'modifiedAt' | 'syncedAt' | 'isDeleted' | 'totalHours'
 >;
 
 /**
@@ -67,28 +75,78 @@ const deriveDisplayFields = async (
 };
 
 /**
+ * Resolves the shiftHoursWorked value from the referenced shift definition.
+ * Returns undefined if the event is not a shift or the shift is not found.
+ */
+const resolveShiftHoursWorked = async (
+  eventType: 'shift' | 'reminder',
+  eventTypeId: string,
+): Promise<number | undefined> => {
+  if (eventType !== 'shift') {
+    return undefined;
+  }
+  const shift = await db.shifts.get(eventTypeId);
+  return shift?.hoursWorked;
+};
+
+/**
  * Creates a new calendar event with system-generated fields.
- * Enforces dual validation: time range + one-shift-per-day.
+ * Enforces dual validation: day range, time (reminders), one-shift-per-day,
+ * notes length, and required fields. For shifts, auto-sets endDay via
+ * computeEndDayForShift() when crossing midnight.
  *
- * **Validates: Requirements 1.1, 7.2, 11.1, 11.5**
+ * **Validates: Requirements 1.1, 1.6, 7.2, 11.5, 11.6, 11.7**
  */
 export const create = async (input: CreateCalendarEventInput): Promise<CalendarEvent> => {
-  if (!validateTimeRange(input.startTime, input.endTime)) {
-    throw new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_END_TIME_AFTER_START);
+  let { endDay } = input;
+  const { eventType, eventTypeId, startDay, startTime, endTime } = input;
+
+  // For shift events, auto-compute endDay based on crossing midnight
+  if (eventType === 'shift') {
+    endDay = computeEndDayForShift(startDay, startTime, endTime);
   }
 
-  const existingEvents = await getShiftsForDate(input.day);
-  if (!checkOneShiftPerDay(input.day, input.eventType, existingEvents)) {
+  // Validate day range: endDay >= startDay
+  if (!validateDayRange(startDay, endDay)) {
+    throw new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_DAY_RANGE);
+  }
+
+  // Validate time for reminders: endTime > startTime when endDay == startDay
+  if (eventType === 'reminder' && !validateTimeForReminder(startDay, endDay, startTime, endTime)) {
+    throw new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER);
+  }
+
+  // Validate notes length
+  if (!validateNotes(input.notes)) {
+    throw new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_NOTES_MAX_LENGTH);
+  }
+
+  // Enforce one-shift-per-day constraint
+  const existingEvents = await getShiftsForDate(startDay);
+  if (!checkOneShiftPerDay(startDay, eventType, existingEvents)) {
     throw new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY);
   }
 
+  // Compute totalHours based on event type
+  const shiftHoursWorked = await resolveShiftHoursWorked(eventType, eventTypeId);
+  const totalHours = computeTotalHours(eventType, startDay, endDay, startTime, endTime, shiftHoursWorked);
+
   const event: CalendarEvent = {
     ...input,
+    endDay,
+    totalHours,
     id: crypto.randomUUID(),
     modifiedAt: new Date(),
     syncedAt: null,
     isDeleted: false,
   };
+
+  // Validate required fields as a final check
+  const validation = validateRequiredFields(event);
+  if (!validation.isValid) {
+    const firstError = Object.values(validation.errors)[0];
+    throw new Error(firstError);
+  }
 
   await db.calendarEvents.add(event);
 
@@ -97,10 +155,12 @@ export const create = async (input: CreateCalendarEventInput): Promise<CalendarE
 
 /**
  * Updates an existing calendar event.
- * Enforces dual validation: time range + one-shift-per-day.
+ * Enforces dual validation: day range, time (reminders), one-shift-per-day,
+ * notes length, and required fields. Recomputes totalHours and auto-sets
+ * endDay for shifts crossing midnight.
  * Sets modifiedAt to UTC now and syncedAt to null.
  *
- * **Validates: Requirements 1.1, 7.2, 8.2, 11.4**
+ * **Validates: Requirements 1.1, 1.6, 7.2, 8.2, 11.4, 11.5, 11.6, 11.7**
  */
 export const update = async (
   id: string,
@@ -113,21 +173,50 @@ export const update = async (
 
   const merged = { ...existing, ...changes };
 
-  if (!validateTimeRange(merged.startTime, merged.endTime)) {
-    throw new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_END_TIME_AFTER_START);
+  // For shift events, auto-compute endDay based on crossing midnight
+  if (merged.eventType === 'shift') {
+    merged.endDay = computeEndDayForShift(merged.startDay, merged.startTime, merged.endTime);
   }
 
-  const existingEvents = await getShiftsForDate(merged.day, id);
-  if (!checkOneShiftPerDay(merged.day, merged.eventType, existingEvents, id)) {
+  // Validate day range: endDay >= startDay
+  if (!validateDayRange(merged.startDay, merged.endDay)) {
+    throw new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_DAY_RANGE);
+  }
+
+  // Validate time for reminders: endTime > startTime when endDay == startDay
+  if (merged.eventType === 'reminder' && !validateTimeForReminder(merged.startDay, merged.endDay, merged.startTime, merged.endTime)) {
+    throw new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER);
+  }
+
+  // Validate notes length
+  if (!validateNotes(merged.notes)) {
+    throw new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_NOTES_MAX_LENGTH);
+  }
+
+  // Enforce one-shift-per-day constraint (exclude the event being updated)
+  const existingEvents = await getShiftsForDate(merged.startDay, id);
+  if (!checkOneShiftPerDay(merged.startDay, merged.eventType, existingEvents, id)) {
     throw new Error(CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY);
   }
 
+  // Recompute totalHours based on event type
+  const shiftHoursWorked = await resolveShiftHoursWorked(merged.eventType, merged.eventTypeId);
+  const totalHours = computeTotalHours(merged.eventType, merged.startDay, merged.endDay, merged.startTime, merged.endTime, shiftHoursWorked);
+
   const updatedEvent: CalendarEvent = {
     ...merged,
+    totalHours,
     id,
     modifiedAt: new Date(),
     syncedAt: null,
   };
+
+  // Validate required fields as a final check
+  const validation = validateRequiredFields(updatedEvent);
+  if (!validation.isValid) {
+    const firstError = Object.values(validation.errors)[0];
+    throw new Error(firstError);
+  }
 
   await db.calendarEvents.put(updatedEvent);
 
@@ -150,7 +239,8 @@ export const softDelete = async (id: string): Promise<void> => {
 
 /**
  * Retrieves all non-deleted calendar events within a date range (inclusive)
- * and derives display fields from the referenced shift/reminder store.
+ * using range intersection logic: events where startDay <= endDate AND endDay >= startDate.
+ * Derives display fields from the referenced shift/reminder store.
  *
  * **Validates: Requirements 11.2, 11.3**
  */
@@ -158,44 +248,47 @@ export const getByDateRange = async (
   startDate: string,
   endDate: string,
 ): Promise<CalendarEventDisplay[]> => {
+  // Range intersection: event is visible if startDay <= endDate AND endDay >= startDate
   const events = await db.calendarEvents
-    .where('day')
-    .between(startDate, endDate, true, true)
-    .filter((event) => event.isDeleted === false)
+    .where('startDay')
+    .belowOrEqual(endDate)
+    .filter((event) => event.endDay >= startDate && event.isDeleted === false)
     .toArray();
 
   return Promise.all(events.map(deriveDisplayFields));
 };
 
 /**
- * Retrieves all non-deleted calendar events for an exact day
- * and derives display fields from the referenced shift/reminder store.
+ * Retrieves all non-deleted calendar events that cover a specific day.
+ * An event covers a day if startDay <= day <= endDay.
+ * Derives display fields from the referenced shift/reminder store.
  *
  * **Validates: Requirements 11.2, 11.3**
  */
 export const getByDate = async (day: string): Promise<CalendarEventDisplay[]> => {
+  // Event covers this day if startDay <= day AND endDay >= day
   const events = await db.calendarEvents
-    .where('day')
-    .equals(day)
-    .filter((event) => event.isDeleted === false)
+    .where('startDay')
+    .belowOrEqual(day)
+    .filter((event) => event.endDay >= day && event.isDeleted === false)
     .toArray();
 
   return Promise.all(events.map(deriveDisplayFields));
 };
 
 /**
- * Returns non-deleted shift events for a given day.
+ * Returns non-deleted shift events for a given startDay.
  * Optionally excludes an event by ID (used during update validation).
  *
  * **Validates: Requirements 2.1, 11.1**
  */
 export const getShiftsForDate = async (
-  day: string,
+  startDay: string,
   excludeId?: string,
 ): Promise<CalendarEvent[]> => {
   const events = await db.calendarEvents
-    .where('day')
-    .equals(day)
+    .where('startDay')
+    .equals(startDay)
     .filter(
       (event) =>
         event.eventType === 'shift' &&

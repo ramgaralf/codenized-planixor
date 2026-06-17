@@ -29,9 +29,11 @@ export interface CalendarEventSyncRecord {
   id: string;
   eventType: 'shift' | 'reminder';
   eventTypeId: string;
-  day: string;
+  startDay: string;
+  endDay: string;
   startTime: number;
   endTime: number;
+  totalHours: number;
   notes: string | null;
   modifiedAt: string;
   isDeleted: boolean;
@@ -102,9 +104,11 @@ export const toSyncRecord = (event: CalendarEvent): CalendarEventSyncRecord => (
   id: event.id,
   eventType: event.eventType,
   eventTypeId: event.eventTypeId,
-  day: event.day,
+  startDay: event.startDay,
+  endDay: event.endDay,
   startTime: event.startTime,
   endTime: event.endTime,
+  totalHours: event.totalHours,
   notes: event.notes,
   modifiedAt: event.modifiedAt.toISOString(),
   isDeleted: event.isDeleted,
@@ -121,9 +125,11 @@ export const fromSyncRecord = (
   id: record.id,
   eventType: record.eventType,
   eventTypeId: record.eventTypeId,
-  day: record.day,
+  startDay: record.startDay,
+  endDay: record.endDay,
   startTime: record.startTime,
   endTime: record.endTime,
+  totalHours: record.totalHours,
   notes: record.notes,
   modifiedAt: new Date(record.modifiedAt),
   syncedAt,

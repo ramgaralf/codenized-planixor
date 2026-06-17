@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { db } from '@/data/db';
 import { useCalendarStore } from '@/stores/calendarStore';
 
 import { CALENDAR_EVENT_I18N_KEYS } from '../constants';
@@ -7,17 +8,22 @@ import type { CalendarEvent } from '../models';
 import * as calendarEventService from '../services/calendarEventService';
 import {
   checkOneShiftPerDay,
+  computeEndDayForShift,
+  computeTotalHours,
+  validateDayRange,
   validateNotes,
   validateRequiredFields,
-  validateTimeRange,
+  validateTimeForReminder,
 } from '../validation';
 
 export interface EventFormState {
   eventType: 'shift' | 'reminder' | null;
   eventTypeId: string | null;
-  day: string;
+  startDay: string;
+  endDay: string;
   startTime: number | null;
   endTime: number | null;
+  totalHours: number;
   notes: string;
 }
 
@@ -32,7 +38,9 @@ export interface UseEventFormReturn {
   fieldErrors: Record<string, string>;
   formError: string | null;
   isSubmitting: boolean;
+  isTimeReadOnly: boolean;
   setField: (field: keyof EventFormState, value: EventFormState[keyof EventFormState]) => void;
+  selectEventType: (eventType: 'shift' | 'reminder', eventTypeId: string) => Promise<void>;
   handleSubmit: () => Promise<void>;
   handleCancel: () => void;
   isEditMode: boolean;
@@ -41,7 +49,7 @@ export interface UseEventFormReturn {
 /**
  * Computes the pre-selected day based on the calendar's active view and navigated date.
  *
- * **Validates: Requirements 9.1–9.6**
+ * **Validates: Requirements 9.1–9.7**
  */
 const computePreSelectedDay = (activeView: string, currentDate: Date): string => {
   const today = new Date();
@@ -52,7 +60,6 @@ const computePreSelectedDay = (activeView: string, currentDate: Date): string =>
       return formatDateToISO(currentDate);
     }
     case 'week': {
-      // Determine the Monday of the displayed week
       const monday = getMonday(currentDate);
       const sunday = new Date(monday);
       sunday.setDate(monday.getDate() + 6);
@@ -65,7 +72,6 @@ const computePreSelectedDay = (activeView: string, currentDate: Date): string =>
       return formatDateToISO(monday);
     }
     case 'month': {
-      // Determine the month boundaries
       const firstOfMonth = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth(),
@@ -84,9 +90,18 @@ const computePreSelectedDay = (activeView: string, currentDate: Date): string =>
       // 9.5: Otherwise, use first day of displayed month
       return formatDateToISO(firstOfMonth);
     }
-    case 'year':
+    case 'year': {
+      const firstOfYear = new Date(currentDate.getFullYear(), 0, 1);
+      const lastOfYear = new Date(currentDate.getFullYear(), 11, 31);
+
+      // 9.6: If current device date falls within displayed year, use today
+      if (isDateInRange(today, firstOfYear, lastOfYear)) {
+        return formatDateToISO(today);
+      }
+      // 9.7: Otherwise, use January 1st of displayed year
+      return formatDateToISO(firstOfYear);
+    }
     default: {
-      // 9.6: Pre-select current device date
       return formatDateToISO(today);
     }
   }
@@ -99,7 +114,6 @@ const computePreSelectedDay = (activeView: string, currentDate: Date): string =>
 const getMonday = (date: Date): Date => {
   const d = new Date(date);
   const dayOfWeek = d.getDay();
-  // getDay() returns 0 for Sunday; shift so Monday = 0
   const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   d.setDate(d.getDate() + diff);
   return d;
@@ -139,26 +153,63 @@ const buildInitialState = (
     return {
       eventType: existingEvent.eventType,
       eventTypeId: existingEvent.eventTypeId,
-      day: existingEvent.day,
+      startDay: existingEvent.startDay,
+      endDay: existingEvent.endDay,
       startTime: existingEvent.startTime,
       endTime: existingEvent.endTime,
+      totalHours: existingEvent.totalHours,
       notes: existingEvent.notes ?? '',
     };
   }
 
+  const preSelectedDay = computePreSelectedDay(activeView, currentDate);
+
   return {
     eventType: null,
     eventTypeId: null,
-    day: computePreSelectedDay(activeView, currentDate),
+    startDay: preSelectedDay,
+    endDay: preSelectedDay,
     startTime: null,
     endTime: null,
+    totalHours: 0,
     notes: '',
   };
 };
 
 /**
+ * Validates reminder time constraints.
+ */
+const validateReminderTime = (formState: EventFormState): string | null => {
+  if (formState.eventType !== 'reminder') return null;
+  if (formState.startTime === null || formState.endTime === null) return null;
+  if (!formState.startDay || !formState.endDay) return null;
+  if (!validateTimeForReminder(formState.startDay, formState.endDay, formState.startTime, formState.endTime)) {
+    return CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER;
+  }
+  return null;
+};
+
+/**
+ * Checks the one-shift-per-day constraint asynchronously.
+ */
+const checkShiftConstraint = async (
+  formState: EventFormState,
+  isEditMode: boolean,
+  existingEvent: CalendarEvent | null | undefined,
+): Promise<string | null> => {
+  if (formState.eventType !== 'shift' || !formState.startDay) return null;
+  const existingShifts = await calendarEventService.getShiftsForDate(
+    formState.startDay,
+    isEditMode ? existingEvent!.id : undefined,
+  );
+  if (!checkOneShiftPerDay(formState.startDay, formState.eventType, existingShifts, isEditMode ? existingEvent!.id : undefined)) {
+    return CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY;
+  }
+  return null;
+};
+
+/**
  * Runs all form validation checks and returns field-level and form-level errors.
- * Extracted to reduce cognitive complexity of handleSubmit.
  */
 const runValidation = async (
   formState: EventFormState,
@@ -172,53 +223,57 @@ const runValidation = async (
   const requiredResult = validateRequiredFields({
     eventType: formState.eventType ?? undefined,
     eventTypeId: formState.eventTypeId ?? undefined,
-    day: formState.day || undefined,
+    startDay: formState.startDay || undefined,
+    endDay: formState.endDay || undefined,
     startTime: formState.startTime ?? undefined,
     endTime: formState.endTime ?? undefined,
+    totalHours: formState.totalHours,
   });
 
   if (!requiredResult.isValid) {
     Object.assign(fieldErrors, requiredResult.errors);
   }
 
-  // 2. Validate time range (only if both times are provided)
-  if (formState.startTime !== null && formState.endTime !== null) {
-    if (!validateTimeRange(formState.startTime, formState.endTime)) {
-      fieldErrors.endTime = CALENDAR_EVENT_I18N_KEYS.VALIDATION_END_TIME_AFTER_START;
-    }
+  // 2. Validate day range: endDay >= startDay
+  if (formState.startDay && formState.endDay && !validateDayRange(formState.startDay, formState.endDay)) {
+    fieldErrors.endDay = CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_DAY_RANGE;
   }
 
-  // 3. Validate notes length
+  // 3. Validate time for reminders
+  const timeError = validateReminderTime(formState);
+  if (timeError) {
+    fieldErrors.endTime = timeError;
+  }
+
+  // 4. Validate notes length
   if (!validateNotes(formState.notes || null)) {
     fieldErrors.notes = CALENDAR_EVENT_I18N_KEYS.VALIDATION_NOTES_MAX_LENGTH;
   }
 
-  // 4. Check one-shift-per-day constraint (only if no field errors so far)
-  if (
-    formState.eventType === 'shift' &&
-    formState.day &&
-    Object.keys(fieldErrors).length === 0
-  ) {
-    const existingShifts = await calendarEventService.getShiftsForDate(
-      formState.day,
-      isEditMode ? existingEvent!.id : undefined,
-    );
-
-    if (
-      !checkOneShiftPerDay(
-        formState.day,
-        formState.eventType,
-        existingShifts,
-        isEditMode ? existingEvent!.id : undefined,
-      )
-    ) {
-      formError = CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY;
-    }
+  // 5. Check one-shift-per-day constraint (only if no field errors yet)
+  if (Object.keys(fieldErrors).length === 0) {
+    formError = await checkShiftConstraint(formState, isEditMode, existingEvent);
   }
 
   return { fieldErrors, formError };
 };
 
+
+/**
+ * Hook for managing the calendar event form state, validation, and submission.
+ *
+ * Manages: startDay, endDay, startTime, endTime, totalHours (computed),
+ * eventType, eventTypeId, and notes.
+ *
+ * When a **shift** is selected: startTime/endTime are auto-populated from the
+ * shift definition as read-only; totalHours = shift's hoursWorked; endDay is
+ * auto-computed via computeEndDayForShift() if crossing midnight.
+ *
+ * When a **reminder** is selected: startTime/endTime are editable via timepickers;
+ * totalHours is recalculated on every time/day change via computeTotalHours().
+ *
+ * **Validates: Requirements 1.2, 1.5, 1.6, 1.10, 1.11, 9.1–9.7**
+ */
 export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn => {
   const { existingEvent, onSuccess, onCancel } = options ?? {};
 
@@ -234,6 +289,36 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /**
+   * Whether times are read-only (shift selected) or editable (reminder/no selection).
+   */
+  const isTimeReadOnly = useMemo(
+    () => formState.eventType === 'shift',
+    [formState.eventType],
+  );
+
+  /**
+   * Recalculate totalHours for reminders whenever time/day fields change.
+   */
+  useEffect(() => {
+    if (formState.eventType !== 'reminder') return;
+    if (formState.startTime === null || formState.endTime === null) return;
+    if (!formState.startDay || !formState.endDay) return;
+
+    const newTotalHours = computeTotalHours(
+      'reminder',
+      formState.startDay,
+      formState.endDay,
+      formState.startTime,
+      formState.endTime,
+    );
+
+    setFormState((prev) => {
+      if (prev.totalHours === newTotalHours) return prev;
+      return { ...prev, totalHours: newTotalHours };
+    });
+  }, [formState.eventType, formState.startDay, formState.endDay, formState.startTime, formState.endTime]);
+
   const setField = useCallback(
     (field: keyof EventFormState, value: EventFormState[keyof EventFormState]) => {
       setFormState((prev) => ({ ...prev, [field]: value }));
@@ -246,12 +331,79 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
         return next;
       });
 
-      // Clear form-level error when day or eventType changes (relevant to one-shift-per-day)
-      if (field === 'day' || field === 'eventType') {
+      // Clear form-level error when startDay or eventType changes (relevant to one-shift-per-day)
+      if (field === 'startDay' || field === 'eventType') {
         setFormError(null);
       }
     },
     [],
+  );
+
+  /**
+   * Handles event type selection from the Event_Type_Selector.
+   * Looks up the shift/reminder definition from Dexie and auto-populates fields.
+   *
+   * For shifts: sets startTime, endTime (read-only), totalHours from hoursWorked,
+   * and computes endDay via computeEndDayForShift() (crossing midnight).
+   *
+   * For reminders: clears times (user editable), resets totalHours.
+   */
+  const selectEventType = useCallback(
+    async (eventType: 'shift' | 'reminder', eventTypeId: string): Promise<void> => {
+      if (eventType === 'shift') {
+        const shift = await db.shifts.get(eventTypeId);
+
+        if (shift) {
+          const endDay = computeEndDayForShift(
+            formState.startDay,
+            shift.startTime,
+            shift.endTime,
+          );
+
+          setFormState((prev) => ({
+            ...prev,
+            eventType,
+            eventTypeId,
+            startTime: shift.startTime,
+            endTime: shift.endTime,
+            totalHours: shift.hoursWorked,
+            endDay,
+          }));
+        } else {
+          // Shift not found — set type but leave times as-is
+          setFormState((prev) => ({
+            ...prev,
+            eventType,
+            eventTypeId,
+          }));
+        }
+      } else {
+        // Reminder selected: times are editable, reset totalHours until user fills times
+        setFormState((prev) => ({
+          ...prev,
+          eventType,
+          eventTypeId,
+          startTime: prev.startTime,
+          endTime: prev.endTime,
+          totalHours: prev.startTime !== null && prev.endTime !== null
+            ? computeTotalHours('reminder', prev.startDay, prev.endDay, prev.startTime, prev.endTime)
+            : 0,
+        }));
+      }
+
+      // Clear relevant errors
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next.eventType;
+        delete next.eventTypeId;
+        delete next.startTime;
+        delete next.endTime;
+        delete next.endDay;
+        return next;
+      });
+      setFormError(null);
+    },
+    [formState.startDay],
   );
 
   const handleSubmit = useCallback(async (): Promise<void> => {
@@ -279,7 +431,8 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
         await calendarEventService.update(existingEvent!.id, {
           eventType: formState.eventType!,
           eventTypeId: formState.eventTypeId!,
-          day: formState.day,
+          startDay: formState.startDay,
+          endDay: formState.endDay,
           startTime: formState.startTime!,
           endTime: formState.endTime!,
           notes: formState.notes || null,
@@ -288,7 +441,8 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
         await calendarEventService.create({
           eventType: formState.eventType!,
           eventTypeId: formState.eventTypeId!,
-          day: formState.day,
+          startDay: formState.startDay,
+          endDay: formState.endDay,
           startTime: formState.startTime!,
           endTime: formState.endTime!,
           notes: formState.notes || null,
@@ -296,12 +450,15 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
       }
 
       // On successful create/update: clear form and call onSuccess
+      const preSelectedDay = computePreSelectedDay(activeView, currentDate);
       setFormState({
         eventType: null,
         eventTypeId: null,
-        day: computePreSelectedDay(activeView, currentDate),
+        startDay: preSelectedDay,
+        endDay: preSelectedDay,
         startTime: null,
         endTime: null,
+        totalHours: 0,
         notes: '',
       });
 
@@ -309,7 +466,6 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
     } catch (err) {
       console.error('Failed to save calendar event:', err);
 
-      // Handle one-shift-per-day error from the service layer (dual validation)
       if (
         err instanceof Error &&
         err.message === CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY
@@ -317,11 +473,19 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
         setFormError(CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY);
       } else if (
         err instanceof Error &&
-        err.message === CALENDAR_EVENT_I18N_KEYS.VALIDATION_END_TIME_AFTER_START
+        err.message === CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER
       ) {
         setFieldErrors((prev) => ({
           ...prev,
-          endTime: CALENDAR_EVENT_I18N_KEYS.VALIDATION_END_TIME_AFTER_START,
+          endTime: CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER,
+        }));
+      } else if (
+        err instanceof Error &&
+        err.message === CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_DAY_RANGE
+      ) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          endDay: CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_DAY_RANGE,
         }));
       } else {
         setFormError(CALENDAR_EVENT_I18N_KEYS.ERROR_SAVE_FAILED);
@@ -340,7 +504,9 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
     fieldErrors,
     formError,
     isSubmitting,
+    isTimeReadOnly,
     setField,
+    selectEventType,
     handleSubmit,
     handleCancel,
     isEditMode,

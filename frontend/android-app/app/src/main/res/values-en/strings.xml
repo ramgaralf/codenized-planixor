@@ -168,10 +168,13 @@
     <string name="event_form_title_edit">Edit event</string>
     <string name="event_form_field_event_type">Event Type</string>
     <string name="event_form_field_day">Day</string>
+    <string name="event_form_field_start_day">Start day</string>
+    <string name="event_form_field_end_day">End day</string>
     <string name="event_form_field_start_time">Start time</string>
     <string name="event_form_field_end_time">End time</string>
+    <string name="event_form_field_total_hours">Total duration</string>
     <string name="event_form_field_notes">Notes</string>
-    <string name="event_form_notes_counter">%1$d / 200</string>
+    <string name="event_form_notes_counter">%1$d / 250</string>
     <string name="event_form_action_save">Save</string>
     <string name="event_form_action_cancel">Cancel</string>
     <string name="event_form_action_delete">Delete</string>
@@ -181,14 +184,19 @@
     <string name="event_form_not_set">Not set</string>
     <string name="event_form_type_shift">Shift</string>
     <string name="event_form_type_reminder">Reminder</string>
+    <string name="event_form_time_read_only">Time defined by shift</string>
 
     <!-- Calendar Event Validation -->
     <string name="event_validation_type_required">Select an event type</string>
     <string name="event_validation_day_required">Day is required</string>
+    <string name="event_validation_start_day_required">Start day is required</string>
+    <string name="event_validation_end_day_required">End day is required</string>
     <string name="event_validation_start_time_required">Start time is required</string>
     <string name="event_validation_end_time_required">End time is required</string>
     <string name="event_validation_end_before_start">End time must be after start time</string>
-    <string name="event_validation_notes_max_length">Notes must be 200 characters or less</string>
+    <string name="event_validation_invalid_day_range">End day must be on or after start day</string>
+    <string name="event_validation_invalid_time_for_reminder">End time must be after start time on the same day</string>
+    <string name="event_validation_notes_max_length">Notes must be 250 characters or less</string>
     <string name="event_validation_one_shift_per_day">Only one shift is allowed per day</string>
 
     <!-- Calendar Event Detail -->
