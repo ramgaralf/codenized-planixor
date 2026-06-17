@@ -2,17 +2,17 @@
 
 ## Overview
 
-Calendar Event Management enables users to create, view, modify, and delete calendar events across the React Web PWA and Android App platforms. Events reference previously created shifts or reminders, are displayed in four view modes (Day, Week, Month, Year), and follow the offline-first architecture where all CRUD operations happen locally first with optional synchronization for subscribed users.
+Calendar Event Management enables users to create, view, modify, and delete calendar events across the React Web PWA and Android App platforms. Events reference previously created shifts or reminders, span one or more days with a time range, are displayed in four view modes (Day, Week, Month, Year), and follow the offline-first architecture where all CRUD operations happen locally first with optional synchronization for subscribed users.
 
-The system enforces a one-shift-per-day constraint, supports soft deletes with change tracking, and derives display metadata (name, icon, background color) from referenced shift/reminder definitions at read time.
+The system enforces a one-shift-per-day constraint, supports soft deletes with change tracking, computes `totalHours` based on event type rules, and derives display metadata (name, icon, background color) from referenced shift/reminder definitions at read time.
 
 ### Key Design Decisions
 
 1. **Offline-first with local-derived display fields**: The `CalendarEvent` record stores only reference IDs (`eventTypeId`). Display fields (name, icon, backgroundColor) are derived at read time by joining with the local Shift/Reminder store. This ensures events always reflect the latest definition state.
 
-2. **Shared validation logic**: Time validation and the one-shift-per-day constraint are implemented as pure functions shared between form validation and the persistence layer (dual validation), ensuring consistency across create/edit flows and guaranteeing data integrity even if the UI validation is bypassed.
+2. **Shared validation logic**: Day range validation, time validation (reminders only), crossing-midnight auto-computation (shifts), and the one-shift-per-day constraint are implemented as pure functions shared between form validation and the persistence layer (dual validation), ensuring consistency across create/edit flows and guaranteeing data integrity even if the UI validation is bypassed.
 
-3. **Unified filtering**: A single filtering function handles the `isDeleted` and date-range checks across all four view modes, avoiding duplication.
+3. **Unified filtering**: A single filtering function handles the `isDeleted` and date-range intersection checks across all four view modes. Events now span `[startDay, endDay]`, so a view for a date range shows events whose `[startDay, endDay]` intersects with the view range.
 
 4. **Sync conflict resolution via LWW**: Last-writer-wins based on `modifiedAt` with remote-preference for ties, consistent with the global sync strategy.
 
@@ -92,10 +92,10 @@ frontend/react-web/src/features/calendar-events/
 │   └── CurrentTimeIndicator.tsx           # Blue line with circle marker
 ├── hooks/
 │   ├── useCalendarEvents.ts              # CRUD operations + query logic
-│   ├── useEventForm.ts                   # Form state, validation, submission
-│   ├── useEventFiltering.ts             # Filter events by date range + isDeleted
+│   ├── useEventForm.ts                   # Form state (startDay, endDay, startTime, endTime, totalHours), validation, submission
+│   ├── useEventFiltering.ts             # Filter events by date range intersection + isDeleted
 │   ├── useViewNavigation.ts             # View mode state + navigation logic
-│   └── useDayPreSelection.ts            # Pre-select day based on view context
+│   └── useDayPreSelection.ts            # Pre-select startDay/endDay based on view context
 ├── services/
 │   └── calendarEventService.ts           # Dexie CRUD operations
 ├── models.ts                             # CalendarEvent interface + types
@@ -114,10 +114,12 @@ interface CalendarEvent {
   id: string;                    // Client-generated UUID
   eventType: 'shift' | 'reminder';
   eventTypeId: string;           // UUID referencing Shift or Reminder
-  day: string;                   // ISO date string (YYYY-MM-DD)
+  startDay: string;              // ISO date string (YYYY-MM-DD)
+  endDay: string;                // ISO date string (YYYY-MM-DD)
   startTime: number;             // Minutes from midnight (0-1439)
-  endTime: number;               // Minutes from midnight (0-1439), must be > startTime
-  notes: string | null;          // Optional, max 200 chars
+  endTime: number;               // Minutes from midnight (0-1439)
+  totalHours: number;            // Total duration in minutes (read-only, computed)
+  notes: string | null;          // Optional, max 250 chars
   modifiedAt: Date;              // UTC timestamp
   syncedAt: Date | null;         // null = never synced
   isDeleted: boolean;            // Soft-delete flag
@@ -138,11 +140,26 @@ interface ValidationResult {
   errors: Record<string, string>;
 }
 
-function validateTimeRange(startTime: number, endTime: number): boolean;
+function validateDayRange(startDay: string, endDay: string): boolean;
+// Returns true if endDay >= startDay
+
+function validateTimeForReminder(startDay: string, endDay: string, startTime: number, endTime: number): boolean;
+// Returns true if: endDay > startDay (any times valid) OR (endDay == startDay AND endTime > startTime)
+// For shifts: always returns true (no time validation needed)
+
+function computeTotalHours(eventType: 'shift' | 'reminder', startDay: string, endDay: string, startTime: number, endTime: number, shiftHoursWorked?: number): number;
+// For shifts: returns shiftHoursWorked
+// For reminders: calculates based on day difference + time difference
+
+function computeEndDayForShift(startDay: string, startTime: number, endTime: number): string;
+// If endTime < startTime (crossing midnight): returns startDay + 1
+// Otherwise: returns startDay
+
 function validateRequiredFields(event: Partial<CalendarEvent>): ValidationResult;
 function validateNotes(notes: string | null): boolean;
+// Returns true if notes is null or notes.length <= 250
 function checkOneShiftPerDay(
-  day: string,
+  startDay: string,
   eventType: 'shift' | 'reminder',
   existingEvents: CalendarEvent[],
   excludeEventId?: string
@@ -154,20 +171,22 @@ function formatDuration(startTime: number, endTime: number): string;
 
 // services/calendarEventService.ts
 interface CalendarEventService {
-  create(event: Omit<CalendarEvent, 'id' | 'modifiedAt' | 'syncedAt' | 'isDeleted'>): Promise<CalendarEvent>;
+  create(event: Omit<CalendarEvent, 'id' | 'modifiedAt' | 'syncedAt' | 'isDeleted' | 'totalHours'>): Promise<CalendarEvent>;
   update(id: string, changes: Partial<CalendarEvent>): Promise<CalendarEvent>;
   softDelete(id: string): Promise<void>;
   getByDateRange(startDate: string, endDate: string): Promise<CalendarEventDisplay[]>;
   getByDate(day: string): Promise<CalendarEventDisplay[]>;
-  getShiftsForDate(day: string, excludeId?: string): Promise<CalendarEvent[]>;
+  getShiftsForDate(startDay: string, excludeId?: string): Promise<CalendarEvent[]>;
 }
 ```
 
-**Dual validation enforcement:** Both the UI layer (hooks) and the persistence layer (service) validate constraints independently. The `calendarEventService.create()` and `calendarEventService.update()` methods internally call `checkOneShiftPerDay()` and `validateTimeRange()` before persisting. If validation fails at the service level, the promise rejects with a descriptive error. This guarantees data integrity even if the UI validation is bypassed (e.g., race conditions, direct service calls from sync).
+**Dual validation enforcement:** Both the UI layer (hooks) and the persistence layer (service) validate constraints independently. The `calendarEventService.create()` and `calendarEventService.update()` methods internally call `checkOneShiftPerDay()`, `validateDayRange()`, `validateTimeForReminder()`, and `computeTotalHours()` before persisting. For shift events, `computeEndDayForShift()` is called to auto-set `endDay` when crossing midnight. If validation fails at the service level, the promise rejects with a descriptive error. This guarantees data integrity even if the UI validation is bypassed (e.g., race conditions, direct service calls from sync).
 
 **Calendar navigation state:** The existing `calendarStore.ts` (Zustand) is extended with granular navigation methods (`navigateDay`, `navigateWeek`, `navigateMonth`, `navigateYear`) to support the per-view-mode navigator controls. The existing `navigateForward`/`navigateBackward` methods are deprecated and replaced by the specific methods. The new navigator components in the feature module consume the store directly.
 
 **View state persistence:** The existing `calendarStore.ts` already persists the `activeView` field via Zustand's `persist` middleware (localStorage key: `planixor_calendar`). This behavior is preserved — no additional persistence mechanism is needed for Requirement 12.5. The store continues to restore the last-used View_Mode on subsequent page loads.
+
+**useEventForm hook state model:** The form hook manages the following state fields: `startDay` (date), `endDay` (date), `startTime` (minutes), `endTime` (minutes), `totalHours` (computed, read-only), `eventType`, `eventTypeId`, and `notes` (max 250 chars). When a shift is selected: `startTime` and `endTime` are auto-populated from the shift definition as read-only fields; `totalHours` is set from the shift's `hoursWorked`; `endDay` is auto-computed via `computeEndDayForShift()` if crossing midnight. When a reminder is selected: `startTime` and `endTime` are editable via timepickers; `totalHours` is recalculated on every change via `computeTotalHours()`.
 
 ### Android App — Module Structure
 
@@ -236,18 +255,25 @@ backend/src/Codenized.Planixor.UseCases/CalendarEvent/
 | `id` | UUID (string) | Yes | Client-generated, primary key |
 | `eventType` | string (`"shift"` \| `"reminder"`) | Yes | Type discriminator |
 | `eventTypeId` | UUID (string) | Yes | References Shift.id or Reminder.id |
-| `day` | string (ISO date `YYYY-MM-DD`) | Yes | Calendar date of the event |
+| `startDay` | string (ISO date `YYYY-MM-DD`) | Yes | Start calendar date of the event |
+| `endDay` | string (ISO date `YYYY-MM-DD`) | Yes | End calendar date of the event (>= startDay) |
 | `startTime` | number (0–1439) | Yes | Minutes from midnight |
-| `endTime` | number (0–1439) | Yes | Minutes from midnight, must be > startTime |
-| `notes` | string \| null | No | Optional, max 200 characters |
+| `endTime` | number (0–1439) | Yes | Minutes from midnight |
+| `totalHours` | number | Yes | Total duration in minutes (read-only, computed) |
+| `notes` | string \| null | No | Optional, max 250 characters |
 | `modifiedAt` | DateTime (UTC) | Yes | Updated on every local write |
 | `syncedAt` | DateTime (UTC) \| null | No | Last successful sync timestamp |
 | `isDeleted` | boolean | Yes | Soft-delete flag, defaults to false |
 
+**Time validation rules:**
+- For reminder events where `endDay == startDay`: `endTime` must be strictly greater than `startTime`
+- For reminder events where `endDay > startDay`: any combination of `startTime` and `endTime` (0–1439) is valid
+- For shift events: no time validation is applied (times are read-only from the shift definition)
+
 **Indexes (IndexedDB via Dexie):**
 - Primary: `id`
-- Compound: `[day+eventType+isDeleted]` (for one-shift-per-day queries)
-- Single: `isDeleted`, `eventType`, `day`
+- Compound: `[startDay+eventType+isDeleted]` (for one-shift-per-day queries)
+- Single: `isDeleted`, `eventType`, `startDay`, `endDay`
 
 **Derived Display Fields (not persisted, resolved at read time):**
 
@@ -269,33 +295,35 @@ backend/src/Codenized.Planixor.UseCases/CalendarEvent/
 | `UserId` | `CHAR(36)` | FK → Users, NOT NULL, indexed |
 | `EventType` | `VARCHAR(10)` | NOT NULL, CHECK ('shift', 'reminder') |
 | `EventTypeId` | `CHAR(36)` | NOT NULL |
-| `Day` | `DATE` | NOT NULL, indexed |
+| `StartDay` | `DATE` | NOT NULL, indexed |
+| `EndDay` | `DATE` | NOT NULL |
 | `StartTime` | `INT` | NOT NULL, CHECK (0–1439) |
-| `EndTime` | `INT` | NOT NULL, CHECK (0–1439), CHECK (EndTime > StartTime) |
-| `Notes` | `VARCHAR(200)` | NULL |
+| `EndTime` | `INT` | NOT NULL, CHECK (0–1439) |
+| `TotalHours` | `INT` | NOT NULL |
+| `Notes` | `VARCHAR(250)` | NULL |
 | `ModifiedAt` | `DATETIME(6)` | NOT NULL |
 | `SyncedAt` | `DATETIME(6)` | NULL |
 | `IsDeleted` | `TINYINT(1)` | NOT NULL, DEFAULT 0 |
 
-**Note:** The backend includes `UserId` for ownership enforcement. Clients do not store or send this field — it is derived from the authenticated session on the API side.
+**Note:** The backend includes `UserId` for ownership enforcement. Clients do not store or send this field — it is derived from the authenticated session on the API side. The `EndDay >= StartDay` constraint and time validation for reminders are enforced at the application level (not as DB CHECK constraints) for consistency with client-side rules.
 
 ### Dexie Schema Migration
 
-The existing `db.ts` will be updated to version 4:
+The existing `db.ts` will be updated to version 5:
 
 ```typescript
-this.version(4).stores({
-  calendarEvents: 'id, day, [day+eventType+isDeleted], eventType, isDeleted, modifiedAt',
+this.version(5).stores({
+  calendarEvents: 'id, startDay, endDay, [startDay+eventType+isDeleted], eventType, isDeleted, modifiedAt',
   shifts: 'id, createdAt, isDeleted, isActive',
   reminders: 'id, createdAt, isDeleted, isActive',
 }).upgrade(tx => {
-  // v1–v3 calendarEvents schema is incompatible (startAt/endAt/title → day/startTime/endTime).
+  // v4 calendarEvents schema used `day` field (single day). v5 introduces `startDay`, `endDay`, `totalHours`.
   // No user data exists in any deployed environment. Clear and start fresh.
   return tx.table('calendarEvents').clear();
 });
 ```
 
-**Migration strategy:** The v1–v3 `calendarEvents` schema was a scaffold placeholder with fields `startAt`, `endAt`, `title`, `description`, `isAllDay`, `eventType` (6-value enum), and `color`. No user-created calendar events exist in any deployed environment. Version 4 clears the `calendarEvents` table via `upgrade()` and applies the new schema. No data transformation is required.
+**Migration strategy:** The v4 `calendarEvents` schema used a single `day` field. Version 5 replaces it with `startDay` and `endDay` to support multi-day events, adds `totalHours` as a computed field, and removes the `EndTime > StartTime` constraint (now only applies to reminders where `endDay == startDay`). No user-created calendar events exist in any deployed environment. Version 5 clears the `calendarEvents` table via `upgrade()` and applies the new schema. No data transformation is required.
 
 ### Sync Data Transfer Objects
 
@@ -309,11 +337,13 @@ interface CalendarEventSyncRecord {
   id: string;
   eventType: 'shift' | 'reminder';
   eventTypeId: string;
-  day: string;              // ISO date
+  startDay: string;           // ISO date (YYYY-MM-DD)
+  endDay: string;             // ISO date (YYYY-MM-DD)
   startTime: number;
   endTime: number;
+  totalHours: number;         // Total duration in minutes
   notes: string | null;
-  modifiedAt: string;       // ISO DateTime UTC
+  modifiedAt: string;         // ISO DateTime UTC
   isDeleted: boolean;
 }
 
@@ -355,7 +385,9 @@ sequenceDiagram
     Form->>Form: user selects option
     Form->>Hook: onSelect(eventType, eventTypeId)
     Hook->>Hook: derive name, icon, backgroundColor from selection
-    Hook-->>Form: update read-only display fields
+    Hook->>Hook: if shift: set startTime, endTime (read-only), compute endDay via crossing-midnight rule, set totalHours from hoursWorked
+    Hook->>Hook: if reminder: keep startTime, endTime editable, compute totalHours from time/day difference
+    Hook-->>Form: update display fields + computed values
 ```
 
 ## Correctness Properties
@@ -368,15 +400,15 @@ sequenceDiagram
 
 **Validates: Requirements 1.1, 7.2, 8.2, 11.4**
 
-### Property 2: Time range validation rejects invalid intervals
+### Property 2: Time validation for reminders rejects invalid intervals on same day
 
-*For any* pair of startTime and endTime values where endTime is less than or equal to startTime, the validation function SHALL return invalid and the event SHALL NOT be persisted. Conversely, for any pair where endTime is strictly greater than startTime, the time validation SHALL pass.
+*For any* reminder event where `endDay` equals `startDay`, if `endTime` is less than or equal to `startTime`, the validation function SHALL return invalid and the event SHALL NOT be persisted. Conversely, for any reminder where `endDay` equals `startDay` and `endTime` is strictly greater than `startTime`, the time validation SHALL pass. For any reminder where `endDay` is greater than `startDay`, any combination of `startTime` and `endTime` values (0–1439) SHALL be valid. For shift events, no time validation SHALL be applied regardless of `startDay`/`endDay`/`startTime`/`endTime` values.
 
-**Validates: Requirements 1.8, 11.5**
+**Validates: Requirements 1.10, 11.6**
 
 ### Property 3: One-shift-per-day constraint enforcement
 
-*For any* set of existing non-deleted calendar events and any new or modified event with `eventType` "shift", the store SHALL allow persistence only if no other non-deleted event with `eventType` "shift" exists for the same calendar date (excluding the event being modified, if applicable). Events with `eventType` "reminder" SHALL always be allowed regardless of existing events.
+*For any* set of existing non-deleted calendar events and any new or modified event with `eventType` "shift", the store SHALL allow persistence only if no other non-deleted event with `eventType` "shift" exists with the same `startDay` (excluding the event being modified, if applicable). Events with `eventType` "reminder" SHALL always be allowed regardless of existing events.
 
 **Validates: Requirements 2.1, 2.3, 2.4, 2.5**
 
@@ -394,7 +426,7 @@ sequenceDiagram
 
 ### Property 6: View filtering excludes deleted events and out-of-range dates
 
-*For any* view mode (Day, Week, Month, Year) and any set of calendar events with mixed `isDeleted` values and `day` values, the Calendar_Page SHALL display only events where `isDeleted` is false AND the event `day` falls within the currently displayed date range.
+*For any* view mode (Day, Week, Month, Year) and any set of calendar events with mixed `isDeleted` values, `startDay` values, and `endDay` values, the Calendar_Page SHALL display only events where `isDeleted` is false AND the event's date range `[startDay, endDay]` intersects with the currently displayed date range. A day view for date D shows events where `startDay <= D <= endDay`. A week view shows events where their `[startDay, endDay]` range intersects with the Mon-Sun week range.
 
 **Validates: Requirements 3.4, 4.4, 5.4, 6.4, 8.4**
 
@@ -442,9 +474,9 @@ sequenceDiagram
 
 ### Property 14: Required fields validation rejects incomplete events
 
-*For any* combination of event fields where at least one required field (eventType, eventTypeId, day, startTime, endTime) is missing or empty, the validation function SHALL return invalid and prevent persistence.
+*For any* combination of event fields where at least one required field (eventType, eventTypeId, startDay, endDay, startTime, endTime) is missing or empty, the validation function SHALL return invalid and prevent persistence.
 
-**Validates: Requirements 1.2, 1.9**
+**Validates: Requirements 1.2, 1.12**
 
 ### Property 15: Referential protection prevents physical deletion of referenced entities
 
@@ -452,13 +484,25 @@ sequenceDiagram
 
 **Validates: Requirements 11.2**
 
+### Property 16: Day range validation rejects invalid intervals
+
+*For any* pair of `startDay` and `endDay` values where `endDay` is earlier than `startDay`, the validation function SHALL return invalid and the event SHALL NOT be persisted. Conversely, for any pair where `endDay` is greater than or equal to `startDay`, the day range validation SHALL pass.
+
+**Validates: Requirements 1.11, 11.5**
+
+### Property 17: Crossing midnight shift auto-sets endDay
+
+*For any* calendar event with `eventType` "shift" where the referenced shift definition has `endTime` less than `startTime` (crossing midnight), the system SHALL automatically set `endDay` to `startDay + 1` day. For shift events where `endTime` is greater than or equal to `startTime`, `endDay` SHALL remain equal to `startDay`.
+
+**Validates: Requirements 1.6, 11.7**
+
 ## Error Handling
 
 ### Client-Side (React Web & Android)
 
 | Scenario | Handling Strategy |
 |---|---|
-| Form validation failure (required fields, time range, one-shift-per-day) | Prevent submission, display inline error messages per field, clear errors on correction |
+| Form validation failure (required fields, time range, day range, one-shift-per-day) | Prevent submission, display inline error messages per field, clear errors on correction |
 | Local storage write failure (IndexedDB/SQLite) | Display toast/snackbar error message, preserve form state, allow retry |
 | Deletion storage failure | Dismiss modal, display error message, guarantee event record unchanged |
 | Referenced shift/reminder deleted/deactivated | Allow viewing/editing the event, show current reference in selector, permit type change |
@@ -508,7 +552,7 @@ This feature uses both unit/example-based tests and property-based tests for com
 
 | Layer | Test Type | What to Test |
 |---|---|---|
-| `validation.ts` (pure functions) | Property tests | Time range, required fields, one-shift-per-day, notes length |
+| `validation.ts` (pure functions) | Property tests | Day range, time for reminders, required fields, one-shift-per-day, notes length, crossing midnight, totalHours computation |
 | `calendarEventService.ts` | Property tests + Unit tests | CRUD operations with change tracking, filtering, constraint enforcement |
 | `useEventForm.ts` hook | Unit tests | Form state management, submission flow, error clearing |
 | `EventForm.tsx` component | Integration tests (RTL) | User interaction flows, validation display |
@@ -524,15 +568,44 @@ This feature uses both unit/example-based tests and property-based tests for com
 import { fc } from 'fast-check';
 
 describe('Calendar Event Validation Properties', () => {
-  it('Property 2: Time range validation rejects invalid intervals', () => {
-    // Feature: gh8-calendar-event-management, Property 2: Time range validation
+  it('Property 2: Time validation for reminders rejects invalid intervals on same day', () => {
+    // Feature: gh8-calendar-event-management, Property 2: Time validation for reminders
     fc.assert(
       fc.property(
+        fc.constantFrom('shift', 'reminder') as fc.Arbitrary<'shift' | 'reminder'>,
+        fc.date(), // startDay
+        fc.date(), // endDay
         fc.integer({ min: 0, max: 1439 }), // startTime
         fc.integer({ min: 0, max: 1439 }), // endTime
-        (startTime, endTime) => {
-          const result = validateTimeRange(startTime, endTime);
-          return result === (endTime > startTime);
+        (eventType, startDayDate, endDayDate, startTime, endTime) => {
+          const startDay = startDayDate.toISOString().slice(0, 10);
+          const endDay = endDayDate.toISOString().slice(0, 10);
+          if (eventType === 'shift') {
+            // Shifts always pass time validation
+            return validateTimeForReminder(startDay, endDay, startTime, endTime) === true || eventType === 'shift';
+          }
+          // Reminders: only validate when endDay == startDay
+          const result = validateTimeForReminder(startDay, endDay, startTime, endTime);
+          if (endDay > startDay) return result === true;
+          if (endDay === startDay) return result === (endTime > startTime);
+          return true; // endDay < startDay handled by validateDayRange
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('Property 16: Day range validation rejects invalid intervals', () => {
+    // Feature: gh8-calendar-event-management, Property 16: Day range validation
+    fc.assert(
+      fc.property(
+        fc.date(), // startDay
+        fc.date(), // endDay
+        (startDayDate, endDayDate) => {
+          const startDay = startDayDate.toISOString().slice(0, 10);
+          const endDay = endDayDate.toISOString().slice(0, 10);
+          const result = validateDayRange(startDay, endDay);
+          return result === (endDay >= startDay);
         }
       ),
       { numRuns: 100 }
