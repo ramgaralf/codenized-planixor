@@ -1,6 +1,7 @@
 package com.codenized.planixor.ui.calendar
 
 import app.cash.turbine.test
+import com.codenized.planixor.data.local.CalendarEventRepository
 import com.codenized.planixor.data.local.PreferencesRepository
 import com.codenized.planixor.data.local.ReminderRepository
 import com.codenized.planixor.data.local.ShiftRepository
@@ -29,6 +30,7 @@ class CalendarViewModelTest {
     private lateinit var preferencesRepository: PreferencesRepository
     private lateinit var shiftRepository: ShiftRepository
     private lateinit var reminderRepository: ReminderRepository
+    private lateinit var calendarEventRepository: CalendarEventRepository
     private lateinit var viewModel: CalendarViewModel
 
     @Before
@@ -38,9 +40,11 @@ class CalendarViewModelTest {
         preferencesRepository = PreferencesRepository(fakeDataStore)
         shiftRepository = mockk(relaxed = true)
         reminderRepository = mockk(relaxed = true)
+        calendarEventRepository = mockk(relaxed = true)
 
         coEvery { shiftRepository.getAllActive() } returns flowOf(emptyList())
         coEvery { reminderRepository.getActiveForCalendarSelection() } returns flowOf(emptyList())
+        coEvery { calendarEventRepository.getByDateRange(any(), any()) } returns flowOf(emptyList())
     }
 
     @After
@@ -49,7 +53,7 @@ class CalendarViewModelTest {
     }
 
     private fun createViewModel(): CalendarViewModel {
-        return CalendarViewModel(preferencesRepository, shiftRepository, reminderRepository)
+        return CalendarViewModel(preferencesRepository, shiftRepository, reminderRepository, calendarEventRepository)
     }
 
     @Test
