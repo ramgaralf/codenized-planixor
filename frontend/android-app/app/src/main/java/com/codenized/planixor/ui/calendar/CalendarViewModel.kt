@@ -314,12 +314,24 @@ class CalendarViewModel @Inject constructor(
     /**
      * Updates start time and recalculates totalHours for reminders.
      * For shifts this should not be called (times are read-only).
+     *
+     * Rule: if the new start time >= current end time, auto-adjust end time to start + 30 min.
      */
     fun onStartTimeSelected(hours: Int, minutes: Int) {
         _formState.update { current ->
+            val newStartTotal = hours * 60 + minutes
+            val currentEndTotal = if (current.endTimeHours != null && current.endTimeMinutes != null) {
+                current.endTimeHours * 60 + current.endTimeMinutes
+            } else null
+
+            val adjustEnd = currentEndTotal != null && currentEndTotal <= newStartTotal
+            val adjustedEndTotal = if (adjustEnd) (newStartTotal + 30).coerceAtMost(1439) else null
+
             val updatedState = current.copy(
                 startTimeHours = hours,
                 startTimeMinutes = minutes,
+                endTimeHours = if (adjustedEndTotal != null) adjustedEndTotal / 60 else current.endTimeHours,
+                endTimeMinutes = if (adjustedEndTotal != null) adjustedEndTotal % 60 else current.endTimeMinutes,
                 errors = current.errors - "startTime",
             )
             if (current.eventType == "reminder") {

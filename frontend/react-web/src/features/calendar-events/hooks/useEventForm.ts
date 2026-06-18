@@ -333,6 +333,10 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
         if (field === 'startDay' && typeof value === 'string' && updated.endDay && updated.endDay < value) {
           updated.endDay = value;
         }
+        // Rule: if startTime changes and endTime <= new startTime, auto-set endTime = startTime + 30 min
+        if (field === 'startTime' && typeof value === 'number' && updated.endTime !== null && updated.endTime <= value) {
+          updated.endTime = Math.min(value + 30, 1439);
+        }
         return updated;
       });
 
