@@ -19,6 +19,114 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                 .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("Codenized.Planixor.Core.Entities.CalendarEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateOnly>("EndDay")
+                        .HasColumnType("date");
+
+                    b.Property<int>("EndTime")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<Guid>("EventTypeId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("varchar(250)");
+
+                    b.Property<DateOnly>("StartDay")
+                        .HasColumnType("date");
+
+                    b.Property<int>("StartTime")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SyncedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("TotalHours")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EndDay")
+                        .HasDatabaseName("IX_CalendarEvents_EndDay");
+
+                    b.HasIndex("StartDay")
+                        .HasDatabaseName("IX_CalendarEvents_StartDay");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_CalendarEvents_UserId");
+
+                    b.HasIndex("UserId", "ModifiedAt")
+                        .HasDatabaseName("IX_CalendarEvents_UserId_ModifiedAt");
+
+                    b.ToTable("CalendarEvents", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CalendarEvents_EndTime", "EndTime >= 0 AND EndTime <= 1439");
+
+                            t.HasCheckConstraint("CK_CalendarEvents_EventType", "EventType IN ('shift', 'reminder')");
+
+                            t.HasCheckConstraint("CK_CalendarEvents_StartTime", "StartTime >= 0 AND StartTime <= 1439");
+                        });
+                });
+
+            modelBuilder.Entity("Codenized.Planixor.Core.Entities.Reminder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("SyncedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_Reminders_UserId");
+
+                    b.HasIndex("UserId", "ModifiedAt")
+                        .HasDatabaseName("IX_Reminders_UserId_ModifiedAt");
+
+                    b.ToTable("Reminders", (string)null);
+                });
+
             modelBuilder.Entity("Codenized.Planixor.Core.Entities.Shift", b =>
                 {
                     b.Property<Guid>("Id")
@@ -56,6 +164,72 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                         .HasDatabaseName("IX_Shifts_UserId_ModifiedAt");
 
                     b.ToTable("Shifts", (string)null);
+                });
+
+            modelBuilder.Entity("Codenized.Planixor.Core.Entities.Reminder", b =>
+                {
+                    b.OwnsOne("Codenized.Planixor.Core.ValueObjects.ReminderColor", "BackgroundColor", b1 =>
+                        {
+                            b1.Property<Guid>("ReminderId")
+                                .HasColumnType("char(36)");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("varchar(7)")
+                                .HasColumnName("BackgroundColor");
+
+                            b1.HasKey("ReminderId");
+
+                            b1.ToTable("Reminders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ReminderId");
+                        });
+
+                    b.OwnsOne("Codenized.Planixor.Core.ValueObjects.ReminderIcon", "Icon", b1 =>
+                        {
+                            b1.Property<Guid>("ReminderId")
+                                .HasColumnType("char(36)");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("varchar(10)")
+                                .HasColumnName("Icon");
+
+                            b1.HasKey("ReminderId");
+
+                            b1.ToTable("Reminders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ReminderId");
+                        });
+
+                    b.OwnsOne("Codenized.Planixor.Core.ValueObjects.ReminderName", "Name", b1 =>
+                        {
+                            b1.Property<Guid>("ReminderId")
+                                .HasColumnType("char(36)");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("varchar(50)")
+                                .HasColumnName("Name");
+
+                            b1.HasKey("ReminderId");
+
+                            b1.ToTable("Reminders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ReminderId");
+                        });
+
+                    b.Navigation("BackgroundColor")
+                        .IsRequired();
+
+                    b.Navigation("Icon")
+                        .IsRequired();
+
+                    b.Navigation("Name")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Codenized.Planixor.Core.Entities.Shift", b =>

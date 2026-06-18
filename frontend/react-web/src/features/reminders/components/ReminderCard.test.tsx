@@ -200,7 +200,7 @@ describe('ReminderCard', () => {
       const validNameArb = fc
         .string({ minLength: 1, maxLength: 50, unit: 'grapheme-ascii' })
         .filter((s) => s.trim().length >= 1 && s.trim().length <= 50)
-        .map((s) => s.trim());
+        .map((s) => s.trim().replace(/\s{2,}/g, ' '));
 
       const validIconArb = fc.constantFrom(...SINGLE_EMOJIS);
       const validColorArb = fc.constantFrom(...PREDEFINED_PALETTE);

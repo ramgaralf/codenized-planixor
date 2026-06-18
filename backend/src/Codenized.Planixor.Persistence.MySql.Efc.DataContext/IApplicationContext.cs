@@ -19,4 +19,9 @@ public interface IApplicationContext
     /// Gets reminders.
     /// </summary>
     DbSet<Reminder> Reminders { get; }
+
+    /// <summary>
+    /// Gets calendar events.
+    /// </summary>
+    DbSet<CalendarEvent> CalendarEvents { get; }
 }

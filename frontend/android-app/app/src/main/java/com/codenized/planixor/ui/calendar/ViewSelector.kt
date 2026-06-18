@@ -2,6 +2,7 @@ package com.codenized.planixor.ui.calendar
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -13,7 +14,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.codenized.planixor.R
 import com.codenized.planixor.model.CalendarView
 import com.codenized.planixor.ui.theme.PlanixorTheme
-import com.codenized.planixor.ui.theme.PrimaryBlue
 
 /**
  * Compact segmented control that lets the user switch between Day, Week, Month, and Year views.
@@ -45,7 +45,7 @@ fun ViewSelector(
                 ),
                 icon = {},
                 colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = PrimaryBlue,
+                    activeContainerColor = MaterialTheme.colorScheme.primary,
                     activeContentColor = androidx.compose.ui.graphics.Color.White,
                 ),
             ) {

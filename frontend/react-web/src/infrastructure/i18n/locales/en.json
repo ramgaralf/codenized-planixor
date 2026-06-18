@@ -2,7 +2,10 @@
   "common": {
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "loading": "Loading"
+    "loading": "Loading",
+    "save": "Save",
+    "saving": "Saving...",
+    "retry": "Retry"
   },
   "app": {
     "name": "Planixor",
@@ -26,7 +29,11 @@
     "weekNumber": "Week {{week}}, {{year}}",
     "noEvents": "No events scheduled for this period",
     "allDay": "All day",
-    "currentTime": "Current time"
+    "currentTime": "Current time",
+    "yearView": {
+      "label": "Year view {{year}}",
+      "navigationError": "Failed to navigate. Please try again."
+    }
   },
   "dates": {
     "monday": "Monday",
@@ -205,10 +212,99 @@
       "delete": "Delete"
     }
   },
+  "calendarEvent": {
+    "eventTypeSelector": {
+      "label": "Event Type",
+      "placeholder": "Select a shift or reminder...",
+      "shiftPrefix": "Shift",
+      "reminderPrefix": "Reminder",
+      "selectedDetails": "Selected event type details"
+    },
+    "form": {
+      "createTitle": "New Event",
+      "editTitle": "Edit Event",
+      "startDayLabel": "Start Day",
+      "startDay": "Start Day",
+      "endDayLabel": "End Day",
+      "endDay": "End Day",
+      "totalHoursLabel": "Total Hours",
+      "totalHours": "Total Hours",
+      "startTimeLabel": "Start Time",
+      "startTime": "Start Time",
+      "endTimeLabel": "End Time",
+      "endTime": "End Time",
+      "notesLabel": "Notes (optional)",
+      "notes": "Notes (optional)",
+      "notesPlaceholder": "Add notes...",
+      "submit": "Save",
+      "cancel": "Cancel",
+      "submitting": "Saving..."
+    },
+    "validation": {
+      "eventType": {
+        "required": "Event type is required"
+      },
+      "eventTypeId": {
+        "required": "Event type selection is required"
+      },
+      "startDay": {
+        "required": "Start day is required"
+      },
+      "endDay": {
+        "required": "End day is required"
+      },
+      "totalHours": {
+        "required": "Total hours is required"
+      },
+      "startTime": {
+        "required": "Start time is required"
+      },
+      "endTime": {
+        "required": "End time is required"
+      },
+      "dayRange": {
+        "invalid": "End day must be on or after start day"
+      },
+      "timeForReminder": {
+        "invalid": "End time must be after start time for same-day reminders"
+      },
+      "crossingMidnight": {
+        "info": "This shift crosses midnight — end day has been set to the next day"
+      },
+      "notes": {
+        "maxLength": "Notes must be 250 characters or less"
+      },
+      "oneShiftPerDay": "Only one shift is allowed per day"
+    },
+    "error": {
+      "loadFailed": "Could not load calendar events",
+      "saveFailed": "Could not save the event. Please try again.",
+      "deleteFailed": "Could not delete the event. Please try again."
+    },
+    "delete": {
+      "title": "Delete '{{name}}'?",
+      "message": "This action is permanent and cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "detail": {
+      "delete": "Delete",
+      "deleteAriaLabel": "Delete {{name}}"
+    }
+  },
   "accessibility": {
     "fabLabel": "Create new event",
     "previousPeriod": "Previous period",
     "nextPeriod": "Next period",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "previousYear": "Previous year",
+    "nextYear": "Next year",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "dayNavigation": "Day navigation",
+    "monthNavigation": "Month navigation",
+    "yearNavigation": "Year navigation",
     "notifications": "Notifications",
     "userMenu": "User menu",
     "mainNavigation": "Main navigation",

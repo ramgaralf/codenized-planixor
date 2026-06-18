@@ -12,16 +12,26 @@
     <string name="nav_settings">Settings</string>
 
     <!-- Calendar Views -->
-    <string name="calendar_view_day">Day</string>
-    <string name="calendar_view_week">Week</string>
-    <string name="calendar_view_month">Month</string>
-    <string name="calendar_view_year">Year</string>
+    <string name="calendar_view_day">D</string>
+    <string name="calendar_view_week">W</string>
+    <string name="calendar_view_month">M</string>
+    <string name="calendar_view_year">Y</string>
 
     <!-- Calendar Navigation -->
     <string name="calendar_today">Today</string>
     <string name="calendar_week_label">Week</string>
     <string name="calendar_week_format">Week %1$d, %2$d</string>
     <string name="calendar_empty_state">No events scheduled for this period</string>
+
+    <!-- Date Navigator Accessibility -->
+    <string name="content_description_previous_day">Previous day</string>
+    <string name="content_description_next_day">Next day</string>
+    <string name="content_description_previous_month">Previous month</string>
+    <string name="content_description_next_month">Next month</string>
+    <string name="content_description_previous_year">Previous year</string>
+    <string name="content_description_next_year">Next year</string>
+    <string name="content_description_previous_week">Previous week</string>
+    <string name="content_description_next_week">Next week</string>
 
     <!-- Reports -->
     <string name="reports_title">Reports</string>
@@ -152,6 +162,54 @@
     <!-- Emoji Picker Dialog -->
     <string name="emoji_picker_title">Select icon</string>
     <string name="emoji_picker_dismiss">Close</string>
+
+    <!-- Calendar Event Form -->
+    <string name="event_form_title_create">New event</string>
+    <string name="event_form_title_edit">Edit event</string>
+    <string name="event_form_field_event_type">Event Type</string>
+    <string name="event_form_field_day">Day</string>
+    <string name="event_form_field_start_day">Start day</string>
+    <string name="event_form_field_end_day">End day</string>
+    <string name="event_form_field_start_time">Start time</string>
+    <string name="event_form_field_end_time">End time</string>
+    <string name="event_form_field_total_hours">Total duration</string>
+    <string name="event_form_field_notes">Notes</string>
+    <string name="event_form_notes_counter">%1$d / 250</string>
+    <string name="event_form_action_save">Save</string>
+    <string name="event_form_action_cancel">Cancel</string>
+    <string name="event_form_action_delete">Delete</string>
+    <string name="event_form_select_type">Select type</string>
+    <string name="event_form_select_date">Select date</string>
+    <string name="event_form_select_time">Select time</string>
+    <string name="event_form_not_set">Not set</string>
+    <string name="event_form_type_shift">Shift</string>
+    <string name="event_form_type_reminder">Reminder</string>
+    <string name="event_form_time_read_only">Time defined by shift</string>
+
+    <!-- Calendar Event Validation -->
+    <string name="event_validation_type_required">Select an event type</string>
+    <string name="event_validation_day_required">Day is required</string>
+    <string name="event_validation_start_day_required">Start day is required</string>
+    <string name="event_validation_end_day_required">End day is required</string>
+    <string name="event_validation_start_time_required">Start time is required</string>
+    <string name="event_validation_end_time_required">End time is required</string>
+    <string name="event_validation_end_before_start">End time must be after start time</string>
+    <string name="event_validation_invalid_day_range">End day must be on or after start day</string>
+    <string name="event_validation_invalid_time_for_reminder">End time must be after start time on the same day</string>
+    <string name="event_validation_notes_max_length">Notes must be 250 characters or less</string>
+    <string name="event_validation_one_shift_per_day">Only one shift is allowed per day</string>
+
+    <!-- Calendar Event Detail -->
+    <string name="event_detail_title">Event detail</string>
+    <string name="event_detail_delete_title">Delete this event?</string>
+    <string name="event_detail_delete_text">This action is permanent and cannot be undone. Delete \"%1$s\"?</string>
+    <string name="event_detail_confirm">Confirm</string>
+    <string name="event_detail_cancel">Cancel</string>
+    <string name="event_detail_error_delete">Could not delete the event</string>
+    <string name="event_detail_error_save">Could not save the event</string>
+
+    <!-- Calendar Event Card -->
+    <string name="event_card_duration_format">%1$s – %2$s · %3$s</string>
 
     <!-- Empty States -->
     <string name="empty_no_data">No data available</string>

@@ -25,7 +25,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 import com.codenized.planixor.ui.theme.PlanixorTheme
-import com.codenized.planixor.ui.theme.PrimaryBlue
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.Month
@@ -36,7 +35,7 @@ import java.util.Locale
 
 /**
  * Year view composable displaying 12 mini-month grids in a 3 columns × 4 rows layout.
- * Current day is highlighted with PrimaryBlue.
+ * Current day is highlighted with the primary theme color.
  * First day of week is locale-dependent.
  *
  * @param currentDate The anchor date within the year being displayed.
@@ -150,7 +149,7 @@ private fun MiniDayCell(
                 modifier = Modifier
                     .size(16.dp)
                     .clip(CircleShape)
-                    .background(PrimaryBlue),
+                    .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

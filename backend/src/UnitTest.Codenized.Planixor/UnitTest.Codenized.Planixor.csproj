@@ -4,6 +4,7 @@
     <ProjectReference Include="..\Codenized.Planixor.IoC\Codenized.Planixor.IoC.csproj" />
     <ProjectReference Include="..\Codenized.Planixor.Core\Codenized.Planixor.Core.csproj" />
     <ProjectReference Include="..\Codenized.Planixor.Dtos\Codenized.Planixor.Dtos.csproj" />
+    <ProjectReference Include="..\Codenized.Planixor.Persistence.MySql.Efc.DataContext\Codenized.Planixor.Persistence.MySql.Efc.DataContext.csproj" />
   </ItemGroup>
 
   <ItemGroup>

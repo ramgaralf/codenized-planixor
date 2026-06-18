@@ -30,6 +30,11 @@ public sealed class ApplicationWriteContext : DbContext, IApplicationContext
     /// </summary>
     public DbSet<Reminder> Reminders => this.Set<Reminder>();
 
+    /// <summary>
+    /// Gets calendar events.
+    /// </summary>
+    public DbSet<CalendarEvent> CalendarEvents => this.Set<CalendarEvent>();
+
     /// <summary>On model creating.</summary>
     /// <param name="modelBuilder">Model builder.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)

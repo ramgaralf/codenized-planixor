@@ -2,7 +2,10 @@
   "common": {
     "confirm": "Confirmar",
     "cancel": "Cancelar",
-    "loading": "Cargando"
+    "loading": "Cargando",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "retry": "Reintentar"
   },
   "app": {
     "name": "Planixor",
@@ -17,7 +20,7 @@
   },
   "views": {
     "day": "Día",
-    "week": "Semana",
+    "week": "Sem",
     "month": "Mes",
     "year": "Año"
   },
@@ -26,7 +29,11 @@
     "weekNumber": "Semana {{week}}, {{year}}",
     "noEvents": "No hay eventos programados para este período",
     "allDay": "Todo el día",
-    "currentTime": "Hora actual"
+    "currentTime": "Hora actual",
+    "yearView": {
+      "label": "Vista anual {{year}}",
+      "navigationError": "Error al navegar. Inténtalo de nuevo."
+    }
   },
   "dates": {
     "monday": "Lunes",
@@ -205,10 +212,99 @@
       "delete": "Eliminar"
     }
   },
+  "calendarEvent": {
+    "eventTypeSelector": {
+      "label": "Tipo de Evento",
+      "placeholder": "Selecciona un turno o recordatorio...",
+      "shiftPrefix": "Turno",
+      "reminderPrefix": "Recordatorio",
+      "selectedDetails": "Detalles del tipo de evento seleccionado"
+    },
+    "form": {
+      "createTitle": "Nuevo Evento",
+      "editTitle": "Editar Evento",
+      "startDayLabel": "Día de Inicio",
+      "startDay": "Día de Inicio",
+      "endDayLabel": "Día de Fin",
+      "endDay": "Día de Fin",
+      "totalHoursLabel": "Horas Totales",
+      "totalHours": "Horas Totales",
+      "startTimeLabel": "Hora de Inicio",
+      "startTime": "Hora de Inicio",
+      "endTimeLabel": "Hora de Fin",
+      "endTime": "Hora de Fin",
+      "notesLabel": "Notas (opcional)",
+      "notes": "Notas (opcional)",
+      "notesPlaceholder": "Agregar notas...",
+      "submit": "Guardar",
+      "cancel": "Cancelar",
+      "submitting": "Guardando..."
+    },
+    "validation": {
+      "eventType": {
+        "required": "El tipo de evento es obligatorio"
+      },
+      "eventTypeId": {
+        "required": "La selección del tipo de evento es obligatoria"
+      },
+      "startDay": {
+        "required": "El día de inicio es obligatorio"
+      },
+      "endDay": {
+        "required": "El día de fin es obligatorio"
+      },
+      "totalHours": {
+        "required": "Las horas totales son obligatorias"
+      },
+      "startTime": {
+        "required": "La hora de inicio es obligatoria"
+      },
+      "endTime": {
+        "required": "La hora de fin es obligatoria"
+      },
+      "dayRange": {
+        "invalid": "El día de fin debe ser igual o posterior al día de inicio"
+      },
+      "timeForReminder": {
+        "invalid": "La hora de fin debe ser posterior a la hora de inicio para recordatorios del mismo día"
+      },
+      "crossingMidnight": {
+        "info": "Este turno cruza la medianoche — el día de fin se ha establecido al día siguiente"
+      },
+      "notes": {
+        "maxLength": "Las notas deben tener 250 caracteres o menos"
+      },
+      "oneShiftPerDay": "Solo se permite un turno por día"
+    },
+    "error": {
+      "loadFailed": "No se pudieron cargar los eventos del calendario",
+      "saveFailed": "No se pudo guardar el evento. Inténtalo de nuevo.",
+      "deleteFailed": "No se pudo eliminar el evento. Inténtalo de nuevo."
+    },
+    "delete": {
+      "title": "¿Eliminar '{{name}}'?",
+      "message": "Esta acción es permanente y no se puede deshacer.",
+      "confirm": "Eliminar",
+      "cancel": "Cancelar"
+    },
+    "detail": {
+      "delete": "Eliminar",
+      "deleteAriaLabel": "Eliminar {{name}}"
+    }
+  },
   "accessibility": {
     "fabLabel": "Crear nuevo evento",
     "previousPeriod": "Período anterior",
     "nextPeriod": "Período siguiente",
+    "previousMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "previousYear": "Año anterior",
+    "nextYear": "Año siguiente",
+    "previousDay": "Día anterior",
+    "nextDay": "Día siguiente",
+    "dayNavigation": "Navegación de día",
+    "monthNavigation": "Navegación de mes",
+    "yearNavigation": "Navegación de año",
     "notifications": "Notificaciones",
     "userMenu": "Menú de usuario",
     "mainNavigation": "Navegación principal",

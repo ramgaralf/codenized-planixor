@@ -97,7 +97,7 @@ export const ReminderForm = ({
   return (
     <form
       onSubmit={handleFormSubmit}
-      style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '640px' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '640px', paddingBottom: '64px' }}
       aria-label={title}
       noValidate
     >

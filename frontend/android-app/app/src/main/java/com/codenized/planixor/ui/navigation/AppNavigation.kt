@@ -41,8 +41,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.codenized.planixor.R
 import com.codenized.planixor.ui.calendar.CalendarScreen
+import com.codenized.planixor.ui.calendar.CalendarViewModel
+import com.codenized.planixor.ui.calendar.EventFormScreen
+import com.codenized.planixor.ui.calendar.EventFormUiState
 import com.codenized.planixor.ui.reports.ReportsScreen
 import com.codenized.planixor.ui.settings.SettingsScreen
 import com.codenized.planixor.ui.shifts.ShiftFormScreen
@@ -79,10 +84,13 @@ fun AppNavigation() {
     val isSubScreen = currentRoute == Screen.ShiftCreate.route ||
         currentRoute == Screen.ShiftEdit.route ||
         currentRoute == Screen.ReminderCreate.route ||
-        currentRoute == Screen.ReminderEdit.route
+        currentRoute == Screen.ReminderEdit.route ||
+        currentRoute == Screen.EventCreate.route ||
+        currentRoute == Screen.EventEdit.route
 
     // For bottom nav selection, map sub-routes to their parent
     val bottomNavRoute = when {
+        currentRoute?.startsWith("calendar") == true -> Screen.Calendar.route
         currentRoute?.startsWith("shifts") == true -> Screen.Shifts.route
         currentRoute?.startsWith("reminders") == true -> Screen.Reminders.route
         else -> currentRoute
@@ -109,6 +117,8 @@ fun AppNavigation() {
                                 Screen.ShiftEdit.route -> stringResource(R.string.shift_form_title_edit)
                                 Screen.ReminderCreate.route -> stringResource(R.string.reminder_form_title_create)
                                 Screen.ReminderEdit.route -> stringResource(R.string.reminder_form_title_edit)
+                                Screen.EventCreate.route -> stringResource(R.string.event_form_title_create)
+                                Screen.EventEdit.route -> stringResource(R.string.event_form_title_edit)
                                 else -> ""
                             },
                             style = MaterialTheme.typography.titleMedium.copy(
@@ -146,23 +156,11 @@ fun AppNavigation() {
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = stringResource(R.string.app_name),
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                ),
-                                color = MaterialTheme.colorScheme.onBackground,
-                            )
-                            Text(
-                                text = " · ",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = TextSecondary,
-                            )
-                            Text(
                                 text = pageTitle,
                                 style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Normal,
+                                    fontWeight = FontWeight.SemiBold,
                                 ),
-                                color = TextSecondary,
+                                color = MaterialTheme.colorScheme.onBackground,
                             )
                         }
                     }
@@ -171,7 +169,7 @@ fun AppNavigation() {
                 actions = {
                     // New event button (only on Calendar screen)
                     if (currentRoute == Screen.Calendar.route) {
-                        IconButton(onClick = { /* TODO: new event */ }) {
+                        IconButton(onClick = { navController.navigate(Screen.EventCreate.route) }) {
                             Box(
                                 modifier = Modifier
                                     .size(32.dp)
@@ -278,7 +276,29 @@ fun AppNavigation() {
             modifier = Modifier.padding(innerPadding),
         ) {
             composable(Screen.Calendar.route) {
-                CalendarScreen()
+                CalendarScreen(
+                    onNavigateToEventDetail = { eventId ->
+                        navController.navigate(Screen.EventEdit.createRoute(eventId))
+                    },
+                )
+            }
+            composable(Screen.EventCreate.route) {
+                CalendarEventFormDestination(
+                    eventId = null,
+                    onNavigateBack = { navController.popBackStack() },
+                )
+            }
+            composable(
+                route = Screen.EventEdit.route,
+                arguments = listOf(
+                    navArgument("eventId") { type = NavType.StringType },
+                ),
+            ) { backStackEntry ->
+                val eventId = backStackEntry.arguments?.getString("eventId")
+                CalendarEventFormDestination(
+                    eventId = eventId,
+                    onNavigateBack = { navController.popBackStack() },
+                )
             }
             composable(Screen.Shifts.route) {
                 ShiftsScreen(
@@ -337,5 +357,65 @@ fun AppNavigation() {
                 SettingsScreen()
             }
         }
+    }
+}
+
+/**
+ * Destination composable for the calendar event create/edit form.
+ * Obtains the CalendarViewModel via Hilt and wires it to EventFormScreen.
+ * If eventId is provided, loads the existing event for editing.
+ */
+@Composable
+private fun CalendarEventFormDestination(
+    eventId: String?,
+    onNavigateBack: () -> Unit,
+) {
+    val viewModel: CalendarViewModel = hiltViewModel()
+    val formState by viewModel.formState.collectAsStateWithLifecycle()
+    val isEditMode = eventId != null
+    val showDeleteDialogState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+
+    androidx.compose.runtime.LaunchedEffect(eventId) {
+        if (eventId != null) {
+            viewModel.loadEventForEdit(eventId)
+        } else {
+            viewModel.initCreateForm()
+        }
+    }
+
+    EventFormScreen(
+        uiState = formState,
+        isEditMode = isEditMode,
+        onEventTypeSelected = viewModel::selectEventType,
+        onStartDaySelected = viewModel::onStartDaySelected,
+        onEndDaySelected = viewModel::onEndDaySelected,
+        onStartTimeSelected = viewModel::onStartTimeSelected,
+        onEndTimeSelected = viewModel::onEndTimeSelected,
+        onNotesChanged = viewModel::onNotesChanged,
+        onSave = {
+            if (isEditMode) {
+                viewModel.updateEvent(eventId!!, onNavigateBack)
+            } else {
+                viewModel.saveEvent(onNavigateBack)
+            }
+        },
+        onCancel = onNavigateBack,
+        onDelete = if (isEditMode) {
+            { showDeleteDialogState.value = true }
+        } else {
+            null
+        },
+    )
+
+    // Delete confirmation dialog
+    if (showDeleteDialogState.value && eventId != null) {
+        com.codenized.planixor.ui.calendar.DeleteConfirmationDialog(
+            eventName = formState.derivedName.ifBlank { "Event" },
+            onConfirm = {
+                showDeleteDialogState.value = false
+                viewModel.deleteEvent(eventId, onNavigateBack)
+            },
+            onDismiss = { showDeleteDialogState.value = false },
+        )
     }
 }

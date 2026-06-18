@@ -1,10 +1,16 @@
 package com.codenized.planixor.ui.calendar
 
 import app.cash.turbine.test
+import com.codenized.planixor.data.local.CalendarEventRepository
 import com.codenized.planixor.data.local.PreferencesRepository
+import com.codenized.planixor.data.local.ReminderRepository
+import com.codenized.planixor.data.local.ShiftRepository
 import com.codenized.planixor.model.CalendarView
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -22,6 +28,9 @@ class CalendarViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var fakeDataStore: FakeDataStore
     private lateinit var preferencesRepository: PreferencesRepository
+    private lateinit var shiftRepository: ShiftRepository
+    private lateinit var reminderRepository: ReminderRepository
+    private lateinit var calendarEventRepository: CalendarEventRepository
     private lateinit var viewModel: CalendarViewModel
 
     @Before
@@ -29,6 +38,13 @@ class CalendarViewModelTest {
         Dispatchers.setMain(testDispatcher)
         fakeDataStore = FakeDataStore()
         preferencesRepository = PreferencesRepository(fakeDataStore)
+        shiftRepository = mockk(relaxed = true)
+        reminderRepository = mockk(relaxed = true)
+        calendarEventRepository = mockk(relaxed = true)
+
+        coEvery { shiftRepository.getAllActive() } returns flowOf(emptyList())
+        coEvery { reminderRepository.getActiveForCalendarSelection() } returns flowOf(emptyList())
+        coEvery { calendarEventRepository.getByDateRange(any(), any()) } returns flowOf(emptyList())
     }
 
     @After
@@ -37,16 +53,16 @@ class CalendarViewModelTest {
     }
 
     private fun createViewModel(): CalendarViewModel {
-        return CalendarViewModel(preferencesRepository)
+        return CalendarViewModel(preferencesRepository, shiftRepository, reminderRepository, calendarEventRepository)
     }
 
     @Test
-    fun `activeView should default to Week when no persisted value`() = runTest {
+    fun `activeView should default to Day when no persisted value`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.activeView.test {
-            assertEquals(CalendarView.Week, awaitItem())
+            assertEquals(CalendarView.Day, awaitItem())
         }
     }
 
@@ -63,14 +79,14 @@ class CalendarViewModelTest {
     }
 
     @Test
-    fun `activeView should default to Week when persisted value is invalid`() = runTest {
+    fun `activeView should default to Day when persisted value is invalid`() = runTest {
         preferencesRepository.setActiveView("invalid_value")
 
         viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.activeView.test {
-            assertEquals(CalendarView.Week, awaitItem())
+            assertEquals(CalendarView.Day, awaitItem())
         }
     }
 
@@ -79,11 +95,11 @@ class CalendarViewModelTest {
         viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.switchView(CalendarView.Day)
+        viewModel.switchView(CalendarView.Week)
         advanceUntilIdle()
 
         viewModel.activeView.test {
-            assertEquals(CalendarView.Day, awaitItem())
+            assertEquals(CalendarView.Week, awaitItem())
         }
     }
 
@@ -95,7 +111,6 @@ class CalendarViewModelTest {
         viewModel.switchView(CalendarView.Month)
         advanceUntilIdle()
 
-        // Verify the value was persisted by reading from the repository flow
         preferencesRepository.activeViewFlow.test {
             assertEquals("month", awaitItem())
         }
@@ -231,5 +246,149 @@ class CalendarViewModelTest {
         viewModel.activeView.test {
             assertEquals(CalendarView.Year, awaitItem())
         }
+    }
+
+    // --- Form state: conditional time editability ---
+
+    @Test
+    fun `initCreateForm should set startDay and endDay to pre-selected day`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.switchView(CalendarView.Day)
+        advanceUntilIdle()
+
+        viewModel.initCreateForm()
+        advanceUntilIdle()
+
+        val formState = viewModel.formState.value
+        assertEquals(viewModel.currentDate.value, formState.startDay)
+        assertEquals(viewModel.currentDate.value, formState.endDay)
+    }
+
+    @Test
+    fun `form should have isTimeEditable false after selecting a shift`() = runTest {
+        val mockShift = com.codenized.planixor.domain.model.Shift(
+            id = "shift-1",
+            name = "Morning",
+            icon = "☀️",
+            backgroundColor = "#10B981",
+            startTime = 480,
+            endTime = 1020,
+            hoursWorked = 540,
+            isActive = true,
+            createdAt = System.currentTimeMillis(),
+            isDeleted = false,
+            modifiedAt = System.currentTimeMillis(),
+            syncedAt = null,
+        )
+        coEvery { shiftRepository.getById("shift-1") } returns mockShift
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.initCreateForm()
+        advanceUntilIdle()
+
+        viewModel.selectEventType("shift", "shift-1")
+        advanceUntilIdle()
+
+        val formState = viewModel.formState.value
+        assertEquals(false, formState.isTimeEditable)
+        assertEquals(540, formState.totalHours)
+    }
+
+    @Test
+    fun `form should have isTimeEditable true after selecting a reminder`() = runTest {
+        val mockReminder = com.codenized.planixor.domain.model.Reminder(
+            id = "reminder-1",
+            name = "Meeting",
+            icon = "📝",
+            backgroundColor = "#2563EB",
+            isActive = true,
+            createdAt = System.currentTimeMillis(),
+            isDeleted = false,
+            modifiedAt = System.currentTimeMillis(),
+            syncedAt = null,
+        )
+        coEvery { reminderRepository.getById("reminder-1") } returns mockReminder
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.initCreateForm()
+        advanceUntilIdle()
+
+        viewModel.selectEventType("reminder", "reminder-1")
+        advanceUntilIdle()
+
+        val formState = viewModel.formState.value
+        assertEquals(true, formState.isTimeEditable)
+    }
+
+    @Test
+    fun `form should auto-compute endDay for crossing midnight shift`() = runTest {
+        val mockShift = com.codenized.planixor.domain.model.Shift(
+            id = "shift-night",
+            name = "Night",
+            icon = "🌙",
+            backgroundColor = "#2563EB",
+            startTime = 1320,
+            endTime = 360,
+            hoursWorked = 480,
+            isActive = true,
+            createdAt = System.currentTimeMillis(),
+            isDeleted = false,
+            modifiedAt = System.currentTimeMillis(),
+            syncedAt = null,
+        )
+        coEvery { shiftRepository.getById("shift-night") } returns mockShift
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.initCreateForm()
+        advanceUntilIdle()
+
+        viewModel.selectEventType("shift", "shift-night")
+        advanceUntilIdle()
+
+        val formState = viewModel.formState.value
+        val expectedEndDay = formState.startDay?.plusDays(1)
+        assertEquals(expectedEndDay, formState.endDay)
+        assertEquals(480, formState.totalHours)
+    }
+
+    @Test
+    fun `onStartTimeSelected should recalculate totalHours for reminder`() = runTest {
+        val mockReminder = com.codenized.planixor.domain.model.Reminder(
+            id = "reminder-1",
+            name = "Meeting",
+            icon = "📝",
+            backgroundColor = "#2563EB",
+            isActive = true,
+            createdAt = System.currentTimeMillis(),
+            isDeleted = false,
+            modifiedAt = System.currentTimeMillis(),
+            syncedAt = null,
+        )
+        coEvery { reminderRepository.getById("reminder-1") } returns mockReminder
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.initCreateForm()
+        advanceUntilIdle()
+
+        viewModel.selectEventType("reminder", "reminder-1")
+        advanceUntilIdle()
+
+        // Set time range: 8:00 - 17:00 = 9 hours = 540 minutes
+        viewModel.onStartTimeSelected(8, 0)
+        viewModel.onEndTimeSelected(17, 0)
+        advanceUntilIdle()
+
+        val formState = viewModel.formState.value
+        assertEquals(540, formState.totalHours)
     }
 }
