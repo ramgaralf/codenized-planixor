@@ -57,16 +57,14 @@ describe('useEventForm', () => {
     it('should initialize with empty fields and pre-selected day in create mode', () => {
       const { result } = renderHook(() => useEventForm());
 
-      expect(result.current.formState).toEqual({
-        eventType: null,
-        eventTypeId: null,
-        startDay: '2024-06-15',
-        endDay: '2024-06-15',
-        startTime: null,
-        endTime: null,
-        totalHours: 0,
-        notes: '',
-      });
+      expect(result.current.formState.eventType).toBeNull();
+      expect(result.current.formState.eventTypeId).toBeNull();
+      expect(result.current.formState.startDay).toBe('2024-06-15');
+      expect(result.current.formState.endDay).toBe('2024-06-15');
+      expect(result.current.formState.startTime).toEqual(expect.any(Number));
+      expect(result.current.formState.endTime).toEqual(expect.any(Number));
+      expect(result.current.formState.totalHours).toBe(0);
+      expect(result.current.formState.notes).toBe('');
       expect(result.current.fieldErrors).toEqual({});
       expect(result.current.formError).toBeNull();
       expect(result.current.isSubmitting).toBe(false);
@@ -348,10 +346,10 @@ describe('useEventForm', () => {
         await result.current.handleSubmit();
       });
 
+      // eventType and eventTypeId are still required (not pre-populated)
       expect(result.current.fieldErrors.eventType).toBeDefined();
       expect(result.current.fieldErrors.eventTypeId).toBeDefined();
-      expect(result.current.fieldErrors.startTime).toBeDefined();
-      expect(result.current.fieldErrors.endTime).toBeDefined();
+      // startTime and endTime are now pre-populated with defaults, so no error
     });
 
     it('should set endTime error when time is invalid for same-day reminder', async () => {
