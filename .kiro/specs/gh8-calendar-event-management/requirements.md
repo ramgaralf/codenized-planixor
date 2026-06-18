@@ -205,3 +205,27 @@ Calendar Event Management enables users to create, view, modify, and delete cale
 5. WHEN a user signs out and a different user signs in on the same device, THE Event_Store SHALL make the previous user's locally stored data inaccessible and non-visible to the newly signed-in user, retaining it only for restoration when the original account signs back in.
 6. THE Backend_API SHALL reject any sync request that attempts to read or write calendar event records not owned by the authenticated user, returning an authorization error response without exposing the existence or content of other users' data.
 7. IF a free (anonymous) user operates without authentication, THEN THE Event_Store SHALL treat all local data as belonging exclusively to that device session, and THE Sync_Service SHALL remain inactive with no data transmitted to or from the backend; WHEN no anonymous user session is currently active on the device, THE Sync_Service restrictions SHALL NOT apply and the service MAY operate normally for any authenticated user.
+
+### Requirement 14: Navigate to Today
+
+**User Story:** As a user, I want a quick way to return to today's date from any calendar view, so that I can easily get back to the current day regardless of how far I've navigated.
+
+#### Acceptance Criteria
+
+1. THE Calendar_Page SHALL display a "Today" button within every date navigator component (Day, Week, Month, and Year view modes) on both platforms.
+2. WHEN the user activates the "Today" button, THE Calendar_Page SHALL immediately navigate the current view to include the current device date (today), resetting the navigation position to center on today.
+3. THE "Today" button SHALL be visually right-aligned within the navigator bar, styled as a compact outlined text button with primary color text.
+4. THE "Today" button label SHALL be localized ("Hoy" in Spanish, "Today" in English).
+
+### Requirement 15: Event Form Field Auto-Adjustment
+
+**User Story:** As a user, I want the form to intelligently auto-adjust dependent fields when I change a value, so that I avoid invalid combinations and save time.
+
+#### Acceptance Criteria
+
+1. WHEN the user changes the `startTime` field and the current `endTime` is less than or equal to the new `startTime`, THE Event_Form SHALL silently auto-set `endTime` to `startTime + 30 minutes` (capped at 23:59).
+2. WHEN the user changes the `startTime` field and the current `endTime` is already greater than the new `startTime`, THE Event_Form SHALL NOT modify `endTime`.
+3. WHEN the user changes the `startDay` field and the current `endDay` is earlier than the new `startDay`, THE Event_Form SHALL silently auto-set `endDay` to equal the new `startDay`.
+4. WHEN the user changes the `startDay` field and the current `endDay` is already equal to or later than the new `startDay`, THE Event_Form SHALL NOT modify `endDay`.
+5. THE auto-adjustment rules SHALL apply only to editable fields — for shift events where time fields are read-only, the time auto-adjustment SHALL NOT apply.
+6. THE auto-adjustments SHALL be silent (no notification, toast, or dialog) and the user SHALL be able to manually override the auto-adjusted value immediately after adjustment.

@@ -85,10 +85,14 @@ frontend/react-web/src/features/calendar-events/
 │   ├── MonthView.tsx                      # Month grid view
 │   ├── YearView.tsx                       # Year overview
 │   ├── ViewSelector.tsx                   # Day/Week/Month/Year tabs
-│   ├── DayNavigator.tsx                   # ← / → day navigation
-│   ├── MonthNavigator.tsx                 # ← / → month navigation
-│   ├── YearNavigator.tsx                  # ← / → year navigation
-│   ├── WeekNavigator.tsx                  # ← / → week navigation
+│   ├── DayDateNavigator.tsx               # Composite navigator for Day view (day/month/year controls + Today button)
+│   ├── WeekDateNavigator.tsx              # Composite navigator for Week view (week/year controls + Today button)
+│   ├── MonthDateNavigator.tsx             # Composite navigator for Month view (month/year controls + Today button)
+│   ├── YearDateNavigator.tsx              # Composite navigator for Year view (year controls + Today button)
+│   ├── DayNavigator.tsx                   # ← / → day navigation (building block)
+│   ├── MonthNavigator.tsx                 # ← / → month navigation (building block)
+│   ├── YearNavigator.tsx                  # ← / → year navigation (building block)
+│   ├── WeekNavigator.tsx                  # ← / → week navigation (building block)
 │   └── CurrentTimeIndicator.tsx           # Blue line with circle marker
 ├── hooks/
 │   ├── useCalendarEvents.ts              # CRUD operations + query logic
@@ -182,7 +186,7 @@ interface CalendarEventService {
 
 **Dual validation enforcement:** Both the UI layer (hooks) and the persistence layer (service) validate constraints independently. The `calendarEventService.create()` and `calendarEventService.update()` methods internally call `checkOneShiftPerDay()`, `validateDayRange()`, `validateTimeForReminder()`, and `computeTotalHours()` before persisting. For shift events, `computeEndDayForShift()` is called to auto-set `endDay` when crossing midnight. If validation fails at the service level, the promise rejects with a descriptive error. This guarantees data integrity even if the UI validation is bypassed (e.g., race conditions, direct service calls from sync).
 
-**Calendar navigation state:** The existing `calendarStore.ts` (Zustand) is extended with granular navigation methods (`navigateDay`, `navigateWeek`, `navigateMonth`, `navigateYear`) to support the per-view-mode navigator controls. The existing `navigateForward`/`navigateBackward` methods are deprecated and replaced by the specific methods. The new navigator components in the feature module consume the store directly.
+**Calendar navigation state:** The existing `calendarStore.ts` (Zustand) is extended with granular navigation methods (`navigateDay`, `navigateWeek`, `navigateMonth`, `navigateYear`, `goToToday`) to support the per-view-mode navigator controls. The existing `navigateForward`/`navigateBackward` methods are deprecated and replaced by the specific methods. Each view mode has a **composite navigator component** (`DayDateNavigator`, `WeekDateNavigator`, `MonthDateNavigator`, `YearDateNavigator`) that combines the relevant sub-navigators for that view plus a "Today" button. The individual navigator components (`DayNavigator`, `MonthNavigator`, `WeekNavigator`, `YearNavigator`) serve as building blocks. The composite navigators consume the store directly.
 
 **View state persistence:** The existing `calendarStore.ts` already persists the `activeView` field via Zustand's `persist` middleware (localStorage key: `planixor_calendar`). This behavior is preserved — no additional persistence mechanism is needed for Requirement 12.5. The store continues to restore the last-used View_Mode on subsequent page loads.
 
