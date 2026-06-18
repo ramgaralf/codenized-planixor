@@ -1,17 +1,17 @@
 package com.codenized.planixor.ui.calendar.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,11 +21,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.codenized.planixor.domain.model.CalendarEventDisplay
 import com.codenized.planixor.ui.theme.PlanixorTheme
@@ -35,11 +36,14 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+private val HOUR_HEIGHT = 60.dp
+private val TIME_LABEL_WIDTH = 56.dp
+private const val TOTAL_HOURS = 24
+
 /**
  * Day view composable with vertical 24-hour timeline.
- * Displays events positioned by their start time.
- * Shows a current time indicator (blue line + circle) when viewing today.
- * Auto-scrolls to center current hour on open.
+ * Events are positioned absolutely over the timeline based on their start/end times,
+ * spanning the full duration visually (like the React Web version).
  *
  * @param currentDate The date being displayed.
  * @param events Events for this day (already filtered).
@@ -53,23 +57,14 @@ fun DayView(
     onEventClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val hours = (0..23).toList()
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())
     val isToday = currentDate == LocalDate.now()
-    val listState = rememberLazyListState()
+    val scrollState = rememberScrollState()
 
-    // Track current minute for the indicator (updates every 60 seconds)
     var currentMinute by remember { mutableIntStateOf(LocalTime.now().minute) }
     var currentHour by remember { mutableIntStateOf(LocalTime.now().hour) }
 
     if (isToday) {
-        LaunchedEffect(Unit) {
-            listState.animateScrollToItem(
-                index = currentHour,
-                scrollOffset = -200,
-            )
-        }
-
         LaunchedEffect(Unit) {
             while (true) {
                 delay(60_000L)
@@ -79,122 +74,226 @@ fun DayView(
         }
     }
 
+    // Auto-scroll to current hour on open
+    val density = LocalDensity.current
+    LaunchedEffect(isToday) {
+        if (isToday) {
+            val targetPx = with(density) { (currentHour * HOUR_HEIGHT.toPx() - 200.dp.toPx()).coerceAtLeast(0f) }
+            scrollState.animateScrollTo(targetPx.toInt())
+        }
+    }
+
     // Range intersection: show events where startDay <= currentDay <= endDay
     val currentDayStr = currentDate.toString()
     val dayEvents = events.filter { it.startDay <= currentDayStr && it.endDay >= currentDayStr }
 
-    /**
-     * Returns the effective start hour for an event on the current day.
-     * On the start day, uses the event's startTime. On intermediate/end days, uses hour 0.
-     */
-    fun getEffectiveStartHour(event: CalendarEventDisplay): Int {
-        val isMultiDay = event.startDay != event.endDay
-        if (!isMultiDay) return event.startTime / 60
-        val isStartDay = event.startDay == currentDayStr
-        return if (isStartDay) event.startTime / 60 else 0
-    }
+    val totalHeight = HOUR_HEIGHT * TOTAL_HOURS
 
-    Box(modifier = modifier.fillMaxSize()) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize(),
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState),
+    ) {
+        // Full timeline container
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(totalHeight),
         ) {
-            items(hours) { hour ->
-                Box {
-                    HourSlot(
-                        hour = hour,
-                        timeFormatter = timeFormatter,
-                        events = dayEvents.filter { getEffectiveStartHour(it) == hour },
-                        onEventClick = onEventClick,
-                    )
+            // Hour grid lines and labels
+            repeat(TOTAL_HOURS) { hour ->
+                val topOffset = HOUR_HEIGHT * hour
+                val timeLabel = LocalTime.of(hour, 0).format(timeFormatter)
 
-                    if (isToday && hour == currentHour) {
-                        CurrentTimeIndicator(minuteFraction = currentMinute / 60f)
+                // Time label
+                Text(
+                    text = timeLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier
+                        .offset(y = topOffset)
+                        .padding(end = 8.dp, top = 2.dp)
+                        .height(HOUR_HEIGHT)
+                        .fillMaxWidth(0f) // don't take space
+                        .padding(end = 8.dp),
+                )
+
+                // Hour line
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                    modifier = Modifier
+                        .offset(x = TIME_LABEL_WIDTH, y = topOffset)
+                        .fillMaxWidth(),
+                )
+            }
+
+            // Time labels column (drawn as overlay)
+            repeat(TOTAL_HOURS) { hour ->
+                val topOffset = HOUR_HEIGHT * hour
+                val timeLabel = LocalTime.of(hour, 0).format(timeFormatter)
+
+                Text(
+                    text = timeLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier
+                        .offset(y = topOffset + 2.dp)
+                        .padding(start = 4.dp, end = 8.dp)
+                )
+            }
+
+            // Events positioned absolutely with column layout for overlaps
+            BoxWithConstraints(
+                modifier = Modifier
+                    .offset(x = TIME_LABEL_WIDTH)
+                    .fillMaxWidth()
+                    .height(totalHeight),
+            ) {
+                val eventsAreaWidth = maxWidth - TIME_LABEL_WIDTH
+                val positioned = computeEventColumns(dayEvents, currentDayStr)
+
+                positioned.forEach { pos ->
+                    val topOffset: Dp = HOUR_HEIGHT * pos.effectiveStart / 60
+                    val eventHeight: Dp = HOUR_HEIGHT * pos.durationMinutes / 60
+                    val columnWidth = eventsAreaWidth / pos.totalColumns
+                    val leftOffset = columnWidth * pos.column
+
+                    Box(
+                        modifier = Modifier
+                            .offset(x = leftOffset, y = topOffset)
+                            .width(columnWidth - 2.dp)
+                            .height(eventHeight)
+                            .padding(1.dp),
+                    ) {
+                        EventCard(
+                            event = pos.event,
+                            onClick = { onEventClick(pos.event.id) },
+                            showNotes = true,
+                            modifier = Modifier.fillMaxSize(),
+                        )
                     }
+                }
+            }
+
+            // Current time indicator
+            if (isToday) {
+                val minuteOfDay = currentHour * 60 + currentMinute
+                val indicatorY: Dp = HOUR_HEIGHT * minuteOfDay / 60
+                val indicatorColor = MaterialTheme.colorScheme.primary
+
+                Canvas(
+                    modifier = Modifier
+                        .offset(x = TIME_LABEL_WIDTH, y = indicatorY)
+                        .fillMaxWidth()
+                        .height(2.dp),
+                ) {
+                    val circleRadius = 4.dp.toPx()
+                    drawCircle(
+                        color = indicatorColor,
+                        radius = circleRadius,
+                        center = Offset(circleRadius, size.height / 2),
+                    )
+                    drawLine(
+                        color = indicatorColor,
+                        start = Offset(0f, size.height / 2),
+                        end = Offset(size.width, size.height / 2),
+                        strokeWidth = 2.dp.toPx(),
+                    )
                 }
             }
         }
     }
 }
 
-@Composable
-private fun CurrentTimeIndicator(
-    minuteFraction: Float,
-    modifier: Modifier = Modifier,
-) {
-    val indicatorColor = MaterialTheme.colorScheme.primary
+/**
+ * Positioned event with its column assignment for side-by-side rendering.
+ */
+private data class PositionedEvent(
+    val event: CalendarEventDisplay,
+    val effectiveStart: Int,
+    val durationMinutes: Int,
+    val column: Int,
+    val totalColumns: Int,
+)
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(60.dp)
-            .padding(start = 56.dp),
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val yPosition = size.height * minuteFraction
-            val circleRadius = 3.dp.toPx()
+/**
+ * Computes column layout for overlapping events (greedy algorithm).
+ * Overlapping events are placed side-by-side in parallel columns.
+ */
+private fun computeEventColumns(
+    events: List<CalendarEventDisplay>,
+    currentDayStr: String,
+): List<PositionedEvent> {
+    if (events.isEmpty()) return emptyList()
 
-            drawCircle(
-                color = indicatorColor,
-                radius = circleRadius,
-                center = Offset(circleRadius, yPosition),
-            )
+    data class EventWithTimes(
+        val event: CalendarEventDisplay,
+        val start: Int,
+        val end: Int,
+    )
 
-            drawLine(
-                color = indicatorColor,
-                start = Offset(0f, yPosition),
-                end = Offset(size.width, yPosition),
-                strokeWidth = 2.dp.toPx(),
-            )
+    val withTimes = events.map { event ->
+        EventWithTimes(
+            event = event,
+            start = getEffectiveStartMinutes(event, currentDayStr),
+            end = getEffectiveEndMinutes(event, currentDayStr),
+        )
+    }.sortedWith(compareBy({ it.start }, { it.end }))
+
+    // Greedy column assignment
+    val columns = mutableListOf<MutableList<EventWithTimes>>()
+    val columnAssignment = mutableMapOf<String, Int>()
+
+    for (item in withTimes) {
+        var placed = false
+        for ((colIdx, col) in columns.withIndex()) {
+            val lastInCol = col.last()
+            if (lastInCol.end <= item.start) {
+                col.add(item)
+                columnAssignment[item.event.id] = colIdx
+                placed = true
+                break
+            }
         }
+        if (!placed) {
+            columns.add(mutableListOf(item))
+            columnAssignment[item.event.id] = columns.size - 1
+        }
+    }
+
+    // Determine totalColumns for each event's overlap group
+    return withTimes.map { item ->
+        val overlapping = withTimes.filter { other ->
+            other.start < item.end && other.end > item.start
+        }
+        val maxCol = overlapping.maxOf { columnAssignment[it.event.id] ?: 0 }
+
+        PositionedEvent(
+            event = item.event,
+            effectiveStart = item.start,
+            durationMinutes = (item.end - item.start).coerceAtLeast(30),
+            column = columnAssignment[item.event.id] ?: 0,
+            totalColumns = maxCol + 1,
+        )
     }
 }
 
-@Composable
-private fun HourSlot(
-    hour: Int,
-    timeFormatter: DateTimeFormatter,
-    events: List<CalendarEventDisplay>,
-    onEventClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val timeLabel = LocalTime.of(hour, 0).format(timeFormatter)
+/**
+ * Returns the effective start time in minutes for an event on the given day.
+ */
+private fun getEffectiveStartMinutes(event: CalendarEventDisplay, currentDayStr: String): Int {
+    if (event.startDay == event.endDay) return event.startTime
+    return if (event.startDay == currentDayStr) event.startTime else 0
+}
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .let { if (events.isEmpty()) it.height(60.dp) else it },
-        verticalAlignment = Alignment.Top,
-    ) {
-        Text(
-            text = timeLabel,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.End,
-            modifier = Modifier
-                .width(56.dp)
-                .padding(end = 8.dp, top = 4.dp),
-        )
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .let { if (events.isEmpty()) it.height(60.dp) else it },
-        ) {
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-            )
-
-            events.forEach { event ->
-                EventCard(
-                    event = event,
-                    onClick = { onEventClick(event.id) },
-                    showNotes = true,
-                    modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp),
-                )
-            }
-        }
-    }
+/**
+ * Returns the effective end time in minutes for an event on the given day.
+ */
+private fun getEffectiveEndMinutes(event: CalendarEventDisplay, currentDayStr: String): Int {
+    if (event.startDay == event.endDay) return event.endTime
+    return if (event.endDay == currentDayStr) event.endTime else 1439
 }
 
 @Preview(showBackground = true)

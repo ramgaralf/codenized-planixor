@@ -63,17 +63,30 @@ fun YearView(
     val firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
     val scrollState = rememberScrollState()
 
+    // Auto-scroll to current month row, centered on screen
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    androidx.compose.runtime.LaunchedEffect(year) {
+        if (year == today.year) {
+            val currentMonthIndex = today.monthValue - 1 // 0-based
+            val rowIndex = currentMonthIndex / 2 // 2 months per row
+            val rowHeightPx = with(density) { 200.dp.toPx() } // approximate row height
+            val halfScreenPx = with(density) { 300.dp.toPx() } // approximate half screen
+            val targetScroll = ((rowIndex * rowHeightPx) - halfScreenPx).coerceAtLeast(0f).toInt()
+            scrollState.animateScrollTo(targetScroll)
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
             .padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
-        // 4 rows of 3 months
-        Month.entries.chunked(3).forEach { monthRow ->
+        // 6 rows of 2 months
+        Month.entries.chunked(2).forEach { monthRow ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 monthRow.forEach { month ->
                     val monthYm = YearMonth.of(year, month)
@@ -177,7 +190,7 @@ private fun MiniDayCell(
     val fillColor = if (hasShift) parseHexColorSafe(shiftEvent!!.backgroundColor) else Color.Transparent
     val textColor = if (hasShift) Color.White else MaterialTheme.colorScheme.onSurface
 
-    val fontSize = if (isToday) 13.sp else 11.sp
+    val fontSize = if (isToday) 14.sp else 12.sp
     val fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
 
     Box(
@@ -191,7 +204,7 @@ private fun MiniDayCell(
 
         Box(
             modifier = Modifier
-                .size(20.dp)
+                .size(28.dp)
                 .clip(CircleShape)
                 .background(fillColor)
                 .then(

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useCalendarStore } from '@/stores/calendarStore';
 
@@ -59,6 +59,23 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
 
   const { events } = useCalendarEvents();
   const { filteredEvents } = useEventFiltering(events);
+
+  // Detect midnight crossing and advance calendar to new day
+  const lastKnownDay = useRef(new Date().toDateString());
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const todayStr = new Date().toDateString();
+      if (todayStr !== lastKnownDay.current) {
+        const previousToday = lastKnownDay.current;
+        lastKnownDay.current = todayStr;
+        // If user was viewing the previous "today", advance to new today
+        if (currentDate.toDateString() === previousToday) {
+          useCalendarStore.setState({ currentDate: new Date() });
+        }
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [currentDate]);
 
   // Handle parent-controlled create mode via prop
   const effectiveMode = showCreateForm && viewState.mode === 'calendar' ? 'create' : viewState.mode;

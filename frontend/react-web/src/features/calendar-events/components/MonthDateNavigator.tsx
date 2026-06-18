@@ -25,6 +25,8 @@ const LABEL_STYLE: React.CSSProperties = {
   textTransform: 'capitalize',
   userSelect: 'none',
   textAlign: 'center',
+  minWidth: '24px',
+  display: 'inline-block',
 };
 
 /**
@@ -49,7 +51,7 @@ export const MonthDateNavigator = () => {
 
   return (
     <nav
-      className="flex items-center gap-1 flex-wrap justify-center"
+      className="flex items-center gap-1 w-full"
       aria-label={t('accessibility.calendarNavigation', { defaultValue: 'Calendar navigation' })}
     >
       {/* Month name with controls */}
@@ -61,7 +63,7 @@ export const MonthDateNavigator = () => {
       >
         <ChevronLeft size={16} aria-hidden="true" />
       </button>
-      <span style={LABEL_STYLE}>
+      <span style={{ ...LABEL_STYLE, minWidth: '80px' }}>
         {monthName}
       </span>
       <button
@@ -99,7 +101,7 @@ export const MonthDateNavigator = () => {
         type="button"
         onClick={goToToday}
         style={{
-          marginLeft: '8px',
+          marginLeft: 'auto',
           padding: '4px 12px',
           fontSize: '12px',
           fontWeight: 600,

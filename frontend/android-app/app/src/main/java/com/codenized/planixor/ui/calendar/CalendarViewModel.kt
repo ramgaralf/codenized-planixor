@@ -2,9 +2,11 @@ package com.codenized.planixor.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.codenized.planixor.data.local.CalendarEventRepository
 import com.codenized.planixor.data.local.PreferencesRepository
 import com.codenized.planixor.data.local.ReminderRepository
 import com.codenized.planixor.data.local.ShiftRepository
+import com.codenized.planixor.domain.model.CalendarEvent
 import com.codenized.planixor.domain.model.CalendarEventDisplay
 import com.codenized.planixor.domain.validation.CalendarEventValidation
 import com.codenized.planixor.model.CalendarView
@@ -13,11 +15,16 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.YearMonth
 import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 
@@ -42,6 +49,7 @@ class CalendarViewModel @Inject constructor(
     private val preferencesRepository: PreferencesRepository,
     private val shiftRepository: ShiftRepository,
     private val reminderRepository: ReminderRepository,
+    private val calendarEventRepository: CalendarEventRepository,
 ) : ViewModel() {
 
     private val _activeView = MutableStateFlow(CalendarView.Day)
@@ -58,6 +66,8 @@ class CalendarViewModel @Inject constructor(
 
     init {
         loadPersistedView()
+        observeEvents()
+        observeMidnight()
     }
 
     // region Navigation
@@ -124,9 +134,18 @@ class CalendarViewModel @Inject constructor(
      */
     fun initCreateForm() {
         val preSelectedDay = computePreSelectedDay()
+        val now = LocalTime.now()
+        val currentMinutes = now.hour * 60 + now.minute
+        val roundedStart = ((currentMinutes + 29) / 30 * 30).coerceAtMost(1410)
+        val defaultEndMinutes = (roundedStart + 60).coerceAtMost(1439)
+
         _formState.value = EventFormUiState(
             startDay = preSelectedDay,
             endDay = preSelectedDay,
+            startTimeHours = roundedStart / 60,
+            startTimeMinutes = roundedStart % 60,
+            endTimeHours = defaultEndMinutes / 60,
+            endTimeMinutes = defaultEndMinutes % 60,
             isLoading = true,
         )
         loadEventTypeOptions()
@@ -215,19 +234,28 @@ class CalendarViewModel @Inject constructor(
                 }
             } else {
                 val reminder = reminderRepository.getById(eventTypeId)
+                // Reset times to rounded 30 min → +1 hour
+                val now = LocalTime.now()
+                val currentMinutes = now.hour * 60 + now.minute
+                val roundedStart = ((currentMinutes + 29) / 30 * 30).coerceAtMost(1410)
+                val endMinutes = (roundedStart + 60).coerceAtMost(1439)
+
                 _formState.update { current ->
-                    val totalHours = recalculateTotalHoursForReminder(current)
-                    current.copy(
+                    val updatedState = current.copy(
                         eventType = eventType,
                         eventTypeId = eventTypeId,
                         isTimeEditable = true,
-                        totalHours = totalHours,
+                        startTimeHours = roundedStart / 60,
+                        startTimeMinutes = roundedStart % 60,
+                        endTimeHours = endMinutes / 60,
+                        endTimeMinutes = endMinutes % 60,
                         derivedName = reminder?.name ?: "",
                         derivedIcon = reminder?.icon ?: "",
                         derivedBackgroundColor = reminder?.backgroundColor ?: "",
                         errors = current.errors - setOf("eventType", "eventTypeId"),
                         formError = null,
                     )
+                    updatedState.copy(totalHours = recalculateTotalHoursForReminder(updatedState))
                 }
             }
         }
@@ -240,8 +268,12 @@ class CalendarViewModel @Inject constructor(
      */
     fun onStartDaySelected(day: LocalDate) {
         _formState.update { current ->
+            // If endDay is before the new startDay, auto-correct endDay = startDay
+            val correctedEndDay = if (current.endDay != null && current.endDay < day) day else current.endDay
+
             val updatedState = current.copy(
                 startDay = day,
+                endDay = correctedEndDay,
                 errors = current.errors - "startDay",
             )
 
@@ -257,7 +289,7 @@ class CalendarViewModel @Inject constructor(
             } else if (current.eventType == "reminder") {
                 updatedState.copy(totalHours = recalculateTotalHoursForReminder(updatedState))
             } else {
-                updatedState.copy(endDay = day)
+                updatedState
             }
         }
     }
@@ -326,6 +358,135 @@ class CalendarViewModel @Inject constructor(
                 notes = notes,
                 errors = current.errors - "notes",
             )
+        }
+    }
+
+    /**
+     * Saves the current form state as a new calendar event.
+     * Returns true on success, false on validation error.
+     */
+    fun saveEvent(onSuccess: () -> Unit) {
+        val state = _formState.value
+        val eventType = state.eventType ?: return
+        val eventTypeId = state.eventTypeId ?: return
+        val startDay = state.startDay?.toString() ?: return
+        val endDay = state.endDay?.toString() ?: return
+        val startTime = if (state.startTimeHours != null && state.startTimeMinutes != null) {
+            state.startTimeHours * 60 + state.startTimeMinutes
+        } else return
+        val endTime = if (state.endTimeHours != null && state.endTimeMinutes != null) {
+            state.endTimeHours * 60 + state.endTimeMinutes
+        } else return
+
+        _formState.update { it.copy(isSubmitting = true) }
+
+        viewModelScope.launch {
+            val shiftHoursWorked = if (eventType == "shift") state.totalHours else null
+            val result = calendarEventRepository.create(
+                eventType = eventType,
+                eventTypeId = eventTypeId,
+                startDay = startDay,
+                endDay = endDay,
+                startTime = startTime,
+                endTime = endTime,
+                notes = state.notes.ifBlank { null },
+                shiftHoursWorked = shiftHoursWorked,
+            )
+
+            when (result) {
+                is com.codenized.planixor.data.local.CalendarEventResult.Success -> {
+                    resetForm()
+                    onSuccess()
+                }
+                is com.codenized.planixor.data.local.CalendarEventResult.ValidationError -> {
+                    _formState.update { it.copy(
+                        isSubmitting = false,
+                        formError = result.message,
+                    ) }
+                }
+            }
+        }
+    }
+
+    /**
+     * Loads an existing event for editing by its ID.
+     * Resolves display fields and pre-populates the form state.
+     */
+    fun loadEventForEdit(eventId: String) {
+        viewModelScope.launch {
+            _formState.update { it.copy(isLoading = true) }
+            val entity = calendarEventRepository.getById(eventId)
+            if (entity != null) {
+                val display = resolveDisplayFields(entity)
+                initEditForm(display)
+            } else {
+                _formState.update { it.copy(isLoading = false, formError = "Event not found") }
+            }
+        }
+    }
+
+    /**
+     * Updates an existing calendar event with the current form state.
+     */
+    fun updateEvent(eventId: String, onSuccess: () -> Unit) {
+        val state = _formState.value
+        val eventType = state.eventType ?: return
+        val eventTypeId = state.eventTypeId ?: return
+        val startDay = state.startDay?.toString() ?: return
+        val endDay = state.endDay?.toString() ?: return
+        val startTime = if (state.startTimeHours != null && state.startTimeMinutes != null) {
+            state.startTimeHours * 60 + state.startTimeMinutes
+        } else return
+        val endTime = if (state.endTimeHours != null && state.endTimeMinutes != null) {
+            state.endTimeHours * 60 + state.endTimeMinutes
+        } else return
+
+        _formState.update { it.copy(isSubmitting = true) }
+
+        viewModelScope.launch {
+            val shiftHoursWorked = if (eventType == "shift") state.totalHours else null
+            val result = calendarEventRepository.update(
+                id = eventId,
+                eventType = eventType,
+                eventTypeId = eventTypeId,
+                startDay = startDay,
+                endDay = endDay,
+                startTime = startTime,
+                endTime = endTime,
+                notes = state.notes.ifBlank { null },
+                shiftHoursWorked = shiftHoursWorked,
+            )
+
+            when (result) {
+                is com.codenized.planixor.data.local.CalendarEventResult.Success -> {
+                    resetForm()
+                    onSuccess()
+                }
+                is com.codenized.planixor.data.local.CalendarEventResult.ValidationError -> {
+                    _formState.update { it.copy(
+                        isSubmitting = false,
+                        formError = result.message,
+                    ) }
+                }
+            }
+        }
+    }
+
+    /**
+     * Soft-deletes an event by ID and navigates back on success.
+     */
+    fun deleteEvent(eventId: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val result = calendarEventRepository.softDelete(eventId)
+            when (result) {
+                is com.codenized.planixor.data.local.CalendarEventResult.Success -> {
+                    resetForm()
+                    onSuccess()
+                }
+                is com.codenized.planixor.data.local.CalendarEventResult.ValidationError -> {
+                    _formState.update { it.copy(formError = result.message) }
+                }
+            }
         }
     }
 
@@ -455,6 +616,122 @@ class CalendarViewModel @Inject constructor(
             val stored = preferencesRepository.activeViewFlow.first()
             _activeView.value = stored.toCalendarView()
         }
+    }
+
+    /**
+     * Monitors for midnight crossing and advances the calendar date.
+     * Checks every 30 seconds if the day has changed.
+     */
+    private fun observeMidnight() {
+        viewModelScope.launch {
+            var lastKnownDay = LocalDate.now()
+            while (true) {
+                kotlinx.coroutines.delay(30_000L)
+                val today = LocalDate.now()
+                if (today != lastKnownDay) {
+                    lastKnownDay = today
+                    // If the user was viewing the previous "today", advance to new today
+                    val previousToday = today.minusDays(1)
+                    if (_currentDate.value == previousToday) {
+                        _currentDate.value = today
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Observes calendar events reactively based on current date and active view.
+     * Computes the date range for the view, queries the repository, and resolves display fields.
+     */
+    private fun observeEvents() {
+        viewModelScope.launch {
+            combine(_currentDate, _activeView) { date, view ->
+                getDateRangeForView(date, view)
+            }.flatMapLatest { (start, end) ->
+                calendarEventRepository.getByDateRange(start, end)
+            }.map { entities ->
+                entities.map { entity ->
+                    resolveDisplayFields(entity)
+                }
+            }.collect { displayEvents ->
+                _events.value = displayEvents
+            }
+        }
+    }
+
+    /**
+     * Computes the date range (start, end) for a given view and date.
+     */
+    private fun getDateRangeForView(date: LocalDate, view: CalendarView): Pair<String, String> {
+        return when (view) {
+            CalendarView.Day -> {
+                val dayStr = date.toString()
+                Pair(dayStr, dayStr)
+            }
+            CalendarView.Week -> {
+                val monday = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                val sunday = monday.plusDays(6)
+                Pair(monday.toString(), sunday.toString())
+            }
+            CalendarView.Month -> {
+                val ym = YearMonth.from(date)
+                val firstOfMonth = ym.atDay(1)
+                // Include leading/trailing days from adjacent months (up to 6 weeks grid)
+                val startDow = firstOfMonth.dayOfWeek
+                val leadingDays = (startDow.value - DayOfWeek.MONDAY.value + 7) % 7
+                val gridStart = firstOfMonth.minusDays(leadingDays.toLong())
+                val gridEnd = gridStart.plusDays(41) // 6 weeks = 42 days
+                Pair(gridStart.toString(), gridEnd.toString())
+            }
+            CalendarView.Year -> {
+                Pair("${date.year}-01-01", "${date.year}-12-31")
+            }
+        }
+    }
+
+    /**
+     * Resolves display fields (name, icon, backgroundColor) from the referenced shift/reminder.
+     */
+    private suspend fun resolveDisplayFields(
+        entity: com.codenized.planixor.data.local.CalendarEventEntity,
+    ): CalendarEventDisplay {
+        val domainEvent = CalendarEvent(
+            id = entity.id,
+            eventType = entity.eventType,
+            eventTypeId = entity.eventTypeId,
+            startDay = entity.startDay,
+            endDay = entity.endDay,
+            startTime = entity.startTime,
+            endTime = entity.endTime,
+            totalHours = entity.totalHours,
+            notes = entity.notes,
+            modifiedAt = entity.modifiedAt,
+            syncedAt = entity.syncedAt,
+            isDeleted = entity.isDeleted,
+        )
+
+        var name: String? = null
+        var icon: String? = null
+        var backgroundColor: String? = null
+
+        if (entity.eventType == "shift") {
+            val shift = shiftRepository.getById(entity.eventTypeId)
+            if (shift != null) {
+                name = shift.name
+                icon = shift.icon
+                backgroundColor = shift.backgroundColor
+            }
+        } else {
+            val reminder = reminderRepository.getById(entity.eventTypeId)
+            if (reminder != null) {
+                name = reminder.name
+                icon = reminder.icon
+                backgroundColor = reminder.backgroundColor
+            }
+        }
+
+        return CalendarEventDisplay.fromEvent(domainEvent, name, icon, backgroundColor)
     }
 
     // endregion

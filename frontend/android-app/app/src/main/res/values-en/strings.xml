@@ -12,10 +12,10 @@
     <string name="nav_settings">Settings</string>
 
     <!-- Calendar Views -->
-    <string name="calendar_view_day">Day</string>
-    <string name="calendar_view_week">Week</string>
-    <string name="calendar_view_month">Month</string>
-    <string name="calendar_view_year">Year</string>
+    <string name="calendar_view_day">D</string>
+    <string name="calendar_view_week">W</string>
+    <string name="calendar_view_month">M</string>
+    <string name="calendar_view_year">Y</string>
 
     <!-- Calendar Navigation -->
     <string name="calendar_today">Today</string>

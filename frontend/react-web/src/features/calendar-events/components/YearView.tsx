@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { CalendarEventDisplay } from '../models';
@@ -185,6 +185,7 @@ interface MiniMonthProps {
   today: Date;
   eventsByDay: Map<string, CalendarEventDisplay[]>;
   onDayClick: (dayISO: string) => void;
+  dataMonth?: number;
 }
 
 const MiniMonth = ({
@@ -196,6 +197,7 @@ const MiniMonth = ({
   today,
   eventsByDay,
   onDayClick,
+  dataMonth,
 }: MiniMonthProps) => {
   const monthName = useMemo(() => getLocalizedMonthName(year, month, locale), [year, month, locale]);
   const { leadingBlanks, days, trailingBlanks } = useMemo(
@@ -205,6 +207,7 @@ const MiniMonth = ({
 
   return (
     <div
+      data-month={dataMonth}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -401,6 +404,19 @@ export const YearView = ({ events, currentDate, onDayClick }: YearViewProps) => 
   const [failedDay, setFailedDay] = useState<string | null>(null);
 
   const year = currentDate.getFullYear();
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to current month when displaying current year
+  useEffect(() => {
+    if (year === today.getFullYear() && gridRef.current) {
+      const currentMonth = today.getMonth(); // 0-based
+      const monthElements = gridRef.current.querySelectorAll('[data-month]');
+      const target = monthElements[currentMonth];
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [year, today]);
 
   const firstDayOfWeek = useMemo(() => getFirstDayOfWeek(locale), [locale]);
   const weekdayInitials = useMemo(
@@ -474,6 +490,7 @@ export const YearView = ({ events, currentDate, onDayClick }: YearViewProps) => 
 
       {/* Month grid */}
       <div
+        ref={gridRef}
         className="flex-1 overflow-y-auto"
         role="grid"
         aria-label={t('calendar.yearView.label', { defaultValue: 'Year view', year })}
@@ -492,6 +509,7 @@ export const YearView = ({ events, currentDate, onDayClick }: YearViewProps) => 
               today={today}
               eventsByDay={eventsByDay}
               onDayClick={handleDayClick}
+              dataMonth={monthIndex}
             />
           ))}
         </div>

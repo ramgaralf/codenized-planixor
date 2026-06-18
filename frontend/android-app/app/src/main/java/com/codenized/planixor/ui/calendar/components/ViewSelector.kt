@@ -34,7 +34,7 @@ fun ViewSelector(
     val views = CalendarView.entries
 
     SingleChoiceSegmentedButtonRow(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
     ) {
         views.forEachIndexed { index, view ->
             SegmentedButton(
@@ -50,7 +50,10 @@ fun ViewSelector(
                     activeContentColor = Color.White,
                 ),
             ) {
-                Text(text = stringResource(view.labelResId()))
+                Text(
+                    text = stringResource(view.labelResId()),
+                    style = MaterialTheme.typography.labelSmall,
+                )
             }
         }
     }

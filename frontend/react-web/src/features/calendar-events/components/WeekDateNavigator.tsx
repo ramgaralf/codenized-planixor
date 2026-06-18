@@ -24,6 +24,8 @@ const LABEL_STYLE: React.CSSProperties = {
   color: 'var(--color-text-primary)',
   userSelect: 'none',
   textAlign: 'center',
+  minWidth: '24px',
+  display: 'inline-block',
 };
 
 /**
@@ -56,7 +58,7 @@ export const WeekDateNavigator = () => {
 
   return (
     <nav
-      className="flex items-center gap-1 flex-wrap justify-center"
+      className="flex items-center gap-1 w-full"
       aria-label={t('accessibility.calendarNavigation', { defaultValue: 'Calendar navigation' })}
     >
       {/* Week label + week number with controls */}
@@ -109,7 +111,7 @@ export const WeekDateNavigator = () => {
         type="button"
         onClick={goToToday}
         style={{
-          marginLeft: '8px',
+          marginLeft: 'auto',
           padding: '4px 12px',
           fontSize: '12px',
           fontWeight: 600,

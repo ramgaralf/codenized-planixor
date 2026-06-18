@@ -24,8 +24,9 @@ const LABEL_STYLE: React.CSSProperties = {
   color: 'var(--color-text-primary)',
   textTransform: 'capitalize',
   userSelect: 'none',
-  minWidth: '24px',
   textAlign: 'center',
+  minWidth: '24px',
+  display: 'inline-block',
 };
 
 /**
@@ -34,6 +35,7 @@ const LABEL_STYLE: React.CSSProperties = {
  * Layout: DayName  < DayNumber >  < MonthName >  < Year >
  *
  * Each segment (day, month, year) has its own prev/next chevrons.
+ * On mobile (<768px), uses short day/month names.
  */
 export const DayDateNavigator = () => {
   const { t, i18n } = useTranslation();
@@ -44,26 +46,27 @@ export const DayDateNavigator = () => {
   const goToToday = useCalendarStore((state) => state.goToToday);
 
   const locale = i18n.language;
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   const dayName = useMemo(() => {
-    return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(currentDate);
-  }, [currentDate, locale]);
+    return new Intl.DateTimeFormat(locale, { weekday: isMobile ? 'short' : 'long' }).format(currentDate);
+  }, [currentDate, locale, isMobile]);
 
   const dayNumber = currentDate.getDate();
 
   const monthName = useMemo(() => {
-    return new Intl.DateTimeFormat(locale, { month: 'long' }).format(currentDate);
-  }, [currentDate, locale]);
+    return new Intl.DateTimeFormat(locale, { month: isMobile ? 'short' : 'long' }).format(currentDate);
+  }, [currentDate, locale, isMobile]);
 
   const year = currentDate.getFullYear();
 
   return (
     <nav
-      className="flex items-center gap-1 flex-wrap justify-center"
+      className="flex items-center gap-1 w-full"
       aria-label={t('accessibility.calendarNavigation', { defaultValue: 'Calendar navigation' })}
     >
       {/* Day name (no controls) */}
-      <span style={{ ...LABEL_STYLE, marginRight: '4px' }}>
+      <span style={{ ...LABEL_STYLE, minWidth: '40px', marginRight: '4px' }}>
         {dayName}
       </span>
 
@@ -76,7 +79,7 @@ export const DayDateNavigator = () => {
       >
         <ChevronLeft size={16} aria-hidden="true" />
       </button>
-      <span style={LABEL_STYLE}>
+      <span style={{ ...LABEL_STYLE, minWidth: '24px' }}>
         {dayNumber}
       </span>
       <button
@@ -97,7 +100,7 @@ export const DayDateNavigator = () => {
       >
         <ChevronLeft size={16} aria-hidden="true" />
       </button>
-      <span style={LABEL_STYLE}>
+      <span style={{ ...LABEL_STYLE, minWidth: '48px' }}>
         {monthName}
       </span>
       <button
@@ -118,7 +121,7 @@ export const DayDateNavigator = () => {
       >
         <ChevronLeft size={16} aria-hidden="true" />
       </button>
-      <span style={LABEL_STYLE}>
+      <span style={{ ...LABEL_STYLE, minWidth: '40px' }}>
         {year}
       </span>
       <button
@@ -135,7 +138,7 @@ export const DayDateNavigator = () => {
         type="button"
         onClick={goToToday}
         style={{
-          marginLeft: '8px',
+          marginLeft: 'auto',
           padding: '4px 12px',
           fontSize: '12px',
           fontWeight: 600,

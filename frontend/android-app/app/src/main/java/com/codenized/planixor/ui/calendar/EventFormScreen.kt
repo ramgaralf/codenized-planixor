@@ -153,15 +153,6 @@ fun EventFormScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        // Derived fields (read-only) — shown when a type is selected
-        if (uiState.derivedName.isNotBlank()) {
-            DerivedFieldsDisplay(
-                name = uiState.derivedName,
-                icon = uiState.derivedIcon,
-                backgroundColor = uiState.derivedBackgroundColor,
-            )
-        }
-
         // Start day picker
         DayPickerField(
             label = stringResource(R.string.event_form_field_start_day),

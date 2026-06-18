@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 
 import type { CalendarEventDisplay } from '../models';
 
-const MAX_VISIBLE_EMOJIS = 5;
+const MAX_VISIBLE_EMOJIS = 4;
+const MAX_WITH_OVERFLOW = 3;
 
 interface MonthDay {
   date: Date;
@@ -201,7 +202,7 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
   );
 
   return (
-    <div className="flex flex-col w-full h-full" style={{ padding: 'var(--spacing-md, 16px)' }}>
+    <div className="flex flex-col w-full h-full" style={{ padding: 'var(--spacing-md, 16px)', minHeight: 0 }}>
       {/* Weekday headers */}
       <div
         className="grid grid-cols-7"
@@ -231,8 +232,13 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
         ))}
       </div>
 
-      {/* Day grid */}
-      <div className="grid grid-cols-7 flex-1" role="grid" aria-label="month-grid">
+      {/* Day grid — equal row heights, overflow hidden */}
+      <div
+        className="grid grid-cols-7 flex-1"
+        role="grid"
+        aria-label="month-grid"
+        style={{ gridTemplateRows: `repeat(${Math.ceil(monthDays.length / 7)}, 1fr)`, overflow: 'hidden' }}
+      >
         {monthDays.map((day, index) => {
           const dayEvents = eventsByDay.get(day.isoDate) ?? [];
           const eventsInfo = getDayEventsInfo(dayEvents);
@@ -251,7 +257,6 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
               })}
               onClick={() => onDayClick(day.isoDate)}
               style={{
-                minHeight: '64px',
                 opacity: day.isCurrentMonth ? 1 : 0.4,
                 color: day.isCurrentMonth
                   ? 'var(--color-text-primary)'
@@ -262,6 +267,8 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
                 borderBottomStyle: 'solid',
                 borderBottomWidth: '1px',
                 borderBottomColor: 'var(--color-border)',
+                overflow: 'hidden',
+                minHeight: 0,
               }}
             >
               {/* Day number */}
@@ -284,35 +291,45 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
               {/* Event container */}
               {eventsInfo.totalCount > 0 && (
                 <div
-                  className="flex flex-wrap items-center justify-center gap-1.5 rounded"
+                  className="flex flex-wrap items-center justify-center gap-1 rounded"
                   style={{
-                    padding: '6px 2px',
-                    minHeight: '20px',
+                    padding: '2px',
                     width: '100%',
+                    flex: 1,
+                    overflow: 'hidden',
                   }}
                 >
-                  {eventsInfo.emojis.slice(0, MAX_VISIBLE_EMOJIS).map((emoji, emojiIndex) => (
-                    <span
-                      key={emojiIndex}
-                      aria-hidden="true"
-                      style={{ fontSize: '24px', lineHeight: 1 }}
-                    >
-                      {emoji}
-                    </span>
-                  ))}
-                  {eventsInfo.totalCount > MAX_VISIBLE_EMOJIS && (
-                    <span
-                      style={{
-                        fontSize: '10px',
-                        fontWeight: 600,
-                        color: eventsInfo.shiftBackgroundColor
-                          ? '#ffffff'
-                          : 'var(--color-text-secondary)',
-                      }}
-                    >
-                      +{eventsInfo.totalCount - MAX_VISIBLE_EMOJIS}
-                    </span>
-                  )}
+                  {(() => {
+                    const showOverflow = eventsInfo.totalCount > MAX_VISIBLE_EMOJIS;
+                    const visibleCount = showOverflow ? MAX_WITH_OVERFLOW : eventsInfo.totalCount;
+                    const hiddenCount = eventsInfo.totalCount - visibleCount;
+                    return (
+                      <>
+                        {eventsInfo.emojis.slice(0, visibleCount).map((emoji, emojiIndex) => (
+                          <span
+                            key={emojiIndex}
+                            aria-hidden="true"
+                            style={{ fontSize: '16px', lineHeight: 1 }}
+                          >
+                            {emoji}
+                          </span>
+                        ))}
+                        {showOverflow && (
+                          <span
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              color: eventsInfo.shiftBackgroundColor
+                                ? '#ffffff'
+                                : 'var(--color-text-secondary)',
+                            }}
+                          >
+                            +{hiddenCount}
+                          </span>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </button>

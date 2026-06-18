@@ -1,5 +1,6 @@
 package com.codenized.planixor.ui.calendar.components
 
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -82,10 +83,12 @@ fun MonthView(
             }
         }
 
-        // Day grid
+        // Day grid — rows fill remaining height equally
         calendarDays.chunked(7).forEach { week ->
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 week.forEach { day ->
@@ -113,6 +116,7 @@ fun MonthView(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MonthDayCell(
     date: LocalDate,
@@ -130,10 +134,14 @@ private fun MonthDayCell(
         Color.Transparent
     }
 
-    // Emojis: shifts first, then reminders, max 5
+    // Emojis: shifts first, then reminders
+    // Rule: max 4 icons shown. If >4 events, show 3 icons + "+N"
     val sortedEvents = events.sortedWith(compareBy({ it.eventType != "shift" }, { it.startTime }))
-    val emojisToShow = sortedEvents.take(5).map { it.icon }
-    val overflow = events.size - 5
+    val totalCount = sortedEvents.size
+    val showOverflow = totalCount > 4
+    val visibleCount = if (showOverflow) 3 else totalCount
+    val emojisToShow = sortedEvents.take(visibleCount).map { it.icon }
+    val hiddenCount = totalCount - visibleCount
 
     // Text color: white on colored background, normal otherwise
     val hasShiftBg = shiftEvent != null && shiftEvent.backgroundColor.isNotBlank() && shiftEvent.backgroundColor != "transparent"
@@ -144,7 +152,7 @@ private fun MonthDayCell(
 
     Box(
         modifier = modifier
-            .aspectRatio(1f)
+            .fillMaxSize()
             .background(cellBg)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.TopCenter,
@@ -187,27 +195,31 @@ private fun MonthDayCell(
             // Padding between header and emoji content
             Spacer(modifier = Modifier.height(2.dp))
 
-            // Emoji indicators with spacing between them
+            // Emoji indicators — wrap to multiple lines
             if (emojisToShow.isNotEmpty()) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3,
+                    overflow = androidx.compose.foundation.layout.FlowRowOverflow.Clip,
                 ) {
                     emojisToShow.forEach { emoji ->
                         Text(
                             text = emoji,
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                         )
                     }
-                }
-                if (overflow > 0) {
-                    Text(
-                        text = "+$overflow",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (hasShiftBg) Color.White.copy(alpha = 0.8f)
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 7.sp,
-                    )
+                    if (showOverflow) {
+                        Text(
+                            text = "+$hiddenCount",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (hasShiftBg) Color.White.copy(alpha = 0.9f)
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        )
+                    }
                 }
             }
         }

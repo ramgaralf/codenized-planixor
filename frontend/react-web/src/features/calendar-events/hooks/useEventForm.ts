@@ -164,13 +164,19 @@ const buildInitialState = (
 
   const preSelectedDay = computePreSelectedDay(activeView, currentDate);
 
+  // Default times: rounded to next 30 min → +1 hour
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const defaultStartTime = Math.min(Math.ceil(currentMinutes / 30) * 30, 1410);
+  const defaultEndTime = Math.min(defaultStartTime + 60, 1439);
+
   return {
     eventType: null,
     eventTypeId: null,
     startDay: preSelectedDay,
     endDay: preSelectedDay,
-    startTime: null,
-    endTime: null,
+    startTime: defaultStartTime,
+    endTime: defaultEndTime,
     totalHours: 0,
     notes: '',
   };
@@ -321,7 +327,14 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
 
   const setField = useCallback(
     (field: keyof EventFormState, value: EventFormState[keyof EventFormState]) => {
-      setFormState((prev) => ({ ...prev, [field]: value }));
+      setFormState((prev) => {
+        const updated = { ...prev, [field]: value };
+        // Rule: if startDay changes and endDay is before it, auto-set endDay = startDay
+        if (field === 'startDay' && typeof value === 'string' && updated.endDay && updated.endDay < value) {
+          updated.endDay = value;
+        }
+        return updated;
+      });
 
       // Immediately clear the error for this field
       setFieldErrors((prev) => {
@@ -378,16 +391,19 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
           }));
         }
       } else {
-        // Reminder selected: times are editable, reset totalHours until user fills times
+        // Reminder selected: times are editable, rounded to next 30 min → +1 hour
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const suggestedStart = Math.min(Math.ceil(currentMinutes / 30) * 30, 1410);
+        const suggestedEnd = Math.min(suggestedStart + 60, 1439);
+
         setFormState((prev) => ({
           ...prev,
           eventType,
           eventTypeId,
-          startTime: prev.startTime,
-          endTime: prev.endTime,
-          totalHours: prev.startTime !== null && prev.endTime !== null
-            ? computeTotalHours('reminder', prev.startDay, prev.endDay, prev.startTime, prev.endTime)
-            : 0,
+          startTime: suggestedStart,
+          endTime: suggestedEnd,
+          totalHours: computeTotalHours('reminder', prev.startDay, prev.endDay, suggestedStart, suggestedEnd),
         }));
       }
 

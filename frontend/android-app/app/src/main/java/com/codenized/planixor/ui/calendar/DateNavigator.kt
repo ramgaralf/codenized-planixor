@@ -1,17 +1,20 @@
 package com.codenized.planixor.ui.calendar
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -55,6 +58,7 @@ fun DateNavigator(
     onNavigateMonth: (Int) -> Unit,
     onNavigateYear: (Int) -> Unit,
     onTodayClick: () -> Unit,
+    showTodayButton: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     when (activeView) {
@@ -64,6 +68,7 @@ fun DateNavigator(
             onNavigateMonth = onNavigateMonth,
             onNavigateYear = onNavigateYear,
             onTodayClick = onTodayClick,
+            showTodayButton = showTodayButton,
             modifier = modifier,
         )
         CalendarView.Week -> WeekDateNavigator(
@@ -71,6 +76,7 @@ fun DateNavigator(
             onNavigateWeek = onNavigateWeek,
             onNavigateYear = onNavigateYear,
             onTodayClick = onTodayClick,
+            showTodayButton = showTodayButton,
             modifier = modifier,
         )
         CalendarView.Month -> MonthDateNavigator(
@@ -78,12 +84,14 @@ fun DateNavigator(
             onNavigateMonth = onNavigateMonth,
             onNavigateYear = onNavigateYear,
             onTodayClick = onTodayClick,
+            showTodayButton = showTodayButton,
             modifier = modifier,
         )
         CalendarView.Year -> YearDateNavigator(
             currentDate = currentDate,
             onNavigateYear = onNavigateYear,
             onTodayClick = onTodayClick,
+            showTodayButton = showTodayButton,
             modifier = modifier,
         )
     }
@@ -99,20 +107,21 @@ private fun DayDateNavigator(
     onNavigateMonth: (Int) -> Unit,
     onNavigateYear: (Int) -> Unit,
     onTodayClick: () -> Unit,
+    showTodayButton: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val locale = Locale.getDefault()
-    val dayName = currentDate.dayOfWeek.getDisplayName(TextStyle.FULL, locale)
+    val dayName = currentDate.dayOfWeek.getDisplayName(TextStyle.SHORT, locale)
         .replaceFirstChar { it.titlecase(locale) }
     val dayNumber = currentDate.dayOfMonth.toString()
-    val monthName = currentDate.month.getDisplayName(TextStyle.FULL, locale)
+    val monthName = currentDate.month.getDisplayName(TextStyle.SHORT, locale)
         .replaceFirstChar { it.titlecase(locale) }
     val year = currentDate.year.toString()
 
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.Start,
     ) {
         // Day name (no controls)
         SegmentLabel(text = dayName)
@@ -144,7 +153,10 @@ private fun DayDateNavigator(
             nextDescription = stringResource(R.string.content_description_next_year),
         )
 
-        TodayButton(onClick = onTodayClick)
+        if (showTodayButton) {
+            Spacer(modifier = Modifier.weight(1f))
+            TodayButton(onClick = onTodayClick)
+        }
     }
 }
 
@@ -157,6 +169,7 @@ private fun WeekDateNavigator(
     onNavigateWeek: (Int) -> Unit,
     onNavigateYear: (Int) -> Unit,
     onTodayClick: () -> Unit,
+    showTodayButton: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val locale = Locale.getDefault()
@@ -168,7 +181,7 @@ private fun WeekDateNavigator(
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.Start,
     ) {
         SegmentLabel(text = weekLabel)
 
@@ -188,7 +201,10 @@ private fun WeekDateNavigator(
             nextDescription = stringResource(R.string.content_description_next_year),
         )
 
-        TodayButton(onClick = onTodayClick)
+        if (showTodayButton) {
+            Spacer(modifier = Modifier.weight(1f))
+            TodayButton(onClick = onTodayClick)
+        }
     }
 }
 
@@ -201,6 +217,7 @@ private fun MonthDateNavigator(
     onNavigateMonth: (Int) -> Unit,
     onNavigateYear: (Int) -> Unit,
     onTodayClick: () -> Unit,
+    showTodayButton: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val locale = Locale.getDefault()
@@ -211,7 +228,7 @@ private fun MonthDateNavigator(
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.Start,
     ) {
         NavSegment(
             label = monthName,
@@ -229,7 +246,10 @@ private fun MonthDateNavigator(
             nextDescription = stringResource(R.string.content_description_next_year),
         )
 
-        TodayButton(onClick = onTodayClick)
+        if (showTodayButton) {
+            Spacer(modifier = Modifier.weight(1f))
+            TodayButton(onClick = onTodayClick)
+        }
     }
 }
 
@@ -241,6 +261,7 @@ private fun YearDateNavigator(
     currentDate: LocalDate,
     onNavigateYear: (Int) -> Unit,
     onTodayClick: () -> Unit,
+    showTodayButton: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val year = currentDate.year.toString()
@@ -248,7 +269,7 @@ private fun YearDateNavigator(
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.Start,
     ) {
         NavSegment(
             label = year,
@@ -258,12 +279,15 @@ private fun YearDateNavigator(
             nextDescription = stringResource(R.string.content_description_next_year),
         )
 
-        TodayButton(onClick = onTodayClick)
+        if (showTodayButton) {
+            Spacer(modifier = Modifier.weight(1f))
+            TodayButton(onClick = onTodayClick)
+        }
     }
 }
 
 /**
- * A label segment without navigation controls.
+ * A label segment without navigation controls — fixed width for stability.
  */
 @Composable
 private fun SegmentLabel(text: String) {
@@ -274,11 +298,13 @@ private fun SegmentLabel(text: String) {
             fontSize = 14.sp,
         ),
         color = MaterialTheme.colorScheme.onSurface,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        modifier = Modifier.width(40.dp),
     )
 }
 
 /**
- * A segment with prev/next chevron buttons and a centered label.
+ * A segment with prev/next chevron buttons and a centered label with fixed width.
  */
 @Composable
 private fun NavSegment(
@@ -287,6 +313,7 @@ private fun NavSegment(
     onNext: () -> Unit,
     prevDescription: String,
     nextDescription: String,
+    labelWidth: androidx.compose.ui.unit.Dp = 44.dp,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -310,6 +337,8 @@ private fun NavSegment(
                 fontSize = 14.sp,
             ),
             color = MaterialTheme.colorScheme.onSurface,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier.width(labelWidth),
         )
 
         IconButton(
@@ -327,20 +356,20 @@ private fun NavSegment(
 }
 
 /**
- * Today button — outlined style with primary text.
+ * Today button — filled primary style to distinguish from navigation controls.
  */
 @Composable
 private fun TodayButton(onClick: () -> Unit) {
-    OutlinedButton(
+    Button(
         onClick = onClick,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        contentPadding = ButtonDefaults.ContentPadding,
+        modifier = Modifier.height(32.dp),
     ) {
         Text(
             text = stringResource(R.string.calendar_today),
             style = MaterialTheme.typography.labelMedium.copy(
                 fontWeight = FontWeight.SemiBold,
             ),
-            color = MaterialTheme.colorScheme.primary,
         )
     }
 }
@@ -408,3 +437,4 @@ private fun YearDateNavigatorPreview() {
         )
     }
 }
+

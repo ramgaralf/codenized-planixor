@@ -1,17 +1,27 @@
 package com.codenized.planixor.ui.calendar
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.codenized.planixor.R
 import com.codenized.planixor.domain.model.CalendarEventDisplay
 import com.codenized.planixor.model.CalendarView
 import com.codenized.planixor.ui.calendar.components.DayView
@@ -89,13 +99,32 @@ fun CalendarScreenContent(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        ViewSelector(
-            activeView = activeView,
-            onViewSelected = onViewSelected,
-        )
+        // Line 1: ViewSelector (left) + Today button (right, same style)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ViewSelector(
+                activeView = activeView,
+                onViewSelected = onViewSelected,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            androidx.compose.material3.OutlinedButton(
+                onClick = onTodayClick,
+                modifier = Modifier.height(40.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.calendar_today),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Line 2: DateNavigator — full width, no Today button
         DateNavigator(
             currentDate = currentDate,
             activeView = activeView,
@@ -104,6 +133,7 @@ fun CalendarScreenContent(
             onNavigateMonth = onNavigateMonth,
             onNavigateYear = onNavigateYear,
             onTodayClick = onTodayClick,
+            showTodayButton = false,
         )
 
         Spacer(modifier = Modifier.height(16.dp))

@@ -5,6 +5,10 @@ package com.codenized.planixor.ui.navigation
  */
 sealed class Screen(val route: String) {
     data object Calendar : Screen("calendar")
+    data object EventCreate : Screen("calendar/new")
+    data object EventEdit : Screen("calendar/{eventId}/edit") {
+        fun createRoute(eventId: String): String = "calendar/$eventId/edit"
+    }
     data object Shifts : Screen("shifts")
     data object ShiftCreate : Screen("shifts/new")
     data object ShiftEdit : Screen("shifts/{shiftId}/edit") {
