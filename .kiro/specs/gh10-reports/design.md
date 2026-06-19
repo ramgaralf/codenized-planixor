@@ -148,8 +148,8 @@ interface ReportsState {
 | Function | Signature | Purpose |
 |---|---|---|
 | `formatDuration` | `(totalMinutes: Int) → String` | Converts minutes to `"{X}h {Y}m"` |
-| `formatHoursComparison` | `(actualMinutes: Int, configuredHours: Int) → String` | Produces `"{A}h / {C}h"` where A = floor(actualMinutes/60), C = configuredHours. Used ONLY in Shift_Donut_Chart center text when Year mode + Annual_Hours_Config exists. |
-| `aggregateByType` | `(events[], period) → Map<typeId, totalMinutes>` | Groups events by eventTypeId, sums totalHours |
+| `formatHoursComparison` | `(actualMinutes: Int, configuredHours: Int) → String` | Produces `"{A}h {B}m /\n{C}h {D}m"` using `formatDuration` for both values. Used ONLY in Shift_Donut_Chart center text when Year mode + Annual_Hours_Config exists. Displayed on two lines inside the donut. |
+| `aggregateByType` | `(events[]) → Map<typeId, { totalMinutes, eventCount }>` | Groups events by eventTypeId, sums totalHours and counts events per type |
 | `computePercentages` | `(totalsMap, configuredHours?) → Map<typeId, percentage>` | Calculates % for donut chart |
 | `filterEventsForPeriod` | `(events[], startDate, endDate) → events[]` | Filters by startDay within range, isDeleted=false |
 
@@ -330,6 +330,7 @@ interface TypeAggregate {
   icon: string;
   backgroundColor: string;
   totalMinutes: number;
+  eventCount: number;
   percentage: number;
 }
 ```
