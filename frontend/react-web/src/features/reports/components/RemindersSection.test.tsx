@@ -67,12 +67,15 @@ describe('RemindersSection', () => {
 
       // Soft-deleted reminder still renders with last known metadata
       expect(screen.getByText('Take Medicine')).toBeInTheDocument();
-      expect(screen.getByText('3h 0m')).toBeInTheDocument();
-      expect(screen.getByText('💊')).toBeInTheDocument();
+      // "3h 0m" appears in bar chart row + table row
+      expect(screen.getAllByText('3h 0m').length).toBeGreaterThanOrEqual(1);
+      // 💊 appears multiple times (bar chart icon + table row icon)
+      expect(screen.getAllByText('💊').length).toBeGreaterThanOrEqual(1);
 
       // Active reminder also renders
       expect(screen.getByText('Workout')).toBeInTheDocument();
-      expect(screen.getByText('2h 0m')).toBeInTheDocument();
+      // "2h 0m" appears in bar chart row + table row
+      expect(screen.getAllByText('2h 0m').length).toBeGreaterThanOrEqual(1);
     });
 
     it('should render unknown fallback metadata when definition is completely missing', () => {
@@ -98,7 +101,8 @@ describe('RemindersSection', () => {
       );
 
       expect(screen.getByText('Unknown')).toBeInTheDocument();
-      expect(screen.getByText('❓')).toBeInTheDocument();
+      // ❓ appears multiple times (bar chart icon + table row icon)
+      expect(screen.getAllByText('❓').length).toBeGreaterThanOrEqual(1);
       // "1h 30m" appears multiple times (donut center + table row + total row)
       expect(screen.getAllByText('1h 30m').length).toBeGreaterThanOrEqual(1);
     });

@@ -201,10 +201,35 @@ private fun ShiftsSection(
         ReportMode.YEAR -> shifts // descending by hours (already sorted)
     }
 
-    // Determine donut center text
-    val showDonut = totalShiftMinutes > 0
-    val centerText = if (mode == ReportMode.YEAR && annualConfig != null) {
-        formatHoursComparison(totalShiftMinutes, annualConfig.configuredHours)
+    val useComparison = mode == ReportMode.YEAR && annualConfig != null
+    val configuredMinutes = if (useComparison) annualConfig!!.configuredHours * 60 else 0
+
+    // Build donut data: add "remaining" segment when annual config exists and total < configured
+    val donutData: List<TypeAggregate>
+    val donutTotalMinutes: Int
+
+    if (useComparison && totalShiftMinutes < configuredMinutes) {
+        val remainingMinutes = configuredMinutes - totalShiftMinutes
+        donutData = sortedForBar + TypeAggregate(
+            typeId = "__remaining__",
+            name = "Remaining",
+            icon = "",
+            backgroundColor = "#E5E7EB",
+            totalMinutes = remainingMinutes,
+            percentage = 0.0,
+        )
+        donutTotalMinutes = configuredMinutes
+    } else if (useComparison) {
+        donutData = sortedForBar
+        donutTotalMinutes = totalShiftMinutes
+    } else {
+        donutData = sortedForBar
+        donutTotalMinutes = totalShiftMinutes
+    }
+
+    val showDonut = donutTotalMinutes > 0
+    val centerText = if (useComparison) {
+        formatHoursComparison(totalShiftMinutes, annualConfig!!.configuredHours)
     } else {
         formatDuration(totalShiftMinutes)
     }
@@ -220,8 +245,8 @@ private fun ShiftsSection(
             Spacer(modifier = Modifier.height(16.dp))
 
             ReportDonutChart(
-                data = sortedForBar,
-                totalMinutes = totalShiftMinutes,
+                data = donutData,
+                totalMinutes = donutTotalMinutes,
                 centerText = centerText,
             )
         }

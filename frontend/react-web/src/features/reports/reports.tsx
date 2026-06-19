@@ -6,6 +6,8 @@ import { useReportsStore } from '@/stores/reportsStore';
 import { TimeRangeSelector } from './components/TimeRangeSelector';
 import { DateNavigator } from './components/DateNavigator';
 import { EmptyState } from './components/EmptyState';
+import { ShiftsSection } from './components/ShiftsSection';
+import { RemindersSection } from './components/RemindersSection';
 import { AnnualConfigModal } from './components/AnnualConfigModal';
 import { useReportData } from './hooks/useReportData';
 import { useAnnualConfig } from './hooks/useAnnualConfig';
@@ -105,15 +107,20 @@ export const Reports = () => {
             )}
 
             {reportData.shifts.length > 0 && (
-              <section aria-label={t('reports.shiftsSection', { defaultValue: 'Shifts' })}>
-                {/* ShiftsSection component will be rendered here (task 4.6) */}
-              </section>
+              <ShiftsSection
+                data={reportData.shifts}
+                totalMinutes={reportData.totalShiftMinutes}
+                mode={mode}
+                annualConfig={reportData.annualConfig}
+              />
             )}
 
             {reportData.reminders.length > 0 && (
-              <section aria-label={t('reports.remindersSection', { defaultValue: 'Reminders' })}>
-                {/* RemindersSection component will be rendered here (task 4.6) */}
-              </section>
+              <RemindersSection
+                data={reportData.reminders}
+                totalMinutes={reportData.totalReminderMinutes}
+                mode={mode}
+              />
             )}
           </>
         )}

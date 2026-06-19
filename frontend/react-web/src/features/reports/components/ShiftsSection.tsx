@@ -24,13 +24,42 @@ export const ShiftsSection = ({
   annualConfig,
 }: ShiftsSectionProps) => {
   const { t } = useTranslation();
+
+  const useComparison = mode === 'year' && annualConfig != null;
+  const configuredMinutes = useComparison
+    ? annualConfig!.configuredHours * 60
+    : 0;
+
+  // Build donut data with "remaining" segment when annual config exists in year mode
+  let donutSourceData: typeof data;
+  let donutTotalMinutes: number;
+
+  if (useComparison && totalMinutes < configuredMinutes) {
+    const remainingMinutes = configuredMinutes - totalMinutes;
+    donutSourceData = [
+      ...data,
+      {
+        typeId: '__remaining__',
+        name: 'Remaining',
+        icon: '',
+        backgroundColor: '#E5E7EB',
+        totalMinutes: remainingMinutes,
+        percentage: 0,
+      },
+    ];
+    donutTotalMinutes = configuredMinutes;
+  } else {
+    donutSourceData = data;
+    donutTotalMinutes = totalMinutes;
+  }
+
   const percentages = new Map(
-    data.map((item) => [item.typeId, item.percentage]),
+    donutSourceData.map((item) => [item.typeId, item.percentage]),
   );
   const donutSegments = computeDonutSegments(percentages);
 
   const donutData = donutSegments.map((segment) => {
-    const original = data.find((d) => d.typeId === segment.typeId);
+    const original = donutSourceData.find((d) => d.typeId === segment.typeId);
     return {
       typeId: segment.typeId,
       name: original?.name ?? '',
@@ -40,9 +69,6 @@ export const ShiftsSection = ({
       percentage: segment.percentage,
     };
   });
-
-  const useComparison =
-    mode === 'year' && annualConfig != null;
 
   const centerText = useComparison
     ? formatHoursComparison(totalMinutes, annualConfig!.configuredHours)
@@ -60,7 +86,7 @@ export const ShiftsSection = ({
       <HorizontalBarChart data={data} />
       <DonutChart
         data={donutData}
-        totalMinutes={totalMinutes}
+        totalMinutes={donutTotalMinutes}
         centerText={centerText}
       />
       <ReportTable
