@@ -1,6 +1,7 @@
 import Dexie from 'dexie';
 
 import type { CalendarEvent } from '@features/calendar-events/models';
+import type { AnnualHoursConfig } from '@features/reports/models';
 import type { Shift } from '@features/shifts/models';
 import type { Reminder } from '@features/reminders/models';
 
@@ -24,6 +25,7 @@ export class PlanixorDatabase extends Dexie {
   calendarEvents!: Dexie.Table<CalendarEvent, string>;
   shifts!: Dexie.Table<Shift, string>;
   reminders!: Dexie.Table<Reminder, string>;
+  annualHoursConfig!: Dexie.Table<AnnualHoursConfig, string>;
 
   constructor() {
     super('planixor');
@@ -66,6 +68,13 @@ export class PlanixorDatabase extends Dexie {
       // v4 calendarEvents schema used `day` field (single day). v5 introduces `startDay`, `endDay`, `totalHours`.
       // No user data exists in any deployed environment. Clear and start fresh.
       return tx.table('calendarEvents').clear();
+    });
+
+    this.version(6).stores({
+      calendarEvents: 'id, startDay, endDay, [startDay+eventType+isDeleted], eventType, isDeleted, modifiedAt',
+      shifts: 'id, createdAt, isDeleted, isActive',
+      reminders: 'id, createdAt, isDeleted, isActive',
+      annualHoursConfig: 'id, year, isDeleted, modifiedAt',
     });
   }
 }

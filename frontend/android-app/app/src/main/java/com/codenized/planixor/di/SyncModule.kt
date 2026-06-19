@@ -1,6 +1,10 @@
 package com.codenized.planixor.di
 
+import com.codenized.planixor.data.local.AnnualHoursConfigRepository
 import com.codenized.planixor.data.local.CalendarEventDao
+import com.codenized.planixor.data.sync.AnnualHoursConfigSyncAdapter
+import com.codenized.planixor.data.sync.AnnualHoursConfigSyncApiService
+import com.codenized.planixor.data.sync.AnnualHoursConfigSyncManager
 import com.codenized.planixor.data.sync.CalendarEventSyncAdapter
 import com.codenized.planixor.data.sync.CalendarEventSyncApiService
 import com.codenized.planixor.data.sync.ReminderSyncManager
@@ -33,10 +37,26 @@ object SyncModule {
 
     @Provides
     @Singleton
+    fun provideAnnualHoursConfigSyncManager(): AnnualHoursConfigSyncManager {
+        return AnnualHoursConfigSyncManager()
+    }
+
+    @Provides
+    @Singleton
     fun provideCalendarEventSyncAdapter(
         calendarEventDao: CalendarEventDao,
         syncApiService: CalendarEventSyncApiService,
     ): CalendarEventSyncAdapter {
         return CalendarEventSyncAdapter(calendarEventDao, syncApiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnnualHoursConfigSyncAdapter(
+        repository: AnnualHoursConfigRepository,
+        syncApiService: AnnualHoursConfigSyncApiService,
+        syncManager: AnnualHoursConfigSyncManager,
+    ): AnnualHoursConfigSyncAdapter {
+        return AnnualHoursConfigSyncAdapter(repository, syncApiService, syncManager)
     }
 }
