@@ -33,6 +33,7 @@ export const RemindersSection = ({
       icon: original?.icon ?? '',
       backgroundColor: original?.backgroundColor ?? '#6B7280',
       totalMinutes: original?.totalMinutes ?? 0,
+      eventCount: original?.eventCount ?? 0,
       percentage: segment.percentage,
     };
   });
