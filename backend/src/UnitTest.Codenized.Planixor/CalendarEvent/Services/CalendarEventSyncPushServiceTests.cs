@@ -140,6 +140,7 @@ public sealed class CalendarEventSyncPushServiceTests
             960,
             480,
             "Old notes",
+            "[]",
             olderTimestamp,
             false);
 
@@ -196,6 +197,7 @@ public sealed class CalendarEventSyncPushServiceTests
             960,
             480,
             "Current notes",
+            "[]",
             newerTimestamp,
             false);
 
