@@ -35,14 +35,33 @@
 
     <!-- Reports -->
     <string name="reports_title">Reports</string>
-    <string name="reports_empty_state">No records available for the selected period</string>
+    <string name="reports_empty_state">No data to display</string>
     <string name="reports_total_hours">Total hours</string>
+    <string name="reports_total_label">Total</string>
+    <string name="reports_configured_hours_label">Configured hours</string>
+    <string name="reports_difference_label">Difference</string>
+    <string name="reports_shifts_section">Shifts</string>
+    <string name="reports_reminders_section">Reminders</string>
     <string name="reports_hours_per_day">Hours per day</string>
     <string name="reports_hours_per_week">Hours per week</string>
     <string name="reports_hours_per_month">Hours per month</string>
     <string name="reports_shift_morning">Morning</string>
     <string name="reports_shift_afternoon">Afternoon</string>
     <string name="reports_shift_night">Night</string>
+    <string name="reports_mode_month">Month</string>
+    <string name="reports_mode_year">Year</string>
+    <string name="reports_navigate_previous">Previous period</string>
+    <string name="reports_navigate_next">Next period</string>
+
+    <!-- Annual Config Dialog -->
+    <string name="annual_config_title">Configure annual hours</string>
+    <string name="annual_config_subtitle">Year %1$d</string>
+    <string name="annual_config_input_label">Annual hours</string>
+    <string name="annual_config_input_placeholder">1800</string>
+    <string name="annual_config_range_error">Value must be between 1 and 8,784</string>
+    <string name="annual_config_save">Save</string>
+    <string name="annual_config_cancel">Cancel</string>
+    <string name="annual_config_button">Configure annual hours</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

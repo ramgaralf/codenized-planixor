@@ -35,6 +35,11 @@ public sealed class ApplicationWriteContext : DbContext, IApplicationContext
     /// </summary>
     public DbSet<CalendarEvent> CalendarEvents => this.Set<CalendarEvent>();
 
+    /// <summary>
+    /// Gets annual hours configs.
+    /// </summary>
+    public DbSet<AnnualHoursConfig> AnnualHoursConfigs => this.Set<AnnualHoursConfig>();
+
     /// <summary>On model creating.</summary>
     /// <param name="modelBuilder">Model builder.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -85,7 +85,26 @@
     "totalHours": "Total de horas",
     "shiftMorning": "Mañana",
     "shiftAfternoon": "Tarde",
-    "shiftNight": "Noche"
+    "shiftNight": "Noche",
+    "timeRangeSelector": "Selector de rango de tiempo",
+    "dateNavigation": "Navegación de fecha del informe",
+    "loading": "Cargando...",
+    "shiftsSection": "Turnos",
+    "remindersSection": "Recordatorios",
+    "emptyState": "Sin datos para mostrar",
+    "today": "Hoy",
+    "table": {
+      "label": "Desglose del informe",
+      "total": "Total",
+      "configured": "Configurado",
+      "difference": "Diferencia"
+    },
+    "annualConfig": {
+      "button": "Config anual",
+      "title": "Horas anuales — {{year}}",
+      "label": "Horas de trabajo configuradas",
+      "rangeError": "El valor debe estar entre 1 y 8.784"
+    }
   },
   "settings": {
     "title": "Ajustes",

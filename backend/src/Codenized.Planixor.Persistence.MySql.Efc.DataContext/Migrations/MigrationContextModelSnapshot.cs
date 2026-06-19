@@ -19,6 +19,48 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                 .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("Codenized.Planixor.Core.Entities.AnnualHoursConfig", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("ConfiguredHours")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("SyncedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_AnnualHoursConfigs_UserId");
+
+                    b.HasIndex("UserId", "ModifiedAt")
+                        .HasDatabaseName("IX_AnnualHoursConfigs_UserId_ModifiedAt");
+
+                    b.HasIndex("UserId", "Year")
+                        .IsUnique()
+                        .HasDatabaseName("IX_AnnualHoursConfigs_UserId_Year")
+                        .HasFilter("IsDeleted = 0");
+
+                    b.ToTable("AnnualHoursConfigs", (string)null);
+                });
+
             modelBuilder.Entity("Codenized.Planixor.Core.Entities.CalendarEvent", b =>
                 {
                     b.Property<Guid>("Id")

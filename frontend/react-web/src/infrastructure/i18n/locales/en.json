@@ -85,7 +85,26 @@
     "totalHours": "Total hours",
     "shiftMorning": "Morning",
     "shiftAfternoon": "Afternoon",
-    "shiftNight": "Night"
+    "shiftNight": "Night",
+    "timeRangeSelector": "Time range selector",
+    "dateNavigation": "Report date navigation",
+    "loading": "Loading...",
+    "shiftsSection": "Shifts",
+    "remindersSection": "Reminders",
+    "emptyState": "No data to display",
+    "today": "Today",
+    "table": {
+      "label": "Report breakdown",
+      "total": "Total",
+      "configured": "Configured",
+      "difference": "Difference"
+    },
+    "annualConfig": {
+      "button": "Annual config",
+      "title": "Annual hours — {{year}}",
+      "label": "Configured working hours",
+      "rangeError": "Value must be between 1 and 8,784"
+    }
   },
   "settings": {
     "title": "Settings",

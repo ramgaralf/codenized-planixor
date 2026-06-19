@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,7 +49,9 @@ import com.codenized.planixor.ui.calendar.CalendarScreen
 import com.codenized.planixor.ui.calendar.CalendarViewModel
 import com.codenized.planixor.ui.calendar.EventFormScreen
 import com.codenized.planixor.ui.calendar.EventFormUiState
+import com.codenized.planixor.ui.reports.ReportMode
 import com.codenized.planixor.ui.reports.ReportsScreen
+import com.codenized.planixor.ui.reports.ReportsViewModel
 import com.codenized.planixor.ui.settings.SettingsScreen
 import com.codenized.planixor.ui.shifts.ShiftFormScreen
 import com.codenized.planixor.ui.shifts.ShiftsScreen
@@ -70,6 +73,23 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Observe ReportsViewModel mode when on Reports screen for top bar config button
+    val isOnReportsScreen = currentRoute == Screen.Reports.route
+
+    // Wrap in a composable helper to properly handle conditional ViewModel retrieval
+    val isReportsYearMode = isOnReportsScreen && navBackStackEntry != null
+    val reportsViewModel: ReportsViewModel? = if (isReportsYearMode) {
+        hiltViewModel<ReportsViewModel>(navBackStackEntry!!)
+    } else {
+        null
+    }
+    val showAnnualConfigButton = if (reportsViewModel != null) {
+        val state by reportsViewModel.uiState.collectAsStateWithLifecycle()
+        state.mode == ReportMode.YEAR
+    } else {
+        false
+    }
 
     val pageTitle = when {
         currentRoute == Screen.Calendar.route -> stringResource(R.string.nav_calendar)
@@ -218,6 +238,25 @@ fun AppNavigation() {
                                 Icon(
                                     imageVector = Icons.Outlined.Add,
                                     contentDescription = stringResource(R.string.reminder_new_reminder),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                    }
+                    // Annual config button (only on Reports screen in Year mode)
+                    if (showAnnualConfigButton) {
+                        IconButton(onClick = { reportsViewModel?.openConfigDialog() }) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(PrimaryBlue),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Settings,
+                                    contentDescription = stringResource(R.string.annual_config_button),
                                     tint = Color.White,
                                     modifier = Modifier.size(18.dp),
                                 )

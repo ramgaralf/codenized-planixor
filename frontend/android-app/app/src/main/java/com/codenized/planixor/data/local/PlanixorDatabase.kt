@@ -17,14 +17,15 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * - Free (anonymous) users: sync is inactive; all data remains local-only on this device.
  */
 @Database(
-    entities = [CalendarEventEntity::class, ShiftEntity::class, ReminderEntity::class],
-    version = 5,
+    entities = [CalendarEventEntity::class, ShiftEntity::class, ReminderEntity::class, AnnualHoursConfigEntity::class],
+    version = 6,
     exportSchema = false,
 )
 abstract class PlanixorDatabase : RoomDatabase() {
     abstract fun calendarEventDao(): CalendarEventDao
     abstract fun shiftDao(): ShiftDao
     abstract fun reminderDao(): ReminderDao
+    abstract fun annualHoursConfigDao(): AnnualHoursConfigDao
 
     companion object {
         /**
@@ -127,6 +128,36 @@ abstract class PlanixorDatabase : RoomDatabase() {
                 )
                 db.execSQL(
                     "CREATE INDEX IF NOT EXISTS `index_calendar_events_eventType` ON `calendar_events` (`eventType`)"
+                )
+            }
+        }
+
+        /**
+         * Migration from version 5 to 6:
+         * Creates the annual_hours_config table for storing annual working hours targets.
+         * Used by the Reports feature to compare actual hours vs configured hours.
+         */
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `annual_hours_config` (
+                        `id` TEXT NOT NULL,
+                        `year` INTEGER NOT NULL,
+                        `configuredHours` INTEGER NOT NULL,
+                        `modifiedAt` INTEGER NOT NULL,
+                        `syncedAt` INTEGER,
+                        `isDeleted` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent()
+                )
+
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_annual_hours_config_year_isDeleted` ON `annual_hours_config` (`year`, `isDeleted`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_annual_hours_config_modifiedAt` ON `annual_hours_config` (`modifiedAt`)"
                 )
             }
         }

@@ -2,6 +2,7 @@ package com.codenized.planixor.di
 
 import android.content.Context
 import androidx.room.Room
+import com.codenized.planixor.data.local.AnnualHoursConfigDao
 import com.codenized.planixor.data.local.CalendarEventDao
 import com.codenized.planixor.data.local.PlanixorDatabase
 import com.codenized.planixor.data.local.ReminderDao
@@ -30,7 +31,7 @@ object DatabaseModule {
             PlanixorDatabase::class.java,
             "planixor_database",
         )
-            .addMigrations(PlanixorDatabase.MIGRATION_3_4, PlanixorDatabase.MIGRATION_4_5)
+            .addMigrations(PlanixorDatabase.MIGRATION_3_4, PlanixorDatabase.MIGRATION_4_5, PlanixorDatabase.MIGRATION_5_6)
             .fallbackToDestructiveMigration()
             .build()
     }
@@ -51,5 +52,11 @@ object DatabaseModule {
     @Singleton
     fun provideReminderDao(database: PlanixorDatabase): ReminderDao {
         return database.reminderDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnnualHoursConfigDao(database: PlanixorDatabase): AnnualHoursConfigDao {
+        return database.annualHoursConfigDao()
     }
 }

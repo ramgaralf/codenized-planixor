@@ -24,4 +24,9 @@ public interface IApplicationContext
     /// Gets calendar events.
     /// </summary>
     DbSet<CalendarEvent> CalendarEvents { get; }
+
+    /// <summary>
+    /// Gets annual hours configs.
+    /// </summary>
+    DbSet<AnnualHoursConfig> AnnualHoursConfigs { get; }
 }

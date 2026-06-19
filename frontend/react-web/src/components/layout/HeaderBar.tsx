@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Plus, User } from 'lucide-react';
+import { Bell, Plus, Settings, User } from 'lucide-react';
 
 import { useCalendarStore } from '@/stores/calendarStore';
+import { useReportsStore } from '@/stores/reportsStore';
 
 import styles from './HeaderBar.module.css';
 
@@ -20,10 +21,14 @@ export const HeaderBar = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const openCreateForm = useCalendarStore((state) => state.openCreateForm);
+  const reportMode = useReportsStore((state) => state.mode);
+  const openConfigModal = useReportsStore((state) => state.openConfigModal);
   const pageTitle = t(getPageTitleKey(pathname));
   const isCalendar = pathname === '/';
   const isShiftsList = pathname === '/shifts';
   const isRemindersList = pathname === '/reminders';
+  const isReports = pathname === '/reports';
+  const showAnnualConfigButton = isReports && reportMode === 'year';
 
   return (
     <header className={styles.headerBar}>
@@ -65,6 +70,18 @@ export const HeaderBar = () => {
           >
             <Plus size={16} aria-hidden="true" />
             {t('reminder.newReminder')}
+          </button>
+        )}
+
+        {showAnnualConfigButton && (
+          <button
+            className={styles.newEventButton}
+            type="button"
+            onClick={openConfigModal}
+            aria-label={t('reports.annualConfig.button', { defaultValue: 'Annual hours configuration' })}
+          >
+            <Settings size={16} aria-hidden="true" />
+            {t('reports.annualConfig.button', { defaultValue: 'Annual config' })}
           </button>
         )}
 
