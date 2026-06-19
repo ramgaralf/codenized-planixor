@@ -19,6 +19,7 @@ data class DonutSegment(
  * @param icon the emoji icon for the event type
  * @param backgroundColor the hex color for rendering
  * @param totalMinutes the total hours (in minutes) for this type
+ * @param eventCount the number of calendar events of this type
  * @param percentage the computed percentage for chart display
  */
 data class TypeAggregate(
@@ -27,5 +28,6 @@ data class TypeAggregate(
     val icon: String,
     val backgroundColor: String,
     val totalMinutes: Int,
+    val eventCount: Int,
     val percentage: Double,
 )

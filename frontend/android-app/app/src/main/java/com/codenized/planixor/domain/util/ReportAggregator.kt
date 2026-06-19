@@ -28,11 +28,10 @@ fun formatDuration(totalMinutes: Int): String {
  *
  * @param actualMinutes total actual minutes worked
  * @param configuredHours the configured annual working hours (whole hours)
- * @return formatted string, e.g. "150h / 1800h"
+ * @return formatted string, e.g. "150h 0m / 1800h 0m"
  */
 fun formatHoursComparison(actualMinutes: Int, configuredHours: Int): String {
-    val actualHours = actualMinutes / 60
-    return "${actualHours}h / ${configuredHours}h"
+    return "${formatDuration(actualMinutes)} /\n${formatDuration(configuredHours * 60)}"
 }
 
 /**
@@ -74,14 +73,28 @@ fun filterEventsForPeriod(
 }
 
 /**
- * Groups events by eventTypeId and sums their totalHours (in minutes).
+ * Aggregated data per event type: total minutes and event count.
+ */
+data class TypeTotals(
+    val totalMinutes: Int,
+    val eventCount: Int,
+)
+
+/**
+ * Groups events by eventTypeId and sums their totalHours (in minutes),
+ * also counting the number of events per type.
  *
  * @param events the filtered list of calendar events
- * @return map of eventTypeId to total minutes for that type
+ * @return map of eventTypeId to TypeTotals (totalMinutes + eventCount)
  */
-fun aggregateByType(events: List<CalendarEvent>): Map<String, Int> {
+fun aggregateByType(events: List<CalendarEvent>): Map<String, TypeTotals> {
     return events.groupBy { it.eventTypeId }
-        .mapValues { (_, typeEvents) -> typeEvents.sumOf { it.totalHours } }
+        .mapValues { (_, typeEvents) ->
+            TypeTotals(
+                totalMinutes = typeEvents.sumOf { it.totalHours },
+                eventCount = typeEvents.size,
+            )
+        }
 }
 
 /**
@@ -90,12 +103,12 @@ fun aggregateByType(events: List<CalendarEvent>): Map<String, Int> {
  * Without configuredHours: each type's percentage = (typeMinutes / grandTotal) * 100
  * With configuredHours: each type's percentage = (typeMinutes / (configuredHours * 60)) * 100
  *
- * @param totalsMap map of typeId to total minutes
+ * @param totalsMap map of typeId to TypeTotals (totalMinutes + eventCount)
  * @param configuredHours optional annual configured hours (null means relative to grand total)
  * @return map of typeId to percentage value
  */
 fun computePercentages(
-    totalsMap: Map<String, Int>,
+    totalsMap: Map<String, TypeTotals>,
     configuredHours: Int? = null,
 ): Map<String, Double> {
     if (totalsMap.isEmpty()) return emptyMap()
@@ -103,13 +116,13 @@ fun computePercentages(
     val denominator = if (configuredHours != null) {
         configuredHours.toDouble() * 60.0
     } else {
-        totalsMap.values.sum().toDouble()
+        totalsMap.values.sumOf { it.totalMinutes }.toDouble()
     }
 
     if (denominator == 0.0) return totalsMap.mapValues { 0.0 }
 
-    return totalsMap.mapValues { (_, minutes) ->
-        (minutes.toDouble() / denominator) * 100.0
+    return totalsMap.mapValues { (_, data) ->
+        (data.totalMinutes.toDouble() / denominator) * 100.0
     }
 }
 

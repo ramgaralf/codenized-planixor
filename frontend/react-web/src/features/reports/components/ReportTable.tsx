@@ -34,15 +34,33 @@ const NAME_STYLE: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
+const COUNT_STYLE: React.CSSProperties = {
+  fontSize: '14px',
+  fontWeight: 500,
+  color: 'var(--color-text-secondary)',
+  whiteSpace: 'nowrap',
+  textAlign: 'left',
+  minWidth: '32px',
+  flexShrink: 0,
+};
+
 const HOURS_STYLE: React.CSSProperties = {
   fontSize: '14px',
   fontWeight: 600,
   color: 'var(--color-text-primary)',
   whiteSpace: 'nowrap',
+  minWidth: '80px',
+  textAlign: 'right',
+  flexShrink: 0,
 };
 
 const SUMMARY_NAME_STYLE: React.CSSProperties = {
   ...NAME_STYLE,
+  fontWeight: 600,
+};
+
+const SUMMARY_COUNT_STYLE: React.CSSProperties = {
+  ...COUNT_STYLE,
   fontWeight: 600,
 };
 
@@ -55,6 +73,8 @@ export const ReportTable = ({ data, totalMinutes, annualConfig }: ReportTablePro
   const totalLabel = t('reports.table.total', { defaultValue: 'Total' });
   const configuredLabel = t('reports.table.configured', { defaultValue: 'Configured' });
   const differenceLabel = t('reports.table.difference', { defaultValue: 'Difference' });
+
+  const totalEventCount = data.reduce((sum, item) => sum + item.eventCount, 0);
 
   const differenceMinutes = annualConfig
     ? totalMinutes - annualConfig.configuredHours * 60
@@ -71,6 +91,9 @@ export const ReportTable = ({ data, totalMinutes, annualConfig }: ReportTablePro
           <span role="cell" style={NAME_STYLE}>
             {item.name}
           </span>
+          <span role="cell" style={COUNT_STYLE}>
+            {item.eventCount}
+          </span>
           <span role="cell" style={HOURS_STYLE}>
             {formatDuration(item.totalMinutes)}
           </span>
@@ -78,11 +101,12 @@ export const ReportTable = ({ data, totalMinutes, annualConfig }: ReportTablePro
       ))}
 
       <div role="row" style={{ ...ROW_STYLE, borderBottom: annualConfig ? '1px solid var(--color-border)' : 'none' }}>
-        <span role="cell" style={ICON_STYLE} aria-hidden="true">
-          —
-        </span>
+        <span role="cell" style={ICON_STYLE} aria-hidden="true" />
         <span role="cell" style={SUMMARY_NAME_STYLE}>
           {totalLabel}
+        </span>
+        <span role="cell" style={SUMMARY_COUNT_STYLE}>
+          {totalEventCount}
         </span>
         <span role="cell" style={HOURS_STYLE}>
           {formatDuration(totalMinutes)}
@@ -92,24 +116,22 @@ export const ReportTable = ({ data, totalMinutes, annualConfig }: ReportTablePro
       {annualConfig && (
         <>
           <div role="row" style={ROW_STYLE}>
-            <span role="cell" style={ICON_STYLE} aria-hidden="true">
-              —
-            </span>
+            <span role="cell" style={ICON_STYLE} aria-hidden="true" />
             <span role="cell" style={SUMMARY_NAME_STYLE}>
               {configuredLabel}
             </span>
+            <span role="cell" style={COUNT_STYLE} />
             <span role="cell" style={HOURS_STYLE}>
-              {`${annualConfig.configuredHours}h 0m`}
+              {formatDuration(annualConfig.configuredHours * 60)}
             </span>
           </div>
 
           <div role="row" style={{ ...ROW_STYLE, borderBottom: 'none' }}>
-            <span role="cell" style={ICON_STYLE} aria-hidden="true">
-              —
-            </span>
+            <span role="cell" style={ICON_STYLE} aria-hidden="true" />
             <span role="cell" style={SUMMARY_NAME_STYLE}>
               {differenceLabel}
             </span>
+            <span role="cell" style={COUNT_STYLE} />
             <span
               role="cell"
               style={{
@@ -117,7 +139,7 @@ export const ReportTable = ({ data, totalMinutes, annualConfig }: ReportTablePro
                 color: isSurplus ? SURPLUS_COLOR : DEFICIT_COLOR,
               }}
             >
-              {formatDuration(Math.abs(differenceMinutes))}
+              {`${isSurplus ? '+' : '-'}${formatDuration(Math.abs(differenceMinutes))}`}
             </span>
           </div>
         </>

@@ -216,6 +216,7 @@ private fun ShiftsSection(
             icon = "",
             backgroundColor = "#E5E7EB",
             totalMinutes = remainingMinutes,
+            eventCount = 0,
             percentage = 0.0,
         )
         donutTotalMinutes = configuredMinutes
@@ -360,8 +361,8 @@ private fun ReportsContentWithShiftsOnlyPreview() {
             uiState = ReportsUiState(
                 reportData = ReportData(
                     shifts = listOf(
-                        TypeAggregate("1", "Morning", "☀️", "#10B981", 480, 60.0),
-                        TypeAggregate("2", "Night", "🌙", "#2563EB", 320, 40.0),
+                        TypeAggregate("1", "Morning", "☀️", "#10B981", 480, 5, 60.0),
+                        TypeAggregate("2", "Night", "🌙", "#2563EB", 320, 3, 40.0),
                     ),
                     reminders = emptyList(),
                     totalShiftMinutes = 800,
@@ -385,11 +386,11 @@ private fun ReportsContentFullPreview() {
             uiState = ReportsUiState(
                 reportData = ReportData(
                     shifts = listOf(
-                        TypeAggregate("1", "Morning", "☀️", "#10B981", 480, 60.0),
-                        TypeAggregate("2", "Night", "🌙", "#2563EB", 320, 40.0),
+                        TypeAggregate("1", "Morning", "☀️", "#10B981", 480, 5, 60.0),
+                        TypeAggregate("2", "Night", "🌙", "#2563EB", 320, 3, 40.0),
                     ),
                     reminders = listOf(
-                        TypeAggregate("3", "Exercise", "🏃", "#F97316", 120, 100.0),
+                        TypeAggregate("3", "Exercise", "🏃", "#F97316", 120, 4, 100.0),
                     ),
                     totalShiftMinutes = 800,
                     totalReminderMinutes = 120,

@@ -137,6 +137,7 @@ private fun HorizontalBarChartPreview() {
                     icon = "☀️",
                     backgroundColor = "#10B981",
                     totalMinutes = 480,
+                    eventCount = 5,
                     percentage = 60.0,
                 ),
                 TypeAggregate(
@@ -145,6 +146,7 @@ private fun HorizontalBarChartPreview() {
                     icon = "🌤️",
                     backgroundColor = "#7C3AED",
                     totalMinutes = 240,
+                    eventCount = 3,
                     percentage = 30.0,
                 ),
                 TypeAggregate(
@@ -153,6 +155,7 @@ private fun HorizontalBarChartPreview() {
                     icon = "🌙",
                     backgroundColor = "#2563EB",
                     totalMinutes = 80,
+                    eventCount = 1,
                     percentage = 10.0,
                 ),
             ),

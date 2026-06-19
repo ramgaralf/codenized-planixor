@@ -45,6 +45,7 @@ describe('RemindersSection', () => {
           icon: '💊',
           backgroundColor: '#EF4444',
           totalMinutes: 180,
+          eventCount: 6,
           percentage: 60,
         },
         {
@@ -53,6 +54,7 @@ describe('RemindersSection', () => {
           icon: '🏋️',
           backgroundColor: '#10B981',
           totalMinutes: 120,
+          eventCount: 4,
           percentage: 40,
         },
       ];
@@ -88,6 +90,7 @@ describe('RemindersSection', () => {
           icon: '❓',
           backgroundColor: '#6B7280',
           totalMinutes: 90,
+          eventCount: 3,
           percentage: 100,
         },
       ];

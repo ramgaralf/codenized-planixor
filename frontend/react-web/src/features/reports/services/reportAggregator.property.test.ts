@@ -13,6 +13,7 @@ import {
   computeDonutSegments,
   sortByTotalDescending,
 } from './reportAggregator';
+import type { TypeTotals } from './reportAggregator';
 
 /**
  * Property-based tests for the report aggregation engine.
@@ -165,7 +166,7 @@ describe('reportAggregator — property tests (Properties 1–6)', () => {
             const result = aggregateByType(events);
 
             const sumOfPerTypeTotals = Array.from(result.values()).reduce(
-              (sum, val) => sum + val,
+              (sum, val) => sum + val.totalMinutes,
               0,
             );
             const sumOfAllEvents = events.reduce(
@@ -195,7 +196,7 @@ describe('reportAggregator — property tests (Properties 1–6)', () => {
           fc.tuple(fc.uuid(), positiveMinutesArb),
           { minLength: 1, maxLength: 10 },
         )
-        .map((entries) => new Map(entries));
+        .map((entries) => new Map(entries.map(([id, mins]) => [id, { totalMinutes: mins, eventCount: 1 }])));
 
       fc.assert(
         fc.property(totalsMapArb, (totalsMap) => {
@@ -225,6 +226,7 @@ describe('reportAggregator — property tests (Properties 1–6)', () => {
       icon: fc.constant('🏢'),
       backgroundColor: fc.constant('#2563EB'),
       totalMinutes: fc.nat({ max: 100000 }),
+      eventCount: fc.nat({ max: 100 }),
       percentage: fc.double({ min: 0, max: 100, noNaN: true }),
     }) as fc.Arbitrary<TypeAggregate>;
 
@@ -269,9 +271,9 @@ describe('reportAggregator — Property Tests (Properties 9–11)', () => {
             return smallPercentage > 0 && smallPercentage < 1;
           }),
           ({ dominantMinutes, smallMinutes }) => {
-            const totalsMap = new Map<string, number>([
-              ['dominant', dominantMinutes],
-              ['small', smallMinutes],
+            const totalsMap = new Map<string, TypeTotals>([
+              ['dominant', { totalMinutes: dominantMinutes, eventCount: 1 }],
+              ['small', { totalMinutes: smallMinutes, eventCount: 1 }],
             ]);
 
             const percentages = computePercentages(totalsMap);
@@ -291,9 +293,9 @@ describe('reportAggregator — Property Tests (Properties 9–11)', () => {
         fc.property(
           fc.integer({ min: 1, max: 100000 }),
           (dominantMinutes) => {
-            const totalsMap = new Map<string, number>([
-              ['dominant', dominantMinutes],
-              ['zero', 0],
+            const totalsMap = new Map<string, TypeTotals>([
+              ['dominant', { totalMinutes: dominantMinutes, eventCount: 1 }],
+              ['zero', { totalMinutes: 0, eventCount: 0 }],
             ]);
 
             const percentages = computePercentages(totalsMap);
@@ -318,9 +320,9 @@ describe('reportAggregator — Property Tests (Properties 9–11)', () => {
             },
           ),
           (minuteValues) => {
-            const totalsMap = new Map<string, number>();
+            const totalsMap = new Map<string, TypeTotals>();
             minuteValues.forEach((val, idx) => {
-              totalsMap.set(`type-${idx}`, val);
+              totalsMap.set(`type-${idx}`, { totalMinutes: val, eventCount: 1 });
             });
 
             const percentages = computePercentages(totalsMap);
@@ -367,7 +369,7 @@ describe('reportAggregator — Property Tests (Properties 9–11)', () => {
         fc.property(
           fc.integer({ min: 1, max: 1000000 }),
           (minutes) => {
-            const totalsMap = new Map<string, number>([['single', minutes]]);
+            const totalsMap = new Map<string, TypeTotals>([['single', { totalMinutes: minutes, eventCount: 1 }]]);
             const percentages = computePercentages(totalsMap);
             const segments = computeDonutSegments(percentages);
 
@@ -408,16 +410,16 @@ describe('reportAggregator — Property Tests (Properties 9–11)', () => {
             });
           }),
           ({ entries, configuredHours }) => {
-            const totalsMap = new Map<string, number>();
+            const totalsMap = new Map<string, TypeTotals>();
             for (const entry of entries) {
-              totalsMap.set(entry.id, entry.minutes);
+              totalsMap.set(entry.id, { totalMinutes: entry.minutes, eventCount: 1 });
             }
 
             const percentages = computePercentages(totalsMap, configuredHours);
             const denominator = configuredHours * 60;
 
-            for (const [typeId, minutes] of totalsMap) {
-              const expected = (minutes / denominator) * 100;
+            for (const [typeId, data] of totalsMap) {
+              const expected = (data.totalMinutes / denominator) * 100;
               const actual = percentages.get(typeId);
               expect(actual).toBeDefined();
               expect(actual).toBeCloseTo(expected, 10);
@@ -435,7 +437,7 @@ describe('reportAggregator — Property Tests (Properties 9–11)', () => {
           (configuredHours) => {
             // Create minutes that exceed configured hours
             const exceedingMinutes = configuredHours * 60 + 1;
-            const totalsMap = new Map<string, number>([['type-a', exceedingMinutes]]);
+            const totalsMap = new Map<string, TypeTotals>([['type-a', { totalMinutes: exceedingMinutes, eventCount: 1 }]]);
 
             const percentages = computePercentages(totalsMap, configuredHours);
             const percentage = percentages.get('type-a')!;

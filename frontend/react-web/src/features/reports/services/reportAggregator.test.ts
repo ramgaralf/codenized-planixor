@@ -58,15 +58,15 @@ describe('reportAggregator', () => {
 
   describe('formatHoursComparison', () => {
     it('should format comparison with matching values', () => {
-      expect(formatHoursComparison(1800 * 60, 1800)).toBe('1800h / 1800h');
+      expect(formatHoursComparison(1800 * 60, 1800)).toBe('1800h 0m /\n1800h 0m');
     });
 
-    it('should floor actual hours', () => {
-      expect(formatHoursComparison(150, 3)).toBe('2h / 3h');
+    it('should show hours and minutes for actual', () => {
+      expect(formatHoursComparison(150, 3)).toBe('2h 30m /\n3h 0m');
     });
 
-    it('should show 0 when actual minutes is 0', () => {
-      expect(formatHoursComparison(0, 1800)).toBe('0h / 1800h');
+    it('should show 0h 0m when actual minutes is 0', () => {
+      expect(formatHoursComparison(0, 1800)).toBe('0h 0m /\n1800h 0m');
     });
   });
 
@@ -135,8 +135,8 @@ describe('reportAggregator', () => {
         makeEvent({ eventTypeId: 'type-b', totalHours: 120 }),
       ];
       const result = aggregateByType(events);
-      expect(result.get('type-a')).toBe(150);
-      expect(result.get('type-b')).toBe(120);
+      expect(result.get('type-a')).toEqual({ totalMinutes: 150, eventCount: 2 });
+      expect(result.get('type-b')).toEqual({ totalMinutes: 120, eventCount: 1 });
     });
 
     it('should return an empty map for no events', () => {
@@ -148,8 +148,8 @@ describe('reportAggregator', () => {
   describe('computePercentages', () => {
     it('should compute relative percentages without config', () => {
       const totals = new Map([
-        ['type-a', 300],
-        ['type-b', 100],
+        ['type-a', { totalMinutes: 300, eventCount: 3 }],
+        ['type-b', { totalMinutes: 100, eventCount: 1 }],
       ]);
       const result = computePercentages(totals);
       expect(result.get('type-a')).toBe(75);
@@ -157,7 +157,7 @@ describe('reportAggregator', () => {
     });
 
     it('should compute percentages against configured hours', () => {
-      const totals = new Map([['type-a', 900]]);
+      const totals = new Map([['type-a', { totalMinutes: 900, eventCount: 5 }]]);
       const result = computePercentages(totals, 10);
       // 900 / (10 * 60) * 100 = 900 / 600 * 100 = 150
       expect(result.get('type-a')).toBe(150);
@@ -165,8 +165,8 @@ describe('reportAggregator', () => {
 
     it('should return 0 for all types when grand total is 0', () => {
       const totals = new Map([
-        ['type-a', 0],
-        ['type-b', 0],
+        ['type-a', { totalMinutes: 0, eventCount: 0 }],
+        ['type-b', { totalMinutes: 0, eventCount: 0 }],
       ]);
       const result = computePercentages(totals);
       expect(result.get('type-a')).toBe(0);
@@ -217,9 +217,9 @@ describe('reportAggregator', () => {
   describe('sortByTotalDescending', () => {
     it('should sort aggregates from highest to lowest totalMinutes', () => {
       const aggregates: TypeAggregate[] = [
-        { typeId: '1', name: 'A', icon: '', backgroundColor: '', totalMinutes: 50, percentage: 0 },
-        { typeId: '2', name: 'B', icon: '', backgroundColor: '', totalMinutes: 200, percentage: 0 },
-        { typeId: '3', name: 'C', icon: '', backgroundColor: '', totalMinutes: 100, percentage: 0 },
+        { typeId: '1', name: 'A', icon: '', backgroundColor: '', totalMinutes: 50, eventCount: 1, percentage: 0 },
+        { typeId: '2', name: 'B', icon: '', backgroundColor: '', totalMinutes: 200, eventCount: 4, percentage: 0 },
+        { typeId: '3', name: 'C', icon: '', backgroundColor: '', totalMinutes: 100, eventCount: 2, percentage: 0 },
       ];
       const result = sortByTotalDescending(aggregates);
       expect(result[0].typeId).toBe('2');
@@ -229,8 +229,8 @@ describe('reportAggregator', () => {
 
     it('should not mutate the original array', () => {
       const aggregates: TypeAggregate[] = [
-        { typeId: '1', name: 'A', icon: '', backgroundColor: '', totalMinutes: 50, percentage: 0 },
-        { typeId: '2', name: 'B', icon: '', backgroundColor: '', totalMinutes: 200, percentage: 0 },
+        { typeId: '1', name: 'A', icon: '', backgroundColor: '', totalMinutes: 50, eventCount: 1, percentage: 0 },
+        { typeId: '2', name: 'B', icon: '', backgroundColor: '', totalMinutes: 200, eventCount: 4, percentage: 0 },
       ];
       sortByTotalDescending(aggregates);
       expect(aggregates[0].typeId).toBe('1');

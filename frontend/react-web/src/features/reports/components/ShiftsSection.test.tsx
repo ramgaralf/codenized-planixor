@@ -42,6 +42,7 @@ describe('ShiftsSection', () => {
           icon: '🦓',
           backgroundColor: '#2563EB',
           totalMinutes: 500,
+          eventCount: 5,
           percentage: 50,
         },
         {
@@ -50,6 +51,7 @@ describe('ShiftsSection', () => {
           icon: '🅰️',
           backgroundColor: '#10B981',
           totalMinutes: 300,
+          eventCount: 3,
           percentage: 30,
         },
         {
@@ -58,6 +60,7 @@ describe('ShiftsSection', () => {
           icon: '☀️',
           backgroundColor: '#7C3AED',
           totalMinutes: 200,
+          eventCount: 2,
           percentage: 20,
         },
       ];
@@ -79,6 +82,7 @@ describe('ShiftsSection', () => {
           icon: '🅰️',
           backgroundColor: '#10B981',
           totalMinutes: 500,
+          eventCount: 5,
           percentage: 50,
         },
         {
@@ -87,6 +91,7 @@ describe('ShiftsSection', () => {
           icon: '🅱️',
           backgroundColor: '#7C3AED',
           totalMinutes: 300,
+          eventCount: 3,
           percentage: 30,
         },
         {
@@ -95,6 +100,7 @@ describe('ShiftsSection', () => {
           icon: '🔵',
           backgroundColor: '#2563EB',
           totalMinutes: 200,
+          eventCount: 2,
           percentage: 20,
         },
       ];

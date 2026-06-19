@@ -51,6 +51,9 @@ export interface TypeAggregate {
   /** Total minutes for this type within the selected period */
   totalMinutes: number;
 
+  /** Number of calendar events of this type within the selected period */
+  eventCount: number;
+
   /** Percentage of total (relative to grand total or configured hours) */
   percentage: number;
 }

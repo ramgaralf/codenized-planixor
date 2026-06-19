@@ -44,6 +44,7 @@ export const ShiftsSection = ({
         icon: '',
         backgroundColor: '#E5E7EB',
         totalMinutes: remainingMinutes,
+        eventCount: 0,
         percentage: 0,
       },
     ];

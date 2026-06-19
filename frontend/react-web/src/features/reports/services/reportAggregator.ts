@@ -26,14 +26,13 @@ export const formatDuration = (totalMinutes: number): string => {
  *
  * @param actualMinutes - Total actual minutes worked
  * @param configuredHours - Configured annual hours target (whole hours)
- * @returns String in the format "{A}h / {C}h" where A = floor(actualMinutes/60), C = configuredHours
+ * @returns String in the format "{X}h {Y}m / {A}h {B}m"
  */
 export const formatHoursComparison = (
   actualMinutes: number,
   configuredHours: number,
 ): string => {
-  const actualHours = Math.floor(actualMinutes / 60);
-  return `${actualHours}h / ${configuredHours}h`;
+  return `${formatDuration(actualMinutes)} /\n${formatDuration(configuredHours * 60)}`;
 };
 
 /**
@@ -72,19 +71,31 @@ export const filterEventsForPeriod = (
 };
 
 /**
- * Groups events by eventTypeId and sums their totalHours (stored in minutes).
+ * Aggregated data per event type: total minutes and event count.
+ */
+export interface TypeTotals {
+  totalMinutes: number;
+  eventCount: number;
+}
+
+/**
+ * Groups events by eventTypeId and sums their totalHours (stored in minutes),
+ * also counting the number of events per type.
  *
  * @param events - Array of calendar events (should already be filtered for the period)
- * @returns Map where key = eventTypeId, value = total minutes for that type
+ * @returns Map where key = eventTypeId, value = { totalMinutes, eventCount }
  */
 export const aggregateByType = (
   events: CalendarEvent[],
-): Map<string, number> => {
-  const totals = new Map<string, number>();
+): Map<string, TypeTotals> => {
+  const totals = new Map<string, TypeTotals>();
 
   for (const event of events) {
-    const current = totals.get(event.eventTypeId) ?? 0;
-    totals.set(event.eventTypeId, current + event.totalHours);
+    const current = totals.get(event.eventTypeId) ?? { totalMinutes: 0, eventCount: 0 };
+    totals.set(event.eventTypeId, {
+      totalMinutes: current.totalMinutes + event.totalHours,
+      eventCount: current.eventCount + 1,
+    });
   }
 
   return totals;
@@ -99,24 +110,24 @@ export const aggregateByType = (
  * With configuredHours: each type = (typeMinutes / (configuredHours * 60)) * 100
  * (percentages relative to configured hours, may exceed 100%).
  *
- * @param totalsMap - Map of typeId to total minutes
+ * @param totalsMap - Map of typeId to TypeTotals (totalMinutes + eventCount)
  * @param configuredHours - Optional configured annual hours target
  * @returns Map of typeId to percentage value
  */
 export const computePercentages = (
-  totalsMap: Map<string, number>,
+  totalsMap: Map<string, TypeTotals>,
   configuredHours?: number,
 ): Map<string, number> => {
   const percentages = new Map<string, number>();
 
   if (configuredHours !== undefined) {
     const denominator = configuredHours * 60;
-    for (const [typeId, minutes] of totalsMap) {
-      percentages.set(typeId, (minutes / denominator) * 100);
+    for (const [typeId, data] of totalsMap) {
+      percentages.set(typeId, (data.totalMinutes / denominator) * 100);
     }
   } else {
     const grandTotal = Array.from(totalsMap.values()).reduce(
-      (sum, val) => sum + val,
+      (sum, val) => sum + val.totalMinutes,
       0,
     );
 
@@ -125,8 +136,8 @@ export const computePercentages = (
         percentages.set(typeId, 0);
       }
     } else {
-      for (const [typeId, minutes] of totalsMap) {
-        percentages.set(typeId, (minutes / grandTotal) * 100);
+      for (const [typeId, data] of totalsMap) {
+        percentages.set(typeId, (data.totalMinutes / grandTotal) * 100);
       }
     }
   }

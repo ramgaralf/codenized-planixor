@@ -201,7 +201,7 @@ class ReportAggregatorPropertyTest {
 
         checkAll(config, nonDeletedEventsArb) { events ->
             val aggregated = aggregateByType(events)
-            val grandTotal = aggregated.values.sum()
+            val grandTotal = aggregated.values.sumOf { it.totalMinutes }
             val inputTotal = events.sumOf { it.totalHours }
 
             assertEquals(
@@ -227,7 +227,7 @@ class ReportAggregatorPropertyTest {
             Arb.int(1, 5),
             Arb.int(1, 5000),
         ) { count, _ -> count }.map { count ->
-            (1..count).associate { i -> "type-$i" to (i * 30 + 10) }
+            (1..count).associate { i -> "type-$i" to TypeTotals(totalMinutes = i * 30 + 10, eventCount = 1) }
         }
 
         checkAll(config, totalsMapArb) { totalsMap ->
@@ -261,6 +261,7 @@ class ReportAggregatorPropertyTest {
                     icon = "📊",
                     backgroundColor = "#2563EB",
                     totalMinutes = minutes,
+                    eventCount = 1,
                     percentage = 0.0,
                 )
             },

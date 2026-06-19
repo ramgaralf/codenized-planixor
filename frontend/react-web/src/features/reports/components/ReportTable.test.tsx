@@ -29,6 +29,7 @@ describe('ReportTable', () => {
       icon: '☀️',
       backgroundColor: '#10B981',
       totalMinutes: 480,
+      eventCount: 5,
       percentage: 60,
     },
     {
@@ -37,6 +38,7 @@ describe('ReportTable', () => {
       icon: '🌤️',
       backgroundColor: '#7C3AED',
       totalMinutes: 320,
+      eventCount: 3,
       percentage: 40,
     },
   ];
@@ -50,6 +52,7 @@ describe('ReportTable', () => {
           icon: '🅰️',
           backgroundColor: '#2563EB',
           totalMinutes: 120,
+          eventCount: 2,
           percentage: 30,
         },
         {
@@ -58,6 +61,7 @@ describe('ReportTable', () => {
           icon: '🅱️',
           backgroundColor: '#7C3AED',
           totalMinutes: 280,
+          eventCount: 4,
           percentage: 70,
         },
       ];
@@ -92,7 +96,7 @@ describe('ReportTable', () => {
         />,
       );
 
-      const differenceText = screen.getByText('3h 20m');
+      const differenceText = screen.getByText('+3h 20m');
       expect(differenceText).toHaveStyle({ color: SURPLUS_COLOR });
     });
 
@@ -108,7 +112,7 @@ describe('ReportTable', () => {
       );
 
       // abs(-1000) = 1000 minutes = "16h 40m"
-      const differenceText = screen.getByText('16h 40m');
+      const differenceText = screen.getByText('-16h 40m');
       expect(differenceText).toHaveStyle({ color: DEFICIT_COLOR });
     });
 
@@ -123,7 +127,7 @@ describe('ReportTable', () => {
         />,
       );
 
-      const differenceText = screen.getByText('0h 0m');
+      const differenceText = screen.getByText('+0h 0m');
       expect(differenceText).toHaveStyle({ color: SURPLUS_COLOR });
     });
 

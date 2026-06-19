@@ -15,6 +15,7 @@ import com.codenized.planixor.domain.util.computePercentages
 import com.codenized.planixor.domain.util.filterEventsForPeriod
 import com.codenized.planixor.domain.util.normalizeTotalMinutes
 import com.codenized.planixor.domain.util.sortByTotalDescending
+import com.codenized.planixor.domain.util.TypeTotals
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -329,8 +330,8 @@ class ReportsViewModel @Inject constructor(
         val shiftAggregates = buildTypeAggregates(shiftTotals, shiftPercentages, EVENT_TYPE_SHIFT)
         val reminderAggregates = buildTypeAggregates(reminderTotals, reminderPercentages, EVENT_TYPE_REMINDER)
 
-        val totalShiftMinutes = shiftTotals.values.sum().let { normalizeTotalMinutes(it) }
-        val totalReminderMinutes = reminderTotals.values.sum().let { normalizeTotalMinutes(it) }
+        val totalShiftMinutes = shiftTotals.values.sumOf { it.totalMinutes }.let { normalizeTotalMinutes(it) }
+        val totalReminderMinutes = reminderTotals.values.sumOf { it.totalMinutes }.let { normalizeTotalMinutes(it) }
 
         return ReportData(
             shifts = sortByTotalDescending(shiftAggregates),
@@ -346,18 +347,19 @@ class ReportsViewModel @Inject constructor(
      * Queries include soft-deleted entries. If definition not found, uses fallback values.
      */
     private suspend fun buildTypeAggregates(
-        totalsMap: Map<String, Int>,
+        totalsMap: Map<String, TypeTotals>,
         percentages: Map<String, Double>,
         eventType: String,
     ): List<TypeAggregate> {
-        return totalsMap.map { (typeId, totalMinutes) ->
+        return totalsMap.map { (typeId, data) ->
             val (name, icon, backgroundColor) = lookupTypeMetadata(typeId, eventType)
             TypeAggregate(
                 typeId = typeId,
                 name = name,
                 icon = icon,
                 backgroundColor = backgroundColor,
-                totalMinutes = normalizeTotalMinutes(totalMinutes),
+                totalMinutes = normalizeTotalMinutes(data.totalMinutes),
+                eventCount = data.eventCount,
                 percentage = percentages[typeId] ?: 0.0,
             )
         }

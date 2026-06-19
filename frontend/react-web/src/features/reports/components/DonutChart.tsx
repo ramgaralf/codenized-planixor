@@ -61,7 +61,9 @@ export const DonutChart = ({ data, totalMinutes, centerText }: DonutChartProps) 
             fontSize: '14px',
             fontWeight: 600,
             color: 'var(--color-text-primary)',
-            whiteSpace: 'nowrap',
+            whiteSpace: 'pre-line',
+            textAlign: 'center',
+            lineHeight: '1.3',
           }}
         >
           {centerText}

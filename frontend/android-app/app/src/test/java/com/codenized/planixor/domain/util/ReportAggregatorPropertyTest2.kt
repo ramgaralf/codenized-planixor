@@ -299,7 +299,7 @@ class ReportAggregatorPropertyTest2 {
             val configuredHours = Arb.int(1, 8784).bind()
             val count = Arb.int(1, 5).bind()
             val totals = (1..count).associate { i ->
-                "type-$i" to Arb.int(1, 50000).bind()
+                "type-$i" to TypeTotals(totalMinutes = Arb.int(1, 50000).bind(), eventCount = 1)
             }
             Pair(totals, configuredHours)
         }
@@ -309,12 +309,12 @@ class ReportAggregatorPropertyTest2 {
 
             val denominator = configuredHours.toDouble() * 60.0
 
-            totals.forEach { (typeId, minutes) ->
-                val expected = (minutes.toDouble() / denominator) * 100.0
+            totals.forEach { (typeId, data) ->
+                val expected = (data.totalMinutes.toDouble() / denominator) * 100.0
                 val actual = percentages[typeId]!!
 
                 assertEquals(
-                    "Type $typeId: ($minutes / ($configuredHours * 60)) * 100 = $expected, got $actual",
+                    "Type $typeId: (${data.totalMinutes} / ($configuredHours * 60)) * 100 = $expected, got $actual",
                     expected,
                     actual,
                     0.0001,
@@ -329,7 +329,7 @@ class ReportAggregatorPropertyTest2 {
         val testCaseArb = arbitrary {
             val configuredHours = Arb.int(1, 100).bind()
             val excessMinutes = configuredHours * 60 + Arb.int(1, 10000).bind()
-            val totals = mapOf("type-1" to excessMinutes)
+            val totals = mapOf("type-1" to TypeTotals(totalMinutes = excessMinutes, eventCount = 1))
             Pair(totals, configuredHours)
         }
 

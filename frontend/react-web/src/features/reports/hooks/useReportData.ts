@@ -14,6 +14,7 @@ import {
   normalizeTotalMinutes,
   sortByTotalDescending,
 } from '../services/reportAggregator';
+import type { TypeTotals } from '../services/reportAggregator';
 
 type ReportMode = 'month' | 'year';
 
@@ -91,7 +92,7 @@ const resolveTypeMetadata = (
  * Builds TypeAggregate[] from a totals map and metadata lookups.
  */
 const buildAggregates = (
-  totalsMap: Map<string, number>,
+  totalsMap: Map<string, TypeTotals>,
   percentages: Map<string, number>,
   eventType: 'shift' | 'reminder',
   shifts: Shift[],
@@ -99,7 +100,7 @@ const buildAggregates = (
 ): TypeAggregate[] => {
   const aggregates: TypeAggregate[] = [];
 
-  for (const [typeId, totalMinutes] of totalsMap) {
+  for (const [typeId, data] of totalsMap) {
     const metadata = resolveTypeMetadata(typeId, eventType, shifts, reminders);
     const percentage = percentages.get(typeId) ?? 0;
 
@@ -108,7 +109,8 @@ const buildAggregates = (
       name: metadata.name,
       icon: metadata.icon,
       backgroundColor: metadata.backgroundColor,
-      totalMinutes: normalizeTotalMinutes(totalMinutes),
+      totalMinutes: normalizeTotalMinutes(data.totalMinutes),
+      eventCount: data.eventCount,
       percentage,
     });
   }
@@ -196,7 +198,7 @@ export const useReportData = (): UseReportDataReturn => {
     // Aggregate shifts
     const shiftTotals = aggregateByType(shiftEvents);
     const totalShiftMinutes = Array.from(shiftTotals.values()).reduce(
-      (sum, val) => sum + normalizeTotalMinutes(val),
+      (sum, val) => sum + normalizeTotalMinutes(val.totalMinutes),
       0,
     );
 
@@ -208,7 +210,7 @@ export const useReportData = (): UseReportDataReturn => {
     // Aggregate reminders (always relative percentages)
     const reminderTotals = aggregateByType(reminderEvents);
     const totalReminderMinutes = Array.from(reminderTotals.values()).reduce(
-      (sum, val) => sum + normalizeTotalMinutes(val),
+      (sum, val) => sum + normalizeTotalMinutes(val.totalMinutes),
       0,
     );
     const reminderPercentages = computePercentages(reminderTotals);
