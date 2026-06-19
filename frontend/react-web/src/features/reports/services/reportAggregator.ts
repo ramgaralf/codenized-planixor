@@ -148,7 +148,10 @@ export const computeDonutSegments = (
   const entries = Array.from(percentages.entries());
 
   if (entries.length === 1) {
-    return [{ typeId: entries[0][0], percentage: 100.0 }];
+    const entry = entries[0];
+    if (entry) {
+      return [{ typeId: entry[0], percentage: 100.0 }];
+    }
   }
 
   return entries.map(([typeId, percentage]) => ({

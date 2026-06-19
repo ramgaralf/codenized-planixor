@@ -7,6 +7,8 @@ import {
   LabelList,
   ResponsiveContainer,
 } from 'recharts';
+import type { LabelContentType } from 'recharts/types/component/Label';
+import type { YAxisTickContentProps, TickProp } from 'recharts/types/util/types';
 
 import { formatDuration } from '../services/reportAggregator';
 import type { TypeAggregate } from '../models';
@@ -18,14 +20,12 @@ interface HorizontalBarChartProps {
 const BAR_HEIGHT = 36;
 const CHART_MARGIN = { top: 8, right: 80, bottom: 8, left: 40 };
 
-const renderCustomBarLabel = (props: {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  value?: number;
-}) => {
-  const { x = 0, y = 0, width = 0, height = 0, value = 0 } = props;
+const renderCustomBarLabel: LabelContentType = (props) => {
+  const x = typeof props.x === 'number' ? props.x : 0;
+  const y = typeof props.y === 'number' ? props.y : 0;
+  const width = typeof props.width === 'number' ? props.width : 0;
+  const height = typeof props.height === 'number' ? props.height : 0;
+  const value = typeof props.value === 'number' ? props.value : 0;
 
   return (
     <text
@@ -42,12 +42,10 @@ const renderCustomBarLabel = (props: {
   );
 };
 
-const renderEmojiTick = (props: {
-  x?: number;
-  y?: number;
-  payload?: { value?: string };
-}) => {
-  const { x = 0, y = 0, payload } = props;
+const renderEmojiTick: TickProp<YAxisTickContentProps> = (props) => {
+  const x = typeof props.x === 'number' ? props.x : 0;
+  const y = typeof props.y === 'number' ? props.y : 0;
+  const payload = props.payload as { value?: string } | undefined;
 
   return (
     <text

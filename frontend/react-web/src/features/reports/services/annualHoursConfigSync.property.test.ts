@@ -13,15 +13,22 @@ import { resolveConflict, batchForPush } from './annualHoursConfigSync';
 const NUM_RUNS = 100;
 
 /**
+ * Arbitrary: generates valid Date objects within a given range, filtering out NaN dates
+ * that fc.date() may produce at boundaries.
+ */
+const validDateArb = (min: Date, max: Date) =>
+  fc.date({ min, max }).filter((d) => !isNaN(d.getTime()));
+
+/**
  * Arbitrary generator for AnnualHoursConfig records.
  */
 const annualHoursConfigArb = fc.record({
   id: fc.uuid(),
   year: fc.integer({ min: 2000, max: 2100 }),
   configuredHours: fc.integer({ min: 1, max: 8784 }),
-  modifiedAt: fc.date({ min: new Date('2020-01-01T00:00:00Z'), max: new Date('2030-12-31T23:59:59Z') }),
+  modifiedAt: validDateArb(new Date('2020-01-01T00:00:00Z'), new Date('2030-12-31T23:59:59Z')),
   syncedAt: fc.option(
-    fc.date({ min: new Date('2020-01-01T00:00:00Z'), max: new Date('2030-12-31T23:59:59Z') }),
+    validDateArb(new Date('2020-01-01T00:00:00Z'), new Date('2030-12-31T23:59:59Z')),
     { nil: null },
   ),
   isDeleted: fc.boolean(),

@@ -6,7 +6,7 @@ import type { CalendarEvent } from '@features/calendar-events/models';
 import type { Shift } from '@features/shifts/models';
 import type { Reminder } from '@features/reminders/models';
 
-import type { ReportData, TypeAggregate } from '../models';
+import type { ReportData, TypeAggregate, AnnualHoursConfig } from '../models';
 import {
   filterEventsForPeriod,
   aggregateByType,
@@ -163,14 +163,14 @@ export const useReportData = (): UseReportDataReturn => {
 
   // Query annual config for year mode
   const annualConfig = useLiveQuery(
-    () => {
-      if (state.mode !== 'year') return Promise.resolve(null);
-      return db.annualHoursConfig
+    async (): Promise<AnnualHoursConfig | null> => {
+      if (state.mode !== 'year') return null;
+      const result = await db.annualHoursConfig
         .where('year')
         .equals(state.selectedYear)
         .filter((r) => !r.isDeleted)
-        .first()
-        .then((r) => r ?? null);
+        .first();
+      return result ?? null;
     },
     [state.mode, state.selectedYear],
   );

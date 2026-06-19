@@ -22,9 +22,11 @@ const formatDate = (date: Date): string => {
 /**
  * Arbitrary: generates a valid ISO date string (YYYY-MM-DD).
  * Constrains to dates between 2000-01-01 and 2099-12-31 for practical ranges.
+ * Filters out invalid dates (NaN) that fc.date() may produce at boundaries.
  */
 const dateArb = fc
   .date({ min: new Date('2000-01-01'), max: new Date('2099-12-31') })
+  .filter((d) => !isNaN(d.getTime()))
   .map(formatDate);
 
 /**
