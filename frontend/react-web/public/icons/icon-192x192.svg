@@ -1,10 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect width="192" height="192" rx="32" fill="url(#grad)"/>
-  <text x="96" y="140" font-family="Poppins, Arial, sans-serif" font-size="120" font-weight="700" fill="white" text-anchor="middle">P</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="192px" height="192px" viewBox="0 0 192 192" version="1.1">
+<defs>
+<linearGradient id="linear0" gradientUnits="userSpaceOnUse" x1="0.2" y1="0" x2="1" y2="1" gradientTransform="matrix(146.25,0,0,168.320312,22.5,14.304687)">
+<stop offset="0" style="stop-color:rgb(18.431373%,33.333333%,100%);stop-opacity:1;"/>
+<stop offset="0.65" style="stop-color:rgb(29.019608%,41.960784%,100%);stop-opacity:1;"/>
+<stop offset="1" style="stop-color:rgb(17.254902%,80.784314%,92.156863%);stop-opacity:1;"/>
+</linearGradient>
+<filter id="alpha" filterUnits="objectBoundingBox" x="0%" y="0%" width="100%" height="100%">
+  <feColorMatrix type="matrix" in="SourceGraphic" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0"/>
+</filter>
+<mask id="mask0">
+  <g filter="url(#alpha)">
+<rect x="0" y="0" width="192" height="192" style="fill:rgb(0%,0%,0%);fill-opacity:0.898039;stroke:none;"/>
+  </g>
+</mask>
+<linearGradient id="linear1" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1" y2="1" gradientTransform="matrix(61.875,0,0,102,106.875,15)">
+<stop offset="0" style="stop-color:rgb(20.784314%,33.333333%,100%);stop-opacity:1;"/>
+<stop offset="0.55" style="stop-color:rgb(35.686275%,30.196078%,100%);stop-opacity:1;"/>
+<stop offset="1" style="stop-color:rgb(12.156863%,83.137255%,90.980392%);stop-opacity:1;"/>
+</linearGradient>
+<clipPath id="clip1">
+  <rect x="0" y="0" width="192" height="192"/>
+</clipPath>
+<g id="surface5" clip-path="url(#clip1)">
+<path style=" stroke:none;fill-rule:nonzero;fill:url(#linear1);" d="M 118.125 15 C 147 15 168.75 37.125 168.75 66 C 168.75 95.25 147 117 118.125 117 L 106.875 117 C 136.875 117 157.5 94.875 157.5 66 C 157.5 43.125 141.75 23.625 118.125 15 Z M 118.125 15 "/>
+</g>
+<mask id="mask1">
+  <g filter="url(#alpha)">
+<rect x="0" y="0" width="192" height="192" style="fill:rgb(0%,0%,0%);fill-opacity:0.0784314;stroke:none;"/>
+  </g>
+</mask>
+<clipPath id="clip2">
+  <rect x="0" y="0" width="192" height="192"/>
+</clipPath>
+<g id="surface8" clip-path="url(#clip2)">
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 65.625 20.625 L 118.125 20.625 C 143.625 20.625 163.125 40.125 163.125 66 C 163.125 70.5 162.375 74.625 161.25 78.75 C 159.375 53.625 139.875 34.875 114.375 34.875 L 65.625 34.875 C 57 34.875 32.515625 28.382812 30.640625 20.882812 C 35.515625 20.507812 58.875 20.625 65.625 20.625 Z M 65.625 20.625 "/>
+</g>
+</defs>
+<g id="surface1">
+<path style=" stroke:none;fill-rule:nonzero;fill:url(#linear0);" d="M 25.035156 34.757812 C 24.515625 24.722656 30.9375 14.304688 42.1875 14.304688 L 118.125 15 C 147 15 168.75 37.125 168.75 66 C 168.75 95.25 147 117 118.125 117 L 91.875 117 C 76.5 117 63.75 129.75 63.75 145.125 L 63.75 162 C 63.75 173.25 54.375 182.625 43.125 182.625 C 31.875 182.625 22.5 173.25 22.5 162 L 22.5 141.375 C 22.5 103.5 50.5 73.589844 88.75 73.589844 L 118.125 73.761719 C 124.5 73.761719 127.8125 70.277344 127.8125 63.902344 C 127.8125 57.527344 121.894531 54.910156 115.519531 54.910156 L 43.40625 54.039062 C 32.15625 54.039062 25.554688 44.792969 25.035156 34.757812 Z M 25.035156 34.757812 "/>
+<use xlink:href="#surface5" mask="url(#mask0)"/>
+<use xlink:href="#surface8" mask="url(#mask1)"/>
+</g>
 </svg>

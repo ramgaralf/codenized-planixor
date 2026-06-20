@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Plus, Settings, User } from 'lucide-react';
 
+import logoIcon from '@/assets/logo-icon.svg';
+
 import { useCalendarStore } from '@/stores/calendarStore';
 import { useReportsStore } from '@/stores/reportsStore';
 
@@ -73,7 +75,7 @@ export const HeaderBar = () => {
   return (
     <header className={styles.headerBar}>
       <div className={styles.mobileLogo}>
-        <span className={styles.mobileLogoIcon} aria-hidden="true">P</span>
+        <img src={logoIcon} alt="" aria-hidden="true" className={styles.mobileLogoIcon} />
         <span className={styles.mobileLogoText}>Planixor</span>
       </div>
 

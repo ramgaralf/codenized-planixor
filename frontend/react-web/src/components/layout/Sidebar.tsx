@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import { Calendar, Clock, AlarmClock, BarChart3, Settings } from 'lucide-react';
 
+import logoIcon from '@/assets/logo-icon.svg';
+
 import styles from './Sidebar.module.css';
 
 const NAV_ITEMS = [
@@ -18,7 +20,7 @@ export const Sidebar = () => {
   return (
     <div className={styles.sidebar}>
       <div className={styles.logo}>
-        <span className={styles.logoIcon} aria-hidden="true">P</span>
+        <img src={logoIcon} alt="" aria-hidden="true" className={styles.logoIcon} />
         <span className={styles.logoText}>Planixor</span>
       </div>
 
