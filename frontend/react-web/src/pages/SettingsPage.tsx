@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '@context/useTheme';
 import type { ThemeMode } from '@context/ThemeContextValue';
+import { NotificationSettingsSection } from '@features/notifications/components/NotificationSettingsSection';
 
 import styles from './SettingsPage.module.css';
 
@@ -71,6 +72,14 @@ export const SettingsPage = () => {
           ))}
         </div>
       </section>
+
+      <NotificationSettingsSection
+        sectionClassName={styles.section}
+        sectionTitleClassName={styles.sectionTitle}
+        optionGroupClassName={styles.optionGroup}
+        optionLabelClassName={styles.optionLabel}
+        optionLabelActiveClassName={styles.optionLabelActive}
+      />
     </div>
   );
 };

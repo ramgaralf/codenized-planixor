@@ -235,6 +235,7 @@ class CalendarEventSyncAdapter @Inject constructor(
             endTime = endTime,
             totalHours = totalHours,
             notes = notes,
+            alertOffsets = alertOffsets,
             modifiedAt = formatTimestampToIso(modifiedAt),
             isDeleted = isDeleted,
         )
@@ -253,6 +254,7 @@ class CalendarEventSyncAdapter @Inject constructor(
             endTime = endTime,
             totalHours = totalHours,
             notes = notes,
+            alertOffsets = alertOffsets ?: "[]",
             modifiedAt = parseIsoToTimestamp(modifiedAt),
             syncedAt = syncedAt,
             isDeleted = isDeleted,

@@ -67,6 +67,11 @@ public sealed class CalendarEventConfiguration : IEntityTypeConfiguration<Calend
         builder.Property(e => e.Notes)
             .HasColumnType("varchar(250)");
 
+        builder.Property(e => e.AlertOffsetsJson)
+            .HasColumnType("varchar(50)")
+            .HasDefaultValue("[]")
+            .IsRequired();
+
         builder.Property(e => e.ModifiedAt)
             .HasColumnType("datetime(6)")
             .IsRequired();

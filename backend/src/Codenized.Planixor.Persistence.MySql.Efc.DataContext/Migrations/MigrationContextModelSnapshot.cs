@@ -67,6 +67,12 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("AlertOffsetsJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(50)")
+                        .HasDefaultValue("[]");
+
                     b.Property<DateOnly>("EndDay")
                         .HasColumnType("date");
 
@@ -128,6 +134,55 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
 
                             t.HasCheckConstraint("CK_CalendarEvents_StartTime", "StartTime >= 0 AND StartTime <= 1439");
                         });
+                });
+
+            modelBuilder.Entity("Codenized.Planixor.Core.Entities.NotificationRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("AlertOffset")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("CalendarEventId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsDelivered")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("SyncedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("TriggerTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "IsDeleted")
+                        .HasDatabaseName("IX_NotificationRecords_UserId_IsDeleted");
+
+                    b.HasIndex("UserId", "ModifiedAt")
+                        .HasDatabaseName("IX_NotificationRecords_UserId_ModifiedAt");
+
+                    b.HasIndex("CalendarEventId", "AlertOffset", "IsDeleted")
+                        .HasDatabaseName("IX_NotificationRecords_CalendarEventId_AlertOffset_IsDeleted");
+
+                    b.ToTable("NotificationRecords", (string)null);
                 });
 
             modelBuilder.Entity("Codenized.Planixor.Core.Entities.Reminder", b =>

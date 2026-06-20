@@ -1,4 +1,9 @@
 import { db } from '@/data/db';
+import {
+  reconcileNotifications,
+  deleteNotificationsForEvent,
+} from '@features/notifications/services/notificationService';
+import { triggerImmediateCheckCycle } from '@features/notifications/services/notificationWorkerManager';
 
 import type { CalendarEvent, CalendarEventDisplay } from '../models';
 import {
@@ -150,6 +155,12 @@ export const create = async (input: CreateCalendarEventInput): Promise<CalendarE
 
   await db.calendarEvents.add(event);
 
+  // Reconcile notifications after persisting (creates NotificationRecords for future trigger times)
+  await reconcileNotifications(event);
+
+  // Trigger immediate check cycle so due notifications are delivered right away
+  await triggerImmediateCheckCycle();
+
   return event;
 };
 
@@ -220,6 +231,20 @@ export const update = async (
 
   await db.calendarEvents.put(updatedEvent);
 
+  // Reconcile notifications if alertOffsets or start time changed
+  const alertOffsetsChanged =
+    JSON.stringify(existing.alertOffsets ?? []) !==
+    JSON.stringify(updatedEvent.alertOffsets ?? []);
+  const startTimeChanged =
+    existing.startDay !== updatedEvent.startDay ||
+    existing.startTime !== updatedEvent.startTime;
+
+  if (alertOffsetsChanged || startTimeChanged) {
+    await reconcileNotifications(updatedEvent);
+    // Trigger immediate check cycle so due notifications are delivered right away
+    await triggerImmediateCheckCycle();
+  }
+
   return updatedEvent;
 };
 
@@ -235,6 +260,12 @@ export const softDelete = async (id: string): Promise<void> => {
     modifiedAt: new Date(),
     syncedAt: null,
   });
+
+  // Cascade soft-delete all notification records for this event
+  await deleteNotificationsForEvent(id);
+
+  // Trigger immediate check cycle so badge count updates right away
+  await triggerImmediateCheckCycle();
 };
 
 /**

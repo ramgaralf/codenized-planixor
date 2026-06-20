@@ -46,4 +46,5 @@ data class CalendarEventEntity(
     val modifiedAt: Long,
     val syncedAt: Long?,
     val isDeleted: Boolean,
+    val alertOffsets: String = "[]",
 )

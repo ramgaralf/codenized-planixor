@@ -1,0 +1,54 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "4. Backend — API endpoints": [
+      {
+        "executionId": "d02191cc-85f7-4904-aba3-e42b1dfc046a",
+        "chatSessionId": "sess_2cc6c852-a60a-4e0a-9f9f-f1399ae88e62",
+        "timestamp": 1781883761160
+      }
+    ],
+    "10. React Web — UI components": [
+      {
+        "executionId": "d02191cc-85f7-4904-aba3-e42b1dfc046a",
+        "chatSessionId": "sess_2cc6c852-a60a-4e0a-9f9f-f1399ae88e62",
+        "timestamp": 1781883761842
+      }
+    ],
+    "11. React Web — Shifts page (container)": [
+      {
+        "executionId": "d02191cc-85f7-4904-aba3-e42b1dfc046a",
+        "chatSessionId": "sess_2cc6c852-a60a-4e0a-9f9f-f1399ae88e62",
+        "timestamp": 1781883762641
+      }
+    ],
+    "12. React Web — Routing and page registration": [
+      {
+        "executionId": "d02191cc-85f7-4904-aba3-e42b1dfc046a",
+        "chatSessionId": "sess_2cc6c852-a60a-4e0a-9f9f-f1399ae88e62",
+        "timestamp": 1781883763407
+      }
+    ],
+    "17. Android — UI layer": [
+      {
+        "executionId": "d02191cc-85f7-4904-aba3-e42b1dfc046a",
+        "chatSessionId": "sess_2cc6c852-a60a-4e0a-9f9f-f1399ae88e62",
+        "timestamp": 1781883764150
+      }
+    ],
+    "18. Android — Navigation and i18n": [
+      {
+        "executionId": "d02191cc-85f7-4904-aba3-e42b1dfc046a",
+        "chatSessionId": "sess_2cc6c852-a60a-4e0a-9f9f-f1399ae88e62",
+        "timestamp": 1781883764970
+      }
+    ],
+    "20. Cross-platform consistency verification": [
+      {
+        "executionId": "d02191cc-85f7-4904-aba3-e42b1dfc046a",
+        "chatSessionId": "sess_2cc6c852-a60a-4e0a-9f9f-f1399ae88e62",
+        "timestamp": 1781883765684
+      }
+    ]
+  }
+}

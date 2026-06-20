@@ -123,6 +123,7 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
                 // Incoming record is newer — apply sync to existing entity
                 DateOnly startDay = DateOnly.Parse(record.StartDay);
                 DateOnly endDay = DateOnly.Parse(record.EndDay);
+                string alertOffsetsJson = AlertOffsetsMapper.Serialize(record.AlertOffsets);
                 existing.ApplySync(
                     record.EventType,
                     record.EventTypeId,
@@ -132,6 +133,7 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
                     record.EndTime,
                     record.TotalHours,
                     record.Notes,
+                    alertOffsetsJson,
                     record.ModifiedAt,
                     record.IsDeleted);
 
@@ -143,6 +145,7 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
                 // New record — insert with the authenticated UserId
                 DateOnly startDay = DateOnly.Parse(record.StartDay);
                 DateOnly endDay = DateOnly.Parse(record.EndDay);
+                string alertOffsetsJson = AlertOffsetsMapper.Serialize(record.AlertOffsets);
                 CalendarEventEntity newEvent = CalendarEventEntity.CreateFromSync(
                     record.Id,
                     request.UserId,
@@ -154,6 +157,7 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
                     record.EndTime,
                     record.TotalHours,
                     record.Notes,
+                    alertOffsetsJson,
                     record.ModifiedAt,
                     record.IsDeleted);
 

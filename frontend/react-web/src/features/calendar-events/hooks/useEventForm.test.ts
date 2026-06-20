@@ -82,6 +82,7 @@ describe('useEventForm', () => {
         endTime: 960,
         totalHours: 480,
         notes: 'Test note',
+        alertOffsets: [],
         modifiedAt: new Date(),
         syncedAt: null,
         isDeleted: false,
@@ -98,6 +99,7 @@ describe('useEventForm', () => {
         endTime: 960,
         totalHours: 480,
         notes: 'Test note',
+        alertOffsets: [],
       });
       expect(result.current.isEditMode).toBe(true);
     });
@@ -113,6 +115,7 @@ describe('useEventForm', () => {
         endTime: 600,
         totalHours: 60,
         notes: null,
+        alertOffsets: [],
         modifiedAt: new Date(),
         syncedAt: null,
         isDeleted: false,
@@ -503,6 +506,7 @@ describe('useEventForm', () => {
         startTime: 480,
         endTime: 960,
         notes: 'Morning shift',
+        alertOffsets: [],
       });
       expect(onSuccess).toHaveBeenCalled();
     });
@@ -589,6 +593,7 @@ describe('useEventForm', () => {
       endTime: 960,
       totalHours: 480,
       notes: null,
+      alertOffsets: [],
       modifiedAt: new Date(),
       syncedAt: null,
       isDeleted: false,
@@ -622,6 +627,7 @@ describe('useEventForm', () => {
         startTime: 480,
         endTime: 1020,
         notes: null,
+        alertOffsets: [],
       });
       expect(onSuccess).toHaveBeenCalled();
     });

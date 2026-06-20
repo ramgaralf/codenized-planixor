@@ -2,11 +2,14 @@ package com.codenized.planixor.di
 
 import com.codenized.planixor.data.local.AnnualHoursConfigRepository
 import com.codenized.planixor.data.local.CalendarEventDao
+import com.codenized.planixor.data.local.NotificationRecordDao
 import com.codenized.planixor.data.sync.AnnualHoursConfigSyncAdapter
 import com.codenized.planixor.data.sync.AnnualHoursConfigSyncApiService
 import com.codenized.planixor.data.sync.AnnualHoursConfigSyncManager
 import com.codenized.planixor.data.sync.CalendarEventSyncAdapter
 import com.codenized.planixor.data.sync.CalendarEventSyncApiService
+import com.codenized.planixor.data.sync.NotificationRecordSyncAdapter
+import com.codenized.planixor.data.sync.NotificationRecordSyncApiService
 import com.codenized.planixor.data.sync.ReminderSyncManager
 import com.codenized.planixor.data.sync.ShiftSyncManager
 import dagger.Module
@@ -58,5 +61,14 @@ object SyncModule {
         syncManager: AnnualHoursConfigSyncManager,
     ): AnnualHoursConfigSyncAdapter {
         return AnnualHoursConfigSyncAdapter(repository, syncApiService, syncManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationRecordSyncAdapter(
+        notificationRecordDao: NotificationRecordDao,
+        syncApiService: NotificationRecordSyncApiService,
+    ): NotificationRecordSyncAdapter {
+        return NotificationRecordSyncAdapter(notificationRecordDao, syncApiService)
     }
 }

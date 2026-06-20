@@ -1,7 +1,30 @@
+import 'fake-indexeddb/auto';
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { App } from './App';
+
+// Mock notification hook and worker manager to prevent async IndexedDB leaks
+vi.mock('@features/notifications/hooks/useNotifications', () => ({
+  useNotifications: () => ({
+    notifications: [],
+    unreadCount: 0,
+    channel: 'both' as const,
+    isLoading: false,
+    markAsRead: vi.fn(),
+    markAllAsRead: vi.fn(),
+  }),
+}));
+
+vi.mock('@features/notifications/services/notificationWorkerManager', () => ({
+  registerNotificationWorker: vi.fn(),
+  subscribeToBadgeCount: (cb: (count: number) => void) => {
+    cb(0);
+    return () => {};
+  },
+  getUnreadCountFromWorker: () => 0,
+  unregisterNotificationWorker: vi.fn(),
+}));
 
 describe('App', () => {
   beforeEach(() => {

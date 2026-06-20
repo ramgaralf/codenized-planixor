@@ -20,6 +20,7 @@ data class CalendarEventSyncRecord(
     val endTime: Int,
     val totalHours: Int,
     val notes: String?,
+    val alertOffsets: String? = null,
     val modifiedAt: String,
     val isDeleted: Boolean,
 )

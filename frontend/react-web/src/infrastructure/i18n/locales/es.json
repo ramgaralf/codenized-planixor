@@ -114,7 +114,13 @@
     "themeSystem": "Sistema",
     "language": "Idioma",
     "languageEs": "Español",
-    "languageEn": "English"
+    "languageEn": "English",
+    "notifications": "Notificaciones",
+    "notificationChannelApp": "Aplicación",
+    "notificationChannelSystem": "Sistema",
+    "notificationChannelBoth": "Ambos",
+    "notificationPermissionWarning": "Las notificaciones del sistema están bloqueadas. Habilítalas en la configuración del navegador.",
+    "notificationWebLimitation": "Las notificaciones solo se enviarán mientras la aplicación esté abierta o minimizada en el navegador."
   },
   "actions": {
     "createEvent": "Crear nuevo evento",
@@ -309,6 +315,29 @@
     "detail": {
       "delete": "Eliminar",
       "deleteAriaLabel": "Eliminar {{name}}"
+    }
+  },
+  "notifications": {
+    "alertConfig": {
+      "label": "Alertas",
+      "atStartTime": "Al inicio",
+      "tenMinutesBefore": "10 minutos antes",
+      "oneHourBefore": "1 hora antes",
+      "oneDayBefore": "1 día antes"
+    },
+    "title": "Notificaciones",
+    "markAllAsRead": "Marcar todas como leídas",
+    "empty": "No hay notificaciones pendientes",
+    "time": {
+      "justNow": "Ahora",
+      "minutesAgo": "hace {{count}} min",
+      "hoursAgo": "hace {{count}} h"
+    },
+    "alertLabel": {
+      "atStart": "Al inicio",
+      "tenMinutes": "10 minutos antes",
+      "oneHour": "1 hora antes",
+      "oneDay": "1 día antes"
     }
   },
   "accessibility": {

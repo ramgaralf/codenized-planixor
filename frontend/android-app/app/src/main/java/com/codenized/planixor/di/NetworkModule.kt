@@ -2,6 +2,7 @@ package com.codenized.planixor.di
 
 import com.codenized.planixor.data.sync.AnnualHoursConfigSyncApiService
 import com.codenized.planixor.data.sync.CalendarEventSyncApiService
+import com.codenized.planixor.data.sync.NotificationRecordSyncApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -65,5 +66,14 @@ object NetworkModule {
     @Singleton
     fun provideAnnualHoursConfigSyncApiService(retrofit: Retrofit): AnnualHoursConfigSyncApiService {
         return retrofit.create(AnnualHoursConfigSyncApiService::class.java)
+    }
+
+    /**
+     * Provides the NotificationRecordSyncApiService Retrofit interface.
+     */
+    @Provides
+    @Singleton
+    fun provideNotificationRecordSyncApiService(retrofit: Retrofit): NotificationRecordSyncApiService {
+        return retrofit.create(NotificationRecordSyncApiService::class.java)
     }
 }

@@ -40,6 +40,11 @@ public sealed class ApplicationReadContext : DbContext, IApplicationContext
     /// </summary>
     public DbSet<AnnualHoursConfig> AnnualHoursConfigs => this.Set<AnnualHoursConfig>();
 
+    /// <summary>
+    /// Gets notification records.
+    /// </summary>
+    public DbSet<NotificationRecord> NotificationRecords => this.Set<NotificationRecord>();
+
     /// <summary>On model creating.</summary>
     /// <param name="modelBuilder">Model builder.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)

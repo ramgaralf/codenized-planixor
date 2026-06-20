@@ -52,9 +52,12 @@ import androidx.compose.ui.window.Dialog
 import com.codenized.planixor.R
 import com.codenized.planixor.ui.calendar.components.EventTypeOption
 import com.codenized.planixor.ui.calendar.components.EventTypeSelector
+import com.codenized.planixor.ui.components.AlertConfigSelector
 import com.codenized.planixor.ui.theme.PlanixorTheme
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -74,6 +77,7 @@ data class EventFormUiState(
     val totalHours: Int? = null,
     val isTimeEditable: Boolean = true,
     val notes: String = "",
+    val alertOffsets: List<Int> = emptyList(),
     val derivedName: String = "",
     val derivedIcon: String = "",
     val derivedBackgroundColor: String = "",
@@ -111,6 +115,7 @@ fun EventFormScreen(
     onStartTimeSelected: (hours: Int, minutes: Int) -> Unit,
     onEndTimeSelected: (hours: Int, minutes: Int) -> Unit,
     onNotesChanged: (String) -> Unit,
+    onAlertOffsetsChanged: (List<Int>) -> Unit = {},
     onSave: () -> Unit,
     onCancel: () -> Unit,
     onDelete: (() -> Unit)? = null,
@@ -209,6 +214,16 @@ fun EventFormScreen(
             error = uiState.errors["notes"],
             onValueChange = onNotesChanged,
         )
+
+        // Alert config selector — only visible when event start is strictly in the future
+        val isEventStartInFuture = isStartInFuture(uiState)
+        if (isEventStartInFuture) {
+            AlertConfigSelector(
+                selectedOffsets = uiState.alertOffsets,
+                onOffsetsChanged = onAlertOffsetsChanged,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         // Form-level error (e.g., one-shift-per-day)
         if (uiState.formError != null) {
@@ -583,6 +598,19 @@ private fun NotesField(
             )
         }
     }
+}
+
+/**
+ * Determines whether the event start date/time is strictly in the future.
+ * Used to control visibility of the AlertConfigSelector.
+ */
+private fun isStartInFuture(uiState: EventFormUiState): Boolean {
+    val startDay = uiState.startDay ?: return false
+    val startHours = uiState.startTimeHours ?: return false
+    val startMinutes = uiState.startTimeMinutes ?: 0
+
+    val eventStart = LocalDateTime.of(startDay, LocalTime.of(startHours, startMinutes))
+    return eventStart.isAfter(LocalDateTime.now())
 }
 
 @Preview(showBackground = true)

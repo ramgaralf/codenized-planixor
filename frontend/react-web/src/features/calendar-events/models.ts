@@ -54,6 +54,14 @@ export interface CalendarEvent {
 
   /** Soft-delete flag — records are never physically removed until confirmed synced */
   isDeleted: boolean;
+
+  /**
+   * Selected alert configuration offsets in minutes before event start.
+   * Values from {0, 10, 60, 1440}. Maximum 4 elements.
+   * Empty array means no alerts configured.
+   * Existing records without this field are treated as [] (no migration needed — Dexie is schema-less for non-indexed fields).
+   */
+  alertOffsets: number[];
 }
 
 /**

@@ -95,6 +95,7 @@ class CalendarEventRepository @Inject constructor(
         endTime: Int,
         notes: String?,
         shiftHoursWorked: Int? = null,
+        alertOffsets: List<Int> = emptyList(),
     ): CalendarEventResult {
         // For shift events, auto-compute endDay based on crossing midnight
         val computedEndDay = if (eventType == "shift") {
@@ -147,6 +148,7 @@ class CalendarEventRepository @Inject constructor(
             modifiedAt = now,
             syncedAt = null,
             isDeleted = false,
+            alertOffsets = serializeAlertOffsets(alertOffsets),
         )
         calendarEventDao.insert(entity)
         return CalendarEventResult.Success(entity)
@@ -174,6 +176,7 @@ class CalendarEventRepository @Inject constructor(
         endTime: Int,
         notes: String?,
         shiftHoursWorked: Int? = null,
+        alertOffsets: List<Int> = emptyList(),
     ): CalendarEventResult {
         val existing = calendarEventDao.getById(id)
             ?: return CalendarEventResult.ValidationError("Event not found")
@@ -224,6 +227,7 @@ class CalendarEventRepository @Inject constructor(
             endTime = endTime,
             totalHours = totalHours,
             notes = notes?.take(MAX_NOTES_LENGTH),
+            alertOffsets = serializeAlertOffsets(alertOffsets),
             modifiedAt = System.currentTimeMillis(),
             syncedAt = null,
         )
@@ -249,5 +253,26 @@ class CalendarEventRepository @Inject constructor(
 
     companion object {
         private const val MAX_NOTES_LENGTH = 250
+
+        /**
+         * Serializes a list of alert offsets to a JSON string for storage.
+         */
+        fun serializeAlertOffsets(offsets: List<Int>): String {
+            if (offsets.isEmpty()) return "[]"
+            return offsets.joinToString(",", prefix = "[", postfix = "]")
+        }
+
+        /**
+         * Deserializes a JSON string of alert offsets to a list of integers.
+         */
+        fun deserializeAlertOffsets(json: String): List<Int> {
+            if (json.isBlank() || json == "[]") return emptyList()
+            return json.trim()
+                .removePrefix("[")
+                .removeSuffix("]")
+                .split(",")
+                .mapNotNull { it.trim().toIntOrNull() }
+                .filter { it in setOf(0, 10, 60, 1440) }
+        }
     }
 }

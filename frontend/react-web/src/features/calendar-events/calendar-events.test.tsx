@@ -111,6 +111,7 @@ const createTestEvent = (overrides?: Partial<CalendarEvent>): CalendarEvent => (
   endTime: 540,
   totalHours: 60,
   notes: null,
+  alertOffsets: [],
   modifiedAt: new Date(),
   syncedAt: null,
   isDeleted: false,

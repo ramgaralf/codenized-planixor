@@ -7,6 +7,7 @@ namespace Codenized.Planixor.Api.Endpoints;
 using Codenized.HealthChecks.AspNetCore;
 using Codenized.Planixor.Api.Endpoints.AnnualHoursConfig;
 using Codenized.Planixor.Api.Endpoints.CalendarEvent;
+using Codenized.Planixor.Api.Endpoints.NotificationRecord;
 using Codenized.Planixor.Api.Endpoints.Reminder;
 using Codenized.Planixor.Api.Endpoints.Shift;
 
@@ -28,6 +29,7 @@ internal static class RegisterEndpoints
         app.MapReminderEndpoints(apiBasePath);
         app.MapCalendarEventEndpoints(apiBasePath);
         app.MapAnnualHoursConfigEndpoints(apiBasePath);
+        app.MapNotificationRecordEndpoints(apiBasePath);
         return app;
     }
 }

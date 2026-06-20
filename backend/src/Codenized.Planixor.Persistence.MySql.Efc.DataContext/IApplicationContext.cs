@@ -29,4 +29,9 @@ public interface IApplicationContext
     /// Gets annual hours configs.
     /// </summary>
     DbSet<AnnualHoursConfig> AnnualHoursConfigs { get; }
+
+    /// <summary>
+    /// Gets notification records.
+    /// </summary>
+    DbSet<NotificationRecord> NotificationRecords { get; }
 }
