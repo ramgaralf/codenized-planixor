@@ -5,6 +5,7 @@ import com.codenized.planixor.data.local.CalendarEventRepository
 import com.codenized.planixor.data.local.PreferencesRepository
 import com.codenized.planixor.data.local.ReminderRepository
 import com.codenized.planixor.data.local.ShiftRepository
+import com.codenized.planixor.data.notification.NotificationService
 import com.codenized.planixor.model.CalendarView
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -31,6 +32,7 @@ class CalendarViewModelTest {
     private lateinit var shiftRepository: ShiftRepository
     private lateinit var reminderRepository: ReminderRepository
     private lateinit var calendarEventRepository: CalendarEventRepository
+    private lateinit var notificationService: NotificationService
     private lateinit var viewModel: CalendarViewModel
 
     @Before
@@ -41,6 +43,7 @@ class CalendarViewModelTest {
         shiftRepository = mockk(relaxed = true)
         reminderRepository = mockk(relaxed = true)
         calendarEventRepository = mockk(relaxed = true)
+        notificationService = mockk(relaxed = true)
 
         coEvery { shiftRepository.getAllActive() } returns flowOf(emptyList())
         coEvery { reminderRepository.getActiveForCalendarSelection() } returns flowOf(emptyList())
@@ -53,7 +56,7 @@ class CalendarViewModelTest {
     }
 
     private fun createViewModel(): CalendarViewModel {
-        return CalendarViewModel(preferencesRepository, shiftRepository, reminderRepository, calendarEventRepository)
+        return CalendarViewModel(preferencesRepository, shiftRepository, reminderRepository, calendarEventRepository, notificationService)
     }
 
     @Test

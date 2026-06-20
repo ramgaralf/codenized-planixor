@@ -17,6 +17,7 @@ data class CalendarEvent(
     val endTime: Int,
     val totalHours: Int,
     val notes: String? = null,
+    val alertOffsets: List<Int> = emptyList(),
     val modifiedAt: Long,
     val syncedAt: Long? = null,
     val isDeleted: Boolean = false,

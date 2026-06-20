@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
+import { AlertConfigField } from '@features/notifications/components/AlertConfigField';
+
 import { MAX_NOTES_LENGTH } from '../constants';
 import { useEventForm } from '../hooks/useEventForm';
 import type { CalendarEvent } from '../models';
@@ -121,6 +123,7 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
     formError,
     isSubmitting,
     isTimeReadOnly,
+    isAlertConfigVisible,
     setField,
     selectEventType,
     handleSubmit,
@@ -279,6 +282,13 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
         />
         <FieldError id="event-notes-error" errorKey={fieldErrors.notes} t={t} />
       </div>
+
+      {/* Alert Config */}
+      <AlertConfigField
+        alertOffsets={formState.alertOffsets}
+        onChange={(offsets) => setField('alertOffsets', offsets)}
+        visible={isAlertConfigVisible}
+      />
 
       {/* Form-level error */}
       {formError && (

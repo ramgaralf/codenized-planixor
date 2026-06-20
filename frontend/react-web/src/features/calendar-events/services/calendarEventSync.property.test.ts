@@ -49,6 +49,7 @@ const calendarEventArb = (
     endTime: (overrides?.endTime as fc.Arbitrary<number>) ?? fc.integer({ min: 0, max: 1439 }),
     totalHours: (overrides?.totalHours as fc.Arbitrary<number>) ?? fc.integer({ min: 0, max: 1440 * 31 }),
     notes: (overrides?.notes as fc.Arbitrary<string | null>) ?? notesArb,
+    alertOffsets: (overrides?.alertOffsets as fc.Arbitrary<number[]>) ?? fc.subarray([0, 10, 60, 1440]),
     modifiedAt: (overrides?.modifiedAt as fc.Arbitrary<Date>) ?? dateArb,
     syncedAt: (overrides?.syncedAt as fc.Arbitrary<Date | null>) ?? fc.option(dateArb, { nil: null }),
     isDeleted: (overrides?.isDeleted as fc.Arbitrary<boolean>) ?? fc.boolean(),

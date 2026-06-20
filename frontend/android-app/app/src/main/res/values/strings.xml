@@ -72,6 +72,11 @@
     <string name="settings_language_title">Idioma</string>
     <string name="settings_language_spanish">Español</string>
     <string name="settings_language_english">English</string>
+    <string name="settings_notifications_title">Notificaciones</string>
+    <string name="settings_notifications_channel_app">App</string>
+    <string name="settings_notifications_channel_system">Sistema</string>
+    <string name="settings_notifications_channel_both">Ambas</string>
+    <string name="settings_notifications_permission_warning">Las notificaciones del sistema están bloqueadas. Actívalas en los ajustes del dispositivo.</string>
 
     <!-- Actions -->
     <string name="action_create_event">Crear evento</string>
@@ -248,4 +253,29 @@
     <string name="empty_no_shifts">No hay turnos</string>
     <string name="empty_no_upcoming">No hay eventos próximos</string>
     <string name="empty_no_records">No hay registros</string>
+
+    <!-- Notification Channel -->
+    <string name="notification_channel_name">Planixor Alerts</string>
+
+    <!-- Notification Alert Config -->
+    <string name="alert_config_section_title">Alertas</string>
+    <string name="notification_alert_at_start">Al inicio</string>
+    <string name="notification_alert_10_min">10 minutos antes</string>
+    <string name="notification_alert_1_hour">1 hora antes</string>
+    <string name="notification_alert_1_day">1 día antes</string>
+
+    <!-- Notifications Screen -->
+    <string name="notifications_title">Notificaciones</string>
+    <string name="notifications_empty">No hay notificaciones pendientes</string>
+    <string name="notifications_mark_all_read">Marcar todas como leídas</string>
+    <string name="notifications_time_just_now">Ahora</string>
+    <string name="notifications_time_minutes_ago">Hace %1$d min</string>
+    <string name="notifications_time_hours_ago">Hace %1$d h</string>
+    <string name="notifications_badge_overflow">99+</string>
+
+    <!-- Notification Remaining Time -->
+    <string name="notification_remaining_now">Ahora</string>
+    <string name="notification_remaining_minutes">En %1$d minutos</string>
+    <string name="notification_remaining_1_hour">En 1 hora</string>
+    <string name="notification_remaining_1_day">En 1 día</string>
 </resources>

@@ -16,6 +16,7 @@ namespace Codenized.Planixor.Dtos.CalendarEvent.Sync;
 /// <param name="EndTime">The end time as minutes from midnight.</param>
 /// <param name="TotalHours">The total duration in minutes.</param>
 /// <param name="Notes">Optional notes for the event.</param>
+/// <param name="AlertOffsets">Alert offsets in minutes before event start (subset of 0, 10, 60, 1440).</param>
 /// <param name="ModifiedAt">The last modification timestamp (UTC).</param>
 /// <param name="IsDeleted">Whether the event is soft-deleted.</param>
 public record CalendarEventSyncRecord(
@@ -28,5 +29,6 @@ public record CalendarEventSyncRecord(
     int EndTime,
     int TotalHours,
     string? Notes,
+    List<int> AlertOffsets,
     DateTime ModifiedAt,
     bool IsDeleted);

@@ -17,8 +17,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * - Free (anonymous) users: sync is inactive; all data remains local-only on this device.
  */
 @Database(
-    entities = [CalendarEventEntity::class, ShiftEntity::class, ReminderEntity::class, AnnualHoursConfigEntity::class],
-    version = 6,
+    entities = [CalendarEventEntity::class, ShiftEntity::class, ReminderEntity::class, AnnualHoursConfigEntity::class, NotificationRecordEntity::class],
+    version = 7,
     exportSchema = false,
 )
 abstract class PlanixorDatabase : RoomDatabase() {
@@ -26,6 +26,7 @@ abstract class PlanixorDatabase : RoomDatabase() {
     abstract fun shiftDao(): ShiftDao
     abstract fun reminderDao(): ReminderDao
     abstract fun annualHoursConfigDao(): AnnualHoursConfigDao
+    abstract fun notificationRecordDao(): NotificationRecordDao
 
     companion object {
         /**
@@ -158,6 +159,52 @@ abstract class PlanixorDatabase : RoomDatabase() {
                 )
                 db.execSQL(
                     "CREATE INDEX IF NOT EXISTS `index_annual_hours_config_modifiedAt` ON `annual_hours_config` (`modifiedAt`)"
+                )
+            }
+        }
+
+        /**
+         * Migration from version 6 to 7:
+         * Creates the notification_records table for tracking notification delivery state.
+         * Adds alertOffsets column to calendar_events for alert configuration.
+         */
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `notification_records` (
+                        `id` TEXT NOT NULL,
+                        `calendarEventId` TEXT NOT NULL,
+                        `alertOffset` INTEGER NOT NULL,
+                        `triggerTime` INTEGER NOT NULL,
+                        `isDelivered` INTEGER NOT NULL,
+                        `isRead` INTEGER NOT NULL,
+                        `modifiedAt` INTEGER NOT NULL,
+                        `syncedAt` INTEGER,
+                        `isDeleted` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent()
+                )
+
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_notification_records_calendarEventId_alertOffset_isDeleted` ON `notification_records` (`calendarEventId`, `alertOffset`, `isDeleted`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_notification_records_triggerTime_isDelivered_isDeleted` ON `notification_records` (`triggerTime`, `isDelivered`, `isDeleted`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_notification_records_isDelivered_isRead_isDeleted` ON `notification_records` (`isDelivered`, `isRead`, `isDeleted`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_notification_records_isDeleted` ON `notification_records` (`isDeleted`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_notification_records_modifiedAt` ON `notification_records` (`modifiedAt`)"
+                )
+
+                db.execSQL(
+                    "ALTER TABLE calendar_events ADD COLUMN alertOffsets TEXT NOT NULL DEFAULT '[]'"
                 )
             }
         }

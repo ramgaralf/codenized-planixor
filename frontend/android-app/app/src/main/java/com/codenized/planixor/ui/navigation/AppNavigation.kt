@@ -16,6 +16,8 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +51,8 @@ import com.codenized.planixor.ui.calendar.CalendarScreen
 import com.codenized.planixor.ui.calendar.CalendarViewModel
 import com.codenized.planixor.ui.calendar.EventFormScreen
 import com.codenized.planixor.ui.calendar.EventFormUiState
+import com.codenized.planixor.ui.notifications.NotificationsScreen
+import com.codenized.planixor.ui.notifications.NotificationsViewModel
 import com.codenized.planixor.ui.reports.ReportMode
 import com.codenized.planixor.ui.reports.ReportsScreen
 import com.codenized.planixor.ui.reports.ReportsViewModel
@@ -60,6 +64,7 @@ import com.codenized.planixor.ui.reminders.RemindersScreen
 import com.codenized.planixor.ui.theme.PrimaryBlue
 import com.codenized.planixor.ui.theme.PrimaryPurple
 import com.codenized.planixor.ui.theme.TextSecondary
+import com.codenized.planixor.data.notification.NotificationChannel
 
 /**
  * Main navigation graph for the Planixor application.
@@ -76,6 +81,12 @@ fun AppNavigation() {
 
     // Observe ReportsViewModel mode when on Reports screen for top bar config button
     val isOnReportsScreen = currentRoute == Screen.Reports.route
+
+    // Notifications badge and channel visibility
+    val notificationsViewModel: NotificationsViewModel = hiltViewModel()
+    val notificationBadgeCount by notificationsViewModel.badgeCount.collectAsStateWithLifecycle()
+    val notificationChannel by notificationsViewModel.channelFlow.collectAsStateWithLifecycle()
+    val showBellIcon = notificationChannel != NotificationChannel.SYSTEM
 
     // Wrap in a composable helper to properly handle conditional ViewModel retrieval
     val isReportsYearMode = isOnReportsScreen && navBackStackEntry != null
@@ -106,7 +117,8 @@ fun AppNavigation() {
         currentRoute == Screen.ReminderCreate.route ||
         currentRoute == Screen.ReminderEdit.route ||
         currentRoute == Screen.EventCreate.route ||
-        currentRoute == Screen.EventEdit.route
+        currentRoute == Screen.EventEdit.route ||
+        currentRoute == Screen.Notifications.route
 
     // For bottom nav selection, map sub-routes to their parent
     val bottomNavRoute = when {
@@ -139,6 +151,7 @@ fun AppNavigation() {
                                 Screen.ReminderEdit.route -> stringResource(R.string.reminder_form_title_edit)
                                 Screen.EventCreate.route -> stringResource(R.string.event_form_title_create)
                                 Screen.EventEdit.route -> stringResource(R.string.event_form_title_edit)
+                                Screen.Notifications.route -> stringResource(R.string.notifications_title)
                                 else -> ""
                             },
                             style = MaterialTheme.typography.titleMedium.copy(
@@ -263,13 +276,11 @@ fun AppNavigation() {
                             }
                         }
                     }
-                    // Notifications icon button (stub)
-                    IconButton(onClick = { /* TODO: notifications */ }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Notifications,
-                            contentDescription = stringResource(R.string.content_description_notifications),
-                            tint = TextSecondary,
-                        )
+                    // Notifications icon button with badge
+                    if (showBellIcon) {
+                        IconButton(onClick = { navController.navigate(Screen.Notifications.route) }) {
+                            BadgedBellIcon(badgeCount = notificationBadgeCount)
+                        }
                     }
                     // User avatar icon button (stub)
                     IconButton(onClick = { /* TODO: user profile */ }) {
@@ -392,6 +403,9 @@ fun AppNavigation() {
             composable(Screen.Reports.route) {
                 ReportsScreen()
             }
+            composable(Screen.Notifications.route) {
+                NotificationsScreen()
+            }
             composable(Screen.Settings.route) {
                 SettingsScreen()
             }
@@ -431,6 +445,7 @@ private fun CalendarEventFormDestination(
         onStartTimeSelected = viewModel::onStartTimeSelected,
         onEndTimeSelected = viewModel::onEndTimeSelected,
         onNotesChanged = viewModel::onNotesChanged,
+        onAlertOffsetsChanged = viewModel::onAlertOffsetsChanged,
         onSave = {
             if (isEditMode) {
                 viewModel.updateEvent(eventId!!, onNavigateBack)
@@ -455,6 +470,31 @@ private fun CalendarEventFormDestination(
                 viewModel.deleteEvent(eventId, onNavigateBack)
             },
             onDismiss = { showDeleteDialogState.value = false },
+        )
+    }
+}
+
+/**
+ * Bell icon with optional badge showing unread notification count.
+ * Badge rules: 0 = hidden, 1-99 = exact count, >99 = "99+".
+ */
+@Composable
+private fun BadgedBellIcon(badgeCount: Int) {
+    BadgedBox(
+        badge = {
+            if (badgeCount > 0) {
+                Badge {
+                    Text(
+                        text = if (badgeCount > 99) "99+" else badgeCount.toString(),
+                    )
+                }
+            }
+        },
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Notifications,
+            contentDescription = stringResource(R.string.content_description_notifications),
+            tint = TextSecondary,
         )
     }
 }

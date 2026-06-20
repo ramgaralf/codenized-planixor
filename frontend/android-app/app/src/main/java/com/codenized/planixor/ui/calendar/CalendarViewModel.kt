@@ -6,6 +6,7 @@ import com.codenized.planixor.data.local.CalendarEventRepository
 import com.codenized.planixor.data.local.PreferencesRepository
 import com.codenized.planixor.data.local.ReminderRepository
 import com.codenized.planixor.data.local.ShiftRepository
+import com.codenized.planixor.data.notification.NotificationService
 import com.codenized.planixor.domain.model.CalendarEvent
 import com.codenized.planixor.domain.model.CalendarEventDisplay
 import com.codenized.planixor.domain.validation.CalendarEventValidation
@@ -50,6 +51,7 @@ class CalendarViewModel @Inject constructor(
     private val shiftRepository: ShiftRepository,
     private val reminderRepository: ReminderRepository,
     private val calendarEventRepository: CalendarEventRepository,
+    private val notificationService: NotificationService,
 ) : ViewModel() {
 
     private val _activeView = MutableStateFlow(CalendarView.Day)
@@ -172,6 +174,7 @@ class CalendarViewModel @Inject constructor(
             totalHours = event.totalHours,
             isTimeEditable = !isShift,
             notes = event.notes ?: "",
+            alertOffsets = event.alertOffsets,
             derivedName = event.name,
             derivedIcon = event.icon,
             derivedBackgroundColor = event.backgroundColor,
@@ -374,6 +377,16 @@ class CalendarViewModel @Inject constructor(
     }
 
     /**
+     * Updates the alert offsets selection.
+     * Stores the selected alert offsets in the form state.
+     */
+    fun onAlertOffsetsChanged(offsets: List<Int>) {
+        _formState.update { current ->
+            current.copy(alertOffsets = offsets)
+        }
+    }
+
+    /**
      * Saves the current form state as a new calendar event.
      * Returns true on success, false on validation error.
      */
@@ -403,10 +416,16 @@ class CalendarViewModel @Inject constructor(
                 endTime = endTime,
                 notes = state.notes.ifBlank { null },
                 shiftHoursWorked = shiftHoursWorked,
+                alertOffsets = state.alertOffsets,
             )
 
             when (result) {
                 is com.codenized.planixor.data.local.CalendarEventResult.Success -> {
+                    // Reconcile notifications after event is persisted
+                    if (state.alertOffsets.isNotEmpty()) {
+                        notificationService.reconcileNotifications(result.event)
+                    }
+                    notificationService.runCheckCycle()
                     resetForm()
                     onSuccess()
                 }
@@ -467,10 +486,15 @@ class CalendarViewModel @Inject constructor(
                 endTime = endTime,
                 notes = state.notes.ifBlank { null },
                 shiftHoursWorked = shiftHoursWorked,
+                alertOffsets = state.alertOffsets,
             )
 
             when (result) {
                 is com.codenized.planixor.data.local.CalendarEventResult.Success -> {
+                    // Reconcile notifications after event is persisted —
+                    // handles both alertOffsets changes and start time changes
+                    notificationService.reconcileNotifications(result.event)
+                    notificationService.runCheckCycle()
                     resetForm()
                     onSuccess()
                 }
@@ -492,6 +516,9 @@ class CalendarViewModel @Inject constructor(
             val result = calendarEventRepository.softDelete(eventId)
             when (result) {
                 is com.codenized.planixor.data.local.CalendarEventResult.Success -> {
+                    // Cascade soft-delete all notifications for this event
+                    notificationService.deleteNotificationsForEvent(eventId)
+                    notificationService.runCheckCycle()
                     resetForm()
                     onSuccess()
                 }
@@ -718,6 +745,7 @@ class CalendarViewModel @Inject constructor(
             endTime = entity.endTime,
             totalHours = entity.totalHours,
             notes = entity.notes,
+            alertOffsets = com.codenized.planixor.data.local.CalendarEventRepository.deserializeAlertOffsets(entity.alertOffsets),
             modifiedAt = entity.modifiedAt,
             syncedAt = entity.syncedAt,
             isDeleted = entity.isDeleted,

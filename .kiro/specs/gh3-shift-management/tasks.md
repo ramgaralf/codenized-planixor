@@ -76,7 +76,7 @@ This plan implements the Shift Management feature across all three Planixor sub-
     - **Property 10: Pull merge inserts new remote records**
     - **Validates: Requirements 6.1, 6.3, 6.5**
 
-- [ ] 4. Backend — API endpoints
+- [x] 4. Backend — API endpoints
   - [x] 4.1 Create Shift sync API endpoints
     - Add `POST /api/v1/shifts/sync/push` endpoint accepting `ShiftSyncPushRequest`
     - Add `GET /api/v1/shifts/sync/pull` endpoint with `lastSyncedAt` and cursor query params
@@ -160,7 +160,7 @@ This plan implements the Shift Management feature across all three Planixor sub-
     - Keys: shift.validation.name.required, shift.validation.name.maxLength, shift.validation.icon.required, shift.validation.color.required, shift.validation.startTime.required, shift.validation.endTime.required, shift.validation.hoursWorked.range, shift.error.loadFailed, shift.empty, shift.deactivate.confirm, shift.delete.confirm
     - _Requirements: 8.4_
 
-- [ ] 10. React Web — UI components
+- [x] 10. React Web — UI components
   - [x] 10.1 Create ShiftCard component
     - Create `src/features/shifts/components/ShiftCard.tsx`
     - Display: left-aligned color indicator, icon + name on first line, start time + end time + hours worked on second line
@@ -202,7 +202,7 @@ This plan implements the Shift Management feature across all three Planixor sub-
     - Dismiss on cancel, clicking outside, or pressing escape — all make no changes
     - _Requirements: 4.1, 5.1, 5.3_
 
-- [ ] 11. React Web — Shifts page (container)
+- [x] 11. React Web — Shifts page (container)
   - [x] 11.1 Implement Shifts page container
     - Create `src/features/shifts/shifts.tsx` as the main container
     - Load all non-deleted shifts ordered by createdAt ASC
@@ -233,7 +233,7 @@ This plan implements the Shift Management feature across all three Planixor sub-
     - Handle create and edit submission through shiftService
     - _Requirements: 1.1, 3.2, 7.7, 7.8, 9.2, 9.3_
 
-- [ ] 12. React Web — Routing and page registration
+- [x] 12. React Web — Routing and page registration
   - [x] 12.1 Register Shifts routes and navigation
     - Add route for `/shifts` (list page) and `/shifts/new` (create form) and `/shifts/:id/edit` (edit form) in the app router
     - Ensure the "Shifts" navigation item in the sidebar links to `/shifts`
@@ -296,7 +296,7 @@ This plan implements the Shift Management feature across all three Planixor sub-
     - **Property 10: Pull merge inserts new remote records**
     - **Validates: Requirements 6.1, 6.3, 6.5**
 
-- [ ] 17. Android — UI layer
+- [x] 17. Android — UI layer
   - [x] 17.1 Create ShiftsViewModel and ShiftsUiState
     - Create `ui/shifts/ShiftsUiState.kt` with sealed states: Loading, Empty, Error, Success(shifts)
     - Create `ui/shifts/ShiftsViewModel.kt` managing shift list loading, deactivation (with confirmation), reactivation (no confirmation), and deletion (with confirmation)
@@ -343,7 +343,7 @@ This plan implements the Shift Management feature across all three Planixor sub-
     - Test ShiftFormScreen validation display
     - _Requirements: 2.2, 2.3, 2.5, 4.4_
 
-- [ ] 18. Android — Navigation and i18n
+- [x] 18. Android — Navigation and i18n
   - [x] 18.1 Register Shifts navigation and i18n strings
     - Add Shifts destination to the bottom navigation graph
     - Add shift form navigation (create and edit routes)
@@ -354,7 +354,7 @@ This plan implements the Shift Management feature across all three Planixor sub-
 - [x] 19. Checkpoint — Android complete
   - Ensure all Android tests pass, build succeeds. Ask the user if questions arise.
 
-- [ ] 20. Cross-platform consistency verification
+- [x] 20. Cross-platform consistency verification
   - [x] 20.1 Verify cross-platform field and behavior parity
     - Confirm same fields, validation rules, and default behaviors on React Web and Android
     - Confirm same data elements in same order on ShiftCard across platforms

@@ -27,6 +27,7 @@ const makeEvent = (
   endTime: 960,
   totalHours: 480,
   notes: null,
+  alertOffsets: [],
   modifiedAt: new Date(),
   syncedAt: null,
   isDeleted: false,

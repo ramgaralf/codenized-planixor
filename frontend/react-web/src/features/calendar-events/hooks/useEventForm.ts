@@ -25,6 +25,7 @@ export interface EventFormState {
   endTime: number | null;
   totalHours: number;
   notes: string;
+  alertOffsets: number[];
 }
 
 export interface UseEventFormOptions {
@@ -39,6 +40,7 @@ export interface UseEventFormReturn {
   formError: string | null;
   isSubmitting: boolean;
   isTimeReadOnly: boolean;
+  isAlertConfigVisible: boolean;
   setField: (field: keyof EventFormState, value: EventFormState[keyof EventFormState]) => void;
   selectEventType: (eventType: 'shift' | 'reminder', eventTypeId: string) => Promise<void>;
   handleSubmit: () => Promise<void>;
@@ -159,6 +161,7 @@ const buildInitialState = (
       endTime: existingEvent.endTime,
       totalHours: existingEvent.totalHours,
       notes: existingEvent.notes ?? '',
+      alertOffsets: existingEvent.alertOffsets ?? [],
     };
   }
 
@@ -179,6 +182,7 @@ const buildInitialState = (
     endTime: defaultEndTime,
     totalHours: 0,
     notes: '',
+    alertOffsets: [],
   };
 };
 
@@ -266,6 +270,25 @@ const runValidation = async (
 
 
 /**
+ * Maps a caught submission error to form-level or field-level error state.
+ */
+const mapSubmitError = (
+  err: unknown,
+): { formError: string | null; fieldErrors: Record<string, string> } => {
+  if (err instanceof Error && err.message === CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY) {
+    return { formError: CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY, fieldErrors: {} };
+  }
+  if (err instanceof Error && err.message === CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER) {
+    return { formError: null, fieldErrors: { endTime: CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER } };
+  }
+  if (err instanceof Error && err.message === CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_DAY_RANGE) {
+    return { formError: null, fieldErrors: { endDay: CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_DAY_RANGE } };
+  }
+  return { formError: CALENDAR_EVENT_I18N_KEYS.ERROR_SAVE_FAILED, fieldErrors: {} };
+};
+
+
+/**
  * Hook for managing the calendar event form state, validation, and submission.
  *
  * Manages: startDay, endDay, startTime, endTime, totalHours (computed),
@@ -302,6 +325,23 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
     () => formState.eventType === 'shift',
     [formState.eventType],
   );
+
+  /**
+   * Whether the alert configuration field should be visible.
+   * Only shows when event start is strictly in the future (start > now).
+   *
+   * **Validates: Requirements 1.1, 1.3**
+   */
+  const isAlertConfigVisible = useMemo(() => {
+    if (!formState.startDay || formState.startTime === null) return false;
+    const parts = formState.startDay.split('-').map(Number);
+    const year = parts[0] ?? 0;
+    const month = parts[1] ?? 1;
+    const day = parts[2] ?? 1;
+    const startDateTime = new Date(year, month - 1, day, 0, 0, 0, 0);
+    startDateTime.setMinutes(formState.startTime);
+    return startDateTime.getTime() > Date.now();
+  }, [formState.startDay, formState.startTime]);
 
   /**
    * Recalculate totalHours for reminders whenever time/day fields change.
@@ -456,6 +496,7 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
           startTime: formState.startTime!,
           endTime: formState.endTime!,
           notes: formState.notes || null,
+          alertOffsets: isAlertConfigVisible ? formState.alertOffsets : [],
         });
       } else {
         await calendarEventService.create({
@@ -466,6 +507,7 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
           startTime: formState.startTime!,
           endTime: formState.endTime!,
           notes: formState.notes || null,
+          alertOffsets: isAlertConfigVisible ? formState.alertOffsets : [],
         });
       }
 
@@ -480,40 +522,24 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
         endTime: null,
         totalHours: 0,
         notes: '',
+        alertOffsets: [],
       });
 
       onSuccess?.();
     } catch (err) {
       console.error('Failed to save calendar event:', err);
 
-      if (
-        err instanceof Error &&
-        err.message === CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY
-      ) {
-        setFormError(CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY);
-      } else if (
-        err instanceof Error &&
-        err.message === CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER
-      ) {
-        setFieldErrors((prev) => ({
-          ...prev,
-          endTime: CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_TIME_FOR_REMINDER,
-        }));
-      } else if (
-        err instanceof Error &&
-        err.message === CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_DAY_RANGE
-      ) {
-        setFieldErrors((prev) => ({
-          ...prev,
-          endDay: CALENDAR_EVENT_I18N_KEYS.VALIDATION_INVALID_DAY_RANGE,
-        }));
-      } else {
-        setFormError(CALENDAR_EVENT_I18N_KEYS.ERROR_SAVE_FAILED);
+      const mapped = mapSubmitError(err);
+      if (mapped.formError) {
+        setFormError(mapped.formError);
+      }
+      if (Object.keys(mapped.fieldErrors).length > 0) {
+        setFieldErrors((prev) => ({ ...prev, ...mapped.fieldErrors }));
       }
     } finally {
       setIsSubmitting(false);
     }
-  }, [formState, isEditMode, existingEvent, activeView, currentDate, onSuccess]);
+  }, [formState, isEditMode, existingEvent, activeView, currentDate, onSuccess, isAlertConfigVisible]);
 
   const handleCancel = useCallback(() => {
     onCancel?.();
@@ -525,6 +551,7 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
     formError,
     isSubmitting,
     isTimeReadOnly,
+    isAlertConfigVisible,
     setField,
     selectEventType,
     handleSubmit,
