@@ -46,7 +46,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithMissingRequiredFields_RejectsRecords()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid recordId = Guid.NewGuid();
         var invalidRecord = new CalendarEventSyncRecord(
             recordId,
@@ -82,7 +82,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithRecordNotOwnedByUser_RejectsWithUnauthorized()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid recordId = Guid.NewGuid();
         CalendarEventSyncRecord record = CreateValidRecord(recordId);
 
@@ -112,7 +112,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithNewerRemoteRecord_UpdatesExistingRecord()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid recordId = Guid.NewGuid();
         DateTime olderTimestamp = new DateTime(2024, 1, 10, 8, 0, 0, DateTimeKind.Utc);
         DateTime newerTimestamp = new DateTime(2024, 6, 15, 12, 0, 0, DateTimeKind.Utc);
@@ -170,7 +170,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithOlderRemoteRecord_AcknowledgesWithoutUpdating()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid recordId = Guid.NewGuid();
         DateTime newerTimestamp = new DateTime(2024, 6, 15, 12, 0, 0, DateTimeKind.Utc);
         DateTime olderTimestamp = new DateTime(2024, 1, 10, 8, 0, 0, DateTimeKind.Utc);
@@ -227,7 +227,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithNewRecord_InsertsNewRecord()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid recordId = Guid.NewGuid();
         CalendarEventSyncRecord record = CreateValidRecord(recordId);
 
@@ -257,7 +257,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithEndDayBeforeStartDay_RejectsRecord()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid recordId = Guid.NewGuid();
         var record = new CalendarEventSyncRecord(
             recordId,
@@ -293,7 +293,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithShiftSameDayEndTimeLessThanStartTime_AcceptsRecord()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid recordId = Guid.NewGuid();
         var record = new CalendarEventSyncRecord(
             recordId,
@@ -332,7 +332,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithReminderSameDayEndTimeLessOrEqualStartTime_RejectsRecord()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid recordId = Guid.NewGuid();
         var record = new CalendarEventSyncRecord(
             recordId,
@@ -368,7 +368,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithReminderSameDayEndTimeEqualStartTime_RejectsRecord()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid recordId = Guid.NewGuid();
         var record = new CalendarEventSyncRecord(
             recordId,
@@ -404,7 +404,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithReminderDifferentDaysEndTimeLessThanStartTime_AcceptsRecord()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid recordId = Guid.NewGuid();
         var record = new CalendarEventSyncRecord(
             recordId,
@@ -443,7 +443,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithNegativeTotalHours_RejectsRecord()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid recordId = Guid.NewGuid();
         var record = new CalendarEventSyncRecord(
             recordId,
@@ -478,7 +478,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public void Run_WithExceedingBatchSize_ThrowsBadRequestException()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         List<CalendarEventSyncRecord> records = Enumerable.Range(0, 101)
             .Select(_ => CreateValidRecord(Guid.NewGuid()))
             .ToList();
@@ -497,7 +497,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithAllValid_ReturnsAllAcknowledged()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid id1 = Guid.NewGuid();
         Guid id2 = Guid.NewGuid();
         Guid id3 = Guid.NewGuid();
@@ -535,7 +535,7 @@ public sealed class CalendarEventSyncPushServiceTests
     public async Task Run_WithMixedValidAndInvalid_ReturnsCorrectCounts()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid validId = Guid.NewGuid();
         Guid invalidId = Guid.NewGuid();
 

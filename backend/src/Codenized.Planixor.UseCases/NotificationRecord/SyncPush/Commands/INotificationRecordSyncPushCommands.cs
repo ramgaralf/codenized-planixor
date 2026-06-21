@@ -21,5 +21,5 @@ public interface INotificationRecordSyncPushCommands
     /// <param name="userId">The user identifier who owns the notification records.</param>
     /// <param name="records">The batch of notification record entities to upsert.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpsertAsync(Guid userId, IReadOnlyList<NotificationRecord> records);
+    Task UpsertAsync(string userId, IReadOnlyList<NotificationRecord> records);
 }

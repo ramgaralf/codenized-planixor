@@ -28,7 +28,7 @@ public sealed class AnnualHoursConfigConfiguration : IEntityTypeConfiguration<An
             .IsRequired();
 
         builder.Property(a => a.UserId)
-            .HasColumnType("char(36)")
+            .HasColumnType("varchar(50)")
             .IsRequired();
 
         builder.Property(a => a.Year)

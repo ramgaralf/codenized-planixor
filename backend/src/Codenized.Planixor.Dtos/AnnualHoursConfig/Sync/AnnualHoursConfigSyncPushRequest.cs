@@ -16,5 +16,5 @@ public record AnnualHoursConfigSyncPushRequest(List<AnnualHoursConfigSyncRecord>
     /// Gets or sets the authenticated user identifier. Set by the endpoint from the auth context.
     /// </summary>
     [JsonIgnore]
-    public Guid UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 }

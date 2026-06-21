@@ -5,8 +5,10 @@
 namespace Codenized.Planixor.Api.Endpoints.Reminder;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
+using Codenized.CleanArchitecture.Abstractions.Exceptions;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
+using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.Reminder.Sync;
 
 /// <summary>Register reminder sync pull endpoints.</summary>
@@ -20,11 +22,11 @@ internal static class ReminderSyncPullEndpoints
         group.MapEndpoint<GenericResponse<ReminderSyncPullResponse>>(
             HttpMethods.Get,
             "/pull",
-            async (DateTime? lastSyncedAt, string? cursor, IController<ReminderSyncPullRequest, ReminderSyncPullResponse> controller) =>
+            async (DateTime? lastSyncedAt, string? cursor, IController<ReminderSyncPullRequest, ReminderSyncPullResponse> controller, ISecurityService securityService) =>
             {
-                // TODO: Extract UserId from authenticated user claims
-                // TODO: Enforce active subscription check (403 ForbiddenException if no active subscription)
-                var request = new ReminderSyncPullRequest(Guid.Empty, lastSyncedAt, cursor);
+                string userId = securityService.GetAuthenticatedUsername()
+                    ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
+                var request = new ReminderSyncPullRequest(userId, lastSyncedAt, cursor);
                 GenericResponse<ReminderSyncPullResponse> result = await controller.Handle(request);
                 return Results.Ok(result);
             },

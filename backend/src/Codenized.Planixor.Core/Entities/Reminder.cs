@@ -23,7 +23,7 @@ public sealed class Reminder
     /// <summary>
     /// Gets the user identifier who owns this reminder.
     /// </summary>
-    public Guid UserId { get; private set; }
+    public string UserId { get; private set; } = string.Empty;
 
     /// <summary>
     /// Gets the reminder name.
@@ -77,7 +77,7 @@ public sealed class Reminder
     /// <returns>A new <see cref="Reminder"/> instance.</returns>
     public static Reminder Create(
         Guid id,
-        Guid userId,
+        string userId,
         ReminderName name,
         ReminderIcon icon,
         ReminderColor backgroundColor,
@@ -113,7 +113,7 @@ public sealed class Reminder
     /// <returns>A new <see cref="Reminder"/> instance from sync data.</returns>
     public static Reminder CreateFromSync(
         Guid id,
-        Guid userId,
+        string userId,
         ReminderName name,
         ReminderIcon icon,
         ReminderColor backgroundColor,

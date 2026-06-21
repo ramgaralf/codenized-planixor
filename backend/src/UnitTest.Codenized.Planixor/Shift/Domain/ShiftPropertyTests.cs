@@ -295,7 +295,7 @@ public sealed class ShiftPropertyTests
                 from hoursWorkedMinutes in Gen.Choose(1, 1440)
                 select new ShiftCreateInput(
                     Guid.NewGuid(),
-                    Guid.NewGuid(),
+                    Guid.NewGuid().ToString(),
                     ShiftName.Create(firstChar + new string(remainingChars)),
                     ShiftIcon.Create(ValidEmojis[emojiIndex]),
                     ShiftColor.Create(PaletteColors[colorIndex]),
@@ -358,7 +358,7 @@ public sealed class ShiftPropertyTests
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
     public record ShiftCreateInput(
         Guid Id,
-        Guid UserId,
+        string UserId,
         ShiftName Name,
         ShiftIcon Icon,
         ShiftColor BackgroundColor,

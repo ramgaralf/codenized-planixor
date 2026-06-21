@@ -276,7 +276,7 @@ public sealed class ReminderPropertyTests
                 from colorIndex in Gen.Choose(0, PaletteColors.Length - 1)
                 select new ReminderCreateInput(
                     Guid.NewGuid(),
-                    Guid.NewGuid(),
+                    Guid.NewGuid().ToString(),
                     ReminderName.Create(firstChar + new string(remainingChars)),
                     ReminderIcon.Create(ValidEmojis[emojiIndex]),
                     ReminderColor.Create(PaletteColors[colorIndex]),
@@ -328,7 +328,7 @@ public sealed class ReminderPropertyTests
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
     public record ReminderCreateInput(
         Guid Id,
-        Guid UserId,
+        string UserId,
         ReminderName Name,
         ReminderIcon Icon,
         ReminderColor BackgroundColor,

@@ -12,7 +12,7 @@ Dependencies always point **inward**. Nothing in an inner ring can know anything
 ```
 Tier 1 — Enterprise Business Rules (Core) — DDD Tactical Patterns
   Rich Entities (behavior + state), Value Objects (self-validating records),
-  Enums, Domain Events, Domain Exceptions, Settings
+  Enums, Domain Events, Domain Exceptions, Settings, Service Interfaces
 
 Tier 2 — Application Business Rules (Dtos, Events, UseCases)
   Use case services, Request/Response DTOs, Request Validators (input validation),
@@ -79,6 +79,7 @@ flowchart TD
 12. **Value Objects are `record` types**: immutable, self-validating, with private constructors and static `Create()` factory methods.
 13. **TDD mandatory**: all domain logic (entities, value objects) and application logic (services) must be developed following Red-Green-Refactor.
 14. **Dual validation**: Request Validators (Tier 2) validate input format/presence; Value Objects (Tier 1) enforce domain invariants. Both levels coexist.
+15. **Service interfaces in Core**: When a service must be accessible from Tier 2 (Use Cases), its interface lives in `Core/Services/{ServiceName}/I{ServiceName}.cs`. The implementation lives in Tier 3 (Services). This preserves the dependency rule.
 
 ## Use case service contract
 

@@ -34,7 +34,7 @@ public sealed class NotificationRecordSyncPushQueries : INotificationRecordSyncP
     /// <param name="ids">The list of notification record identifiers to look up.</param>
     /// <param name="userId">The user identifier to scope the query.</param>
     /// <returns>A read-only list of notification records matching the provided IDs and owned by the user.</returns>
-    public async Task<IReadOnlyList<NotificationRecordEntity>> GetByIdsAsync(IReadOnlyList<Guid> ids, Guid userId)
+    public async Task<IReadOnlyList<NotificationRecordEntity>> GetByIdsAsync(IReadOnlyList<Guid> ids, string userId)
     {
         List<NotificationRecordEntity> records = await this.context.NotificationRecords
             .AsNoTracking()

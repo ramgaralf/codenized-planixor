@@ -42,7 +42,7 @@ public sealed class CalendarEventSyncPullServiceTests
     public async Task Run_WithValidRequest_ReturnsCalendarEventRecords()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         DateTime lastSyncedAt = new DateTime(2024, 6, 15, 10, 0, 0, DateTimeKind.Utc);
         string cursor = "page-cursor";
         var request = new CalendarEventSyncPullRequest(userId, lastSyncedAt, cursor);
@@ -86,7 +86,7 @@ public sealed class CalendarEventSyncPullServiceTests
     public async Task Run_WithNullLastSyncedAt_UsesMinValue()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         var request = new CalendarEventSyncPullRequest(userId, null, null);
 
         this.queries.GetModifiedAfterAsync(userId, DateTime.MinValue, null)
@@ -113,7 +113,7 @@ public sealed class CalendarEventSyncPullServiceTests
     public async Task Run_WithCursor_PassesCursorToQueries()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         DateTime lastSyncedAt = new DateTime(2024, 6, 15, 10, 0, 0, DateTimeKind.Utc);
         string cursor = "abc123-next-page";
         var request = new CalendarEventSyncPullRequest(userId, lastSyncedAt, cursor);
@@ -141,7 +141,7 @@ public sealed class CalendarEventSyncPullServiceTests
     public async Task Run_ReturnsNullCursorWhenNoMorePages()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
         var request = new CalendarEventSyncPullRequest(userId, lastSyncedAt, null);
 
@@ -184,7 +184,7 @@ public sealed class CalendarEventSyncPullServiceTests
     public async Task Run_MapsEntitiesCorrectlyToSyncRecords()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid eventId = Guid.NewGuid();
         Guid eventTypeId = Guid.NewGuid();
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
@@ -242,7 +242,7 @@ public sealed class CalendarEventSyncPullServiceTests
     public async Task Run_WithMultiDayEvent_MapsStartDayAndEndDayCorrectly()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid eventId = Guid.NewGuid();
         Guid eventTypeId = Guid.NewGuid();
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
@@ -300,7 +300,7 @@ public sealed class CalendarEventSyncPullServiceTests
     public async Task Run_WithDeletedEvent_MapsIsDeletedAndFieldsCorrectly()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid eventId = Guid.NewGuid();
         Guid eventTypeId = Guid.NewGuid();
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);

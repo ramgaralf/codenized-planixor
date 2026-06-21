@@ -38,7 +38,7 @@ public sealed class AnnualHoursConfigSyncPushCommands : IAnnualHoursConfigSyncPu
     /// <param name="userId">The user identifier who owns the configurations.</param>
     /// <param name="configs">The batch of annual hours config entities to upsert.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpsertAsync(Guid userId, IReadOnlyList<AnnualHoursConfigEntity> configs)
+    public async Task UpsertAsync(string userId, IReadOnlyList<AnnualHoursConfigEntity> configs)
     {
         List<Guid> incomingIds = configs.Select(c => c.Id).ToList();
 

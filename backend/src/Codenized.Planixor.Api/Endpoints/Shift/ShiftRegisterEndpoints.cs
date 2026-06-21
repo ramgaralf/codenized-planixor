@@ -5,8 +5,10 @@
 namespace Codenized.Planixor.Api.Endpoints.Shift;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
+using Codenized.CleanArchitecture.Abstractions.Exceptions;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
+using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.Shift.Sync;
 
 /// <summary>Register shift-related endpoints.</summary>
@@ -28,10 +30,10 @@ internal static class ShiftRegisterEndpoints
         group.MapEndpoint<GenericResponse<ShiftSyncPushResponse>>(
             HttpMethods.Post,
             "/push",
-            async (ShiftSyncPushRequest request, IController<ShiftSyncPushRequest, ShiftSyncPushResponse> controller) =>
+            async (ShiftSyncPushRequest request, ISecurityService securityService, IController<ShiftSyncPushRequest, ShiftSyncPushResponse> controller) =>
             {
-                // TODO: Extract UserId from authenticated user claims and assign to request.UserId
-                // TODO: Enforce active subscription check (403 ForbiddenException if no active subscription)
+                request.UserId = securityService.GetAuthenticatedUsername()
+                    ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
                 GenericResponse<ShiftSyncPushResponse> result = await controller.Handle(request);
                 return Results.Ok(result);
             },
@@ -42,11 +44,11 @@ internal static class ShiftRegisterEndpoints
         group.MapEndpoint<GenericResponse<ShiftSyncPullResponse>>(
             HttpMethods.Get,
             "/pull",
-            async (DateTime? lastSyncedAt, string? cursor, IController<ShiftSyncPullRequest, ShiftSyncPullResponse> controller) =>
+            async (DateTime? lastSyncedAt, string? cursor, ISecurityService securityService, IController<ShiftSyncPullRequest, ShiftSyncPullResponse> controller) =>
             {
-                // TODO: Extract UserId from authenticated user claims
-                // TODO: Enforce active subscription check (403 ForbiddenException if no active subscription)
-                var request = new ShiftSyncPullRequest(Guid.Empty, lastSyncedAt, cursor);
+                string userId = securityService.GetAuthenticatedUsername()
+                    ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
+                var request = new ShiftSyncPullRequest(userId, lastSyncedAt, cursor);
                 GenericResponse<ShiftSyncPullResponse> result = await controller.Handle(request);
                 return Results.Ok(result);
             },

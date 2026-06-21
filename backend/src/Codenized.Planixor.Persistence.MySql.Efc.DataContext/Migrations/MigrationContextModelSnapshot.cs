@@ -39,8 +39,9 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.Property<DateTime?>("SyncedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
 
                     b.Property<int>("Year")
                         .HasColumnType("int");
@@ -109,8 +110,9 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.Property<int>("TotalHours")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
 
                     b.HasKey("Id");
 
@@ -168,8 +170,9 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.Property<DateTime>("TriggerTime")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
 
                     b.HasKey("Id");
 
@@ -210,8 +213,9 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.Property<DateTime?>("SyncedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
 
                     b.HasKey("Id");
 
@@ -249,8 +253,9 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.Property<DateTime?>("SyncedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
 
                     b.HasKey("Id");
 

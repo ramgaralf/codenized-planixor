@@ -19,7 +19,7 @@ public interface ICalendarEventSyncPullQueries
     /// <param name="lastSyncedAt">The timestamp after which modifications should be returned.</param>
     /// <param name="cursor">The pagination cursor from a previous response, or null for the first page.</param>
     /// <returns>A paginated result containing calendar events, a cursor for the next page, and a flag indicating more records exist.</returns>
-    Task<CalendarEventSyncPullResult> GetModifiedAfterAsync(Guid userId, DateTime lastSyncedAt, string? cursor);
+    Task<CalendarEventSyncPullResult> GetModifiedAfterAsync(string userId, DateTime lastSyncedAt, string? cursor);
 }
 
 /// <summary>

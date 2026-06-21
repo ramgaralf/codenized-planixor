@@ -20,6 +20,8 @@ api/
 │   │   │   └── {Entity}{Action}edDomainEvent.cs
 │   │   ├── Exceptions/                                             # Domain-specific exceptions
 │   │   │   └── {Entity}DomainException.cs
+│   │   ├── Services/                                               # Service interfaces (abstractions for outer layers)
+│   │   │   └── {ServiceName}/I{ServiceName}.cs
 │   │   └── Settings/                                               # AppSettings.cs
 │   │
 │   ├── {Organization}.{Product}.Dtos/                             # Application Business Rules
@@ -42,6 +44,8 @@ api/
 │   │       └── Extensions/{Entity}{Action}Extensions.cs
 │   │
 │   ├── {Organization}.{Product}.Services/                         # Interface Adapters
+│   │   ├── Authentication/                                         # Custom authentication handlers
+│   │   │   └── ApiKeyAuthenticationHandler.cs
 │   │   └── {ServiceName}/
 │   │       ├── I{ServiceName}.cs
 │   │       └── {ServiceName}.cs
@@ -76,12 +80,15 @@ api/
 │   │   └── Dockerfile
 │   │
 │   └── UnitTest.{Organization}.{Product}/                         # Tests
-│       └── {Entity}/
-│           ├── Domain/{Entity}Tests.cs                             # Entity behavior tests (TDD)
-│           ├── ValueObjects/{ValueObject}Tests.cs                  # Value Object validation tests (TDD)
-│           ├── Validators/{Entity}{Action}RequestValidatorTests.cs
-│           ├── Services/{Entity}{Action}ServiceTests.cs
-│           └── Controllers/{Entity}{Action}ControllerTests.cs
+│       ├── {Entity}/
+│       │   ├── Domain/{Entity}Tests.cs                             # Entity behavior tests (TDD)
+│       │   ├── ValueObjects/{ValueObject}Tests.cs                  # Value Object validation tests (TDD)
+│       │   ├── Validators/{Entity}{Action}RequestValidatorTests.cs
+│       │   ├── Services/{Entity}{Action}ServiceTests.cs
+│       │   └── Controllers/{Entity}{Action}ControllerTests.cs
+│       └── Security/
+│           ├── Services/SecurityServiceTests.cs
+│           └── Authentication/ApiKeyAuthenticationHandlerTests.cs
 │
 ├── docs/
 ├── docker-compose.yml

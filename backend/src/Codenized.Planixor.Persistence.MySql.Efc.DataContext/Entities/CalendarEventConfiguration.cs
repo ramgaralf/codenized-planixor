@@ -33,7 +33,7 @@ public sealed class CalendarEventConfiguration : IEntityTypeConfiguration<Calend
             .IsRequired();
 
         builder.Property(e => e.UserId)
-            .HasColumnType("char(36)")
+            .HasColumnType("varchar(50)")
             .IsRequired();
 
         builder.Property(e => e.EventType)

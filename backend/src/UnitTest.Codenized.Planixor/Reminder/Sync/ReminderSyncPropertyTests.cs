@@ -248,7 +248,7 @@ public sealed class ReminderSyncPropertyTests
     private static Reminder ResolveConflict(DateTime localModifiedAt, DateTime remoteModifiedAt)
     {
         Guid sharedId = Guid.NewGuid();
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         ReminderName name = ReminderName.Create("Test");
         ReminderIcon icon = ReminderIcon.Create("\U0001F4BC");
         ReminderColor color = ReminderColor.Create("#EF4444");
@@ -381,7 +381,7 @@ public sealed class ReminderSyncPropertyTests
                 from modifiedDayOffset in Gen.Choose(1, 365)
                 select new ReminderSyncCreateInput(
                     Guid.NewGuid(),
-                    Guid.NewGuid(),
+                    Guid.NewGuid().ToString(),
                     ReminderName.Create(firstChar + new string(remainingChars)),
                     ReminderIcon.Create(ValidEmojis[emojiIndex]),
                     ReminderColor.Create(PaletteColors[colorIndex]),
@@ -423,7 +423,7 @@ public sealed class ReminderSyncPropertyTests
     /// </summary>
     public record ReminderSyncCreateInput(
         Guid Id,
-        Guid UserId,
+        string UserId,
         ReminderName Name,
         ReminderIcon Icon,
         ReminderColor BackgroundColor,

@@ -21,5 +21,5 @@ public interface IReminderSyncPushCommands
     /// <param name="userId">The user identifier who owns the reminders.</param>
     /// <param name="reminders">The batch of reminder entities to upsert.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpsertAsync(Guid userId, IReadOnlyList<Reminder> reminders);
+    Task UpsertAsync(string userId, IReadOnlyList<Reminder> reminders);
 }

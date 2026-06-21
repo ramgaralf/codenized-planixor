@@ -21,7 +21,7 @@ public sealed class AnnualHoursConfig
     /// <summary>
     /// Gets the user identifier who owns this configuration.
     /// </summary>
-    public Guid UserId { get; private set; }
+    public string UserId { get; private set; } = string.Empty;
 
     /// <summary>
     /// Gets the calendar year this configuration applies to.
@@ -60,7 +60,7 @@ public sealed class AnnualHoursConfig
     /// <returns>A new <see cref="AnnualHoursConfig"/> instance.</returns>
     public static AnnualHoursConfig CreateFromSync(
         Guid id,
-        Guid userId,
+        string userId,
         int year,
         int configuredHours,
         DateTime modifiedAt,

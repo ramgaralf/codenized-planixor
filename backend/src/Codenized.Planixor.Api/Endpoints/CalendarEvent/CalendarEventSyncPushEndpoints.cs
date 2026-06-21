@@ -5,8 +5,10 @@
 namespace Codenized.Planixor.Api.Endpoints.CalendarEvent;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
+using Codenized.CleanArchitecture.Abstractions.Exceptions;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
+using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.CalendarEvent.Sync;
 
 /// <summary>Register calendar event sync push endpoints.</summary>
@@ -20,10 +22,10 @@ internal static class CalendarEventSyncPushEndpoints
         group.MapEndpoint<GenericResponse<CalendarEventSyncPushResponse>>(
             HttpMethods.Post,
             "/push",
-            async (CalendarEventSyncPushRequest request, IController<CalendarEventSyncPushRequest, CalendarEventSyncPushResponse> controller) =>
+            async (CalendarEventSyncPushRequest request, ISecurityService securityService, IController<CalendarEventSyncPushRequest, CalendarEventSyncPushResponse> controller) =>
             {
-                // TODO: Extract UserId from authenticated user claims and assign to request.UserId
-                // TODO: Enforce active subscription check (403 ForbiddenException if no active subscription)
+                request.UserId = securityService.GetAuthenticatedUsername()
+                    ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
                 GenericResponse<CalendarEventSyncPushResponse> result = await controller.Handle(request);
                 return Results.Ok(result);
             },

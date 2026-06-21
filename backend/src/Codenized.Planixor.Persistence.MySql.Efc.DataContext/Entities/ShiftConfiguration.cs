@@ -28,7 +28,7 @@ public sealed class ShiftConfiguration : IEntityTypeConfiguration<Shift>
             .IsRequired();
 
         builder.Property(s => s.UserId)
-            .HasColumnType("char(36)")
+            .HasColumnType("varchar(50)")
             .IsRequired();
 
         builder.OwnsOne(s => s.Name, name =>

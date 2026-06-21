@@ -10,4 +10,4 @@ namespace Codenized.Planixor.Dtos.CalendarEvent.Sync;
 /// <param name="UserId">The authenticated user identifier.</param>
 /// <param name="LastSyncedAt">The timestamp of the last sync (UTC), or null for initial sync.</param>
 /// <param name="Cursor">The pagination cursor for subsequent pages, or null for the first page.</param>
-public record CalendarEventSyncPullRequest(Guid UserId, DateTime? LastSyncedAt, string? Cursor);
+public record CalendarEventSyncPullRequest(string UserId, DateTime? LastSyncedAt, string? Cursor);

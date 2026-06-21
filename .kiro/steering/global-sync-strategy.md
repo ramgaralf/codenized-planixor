@@ -18,9 +18,9 @@ All CRUD operations happen against local storage first. No network connection is
 | Tier | Capabilities |
 |---|---|
 | **Free (anonymous)** | Full offline functionality on a single device. No account required. Data lives only on the device. |
-| **Subscribed (authenticated)** | Everything in Free + bidirectional sync across devices via the API. Requires Google Sign-In + active subscription. |
+| **Subscribed (authenticated)** | Everything in Free + bidirectional sync across devices via the API. Requires a valid API key configured in the backend's SecuritySettings. |
 
-**Single account constraint**: A user can only sync with one account at a time per device. All local data belongs implicitly to the device owner. The client does not store `userId` per record — ownership is determined by the authenticated session. If a user signs out and signs in with a different account, local data from the previous account is not accessible to the new account (it remains in local storage but is not visible or syncable until the original account signs back in).
+**Single account constraint**: A user can only sync with one account at a time per device. All local data belongs implicitly to the device owner. The client does not store `userId` per record — ownership is determined by the authenticated API key (username from SecuritySettings). If a user signs out and signs in with a different account, local data from the previous account is not accessible to the new account (it remains in local storage but is not visible or syncable until the original account signs back in).
 
 ## Synchronization rules
 
@@ -90,6 +90,7 @@ Every syncable record includes:
 - Return records modified after a given timestamp for the authenticated user.
 - Never expose or accept data belonging to a different user.
 - Handle soft-deleted records (propagate deletions across devices).
+- Identify the user by the `username` from the validated API key (string, not GUID).
 
 ## Rules
 
@@ -98,3 +99,4 @@ Every syncable record includes:
 - Sync logic is a cross-cutting concern — implement it as a reusable service/module, not per-feature.
 - The sync service MUST be inactive (no network attempts) when connectivity is unavailable.
 - The `backend` API sync endpoints MUST reject requests from users without an active subscription.
+- The `backend` API identifies users by the `username` string from SecuritySettings (not a GUID). The `UserId` field on syncable entities is `string` type stored as `varchar(50)` in the database.
