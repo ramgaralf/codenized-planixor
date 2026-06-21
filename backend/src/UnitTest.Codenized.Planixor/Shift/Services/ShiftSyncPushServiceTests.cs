@@ -41,7 +41,7 @@ public sealed class ShiftSyncPushServiceTests
     public async Task Run_WithValidRequest_CallsUpsertAsyncWithCorrectUserId()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         var request = new ShiftSyncPushRequest(
         [
             new ShiftSyncItem(
@@ -78,7 +78,7 @@ public sealed class ShiftSyncPushServiceTests
     public async Task Run_WithMultipleShifts_PassesAllMappedEntitiesToUpsert()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         var request = new ShiftSyncPushRequest(
         [
             new ShiftSyncItem(
@@ -127,7 +127,7 @@ public sealed class ShiftSyncPushServiceTests
     public async Task Run_WithThreeShifts_ReturnsSyncedCountOfThree()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         var request = new ShiftSyncPushRequest(
         [
             CreateSyncItem(),
@@ -153,7 +153,7 @@ public sealed class ShiftSyncPushServiceTests
     public async Task Run_WithSyncItem_MapsFieldsToShiftEntityCorrectly()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid shiftId = Guid.NewGuid();
         DateTime createdAt = new DateTime(2024, 1, 10, 8, 0, 0, DateTimeKind.Utc);
         DateTime modifiedAt = new DateTime(2024, 6, 15, 12, 0, 0, DateTimeKind.Utc);
@@ -212,7 +212,7 @@ public sealed class ShiftSyncPushServiceTests
     public async Task Run_WithDeletedShift_MapsIsDeletedFlagCorrectly()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         var request = new ShiftSyncPushRequest(
         [
             new ShiftSyncItem(

@@ -9,6 +9,7 @@ using Codenized.Planixor.Api.Endpoints.AnnualHoursConfig;
 using Codenized.Planixor.Api.Endpoints.CalendarEvent;
 using Codenized.Planixor.Api.Endpoints.NotificationRecord;
 using Codenized.Planixor.Api.Endpoints.Reminder;
+using Codenized.Planixor.Api.Endpoints.Security;
 using Codenized.Planixor.Api.Endpoints.Shift;
 
 /// <summary>Register endpoints.</summary>
@@ -30,6 +31,7 @@ internal static class RegisterEndpoints
         app.MapCalendarEventEndpoints(apiBasePath);
         app.MapAnnualHoursConfigEndpoints(apiBasePath);
         app.MapNotificationRecordEndpoints(apiBasePath);
+        app.MapSecurityEndpoints(apiBasePath);
         return app;
     }
 }

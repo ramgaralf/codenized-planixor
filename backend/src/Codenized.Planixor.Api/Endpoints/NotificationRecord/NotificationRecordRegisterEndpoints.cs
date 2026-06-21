@@ -20,6 +20,7 @@ internal static class NotificationRecordRegisterEndpoints
             .WithTags("NotificationRecords")
             .RequireAuthorization();
 
+        group.MapNotificationRecordSyncPushEndpoint();
         group.MapNotificationRecordSyncPullEndpoint();
 
         return app;

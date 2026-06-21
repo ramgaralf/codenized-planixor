@@ -38,7 +38,7 @@ public sealed class ReminderSyncPushCommands : IReminderSyncPushCommands, IAppSe
     /// <param name="userId">The user identifier who owns the reminders.</param>
     /// <param name="reminders">The batch of reminder entities to upsert.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpsertAsync(Guid userId, IReadOnlyList<ReminderEntity> reminders)
+    public async Task UpsertAsync(string userId, IReadOnlyList<ReminderEntity> reminders)
     {
         List<Guid> incomingIds = reminders.Select(r => r.Id).ToList();
 

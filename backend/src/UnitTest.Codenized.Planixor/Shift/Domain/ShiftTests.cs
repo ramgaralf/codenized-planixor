@@ -28,7 +28,7 @@ public sealed class ShiftTests
     [Test]
     public void Create_WithValidFields_SetsUserId()
     {
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Shift shift = CreateValidShift(userId: userId);
 
         Assert.That(shift.UserId, Is.EqualTo(userId));
@@ -87,7 +87,7 @@ public sealed class ShiftTests
 
         Shift shift = Shift.Create(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            "testuser",
             name,
             icon,
             color,
@@ -238,11 +238,11 @@ public sealed class ShiftTests
         Assert.That(shift.ModifiedAt, Is.GreaterThanOrEqualTo(before));
     }
 
-    private static Shift CreateValidShift(Guid? id = null, Guid? userId = null)
+    private static Shift CreateValidShift(Guid? id = null, string? userId = null)
     {
         return Shift.Create(
             id ?? Guid.NewGuid(),
-            userId ?? Guid.NewGuid(),
+            userId ?? "testuser",
             ShiftName.Create("Morning Shift"),
             ShiftIcon.Create("\U0001F4BC"),
             ShiftColor.Create("#EF4444"),

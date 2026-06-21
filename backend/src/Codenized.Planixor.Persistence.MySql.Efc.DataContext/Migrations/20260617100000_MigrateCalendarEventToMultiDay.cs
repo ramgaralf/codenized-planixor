@@ -11,25 +11,17 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropCheckConstraint(
-                name: "CK_CalendarEvents_EndTimeAfterStartTime",
-                table: "CalendarEvents");
+            migrationBuilder.Sql("ALTER TABLE `CalendarEvents` DROP CHECK `CK_CalendarEvents_EndTimeAfterStartTime`;");
 
             migrationBuilder.DropIndex(
                 name: "IX_CalendarEvents_Day",
                 table: "CalendarEvents");
 
-            migrationBuilder.RenameColumn(
-                name: "Day",
-                table: "CalendarEvents",
-                newName: "StartDay");
+            migrationBuilder.Sql("ALTER TABLE `CalendarEvents` RENAME COLUMN `Day` TO `StartDay`;");
 
-            migrationBuilder.AddColumn<DateOnly>(
-                name: "EndDay",
-                table: "CalendarEvents",
-                type: "date",
-                nullable: false,
-                defaultValue: new DateOnly(1, 1, 1));
+            migrationBuilder.Sql("ALTER TABLE `CalendarEvents` ADD COLUMN `EndDay` date NOT NULL DEFAULT '0001-01-01';");
+            migrationBuilder.Sql("UPDATE `CalendarEvents` SET `EndDay` = `StartDay`;");
+            migrationBuilder.Sql("ALTER TABLE `CalendarEvents` ALTER COLUMN `EndDay` DROP DEFAULT;");
 
             migrationBuilder.AddColumn<int>(
                 name: "TotalHours",
@@ -77,10 +69,7 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                 name: "TotalHours",
                 table: "CalendarEvents");
 
-            migrationBuilder.RenameColumn(
-                name: "StartDay",
-                table: "CalendarEvents",
-                newName: "Day");
+            migrationBuilder.Sql("ALTER TABLE `CalendarEvents` RENAME COLUMN `StartDay` TO `Day`;");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Notes",

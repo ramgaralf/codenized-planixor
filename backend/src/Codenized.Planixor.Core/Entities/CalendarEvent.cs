@@ -21,7 +21,7 @@ public sealed class CalendarEvent
     /// <summary>
     /// Gets the user identifier who owns this calendar event.
     /// </summary>
-    public Guid UserId { get; private set; }
+    public string UserId { get; private set; } = string.Empty;
 
     /// <summary>
     /// Gets the event type discriminator ("shift" or "reminder").
@@ -102,7 +102,7 @@ public sealed class CalendarEvent
     /// <returns>A new <see cref="CalendarEvent"/> instance.</returns>
     public static CalendarEvent CreateFromSync(
         Guid id,
-        Guid userId,
+        string userId,
         string eventType,
         Guid eventTypeId,
         DateOnly startDay,

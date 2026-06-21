@@ -28,7 +28,7 @@ public sealed class ReminderConfiguration : IEntityTypeConfiguration<Reminder>
             .IsRequired();
 
         builder.Property(r => r.UserId)
-            .HasColumnType("char(36)")
+            .HasColumnType("varchar(50)")
             .IsRequired();
 
         builder.OwnsOne(r => r.Name, name =>

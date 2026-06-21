@@ -42,10 +42,10 @@ The application is **offline-first**: both clients store all user data locally a
 
 ### Authentication
 
-- Google Sign-In (OAuth 2.0) as the initial and primary auth provider
-- JWT tokens issued by the API after Google auth verification
-- Authentication is **optional** — free users operate fully offline without an account
-- Subscribed users authenticate to unlock sync capabilities
+- **Backend API**: API key authentication via `Authorization: Bearer <key>` header. API keys are configured in `appsettings` under `SecuritySettings` (username → key dictionary). No OAuth/JWT at the API level.
+- **Frontend clients**: Will use the API key to authenticate with the backend. The validation endpoint (`GET /api/security/validate`) returns the username linked to the key.
+- Authentication is **optional** — free users operate fully offline without an account or API key
+- Subscribed users authenticate (with a valid API key) to unlock sync capabilities
 
 ### Versioning
 

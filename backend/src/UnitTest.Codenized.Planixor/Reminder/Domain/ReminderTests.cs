@@ -28,7 +28,7 @@ public sealed class ReminderTests
     [Test]
     public void Create_WithValidFields_SetsUserId()
     {
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Reminder reminder = CreateValidReminder(userId: userId);
 
         Assert.That(reminder.UserId, Is.EqualTo(userId));
@@ -84,7 +84,7 @@ public sealed class ReminderTests
 
         Reminder reminder = Reminder.Create(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            "testuser",
             name,
             icon,
             color,
@@ -258,11 +258,11 @@ public sealed class ReminderTests
         Assert.That(reminder.ModifiedAt, Is.GreaterThanOrEqualTo(before));
     }
 
-    private static Reminder CreateValidReminder(Guid? id = null, Guid? userId = null)
+    private static Reminder CreateValidReminder(Guid? id = null, string? userId = null)
     {
         return Reminder.Create(
             id ?? Guid.NewGuid(),
-            userId ?? Guid.NewGuid(),
+            userId ?? "testuser",
             ReminderName.Create("Take medicine"),
             ReminderIcon.Create("\U0001F48A"),
             ReminderColor.Create("#EF4444"),

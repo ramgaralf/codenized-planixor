@@ -23,7 +23,7 @@ public sealed class Shift
     /// <summary>
     /// Gets the user identifier who owns this shift.
     /// </summary>
-    public Guid UserId { get; private set; }
+    public string UserId { get; private set; } = string.Empty;
 
     /// <summary>
     /// Gets the shift name.
@@ -95,7 +95,7 @@ public sealed class Shift
     /// <returns>A new <see cref="Shift"/> instance.</returns>
     public static Shift Create(
         Guid id,
-        Guid userId,
+        string userId,
         ShiftName name,
         ShiftIcon icon,
         ShiftColor backgroundColor,
@@ -140,7 +140,7 @@ public sealed class Shift
     /// <returns>A new <see cref="Shift"/> instance from sync data.</returns>
     public static Shift CreateFromSync(
         Guid id,
-        Guid userId,
+        string userId,
         ShiftName name,
         ShiftIcon icon,
         ShiftColor backgroundColor,

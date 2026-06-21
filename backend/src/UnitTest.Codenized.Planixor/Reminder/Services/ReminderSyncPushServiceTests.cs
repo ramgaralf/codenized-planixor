@@ -41,7 +41,7 @@ public sealed class ReminderSyncPushServiceTests
     public void Run_WithBatchExceeding100Records_ThrowsBadRequestException()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         List<ReminderSyncRecord> records = Enumerable.Range(0, 101)
             .Select(_ => CreateValidRecord())
             .ToList();
@@ -59,7 +59,7 @@ public sealed class ReminderSyncPushServiceTests
     public void Run_WithBatchExceeding100Records_DoesNotCallUpsertAsync()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         List<ReminderSyncRecord> records = Enumerable.Range(0, 101)
             .Select(_ => CreateValidRecord())
             .ToList();
@@ -71,7 +71,7 @@ public sealed class ReminderSyncPushServiceTests
 
         // Assert
         this.commands.DidNotReceive().UpsertAsync(
-            Arg.Any<Guid>(),
+            Arg.Any<string>(),
             Arg.Any<IReadOnlyList<Reminder>>());
     }
 
@@ -83,7 +83,7 @@ public sealed class ReminderSyncPushServiceTests
     public async Task Run_WithExactly100Records_CallsUpsertAsync()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         List<ReminderSyncRecord> records = Enumerable.Range(0, 100)
             .Select(_ => CreateValidRecord())
             .ToList();
@@ -107,7 +107,7 @@ public sealed class ReminderSyncPushServiceTests
     public async Task Run_WithValidBatch_CallsUpsertAsyncWithCorrectUserId()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         var request = new ReminderSyncPushRequest(
         [
             CreateValidRecord(),
@@ -133,7 +133,7 @@ public sealed class ReminderSyncPushServiceTests
     public async Task Run_WithThreeRecords_ReturnsSyncedCountOfThree()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         var request = new ReminderSyncPushRequest(
         [
             CreateValidRecord(),
@@ -159,7 +159,7 @@ public sealed class ReminderSyncPushServiceTests
     public async Task Run_WithSyncRecord_MapsFieldsToReminderEntityCorrectly()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid reminderId = Guid.NewGuid();
         DateTime createdAt = new DateTime(2024, 1, 10, 8, 0, 0, DateTimeKind.Utc);
         DateTime modifiedAt = new DateTime(2024, 6, 15, 12, 0, 0, DateTimeKind.Utc);

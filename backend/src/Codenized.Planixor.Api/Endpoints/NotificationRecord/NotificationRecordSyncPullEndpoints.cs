@@ -5,8 +5,10 @@
 namespace Codenized.Planixor.Api.Endpoints.NotificationRecord;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
+using Codenized.CleanArchitecture.Abstractions.Exceptions;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
+using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.NotificationRecord.Sync;
 
 /// <summary>Register notification record sync pull endpoints.</summary>
@@ -20,11 +22,11 @@ internal static class NotificationRecordSyncPullEndpoints
         group.MapEndpoint<GenericResponse<NotificationRecordSyncPullResponse>>(
             HttpMethods.Get,
             "/pull",
-            async (DateTime? lastSyncedAt, string? cursor, IController<NotificationRecordSyncPullRequest, NotificationRecordSyncPullResponse> controller) =>
+            async (DateTime? lastSyncedAt, string? cursor, ISecurityService securityService, IController<NotificationRecordSyncPullRequest, NotificationRecordSyncPullResponse> controller) =>
             {
-                // TODO: Extract UserId from authenticated user claims
-                // TODO: Enforce active subscription check (403 ForbiddenException if no active subscription)
-                var request = new NotificationRecordSyncPullRequest(Guid.Empty, lastSyncedAt, cursor);
+                string userId = securityService.GetAuthenticatedUsername()
+                    ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
+                var request = new NotificationRecordSyncPullRequest(userId, lastSyncedAt, cursor);
                 GenericResponse<NotificationRecordSyncPullResponse> result = await controller.Handle(request);
                 return Results.Ok(result);
             },

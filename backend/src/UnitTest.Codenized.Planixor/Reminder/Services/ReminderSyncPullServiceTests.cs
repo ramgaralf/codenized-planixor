@@ -42,7 +42,7 @@ public sealed class ReminderSyncPullServiceTests
     public async Task Run_WithValidRequest_CallsQueriesWithCorrectParameters()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         DateTime lastSyncedAt = new DateTime(2024, 6, 15, 10, 0, 0, DateTimeKind.Utc);
         string cursor = "abc123";
         var request = new ReminderSyncPullRequest(userId, lastSyncedAt, cursor);
@@ -70,7 +70,7 @@ public sealed class ReminderSyncPullServiceTests
     public async Task Run_WithEmptyResult_ReturnsEmptyResponse()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
         var request = new ReminderSyncPullRequest(userId, lastSyncedAt, null);
 
@@ -99,7 +99,7 @@ public sealed class ReminderSyncPullServiceTests
     public async Task Run_WithReminders_MapsEntitiesToSyncRecordsCorrectly()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid reminderId = Guid.NewGuid();
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
         DateTime createdAt = new DateTime(2024, 1, 10, 8, 0, 0, DateTimeKind.Utc);
@@ -150,7 +150,7 @@ public sealed class ReminderSyncPullServiceTests
     public async Task Run_WithPagination_ReturnsCursorAndHasMoreFlag()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
         string expectedCursor = "next-page-cursor";
         var request = new ReminderSyncPullRequest(userId, lastSyncedAt, null);
@@ -190,7 +190,7 @@ public sealed class ReminderSyncPullServiceTests
     public async Task Run_WithNullLastSyncedAt_PassesMinValueToQueries()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         var request = new ReminderSyncPullRequest(userId, null, null);
 
         this.queries.GetModifiedAfterAsync(userId, DateTime.MinValue, null)

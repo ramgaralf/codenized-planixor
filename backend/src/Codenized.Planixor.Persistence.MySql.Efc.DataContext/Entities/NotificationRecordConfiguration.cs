@@ -28,7 +28,7 @@ public sealed class NotificationRecordConfiguration : IEntityTypeConfiguration<N
             .IsRequired();
 
         builder.Property(n => n.UserId)
-            .HasColumnType("char(36)")
+            .HasColumnType("varchar(50)")
             .IsRequired();
 
         builder.Property(n => n.CalendarEventId)

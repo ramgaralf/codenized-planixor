@@ -5,8 +5,10 @@
 namespace Codenized.Planixor.Api.Endpoints.AnnualHoursConfig;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
+using Codenized.CleanArchitecture.Abstractions.Exceptions;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
+using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.AnnualHoursConfig.Sync;
 
 /// <summary>Register annual hours config sync pull endpoints.</summary>
@@ -20,11 +22,12 @@ internal static class AnnualHoursConfigSyncPullEndpoints
         group.MapEndpoint<GenericResponse<AnnualHoursConfigSyncPullResponse>>(
             HttpMethods.Get,
             "/pull",
-            async (DateTime? lastSyncedAt, string? cursor, IController<AnnualHoursConfigSyncPullRequest, AnnualHoursConfigSyncPullResponse> controller) =>
+            async (DateTime? lastSyncedAt, string? cursor, ISecurityService securityService, IController<AnnualHoursConfigSyncPullRequest, AnnualHoursConfigSyncPullResponse> controller) =>
             {
-                // TODO: Extract UserId from authenticated user claims
-                // TODO: Enforce active subscription check (403 ForbiddenException if no active subscription)
-                var request = new AnnualHoursConfigSyncPullRequest(Guid.Empty, lastSyncedAt, cursor);
+                string userId = securityService.GetAuthenticatedUsername()
+                    ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
+
+                var request = new AnnualHoursConfigSyncPullRequest(userId, lastSyncedAt, cursor);
                 GenericResponse<AnnualHoursConfigSyncPullResponse> result = await controller.Handle(request);
                 return Results.Ok(result);
             },

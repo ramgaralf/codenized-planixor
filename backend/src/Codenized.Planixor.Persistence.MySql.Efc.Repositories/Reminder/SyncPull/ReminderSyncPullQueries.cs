@@ -41,7 +41,7 @@ public sealed class ReminderSyncPullQueries : IReminderSyncPullQueries, IAppServ
     /// <param name="lastSyncedAt">The timestamp after which modifications should be returned.</param>
     /// <param name="cursor">The pagination cursor from a previous response, or null for the first page.</param>
     /// <returns>A paginated result containing reminders, a cursor for the next page, and a flag indicating more records exist.</returns>
-    public async Task<ReminderSyncPullResult> GetModifiedAfterAsync(Guid userId, DateTime lastSyncedAt, string? cursor)
+    public async Task<ReminderSyncPullResult> GetModifiedAfterAsync(string userId, DateTime lastSyncedAt, string? cursor)
     {
         IQueryable<ReminderEntity> query = this.context.Reminders
             .AsNoTracking()

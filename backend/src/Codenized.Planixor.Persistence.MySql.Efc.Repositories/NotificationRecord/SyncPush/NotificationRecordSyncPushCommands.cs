@@ -38,7 +38,7 @@ public sealed class NotificationRecordSyncPushCommands : INotificationRecordSync
     /// <param name="userId">The user identifier who owns the notification records.</param>
     /// <param name="records">The batch of notification record entities to upsert.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpsertAsync(Guid userId, IReadOnlyList<NotificationRecordEntity> records)
+    public async Task UpsertAsync(string userId, IReadOnlyList<NotificationRecordEntity> records)
     {
         List<Guid> incomingIds = records.Select(r => r.Id).ToList();
 

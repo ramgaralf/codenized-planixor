@@ -73,6 +73,17 @@ public static class DependencyContainer
     private static IServiceCollection MapSettings(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+
+        services.AddOptions<SecuritySettings>()
+            .Bind(configuration.GetSection(nameof(SecuritySettings)))
+            .Validate(
+                s => s.ApiKeys != null && s.ApiKeys.Count > 0,
+                "SecuritySettings must contain at least one API key entry.")
+            .Validate(
+                s => s.ApiKeys == null || s.ApiKeys.All(kv => !string.IsNullOrWhiteSpace(kv.Value)),
+                "SecuritySettings contains an API key entry with an empty or whitespace value.")
+            .ValidateOnStart();
+
         return services;
     }
 

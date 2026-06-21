@@ -41,7 +41,7 @@ public sealed class ShiftSyncPullQueries : IShiftSyncPullQueries, IAppServiceSco
     /// <param name="lastSyncedAt">The timestamp after which modifications should be returned.</param>
     /// <param name="cursor">The pagination cursor from a previous response, or null for the first page.</param>
     /// <returns>A paginated result containing shifts, a cursor for the next page, and a flag indicating more records exist.</returns>
-    public async Task<ShiftSyncPullResult> GetModifiedAfterAsync(Guid userId, DateTime lastSyncedAt, string? cursor)
+    public async Task<ShiftSyncPullResult> GetModifiedAfterAsync(string userId, DateTime lastSyncedAt, string? cursor)
     {
         IQueryable<ShiftEntity> query = this.context.Shifts
             .AsNoTracking()

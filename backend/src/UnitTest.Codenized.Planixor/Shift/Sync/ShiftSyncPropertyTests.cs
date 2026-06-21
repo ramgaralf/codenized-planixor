@@ -179,7 +179,7 @@ public sealed class ShiftSyncPropertyTests
     private static Shift ResolveConflict(DateTime localModifiedAt, DateTime remoteModifiedAt)
     {
         Guid sharedId = Guid.NewGuid();
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         ShiftName name = ShiftName.Create("Test");
         ShiftIcon icon = ShiftIcon.Create("\U0001F4BC");
         ShiftColor color = ShiftColor.Create("#EF4444");
@@ -325,7 +325,7 @@ public sealed class ShiftSyncPropertyTests
                 from modifiedDayOffset in Gen.Choose(1, 365)
                 select new ShiftSyncCreateInput(
                     Guid.NewGuid(),
-                    Guid.NewGuid(),
+                    Guid.NewGuid().ToString(),
                     ShiftName.Create(firstChar + new string(remainingChars)),
                     ShiftIcon.Create(ValidEmojis[emojiIndex]),
                     ShiftColor.Create(PaletteColors[colorIndex]),
@@ -370,7 +370,7 @@ public sealed class ShiftSyncPropertyTests
     /// </summary>
     public record ShiftSyncCreateInput(
         Guid Id,
-        Guid UserId,
+        string UserId,
         ShiftName Name,
         ShiftIcon Icon,
         ShiftColor BackgroundColor,

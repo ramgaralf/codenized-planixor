@@ -21,7 +21,7 @@ public sealed class NotificationRecord
     /// <summary>
     /// Gets the user identifier who owns this notification record.
     /// </summary>
-    public Guid UserId { get; private set; }
+    public string UserId { get; private set; } = string.Empty;
 
     /// <summary>
     /// Gets the calendar event identifier this notification is for.
@@ -78,7 +78,7 @@ public sealed class NotificationRecord
     /// <returns>A new <see cref="NotificationRecord"/> instance.</returns>
     public static NotificationRecord CreateFromSync(
         Guid id,
-        Guid userId,
+        string userId,
         Guid calendarEventId,
         int alertOffset,
         DateTime triggerTime,

@@ -56,7 +56,7 @@ public sealed class ReminderSyncIntegrationTests
     public async Task FullLifecycle_Create_Update_SoftDelete_PushesAllStatesCorrectly()
     {
         // Arrange — simulate a client that created, updated, and deleted reminders
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid createdId = Guid.NewGuid();
         Guid updatedId = Guid.NewGuid();
         Guid deletedId = Guid.NewGuid();
@@ -99,7 +99,7 @@ public sealed class ReminderSyncIntegrationTests
     public async Task Push_WithValidBatch_RepositoryReceivesCorrectlyMappedEntities()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid reminderId = Guid.NewGuid();
         DateTime createdAt = new DateTime(2024, 3, 1, 8, 0, 0, DateTimeKind.Utc);
         DateTime modifiedAt = new DateTime(2024, 6, 20, 15, 30, 0, DateTimeKind.Utc);
@@ -146,7 +146,7 @@ public sealed class ReminderSyncIntegrationTests
     public async Task Pull_WithModifiedRecords_ReturnsMappedSyncRecords()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         DateTime lastSyncedAt = new DateTime(2024, 6, 10, 0, 0, 0, DateTimeKind.Utc);
 
         Reminder r1 = Reminder.CreateFromSync(
@@ -209,7 +209,7 @@ public sealed class ReminderSyncIntegrationTests
     public async Task PushThenPull_FullCycle_PullReturnsUpdatedRecords()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         Guid reminderId = Guid.NewGuid();
         DateTime createdAt = new DateTime(2024, 1, 10, 8, 0, 0, DateTimeKind.Utc);
         DateTime modifiedAt = new DateTime(2024, 6, 20, 12, 0, 0, DateTimeKind.Utc);
@@ -261,7 +261,7 @@ public sealed class ReminderSyncIntegrationTests
     public async Task Push_WithUserId_PassesUserIdToRepository()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         var record = new ReminderSyncRecord(
             Guid.NewGuid(), "Test", "🔔", "#EF4444", true,
             DateTime.UtcNow.AddDays(-5), DateTime.UtcNow, false);
@@ -285,7 +285,7 @@ public sealed class ReminderSyncIntegrationTests
     public async Task Pull_WithUserId_QueriesAreScopedToUser()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
 
         this.pullQueries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
@@ -312,7 +312,7 @@ public sealed class ReminderSyncIntegrationTests
     public void Push_WithBatchExceeding100_ThrowsBadRequestException()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         List<ReminderSyncRecord> records = Enumerable.Range(0, 101)
             .Select(_ => new ReminderSyncRecord(
                 Guid.NewGuid(), "Test", "🔔", "#EF4444", true,
@@ -334,7 +334,7 @@ public sealed class ReminderSyncIntegrationTests
     public async Task Pull_WithPaginationCursor_PassesCursorToQueries()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-2);
         string cursor = "page-2-cursor";
 
@@ -363,7 +363,7 @@ public sealed class ReminderSyncIntegrationTests
     public async Task Pull_WithMorePages_ReturnsHasMoreAndCursor()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
         string nextCursor = "next-page";
 
@@ -407,7 +407,7 @@ public sealed class ReminderSyncIntegrationTests
     public async Task Push_WithMixedStates_MapsAllStateFlagsCorrectly()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
+        string userId = "testuser";
         DateTime now = DateTime.UtcNow;
 
         var records = new List<ReminderSyncRecord>

@@ -21,5 +21,5 @@ public interface IShiftSyncPushCommands
     /// <param name="userId">The user identifier who owns the shifts.</param>
     /// <param name="shifts">The batch of shift entities to upsert.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpsertAsync(Guid userId, IReadOnlyList<Shift> shifts);
+    Task UpsertAsync(string userId, IReadOnlyList<Shift> shifts);
 }

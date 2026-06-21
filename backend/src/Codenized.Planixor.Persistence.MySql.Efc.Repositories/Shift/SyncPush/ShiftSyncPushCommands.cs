@@ -38,7 +38,7 @@ public sealed class ShiftSyncPushCommands : IShiftSyncPushCommands, IAppServiceS
     /// <param name="userId">The user identifier who owns the shifts.</param>
     /// <param name="shifts">The batch of shift entities to upsert.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpsertAsync(Guid userId, IReadOnlyList<ShiftEntity> shifts)
+    public async Task UpsertAsync(string userId, IReadOnlyList<ShiftEntity> shifts)
     {
         List<Guid> incomingIds = shifts.Select(s => s.Id).ToList();
 
