@@ -20,7 +20,7 @@ data class CalendarEventSyncRecord(
     val endTime: Int,
     val totalHours: Int,
     val notes: String?,
-    val alertOffsets: String? = null,
+    val alertOffsets: List<Int> = emptyList(),
     val modifiedAt: String,
     val isDeleted: Boolean,
 )
@@ -61,12 +61,12 @@ data class CalendarEventSyncPullResponse(
  */
 interface CalendarEventSyncApiService {
 
-    @POST("api/v1/calendar-events/sync/push")
-    suspend fun push(@Body request: CalendarEventSyncPushRequest): Response<CalendarEventSyncPushResponse>
+    @POST("api/calendar-events/sync/push")
+    suspend fun push(@Body request: CalendarEventSyncPushRequest): Response<GenericApiResponse<CalendarEventSyncPushResponse>>
 
-    @GET("api/v1/calendar-events/sync/pull")
+    @GET("api/calendar-events/sync/pull")
     suspend fun pull(
         @Query("lastSyncedAt") lastSyncedAt: String?,
         @Query("cursor") cursor: String?,
-    ): Response<CalendarEventSyncPullResponse>
+    ): Response<GenericApiResponse<CalendarEventSyncPullResponse>>
 }

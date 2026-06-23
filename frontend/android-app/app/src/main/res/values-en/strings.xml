@@ -91,6 +91,7 @@
     <string name="content_description_navigate_next">Navigate to next period</string>
     <string name="content_description_notifications">Notifications</string>
     <string name="content_description_user_menu">User menu</string>
+    <string name="content_description_sync_status">Sync status</string>
 
     <!-- Widgets -->
     <string name="widget_hours_worked">Hours worked</string>
@@ -266,4 +267,37 @@
     <string name="notification_remaining_minutes">In %1$d minutes</string>
     <string name="notification_remaining_1_hour">In 1 hour</string>
     <string name="notification_remaining_1_day">In 1 day</string>
+
+    <!-- Sync Configuration -->
+    <string name="sync_config_title">Configure Sync</string>
+    <string name="sync_title">Synchronization</string>
+    <string name="sync_server_url">Server URL</string>
+    <string name="sync_api_key">API Key</string>
+    <string name="sync_username">Username</string>
+    <string name="sync_last_synced">Last synced</string>
+    <string name="sync_never">Never</string>
+    <string name="sync_status_unconfigured">Not configured</string>
+    <string name="sync_status_active">Active</string>
+    <string name="sync_status_failing">Connection error</string>
+    <string name="sync_status_paused">Paused</string>
+    <string name="sync_action_validate">Validate</string>
+    <string name="sync_action_cancel">Cancel</string>
+    <string name="sync_action_pause">Pause Sync</string>
+    <string name="sync_action_resume">Resume Sync</string>
+    <string name="sync_action_configuration">Configuration</string>
+    <string name="sync_error_network">Unable to connect. Check your internet connection.</string>
+    <string name="sync_error_invalid_credentials">Invalid API key. Please review your configuration.</string>
+    <string name="sync_error_not_found">Server not found. Please check the URL.</string>
+    <string name="sync_error_server">Server error. Please try again later.</string>
+    <string name="sync_error_timeout">Connection timed out. Please check the URL and try again.</string>
+    <string name="sync_validation_url_required">Server URL is required</string>
+    <string name="sync_validation_api_key_required">API key is required</string>
+
+    <!-- Settings Reset -->
+    <string name="settings_danger_zone_title">Danger Zone</string>
+    <string name="settings_reset_button">Reset Application</string>
+    <string name="settings_reset_description">This will delete all data on this device including events, shifts, reminders, notifications, and sync configuration.</string>
+    <string name="settings_reset_confirmation">Are you sure you want to reset the application? All local data will be permanently deleted.</string>
+    <string name="common_confirm">Confirm</string>
+    <string name="common_cancel">Cancel</string>
 </resources>

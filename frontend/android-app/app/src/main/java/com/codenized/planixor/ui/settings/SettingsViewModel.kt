@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.codenized.planixor.data.local.PlanixorDatabase
 import com.codenized.planixor.data.local.PreferencesRepository
 import com.codenized.planixor.data.notification.NotificationChannel
 import com.codenized.planixor.data.notification.NotificationPreferences
@@ -28,6 +29,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val preferencesRepository: PreferencesRepository,
     private val notificationPreferences: NotificationPreferences,
+    private val database: PlanixorDatabase,
 ) : ViewModel() {
 
     private val _locale = MutableStateFlow("es")
@@ -132,6 +134,23 @@ class SettingsViewModel @Inject constructor(
     private fun applyLocale(locale: String) {
         val localeList = LocaleListCompat.forLanguageTags(locale)
         AppCompatDelegate.setApplicationLocales(localeList)
+    }
+
+    /**
+     * Resets all application data by clearing the Room database and DataStore preferences.
+     * Uses Dispatchers.IO and restarts the process to avoid state corruption from active observers.
+     */
+    fun resetApplication() {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                database.clearAllTables()
+                preferencesRepository.clearAll()
+            } catch (_: Exception) {
+                // Best effort — proceed to kill process regardless
+            }
+            // Kill and restart the process to clear all in-memory state
+            android.os.Process.killProcess(android.os.Process.myPid())
+        }
     }
 
     companion object {

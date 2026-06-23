@@ -13,6 +13,8 @@ import { ReminderNewPage } from '@/pages/ReminderNewPage';
 import { ReminderEditPage } from '@/pages/ReminderEditPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { SyncConfigScreen } from '@features/sync/components/SyncConfigScreen';
+import { SyncScreen } from '@features/sync/components/SyncScreen';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -100,6 +102,22 @@ export const router = createBrowserRouter([
     element: (
       <AppShell>
         <SettingsPage />
+      </AppShell>
+    ),
+  },
+  {
+    path: '/sync/config',
+    element: (
+      <AppShell>
+        <SyncConfigScreen />
+      </AppShell>
+    ),
+  },
+  {
+    path: '/sync',
+    element: (
+      <AppShell>
+        <SyncScreen />
       </AppShell>
     ),
   },

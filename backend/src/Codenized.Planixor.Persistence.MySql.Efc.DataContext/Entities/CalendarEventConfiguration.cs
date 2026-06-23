@@ -46,10 +46,16 @@ public sealed class CalendarEventConfiguration : IEntityTypeConfiguration<Calend
 
         builder.Property(e => e.StartDay)
             .HasColumnType("date")
+            .HasConversion(
+                v => v.ToDateTime(TimeOnly.MinValue),
+                v => DateOnly.FromDateTime(v))
             .IsRequired();
 
         builder.Property(e => e.EndDay)
             .HasColumnType("date")
+            .HasConversion(
+                v => v.ToDateTime(TimeOnly.MinValue),
+                v => DateOnly.FromDateTime(v))
             .IsRequired();
 
         builder.Property(e => e.StartTime)

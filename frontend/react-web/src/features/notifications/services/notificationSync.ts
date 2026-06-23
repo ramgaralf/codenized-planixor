@@ -272,7 +272,7 @@ export const pullNotificationRecords = async (
       }
     }
 
-    cursor = response.cursor;
+    cursor = response.cursor ?? null;
   } while (cursor !== null);
 };
 

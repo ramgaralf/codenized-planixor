@@ -26,4 +26,20 @@ interface ShiftDao {
 
     @Query("UPDATE shifts SET isActive = :isActive, modifiedAt = :now WHERE id = :id")
     suspend fun setActive(id: String, isActive: Boolean, now: Long)
+
+    /**
+     * Returns all shifts that need to be pushed to the remote server.
+     * A shift is unsynced if syncedAt is null or modifiedAt > syncedAt.
+     */
+    @Query("SELECT * FROM shifts WHERE syncedAt IS NULL OR modifiedAt > syncedAt")
+    suspend fun getUnsynced(): List<ShiftEntity>
+
+    /**
+     * Returns all shifts including soft-deleted ones. Used for sync merging.
+     */
+    @Query("SELECT * FROM shifts")
+    suspend fun getAll(): List<ShiftEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(shifts: List<ShiftEntity>)
 }

@@ -4,18 +4,18 @@
 
 namespace Codenized.Planixor.Persistence.MySql.Efc.Repositories.Shift.SyncPull;
 
-using System.Globalization;
-using Codenized.CleanArchitecture.Abstractions.AppServices;
+using Codenized.CleanArchitecture.Persistence.Abstractions.Interfaces;
 using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 using Codenized.Planixor.UseCases.Shift.SyncPull.Queries;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using ShiftEntity = Codenized.Planixor.Core.Entities.Shift;
 
 /// <summary>
 /// Repository implementation for querying shift records during sync pull.
 /// Returns shifts modified after a given timestamp with cursor-based pagination.
 /// </summary>
-public sealed class ShiftSyncPullQueries : IShiftSyncPullQueries, IAppServiceScoped
+public sealed class ShiftSyncPullQueries : IShiftSyncPullQueries, IRepository
 {
     private const int PageSize = 100;
     private const string CursorSeparator = "|";
@@ -45,19 +45,19 @@ public sealed class ShiftSyncPullQueries : IShiftSyncPullQueries, IAppServiceSco
     {
         IQueryable<ShiftEntity> query = this.context.Shifts
             .AsNoTracking()
-            .Where(s => s.UserId == userId && s.ModifiedAt > lastSyncedAt);
+            .Where(s => s.UserId == userId && s.SyncedAt > lastSyncedAt);
 
         if (cursor != null)
         {
             (DateTime cursorModifiedAt, Guid cursorId) = DecodeCursor(cursor);
 
             query = query.Where(s =>
-                s.ModifiedAt > cursorModifiedAt ||
-                (s.ModifiedAt == cursorModifiedAt && s.Id.CompareTo(cursorId) > 0));
+                s.SyncedAt > cursorModifiedAt ||
+                (s.SyncedAt == cursorModifiedAt && s.Id.CompareTo(cursorId) > 0));
         }
 
         List<ShiftEntity> results = await query
-            .OrderBy(s => s.ModifiedAt)
+            .OrderBy(s => s.SyncedAt)
             .ThenBy(s => s.Id)
             .Take(PageSize + 1)
             .ToListAsync();
@@ -72,7 +72,7 @@ public sealed class ShiftSyncPullQueries : IShiftSyncPullQueries, IAppServiceSco
         if (hasMore && shifts.Count > 0)
         {
             ShiftEntity lastShift = shifts[^1];
-            nextCursor = EncodeCursor(lastShift.ModifiedAt, lastShift.Id);
+            nextCursor = EncodeCursor(lastShift.SyncedAt ?? lastShift.ModifiedAt, lastShift.Id);
         }
 
         return new ShiftSyncPullResult

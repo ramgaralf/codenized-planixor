@@ -4,18 +4,18 @@
 
 namespace Codenized.Planixor.Persistence.MySql.Efc.Repositories.NotificationRecord.SyncPull;
 
-using System.Globalization;
-using Codenized.CleanArchitecture.Abstractions.AppServices;
+using Codenized.CleanArchitecture.Persistence.Abstractions.Interfaces;
 using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 using Codenized.Planixor.UseCases.NotificationRecord.SyncPull.Queries;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using NotificationRecordEntity = Codenized.Planixor.Core.Entities.NotificationRecord;
 
 /// <summary>
 /// Repository implementation for querying notification records during sync pull.
 /// Returns notification records modified after a given timestamp with cursor-based pagination.
 /// </summary>
-public sealed class NotificationRecordSyncPullQueries : INotificationRecordSyncPullQueries, IAppServiceScoped
+public sealed class NotificationRecordSyncPullQueries : INotificationRecordSyncPullQueries, IRepository
 {
     private const int PageSize = 100;
     private const string CursorSeparator = "|";
@@ -45,19 +45,19 @@ public sealed class NotificationRecordSyncPullQueries : INotificationRecordSyncP
     {
         IQueryable<NotificationRecordEntity> query = this.context.NotificationRecords
             .AsNoTracking()
-            .Where(n => n.UserId == userId && n.ModifiedAt > lastSyncedAt);
+            .Where(n => n.UserId == userId && n.SyncedAt > lastSyncedAt);
 
         if (cursor != null)
         {
             (DateTime cursorModifiedAt, Guid cursorId) = DecodeCursor(cursor);
 
             query = query.Where(n =>
-                n.ModifiedAt > cursorModifiedAt ||
-                (n.ModifiedAt == cursorModifiedAt && n.Id.CompareTo(cursorId) > 0));
+                n.SyncedAt > cursorModifiedAt ||
+                (n.SyncedAt == cursorModifiedAt && n.Id.CompareTo(cursorId) > 0));
         }
 
         List<NotificationRecordEntity> results = await query
-            .OrderBy(n => n.ModifiedAt)
+            .OrderBy(n => n.SyncedAt)
             .ThenBy(n => n.Id)
             .Take(PageSize + 1)
             .ToListAsync();
@@ -72,7 +72,7 @@ public sealed class NotificationRecordSyncPullQueries : INotificationRecordSyncP
         if (hasMore && records.Count > 0)
         {
             NotificationRecordEntity lastRecord = records[^1];
-            nextCursor = EncodeCursor(lastRecord.ModifiedAt, lastRecord.Id);
+            nextCursor = EncodeCursor(lastRecord.SyncedAt ?? lastRecord.ModifiedAt, lastRecord.Id);
         }
 
         return new NotificationRecordSyncPullResult

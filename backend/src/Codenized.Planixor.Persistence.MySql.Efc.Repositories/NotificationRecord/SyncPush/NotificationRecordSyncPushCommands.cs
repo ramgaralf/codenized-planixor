@@ -4,7 +4,7 @@
 
 namespace Codenized.Planixor.Persistence.MySql.Efc.Repositories.NotificationRecord.SyncPush;
 
-using Codenized.CleanArchitecture.Abstractions.AppServices;
+using Codenized.CleanArchitecture.Persistence.Abstractions.Interfaces;
 using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 using Codenized.Planixor.UseCases.NotificationRecord.SyncPush.Commands;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +15,7 @@ using NotificationRecordEntity = Codenized.Planixor.Core.Entities.NotificationRe
 /// Uses last-writer-wins conflict resolution based on modifiedAt.
 /// On tie (identical modifiedAt), the incoming client record wins.
 /// </summary>
-public sealed class NotificationRecordSyncPushCommands : INotificationRecordSyncPushCommands, IAppServiceScoped
+public sealed class NotificationRecordSyncPushCommands : INotificationRecordSyncPushCommands, IRepository
 {
     private readonly ApplicationWriteContext context;
 
@@ -40,11 +40,25 @@ public sealed class NotificationRecordSyncPushCommands : INotificationRecordSync
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task UpsertAsync(string userId, IReadOnlyList<NotificationRecordEntity> records)
     {
-        List<Guid> incomingIds = records.Select(r => r.Id).ToList();
+        if (records == null || records.Count == 0)
+        {
+            return;
+        }
 
-        Dictionary<Guid, NotificationRecordEntity> existingRecords = await this.context.NotificationRecords
-            .Where(n => n.UserId == userId && incomingIds.Contains(n.Id))
-            .ToDictionaryAsync(n => n.Id);
+        Guid[] incomingIds = records.Select(r => r.Id).ToArray();
+
+        var existingRecords = new Dictionary<Guid, NotificationRecordEntity>();
+
+        foreach (Guid id in incomingIds)
+        {
+            NotificationRecordEntity? existing = await this.context.NotificationRecords
+                .FirstOrDefaultAsync(n => n.UserId == userId && n.Id == id);
+
+            if (existing != null)
+            {
+                existingRecords[id] = existing;
+            }
+        }
 
         foreach (NotificationRecordEntity incoming in records)
         {

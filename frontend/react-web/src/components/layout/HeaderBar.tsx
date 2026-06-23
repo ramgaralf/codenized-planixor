@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Plus, Settings, User } from 'lucide-react';
+import { Bell, Plus, Settings } from 'lucide-react';
 
 import logoIcon from '@/assets/logo-icon.svg';
 
@@ -11,6 +11,8 @@ import { useReportsStore } from '@/stores/reportsStore';
 import { NotificationBadge } from '@features/notifications/components/NotificationBadge';
 import { NotificationView } from '@features/notifications/components/NotificationView';
 import { useNotifications } from '@features/notifications/hooks/useNotifications';
+import { SyncButton } from '@features/sync/components/SyncButton';
+import { useSyncStore } from '@features/sync/stores/syncStore';
 
 import styles from './HeaderBar.module.css';
 
@@ -20,6 +22,8 @@ const getPageTitleKey = (pathname: string): string => {
   if (pathname.startsWith('/shifts')) return 'nav.shifts';
   if (pathname.startsWith('/reminders')) return 'nav.reminders';
   if (pathname === '/settings') return 'settings.title';
+  if (pathname === '/sync/config') return 'sync.configTitle';
+  if (pathname === '/sync') return 'sync.title';
   return 'nav.calendar';
 };
 
@@ -31,6 +35,7 @@ export const HeaderBar = () => {
   const reportMode = useReportsStore((state) => state.mode);
   const openConfigModal = useReportsStore((state) => state.openConfigModal);
   const { unreadCount, channel } = useNotifications();
+  const { connectionStatus, config } = useSyncStore();
   const pageTitle = t(getPageTitleKey(pathname));
   const isCalendar = pathname === '/';
   const isShiftsList = pathname === '/shifts';
@@ -52,6 +57,19 @@ export const HeaderBar = () => {
   const closeDropdown = useCallback(() => {
     setIsDropdownOpen(false);
   }, []);
+
+  // Load sync config on mount
+  useEffect(() => {
+    useSyncStore.getState().loadConfig();
+  }, []);
+
+  const handleSyncClick = useCallback(() => {
+    if (config === null) {
+      navigate('/sync/config');
+    } else {
+      navigate('/sync');
+    }
+  }, [config, navigate]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -145,13 +163,7 @@ export const HeaderBar = () => {
           </div>
         )}
 
-        <button
-          className={styles.userAvatar}
-          type="button"
-          aria-label={t('accessibility.userMenu')}
-        >
-          <User size={20} aria-hidden="true" />
-        </button>
+        <SyncButton status={connectionStatus} onClick={handleSyncClick} />
       </div>
     </header>
   );

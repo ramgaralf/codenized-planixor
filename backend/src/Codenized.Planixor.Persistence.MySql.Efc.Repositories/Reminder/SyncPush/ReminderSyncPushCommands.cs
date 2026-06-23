@@ -4,7 +4,7 @@
 
 namespace Codenized.Planixor.Persistence.MySql.Efc.Repositories.Reminder.SyncPush;
 
-using Codenized.CleanArchitecture.Abstractions.AppServices;
+using Codenized.CleanArchitecture.Persistence.Abstractions.Interfaces;
 using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 using Codenized.Planixor.UseCases.Reminder.SyncPush.Commands;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +15,7 @@ using ReminderEntity = Codenized.Planixor.Core.Entities.Reminder;
 /// Uses last-writer-wins conflict resolution based on modifiedAt.
 /// On tie (identical modifiedAt), the incoming client record wins.
 /// </summary>
-public sealed class ReminderSyncPushCommands : IReminderSyncPushCommands, IAppServiceScoped
+public sealed class ReminderSyncPushCommands : IReminderSyncPushCommands, IRepository
 {
     private readonly ApplicationWriteContext context;
 
@@ -40,11 +40,24 @@ public sealed class ReminderSyncPushCommands : IReminderSyncPushCommands, IAppSe
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task UpsertAsync(string userId, IReadOnlyList<ReminderEntity> reminders)
     {
-        List<Guid> incomingIds = reminders.Select(r => r.Id).ToList();
+        if (reminders == null || reminders.Count == 0)
+        {
+            return;
+        }
 
-        Dictionary<Guid, ReminderEntity> existingReminders = await this.context.Reminders
-            .Where(r => r.UserId == userId && incomingIds.Contains(r.Id))
-            .ToDictionaryAsync(r => r.Id);
+        // Workaround for EF Core 10 + MySQL provider: load tracked entities individually
+        var existingReminders = new Dictionary<Guid, ReminderEntity>();
+
+        foreach (ReminderEntity incoming in reminders)
+        {
+            ReminderEntity? existing = await this.context.Reminders
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.Id == incoming.Id);
+
+            if (existing != null)
+            {
+                existingReminders[incoming.Id] = existing;
+            }
+        }
 
         foreach (ReminderEntity incoming in reminders)
         {

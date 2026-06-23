@@ -4,7 +4,7 @@
 
 namespace Codenized.Planixor.Persistence.MySql.Efc.Repositories.AnnualHoursConfig.SyncPush;
 
-using Codenized.CleanArchitecture.Abstractions.AppServices;
+using Codenized.CleanArchitecture.Persistence.Abstractions.Interfaces;
 using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 using Codenized.Planixor.UseCases.AnnualHoursConfig.SyncPush.Commands;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +15,7 @@ using AnnualHoursConfigEntity = Codenized.Planixor.Core.Entities.AnnualHoursConf
 /// Uses last-writer-wins conflict resolution based on modifiedAt.
 /// On tie (identical modifiedAt), the incoming client record wins.
 /// </summary>
-public sealed class AnnualHoursConfigSyncPushCommands : IAnnualHoursConfigSyncPushCommands, IAppServiceScoped
+public sealed class AnnualHoursConfigSyncPushCommands : IAnnualHoursConfigSyncPushCommands, IRepository
 {
     private readonly ApplicationWriteContext context;
 
@@ -40,11 +40,25 @@ public sealed class AnnualHoursConfigSyncPushCommands : IAnnualHoursConfigSyncPu
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task UpsertAsync(string userId, IReadOnlyList<AnnualHoursConfigEntity> configs)
     {
-        List<Guid> incomingIds = configs.Select(c => c.Id).ToList();
+        if (configs == null || configs.Count == 0)
+        {
+            return;
+        }
 
-        Dictionary<Guid, AnnualHoursConfigEntity> existingConfigs = await this.context.AnnualHoursConfigs
-            .Where(c => c.UserId == userId && incomingIds.Contains(c.Id))
-            .ToDictionaryAsync(c => c.Id);
+        Guid[] incomingIds = configs.Select(c => c.Id).ToArray();
+
+        var existingConfigs = new Dictionary<Guid, AnnualHoursConfigEntity>();
+
+        foreach (Guid id in incomingIds)
+        {
+            AnnualHoursConfigEntity? existing = await this.context.AnnualHoursConfigs
+                .FirstOrDefaultAsync(c => c.UserId == userId && c.Id == id);
+
+            if (existing != null)
+            {
+                existingConfigs[id] = existing;
+            }
+        }
 
         foreach (AnnualHoursConfigEntity incoming in configs)
         {
@@ -61,8 +75,27 @@ public sealed class AnnualHoursConfigSyncPushCommands : IAnnualHoursConfigSyncPu
             }
             else
             {
-                incoming.MarkSynced();
-                this.context.AnnualHoursConfigs.Add(incoming);
+                // Check if a record with the same UserId + Year already exists (different Id from another device)
+                AnnualHoursConfigEntity? existingByYear = await this.context.AnnualHoursConfigs
+                    .FirstOrDefaultAsync(c => c.UserId == userId && c.Year == incoming.Year);
+
+                if (existingByYear != null)
+                {
+                    // Another device already created a config for this year — apply LWW
+                    if (incoming.ModifiedAt >= existingByYear.ModifiedAt)
+                    {
+                        existingByYear.ApplySync(
+                            incoming.Year,
+                            incoming.ConfiguredHours,
+                            incoming.ModifiedAt,
+                            incoming.IsDeleted);
+                    }
+                }
+                else
+                {
+                    incoming.MarkSynced();
+                    this.context.AnnualHoursConfigs.Add(incoming);
+                }
             }
         }
 

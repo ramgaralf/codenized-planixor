@@ -100,3 +100,70 @@ Every syncable record includes:
 - The sync service MUST be inactive (no network attempts) when connectivity is unavailable.
 - The `backend` API sync endpoints MUST reject requests from users without an active subscription.
 - The `backend` API identifies users by the `username` string from SecuritySettings (not a GUID). The `UserId` field on syncable entities is `string` type stored as `varchar(50)` in the database.
+
+## Implementation notes (learned during development)
+
+### Pull filter uses `SyncedAt`, not `ModifiedAt`
+
+The backend pull endpoints filter by `SyncedAt > lastSyncedAt` (not `ModifiedAt`). This is critical for multi-device sync: when Device A pushes a record with `ModifiedAt = June 17`, the backend sets `SyncedAt = June 23` (now). When Device B pulls with `lastSyncedAt = June 23 11:00`, it finds records with `SyncedAt > 11:00`, which includes the record from Device A.
+
+Using `ModifiedAt` would miss records created on other devices before the pull timestamp.
+
+### First sync uses epoch date
+
+When `lastSyncedAt` is null (first sync after configuration), clients pass `1970-01-01T00:00:00Z` (epoch) as the filter to ensure ALL records are returned from the backend.
+
+### Each entity syncs independently (resilient cycle)
+
+If one entity's sync fails (e.g., calendar events 400), the other entities still sync. `lastSyncedAt` always updates at the end of the cycle regardless of individual failures.
+
+### Backend API endpoint pattern
+
+All sync endpoints follow this URL pattern:
+```
+POST /api/{entity-kebab}/sync/push   — Push records to server
+GET  /api/{entity-kebab}/sync/pull   — Pull records from server
+```
+
+With query parameters for pull: `?lastSyncedAt={ISO8601}&cursor={base64}`
+
+Entities: `calendar-events`, `notification-records`, `annual-hours-config`, `shifts`, `reminders`
+
+### Backend response wrapper
+
+All API responses are wrapped in `GenericResponse<T>`:
+```json
+{ "data": { ... actual payload ... }, "traceId": "..." }
+```
+
+Clients must unwrap `.data` from the response.
+
+### Push request body format
+
+| Entity | Body field name |
+|---|---|
+| Calendar events | `{ "records": [...] }` |
+| Notification records | `{ "records": [...] }` |
+| Annual hours config | `{ "records": [...] }` |
+| Shifts | `{ "shifts": [...] }` |
+| Reminders | `{ "records": [...] }` |
+
+### EF Core 10 + MySQL: Cannot use `.Contains()` on `List<Guid>`
+
+The MySQL provider for EF Core 10 cannot translate `list.Contains(entity.Id)` to SQL. The workaround is to query entities individually with `FirstOrDefaultAsync(e => e.Id == id)` in a loop, or load all user records and filter in memory.
+
+### DateTime ISO format from backend lacks `Z` suffix
+
+The backend serializes `DateTime` as `"2026-06-20T13:07:59.878"` (without `Z` or offset). Clients must normalize this before parsing (e.g., append `Z` if no timezone indicator is present).
+
+### Android: `android:usesCleartextTraffic="true"` required for HTTP
+
+Android blocks HTTP (non-HTTPS) connections by default since API 28. For local development with `http://` URLs, the manifest must include this attribute.
+
+### Android: Dynamic base URL via OkHttp interceptor
+
+The sync URL comes from user configuration (DataStore), not a hardcoded Retrofit base URL. A `DynamicBaseUrlInterceptor` rewrites the scheme/host/port and adds the Authorization header at runtime.
+
+### Settings: Reset Application
+
+Both platforms include a "Reset Application" button in Settings that wipes all local data (IndexedDB/Room + DataStore preferences) for clean re-sync scenarios.

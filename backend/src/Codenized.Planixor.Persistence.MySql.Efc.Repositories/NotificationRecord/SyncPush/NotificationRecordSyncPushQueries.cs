@@ -4,7 +4,7 @@
 
 namespace Codenized.Planixor.Persistence.MySql.Efc.Repositories.NotificationRecord.SyncPush;
 
-using Codenized.CleanArchitecture.Abstractions.AppServices;
+using Codenized.CleanArchitecture.Persistence.Abstractions.Interfaces;
 using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 using Codenized.Planixor.UseCases.NotificationRecord.SyncPush.Queries;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +14,7 @@ using NotificationRecordEntity = Codenized.Planixor.Core.Entities.NotificationRe
 /// Repository implementation for querying notification records during sync push.
 /// Provides methods for conflict detection and ownership verification.
 /// </summary>
-public sealed class NotificationRecordSyncPushQueries : INotificationRecordSyncPushQueries, IAppServiceScoped
+public sealed class NotificationRecordSyncPushQueries : INotificationRecordSyncPushQueries, IRepository
 {
     private readonly ApplicationReadContext context;
 
@@ -36,12 +36,19 @@ public sealed class NotificationRecordSyncPushQueries : INotificationRecordSyncP
     /// <returns>A read-only list of notification records matching the provided IDs and owned by the user.</returns>
     public async Task<IReadOnlyList<NotificationRecordEntity>> GetByIdsAsync(IReadOnlyList<Guid> ids, string userId)
     {
+        if (ids == null || ids.Count == 0)
+        {
+            return Array.Empty<NotificationRecordEntity>();
+        }
+
+        HashSet<Guid> idsSet = ids.ToHashSet();
+
         List<NotificationRecordEntity> records = await this.context.NotificationRecords
             .AsNoTracking()
-            .Where(n => n.UserId == userId && ids.Contains(n.Id))
+            .Where(n => n.UserId == userId)
             .ToListAsync();
 
-        return records;
+        return records.Where(n => idsSet.Contains(n.Id)).ToList();
     }
 
     /// <summary>
@@ -52,12 +59,25 @@ public sealed class NotificationRecordSyncPushQueries : INotificationRecordSyncP
     /// <returns>A set of identifiers that exist in the store.</returns>
     public async Task<IReadOnlySet<Guid>> GetExistingIdsAsync(IReadOnlyList<Guid> ids)
     {
-        List<Guid> existingIds = await this.context.NotificationRecords
-            .AsNoTracking()
-            .Where(n => ids.Contains(n.Id))
-            .Select(n => n.Id)
-            .ToListAsync();
+        if (ids == null || ids.Count == 0)
+        {
+            return new HashSet<Guid>();
+        }
 
-        return existingIds.ToHashSet();
+        var existingIds = new HashSet<Guid>();
+
+        foreach (Guid id in ids)
+        {
+            bool exists = await this.context.NotificationRecords
+                .AsNoTracking()
+                .AnyAsync(n => n.Id == id);
+
+            if (exists)
+            {
+                existingIds.Add(id);
+            }
+        }
+
+        return existingIds;
     }
 }

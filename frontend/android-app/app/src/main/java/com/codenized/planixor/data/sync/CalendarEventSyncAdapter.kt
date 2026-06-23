@@ -93,7 +93,7 @@ class CalendarEventSyncAdapter @Inject constructor(
                     )
                 }
 
-                val body = response.body() ?: return SyncResult(
+                val body = response.body()?.data ?: return SyncResult(
                     pushed = totalPushed,
                     rejected = totalRejected,
                     success = false,
@@ -144,7 +144,7 @@ class CalendarEventSyncAdapter @Inject constructor(
                     )
                 }
 
-                val body = response.body() ?: return SyncResult(
+                val body = response.body()?.data ?: return SyncResult(
                     inserted = totalInserted,
                     updated = totalUpdated,
                     success = false,
@@ -235,7 +235,7 @@ class CalendarEventSyncAdapter @Inject constructor(
             endTime = endTime,
             totalHours = totalHours,
             notes = notes,
-            alertOffsets = alertOffsets,
+            alertOffsets = parseAlertOffsets(alertOffsets),
             modifiedAt = formatTimestampToIso(modifiedAt),
             isDeleted = isDeleted,
         )
@@ -254,7 +254,7 @@ class CalendarEventSyncAdapter @Inject constructor(
             endTime = endTime,
             totalHours = totalHours,
             notes = notes,
-            alertOffsets = alertOffsets ?: "[]",
+            alertOffsets = serializeAlertOffsets(alertOffsets),
             modifiedAt = parseIsoToTimestamp(modifiedAt),
             syncedAt = syncedAt,
             isDeleted = isDeleted,
@@ -270,10 +270,35 @@ class CalendarEventSyncAdapter @Inject constructor(
 
     /**
      * Parses an ISO 8601 datetime string to UTC timestamp (millis).
+     * Handles both "Z" suffix and no-suffix formats from the backend.
      */
     private fun parseIsoToTimestamp(iso: String): Long {
-        val instant = java.time.Instant.parse(iso)
+        val normalized = if (iso.endsWith("Z") || iso.contains("+") || iso.indexOf('-', 10) >= 0) {
+            iso
+        } else {
+            "${iso}Z"
+        }
+        val instant = java.time.Instant.parse(normalized)
         return instant.toEpochMilli()
+    }
+
+    /**
+     * Parses a JSON array string like "[0,10,60]" into a List<Int>.
+     */
+    private fun parseAlertOffsets(json: String?): List<Int> {
+        if (json.isNullOrBlank() || json == "[]") return emptyList()
+        return try {
+            json.trim('[', ']').split(",").mapNotNull { it.trim().toIntOrNull() }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * Serializes a List<Int> into a JSON array string like "[0,10,60]".
+     */
+    private fun serializeAlertOffsets(offsets: List<Int>): String {
+        return offsets.joinToString(",", "[", "]")
     }
 }
 

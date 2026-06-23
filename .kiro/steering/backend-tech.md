@@ -119,3 +119,26 @@ git push origin BranchName
 - Branches: `feature/<TICKET-KEY>-<summary>` from `develop` (or from the linked User Story / Parent Issue branch if one exists)
 - No direct commits to `main` or `develop`
 - Conventional commits
+
+## Known issues
+
+### EF Core 10 + MySQL provider: `Contains()` on Guid collections
+
+The `MySql.EntityFrameworkCore` provider cannot translate `.Contains()` on `List<Guid>` or `IReadOnlyList<Guid>` collections in LINQ expressions. This produces:
+```
+Expression '@ids' in the SQL tree does not have a type mapping assigned.
+```
+
+**Workaround**: Query entities individually in a loop using `FirstOrDefaultAsync(e => e.Id == id)`, or load user-scoped records and filter in memory with `HashSet<Guid>.Contains()`.
+
+### DateOnly columns require explicit ValueConverter
+
+The MySQL provider does not auto-convert `DATE` columns to `DateOnly` properties. Add explicit `HasConversion()` in entity configuration:
+```csharp
+builder.Property(e => e.StartDay)
+    .HasColumnType("date")
+    .HasConversion(
+        v => v.ToDateTime(TimeOnly.MinValue),
+        v => DateOnly.FromDateTime(v))
+    .IsRequired();
+```

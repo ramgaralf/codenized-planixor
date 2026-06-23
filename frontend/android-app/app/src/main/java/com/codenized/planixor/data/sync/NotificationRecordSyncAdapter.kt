@@ -85,7 +85,7 @@ class NotificationRecordSyncAdapter @Inject constructor(
                     )
                 }
 
-                val body = response.body() ?: return SyncResult(
+                val body = response.body()?.data ?: return SyncResult(
                     pushed = totalPushed,
                     rejected = totalRejected,
                     success = false,
@@ -138,7 +138,7 @@ class NotificationRecordSyncAdapter @Inject constructor(
                     )
                 }
 
-                val body = response.body() ?: return SyncResult(
+                val body = response.body()?.data ?: return SyncResult(
                     inserted = totalInserted,
                     updated = totalUpdated,
                     success = false,

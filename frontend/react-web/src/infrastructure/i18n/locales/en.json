@@ -120,7 +120,11 @@
     "notificationChannelSystem": "System",
     "notificationChannelBoth": "Both",
     "notificationPermissionWarning": "System notifications are blocked. Enable them in browser settings.",
-    "notificationWebLimitation": "Notifications will only be sent while the application is open or minimized in the browser."
+    "notificationWebLimitation": "Notifications will only be sent while the application is open or minimized in the browser.",
+    "dangerZone": "Danger Zone",
+    "resetButton": "Reset Application",
+    "resetDescription": "This will delete all data on this device including events, shifts, reminders, notifications, and sync configuration. This action cannot be undone.",
+    "resetConfirmation": "Are you sure you want to reset the application? All local data will be permanently deleted."
   },
   "actions": {
     "createEvent": "Create new event",
@@ -357,5 +361,38 @@
     "userMenu": "User menu",
     "mainNavigation": "Main navigation",
     "calendarNavigation": "Calendar navigation"
+  },
+  "sync": {
+    "configTitle": "Configure Sync",
+    "title": "Synchronization",
+    "serverUrl": "Server URL",
+    "apiKey": "API Key",
+    "username": "Username",
+    "lastSynced": "Last synced",
+    "never": "Never",
+    "status": {
+      "unconfigured": "Not configured",
+      "active": "Active",
+      "failing": "Connection error",
+      "paused": "Paused"
+    },
+    "actions": {
+      "validate": "Validate",
+      "cancel": "Cancel",
+      "pause": "Pause Sync",
+      "resume": "Resume Sync",
+      "configuration": "Configuration"
+    },
+    "errors": {
+      "networkError": "Unable to connect. Check your internet connection.",
+      "invalidCredentials": "Invalid API key. Please review your configuration.",
+      "notFound": "Server not found. Please check the URL.",
+      "serverError": "Server error. Please try again later.",
+      "timeout": "Connection timed out. Please check the URL and try again."
+    },
+    "validation": {
+      "urlRequired": "Server URL is required",
+      "apiKeyRequired": "API key is required"
+    }
   }
 }
