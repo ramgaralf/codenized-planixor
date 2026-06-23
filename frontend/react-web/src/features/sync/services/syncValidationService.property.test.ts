@@ -15,7 +15,7 @@ describe('syncValidationService — property tests', () => {
     it('should construct GET request to {url}/api/security/validate with Bearer token for any valid URL and API key', async () => {
       await fc.assert(
         fc.asyncProperty(
-          fc.webUrl().map((u) => u.replace(/\/+$/, '')),
+          fc.webUrl().map((u) => u.replace(/\/$/, '')),
           fc
             .string({ minLength: 1, maxLength: 50 })
             .filter((s) => s.trim().length > 0),

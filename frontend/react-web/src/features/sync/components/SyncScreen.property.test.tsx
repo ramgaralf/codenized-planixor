@@ -1,4 +1,5 @@
 // Feature: gh16-synchronization, Property 8: Pause/resume toggles sync execution
+/* eslint-disable sonarjs/no-identical-functions */
 import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest';
 import { render, cleanup, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -41,6 +42,7 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const renderSyncScreen = async () => {
   const { SyncScreen } = await import('./SyncScreen');
   return render(
@@ -181,7 +183,7 @@ describe('SyncScreen — property tests', () => {
 
         // Run a property that generates random booleans to verify resuming across various states
         await fc.assert(
-          fc.asyncProperty(fc.boolean(), async (_randomFlag) => {
+          fc.asyncProperty(fc.boolean(), async (_randomFlag) => { // eslint-disable-line @typescript-eslint/no-unused-vars
             cleanup();
             vi.clearAllMocks();
 

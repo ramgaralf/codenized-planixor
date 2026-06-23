@@ -121,7 +121,7 @@ describe('SyncConfigScreen — property tests', () => {
       async () => {
         await fc.assert(
           fc.asyncProperty(
-            fc.webUrl({ size: 'xsmall' }).map((u) => u.replace(/\/+$/, '')),
+            fc.webUrl({ size: 'xsmall' }).map((u) => u.replace(/\/$/, '')),
             fc
               .string({ minLength: 1, maxLength: 12 })
               .filter((s) => s.trim().length > 0),

@@ -118,7 +118,7 @@ describe('SyncButton — property tests', () => {
             'paused',
           ),
           fc.boolean(),
-          (status, _configPresent) => {
+          (status, _configPresent) => { // eslint-disable-line @typescript-eslint/no-unused-vars
             cleanup();
             // The SyncButton always delegates navigation to its onClick handler.
             // Whether config is absent (navigate to /sync/config) or present
