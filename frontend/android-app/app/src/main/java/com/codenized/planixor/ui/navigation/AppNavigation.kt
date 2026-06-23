@@ -9,13 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -53,6 +51,7 @@ import com.codenized.planixor.ui.calendar.CalendarScreen
 import com.codenized.planixor.ui.calendar.CalendarViewModel
 import com.codenized.planixor.ui.calendar.EventFormScreen
 import com.codenized.planixor.ui.calendar.EventFormUiState
+import com.codenized.planixor.ui.components.SyncButton
 import com.codenized.planixor.ui.notifications.NotificationsScreen
 import com.codenized.planixor.ui.notifications.NotificationsViewModel
 import com.codenized.planixor.ui.reports.ReportMode
@@ -63,8 +62,10 @@ import com.codenized.planixor.ui.shifts.ShiftFormScreen
 import com.codenized.planixor.ui.shifts.ShiftsScreen
 import com.codenized.planixor.ui.reminders.ReminderFormScreen
 import com.codenized.planixor.ui.reminders.RemindersScreen
+import com.codenized.planixor.ui.sync.SyncConfigScreen
+import com.codenized.planixor.ui.sync.SyncScreen
+import com.codenized.planixor.ui.sync.SyncViewModel
 import com.codenized.planixor.ui.theme.PrimaryBlue
-import com.codenized.planixor.ui.theme.PrimaryPurple
 import com.codenized.planixor.ui.theme.TextSecondary
 import com.codenized.planixor.data.notification.NotificationChannel
 
@@ -89,6 +90,10 @@ fun AppNavigation() {
     val notificationBadgeCount by notificationsViewModel.badgeCount.collectAsStateWithLifecycle()
     val notificationChannel by notificationsViewModel.channelFlow.collectAsStateWithLifecycle()
     val showBellIcon = notificationChannel != NotificationChannel.SYSTEM
+
+    // Sync status for the SyncButton
+    val syncViewModel: SyncViewModel = hiltViewModel()
+    val syncUiState by syncViewModel.uiState.collectAsStateWithLifecycle()
 
     // Wrap in a composable helper to properly handle conditional ViewModel retrieval
     val isReportsYearMode = isOnReportsScreen && navBackStackEntry != null
@@ -120,7 +125,9 @@ fun AppNavigation() {
         currentRoute == Screen.ReminderEdit.route ||
         currentRoute == Screen.EventCreate.route ||
         currentRoute == Screen.EventEdit.route ||
-        currentRoute == Screen.Notifications.route
+        currentRoute == Screen.Notifications.route ||
+        currentRoute == Screen.SyncConfig.route ||
+        currentRoute == Screen.Sync.route
 
     // For bottom nav selection, map sub-routes to their parent
     val bottomNavRoute = when {
@@ -154,6 +161,8 @@ fun AppNavigation() {
                                 Screen.EventCreate.route -> stringResource(R.string.event_form_title_create)
                                 Screen.EventEdit.route -> stringResource(R.string.event_form_title_edit)
                                 Screen.Notifications.route -> stringResource(R.string.notifications_title)
+                                Screen.SyncConfig.route -> stringResource(R.string.sync_config_title)
+                                Screen.Sync.route -> stringResource(R.string.sync_title)
                                 else -> ""
                             },
                             style = MaterialTheme.typography.titleMedium.copy(
@@ -271,23 +280,17 @@ fun AppNavigation() {
                             BadgedBellIcon(badgeCount = notificationBadgeCount)
                         }
                     }
-                    // User avatar icon button (stub)
-                    IconButton(onClick = { /* TODO: user profile */ }) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Person,
-                                contentDescription = stringResource(R.string.content_description_user_menu),
-                                tint = TextSecondary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-                    }
+                    // Sync status button (replaces user avatar)
+                    SyncButton(
+                        connectionStatus = syncUiState.connectionStatus,
+                        onClick = {
+                            if (syncUiState.config == null) {
+                                navController.navigate(Screen.SyncConfig.route)
+                            } else {
+                                navController.navigate(Screen.Sync.route)
+                            }
+                        },
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
@@ -397,6 +400,25 @@ fun AppNavigation() {
             }
             composable(Screen.Settings.route) {
                 SettingsScreen()
+            }
+            composable(Screen.SyncConfig.route) {
+                SyncConfigScreen(
+                    viewModel = syncViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToSync = {
+                        navController.navigate(Screen.Sync.route) {
+                            popUpTo(Screen.SyncConfig.route) { inclusive = true }
+                        }
+                    },
+                )
+            }
+            composable(Screen.Sync.route) {
+                SyncScreen(
+                    viewModel = syncViewModel,
+                    onNavigateToConfig = {
+                        navController.navigate(Screen.SyncConfig.route)
+                    },
+                )
             }
         }
     }

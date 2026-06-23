@@ -4,18 +4,18 @@
 
 namespace Codenized.Planixor.Persistence.MySql.Efc.Repositories.Reminder.SyncPull;
 
-using System.Globalization;
-using Codenized.CleanArchitecture.Abstractions.AppServices;
+using Codenized.CleanArchitecture.Persistence.Abstractions.Interfaces;
 using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 using Codenized.Planixor.UseCases.Reminder.SyncPull.Queries;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using ReminderEntity = Codenized.Planixor.Core.Entities.Reminder;
 
 /// <summary>
 /// Repository implementation for querying reminder records during sync pull.
 /// Returns reminders modified after a given timestamp with cursor-based pagination.
 /// </summary>
-public sealed class ReminderSyncPullQueries : IReminderSyncPullQueries, IAppServiceScoped
+public sealed class ReminderSyncPullQueries : IReminderSyncPullQueries, IRepository
 {
     private const int PageSize = 100;
     private const string CursorSeparator = "|";
@@ -45,19 +45,19 @@ public sealed class ReminderSyncPullQueries : IReminderSyncPullQueries, IAppServ
     {
         IQueryable<ReminderEntity> query = this.context.Reminders
             .AsNoTracking()
-            .Where(r => r.UserId == userId && r.ModifiedAt > lastSyncedAt);
+            .Where(r => r.UserId == userId && r.SyncedAt > lastSyncedAt);
 
         if (cursor != null)
         {
             (DateTime cursorModifiedAt, Guid cursorId) = DecodeCursor(cursor);
 
             query = query.Where(r =>
-                r.ModifiedAt > cursorModifiedAt ||
-                (r.ModifiedAt == cursorModifiedAt && r.Id.CompareTo(cursorId) > 0));
+                r.SyncedAt > cursorModifiedAt ||
+                (r.SyncedAt == cursorModifiedAt && r.Id.CompareTo(cursorId) > 0));
         }
 
         List<ReminderEntity> results = await query
-            .OrderBy(r => r.ModifiedAt)
+            .OrderBy(r => r.SyncedAt)
             .ThenBy(r => r.Id)
             .Take(PageSize + 1)
             .ToListAsync();
@@ -72,7 +72,7 @@ public sealed class ReminderSyncPullQueries : IReminderSyncPullQueries, IAppServ
         if (hasMore && reminders.Count > 0)
         {
             ReminderEntity lastReminder = reminders[^1];
-            nextCursor = EncodeCursor(lastReminder.ModifiedAt, lastReminder.Id);
+            nextCursor = EncodeCursor(lastReminder.SyncedAt ?? lastReminder.ModifiedAt, lastReminder.Id);
         }
 
         return new ReminderSyncPullResult

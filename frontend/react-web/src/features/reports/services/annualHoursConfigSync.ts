@@ -29,6 +29,7 @@ export interface AnnualHoursConfigSyncRecord {
   year: number;
   configuredHours: number;
   modifiedAt: string;
+  syncedAt: string | null;
   isDeleted: boolean;
 }
 
@@ -44,7 +45,7 @@ export interface AnnualHoursConfigSyncPushResponse {
  */
 export interface AnnualHoursConfigSyncPullResponse {
   records: AnnualHoursConfigSyncRecord[];
-  cursor: string | null;
+  nextCursor: string | null;
 }
 
 /**
@@ -97,6 +98,7 @@ export const toSyncRecord = (
   year: record.year,
   configuredHours: record.configuredHours,
   modifiedAt: record.modifiedAt.toISOString(),
+  syncedAt: record.syncedAt ? record.syncedAt.toISOString() : null,
   isDeleted: record.isDeleted,
 });
 
@@ -304,7 +306,7 @@ export const pullAnnualHoursConfig = async (
       }
     }
 
-    cursor = response.cursor;
+    cursor = response.nextCursor ?? null;
   } while (cursor !== null);
 };
 

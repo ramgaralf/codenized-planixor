@@ -49,12 +49,12 @@ data class NotificationRecordSyncPullResponse(
  */
 interface NotificationRecordSyncApiService {
 
-    @POST("api/v1/notification-records/sync/push")
-    suspend fun push(@Body request: NotificationRecordSyncPushRequest): Response<NotificationRecordSyncPushResponse>
+    @POST("api/notification-records/sync/push")
+    suspend fun push(@Body request: NotificationRecordSyncPushRequest): Response<GenericApiResponse<NotificationRecordSyncPushResponse>>
 
-    @GET("api/v1/notification-records/sync/pull")
+    @GET("api/notification-records/sync/pull")
     suspend fun pull(
         @Query("lastSyncedAt") lastSyncedAt: String?,
         @Query("cursor") cursor: String?,
-    ): Response<NotificationRecordSyncPullResponse>
+    ): Response<GenericApiResponse<NotificationRecordSyncPullResponse>>
 }

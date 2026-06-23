@@ -5,7 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Codenized.CleanArchitecture.Abstractions" Version="10.*" />
+    <PackageReference Include="Codenized.CleanArchitecture.Abstractions" Version="10.0.3" />
     <PackageReference Include="Codenized.CleanArchitecture.Persistence.Abstractions" Version="10.*" />
     <PackageReference Include="Codenized.CleanArchitecture.Persistence.MySql" Version="10.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7">

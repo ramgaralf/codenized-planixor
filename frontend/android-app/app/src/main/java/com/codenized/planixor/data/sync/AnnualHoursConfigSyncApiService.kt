@@ -47,12 +47,12 @@ data class AnnualHoursConfigSyncPullResponse(
  */
 interface AnnualHoursConfigSyncApiService {
 
-    @POST("api/v1/annual-hours-config/sync/push")
-    suspend fun push(@Body request: AnnualHoursConfigSyncPushRequest): Response<AnnualHoursConfigSyncPushResponse>
+    @POST("api/annual-hours-config/sync/push")
+    suspend fun push(@Body request: AnnualHoursConfigSyncPushRequest): Response<GenericApiResponse<AnnualHoursConfigSyncPushResponse>>
 
-    @GET("api/v1/annual-hours-config/sync/pull")
+    @GET("api/annual-hours-config/sync/pull")
     suspend fun pull(
         @Query("lastSyncedAt") lastSyncedAt: String?,
         @Query("cursor") cursor: String?,
-    ): Response<AnnualHoursConfigSyncPullResponse>
+    ): Response<GenericApiResponse<AnnualHoursConfigSyncPullResponse>>
 }

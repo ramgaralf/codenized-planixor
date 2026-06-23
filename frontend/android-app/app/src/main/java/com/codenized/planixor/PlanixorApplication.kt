@@ -5,13 +5,18 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.codenized.planixor.data.notification.NotificationTimerService
+import com.codenized.planixor.data.sync.SyncServiceController
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Inject
 
 /**
  * Application class annotated with Hilt for dependency injection setup.
- * Registers lifecycle observers for background notification processing
- * and creates the notification channel for system alerts.
+ * Registers lifecycle observers for background notification processing,
+ * creates the notification channel for system alerts, and starts the
+ * sync service controller for background synchronization.
  */
 @HiltAndroidApp
 class PlanixorApplication : Application() {
@@ -19,10 +24,16 @@ class PlanixorApplication : Application() {
     @Inject
     lateinit var notificationTimerService: NotificationTimerService
 
+    @Inject
+    lateinit var syncServiceController: SyncServiceController
+
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         ProcessLifecycleOwner.get().lifecycle.addObserver(notificationTimerService)
+        syncServiceController.start(applicationScope)
     }
 
     /**

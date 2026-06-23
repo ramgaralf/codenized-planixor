@@ -120,7 +120,11 @@
     "notificationChannelSystem": "Sistema",
     "notificationChannelBoth": "Ambos",
     "notificationPermissionWarning": "Las notificaciones del sistema están bloqueadas. Habilítalas en la configuración del navegador.",
-    "notificationWebLimitation": "Las notificaciones solo se enviarán mientras la aplicación esté abierta o minimizada en el navegador."
+    "notificationWebLimitation": "Las notificaciones solo se enviarán mientras la aplicación esté abierta o minimizada en el navegador.",
+    "dangerZone": "Zona de peligro",
+    "resetButton": "Restablecer aplicación",
+    "resetDescription": "Esto eliminará todos los datos de este dispositivo incluyendo eventos, turnos, recordatorios, notificaciones y configuración de sincronización. Esta acción no se puede deshacer.",
+    "resetConfirmation": "¿Estás seguro de que quieres restablecer la aplicación? Todos los datos locales se eliminarán permanentemente."
   },
   "actions": {
     "createEvent": "Crear nuevo evento",
@@ -357,5 +361,38 @@
     "userMenu": "Menú de usuario",
     "mainNavigation": "Navegación principal",
     "calendarNavigation": "Navegación del calendario"
+  },
+  "sync": {
+    "configTitle": "Configurar Sincronización",
+    "title": "Sincronización",
+    "serverUrl": "URL del Servidor",
+    "apiKey": "Clave API",
+    "username": "Usuario",
+    "lastSynced": "Última sincronización",
+    "never": "Nunca",
+    "status": {
+      "unconfigured": "No configurada",
+      "active": "Activa",
+      "failing": "Error de conexión",
+      "paused": "Pausada"
+    },
+    "actions": {
+      "validate": "Validar",
+      "cancel": "Cancelar",
+      "pause": "Pausar Sincronización",
+      "resume": "Reanudar Sincronización",
+      "configuration": "Configuración"
+    },
+    "errors": {
+      "networkError": "No se pudo conectar. Revisa tu conexión a internet.",
+      "invalidCredentials": "Clave API inválida. Revisa tu configuración.",
+      "notFound": "Servidor no encontrado. Revisa la URL.",
+      "serverError": "Error del servidor. Inténtalo más tarde.",
+      "timeout": "La conexión expiró. Revisa la URL e inténtalo de nuevo."
+    },
+    "validation": {
+      "urlRequired": "La URL del servidor es obligatoria",
+      "apiKeyRequired": "La clave API es obligatoria"
+    }
   }
 }

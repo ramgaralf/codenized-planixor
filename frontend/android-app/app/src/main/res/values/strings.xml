@@ -91,6 +91,7 @@
     <string name="content_description_navigate_next">Navegar al período siguiente</string>
     <string name="content_description_notifications">Notificaciones</string>
     <string name="content_description_user_menu">Menú de usuario</string>
+    <string name="content_description_sync_status">Estado de sincronización</string>
 
     <!-- Widgets -->
     <string name="widget_hours_worked">Horas trabajadas</string>
@@ -278,4 +279,37 @@
     <string name="notification_remaining_minutes">En %1$d minutos</string>
     <string name="notification_remaining_1_hour">En 1 hora</string>
     <string name="notification_remaining_1_day">En 1 día</string>
+
+    <!-- Sync Configuration -->
+    <string name="sync_config_title">Configurar Sincronización</string>
+    <string name="sync_title">Sincronización</string>
+    <string name="sync_server_url">URL del Servidor</string>
+    <string name="sync_api_key">Clave API</string>
+    <string name="sync_username">Usuario</string>
+    <string name="sync_last_synced">Última sincronización</string>
+    <string name="sync_never">Nunca</string>
+    <string name="sync_status_unconfigured">No configurada</string>
+    <string name="sync_status_active">Activa</string>
+    <string name="sync_status_failing">Error de conexión</string>
+    <string name="sync_status_paused">Pausada</string>
+    <string name="sync_action_validate">Validar</string>
+    <string name="sync_action_cancel">Cancelar</string>
+    <string name="sync_action_pause">Pausar Sincronización</string>
+    <string name="sync_action_resume">Reanudar Sincronización</string>
+    <string name="sync_action_configuration">Configuración</string>
+    <string name="sync_error_network">No se pudo conectar. Revisa tu conexión a internet.</string>
+    <string name="sync_error_invalid_credentials">Clave API inválida. Revisa tu configuración.</string>
+    <string name="sync_error_not_found">Servidor no encontrado. Revisa la URL.</string>
+    <string name="sync_error_server">Error del servidor. Inténtalo más tarde.</string>
+    <string name="sync_error_timeout">La conexión expiró. Revisa la URL e inténtalo de nuevo.</string>
+    <string name="sync_validation_url_required">La URL del servidor es obligatoria</string>
+    <string name="sync_validation_api_key_required">La clave API es obligatoria</string>
+
+    <!-- Settings Reset -->
+    <string name="settings_danger_zone_title">Zona de peligro</string>
+    <string name="settings_reset_button">Restablecer aplicación</string>
+    <string name="settings_reset_description">Esto eliminará todos los datos de este dispositivo incluyendo eventos, turnos, recordatorios, notificaciones y configuración de sincronización.</string>
+    <string name="settings_reset_confirmation">¿Estás seguro de que quieres restablecer la aplicación? Todos los datos locales se eliminarán permanentemente.</string>
+    <string name="common_confirm">Confirmar</string>
+    <string name="common_cancel">Cancelar</string>
 </resources>

@@ -16,16 +16,24 @@ public record ShiftColor
     /// </summary>
     public static readonly IReadOnlySet<string> Palette = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "#EF4444",
-        "#F97316",
-        "#F59E0B",
-        "#10B981",
-        "#0B86D4",
-        "#2563EB",
-        "#7C3AED",
-        "#EC4899",
-        "#6B7280",
-        "#1F2937",
+        // Red family
+        "#FCA5A5", "#F87171", "#EF4444", "#DC2626", "#991B1B",
+        // Orange family
+        "#FDBA74", "#FB923C", "#F97316", "#EA580C", "#9A3412",
+        // Amber family
+        "#FCD34D", "#FBBF24", "#F59E0B", "#D97706", "#92400E",
+        // Green family
+        "#6EE7B7", "#34D399", "#10B981", "#059669", "#065F46",
+        // Teal family
+        "#67E8F9", "#22D3EE", "#0B86D4", "#0E7490", "#155E75",
+        // Blue family
+        "#93C5FD", "#60A5FA", "#2563EB", "#1D4ED8", "#1E3A8A",
+        // Purple family
+        "#C4B5FD", "#A78BFA", "#7C3AED", "#6D28D9", "#4C1D95",
+        // Pink family
+        "#F9A8D4", "#F472B6", "#EC4899", "#DB2777", "#9D174D",
+        // Gray family
+        "#D1D5DB", "#9CA3AF", "#6B7280", "#4B5563", "#1F2937",
     };
 
     /// <summary>

@@ -124,7 +124,7 @@ class AnnualHoursConfigSyncAdapter @Inject constructor(
                     )
                 }
 
-                val body = response.body() ?: return SyncResult(
+                val body = response.body()?.data ?: return SyncResult(
                     inserted = totalInserted,
                     updated = totalUpdated,
                     success = false,
@@ -223,7 +223,12 @@ class AnnualHoursConfigSyncAdapter @Inject constructor(
      * Parses an ISO 8601 datetime string to UTC timestamp (millis).
      */
     private fun parseIsoToTimestamp(iso: String): Long {
-        val instant = java.time.Instant.parse(iso)
+        val normalized = if (iso.endsWith("Z") || iso.contains("+") || iso.indexOf('-', 10) >= 0) {
+            iso
+        } else {
+            "${iso}Z"
+        }
+        val instant = java.time.Instant.parse(normalized)
         return instant.toEpochMilli()
     }
 }

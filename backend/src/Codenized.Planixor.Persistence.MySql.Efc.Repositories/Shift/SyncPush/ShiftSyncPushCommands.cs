@@ -4,7 +4,7 @@
 
 namespace Codenized.Planixor.Persistence.MySql.Efc.Repositories.Shift.SyncPush;
 
-using Codenized.CleanArchitecture.Abstractions.AppServices;
+using Codenized.CleanArchitecture.Persistence.Abstractions.Interfaces;
 using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 using Codenized.Planixor.UseCases.Shift.SyncPush.Commands;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +15,7 @@ using ShiftEntity = Codenized.Planixor.Core.Entities.Shift;
 /// Uses last-writer-wins conflict resolution based on modifiedAt.
 /// On tie (identical modifiedAt), the incoming client record wins.
 /// </summary>
-public sealed class ShiftSyncPushCommands : IShiftSyncPushCommands, IAppServiceScoped
+public sealed class ShiftSyncPushCommands : IShiftSyncPushCommands, IRepository
 {
     private readonly ApplicationWriteContext context;
 
@@ -40,11 +40,24 @@ public sealed class ShiftSyncPushCommands : IShiftSyncPushCommands, IAppServiceS
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task UpsertAsync(string userId, IReadOnlyList<ShiftEntity> shifts)
     {
-        List<Guid> incomingIds = shifts.Select(s => s.Id).ToList();
+        if (shifts == null || shifts.Count == 0)
+        {
+            return;
+        }
 
-        Dictionary<Guid, ShiftEntity> existingShifts = await this.context.Shifts
-            .Where(s => s.UserId == userId && incomingIds.Contains(s.Id))
-            .ToDictionaryAsync(s => s.Id);
+        // Workaround for EF Core 10 + MySQL provider: load tracked entities individually
+        var existingShifts = new Dictionary<Guid, ShiftEntity>();
+
+        foreach (ShiftEntity incoming in shifts)
+        {
+            ShiftEntity? existing = await this.context.Shifts
+                .FirstOrDefaultAsync(s => s.UserId == userId && s.Id == incoming.Id);
+
+            if (existing != null)
+            {
+                existingShifts[incoming.Id] = existing;
+            }
+        }
 
         foreach (ShiftEntity incoming in shifts)
         {

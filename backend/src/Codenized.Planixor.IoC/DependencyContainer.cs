@@ -15,7 +15,6 @@ using Codenized.Planixor.Core.Settings;
 using Codenized.Planixor.Persistence.IoC;
 using Codenized.CleanArchitecture.Abstractions;
 using Codenized.Exceptions.GlobalExceptionStrategy;
-using Codenized.HealthChecks.AspNetCore;
 using Codenized.HealthChecks.AspNetCore.Entities;
 using Codenized.HealthChecks.AspNetCore.HealthChecks;
 
