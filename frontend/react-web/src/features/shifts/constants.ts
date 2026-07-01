@@ -54,7 +54,7 @@ export const SHIFT_NAME_MIN_LENGTH = 1;
 export const SHIFT_NAME_MAX_LENGTH = 50;
 export const SHIFT_TIME_MIN = 0;
 export const SHIFT_TIME_MAX = 1439;
-export const SHIFT_HOURS_WORKED_MIN = 1;
+export const SHIFT_HOURS_WORKED_MIN = 0;
 export const SHIFT_HOURS_WORKED_MAX = 1440;
 
 /**

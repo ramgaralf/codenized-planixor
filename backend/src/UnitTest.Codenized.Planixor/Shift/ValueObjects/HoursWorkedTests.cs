@@ -23,13 +23,13 @@ public sealed class HoursWorkedTests
         Assert.That(result.TotalMinutes, Is.EqualTo(480));
     }
 
-    /// <summary>Verifies creation with minimum value (1) succeeds.</summary>
+    /// <summary>Verifies creation with minimum value (0) succeeds.</summary>
     [Test]
     public void Create_WithMinimumValue_ReturnsHoursWorkedInstance()
     {
-        HoursWorked result = HoursWorked.Create(1);
+        HoursWorked result = HoursWorked.Create(0);
 
-        Assert.That(result.TotalMinutes, Is.EqualTo(1));
+        Assert.That(result.TotalMinutes, Is.EqualTo(0));
     }
 
     /// <summary>Verifies creation with maximum value (1440) succeeds.</summary>
@@ -39,15 +39,6 @@ public sealed class HoursWorkedTests
         HoursWorked result = HoursWorked.Create(1440);
 
         Assert.That(result.TotalMinutes, Is.EqualTo(1440));
-    }
-
-    /// <summary>Verifies creation with zero succeeds.</summary>
-    [Test]
-    public void Create_WithZero_ReturnsHoursWorkedInstance()
-    {
-        HoursWorked result = HoursWorked.Create(0);
-
-        Assert.That(result.TotalMinutes, Is.EqualTo(0));
     }
 
     /// <summary>Verifies creation with negative value throws DomainException.</summary>

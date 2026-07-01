@@ -1,0 +1,53 @@
+{
+  "pbtResults": {
+    "3.3 Write property test for `validateTimeForReminder` (fast-check)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782890293627
+    },
+    "1.3 Write property test for `HoursWorked` value object (FsCheck)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782890343432
+    },
+    "3.4 Write property test for `computeTotalHours` zero case (fast-check)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782890455206
+    },
+    "2.4 Write property test for shift Zod schema hoursWorked range (fast-check)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782890468662
+    },
+    "2.5 Write property test for store-level validation (fast-check)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782890471698
+    },
+    "11.2 Write property test for Android reminder time validation (Kotest)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782890633655
+    },
+    "10.3 Write property test for Android shift validation (Kotest)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782890650682
+    },
+    "5.3 Write property tests for shift propagation (fast-check)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782891243162
+    },
+    "9.2 Write property test for `computePreSelectedDay` (fast-check)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782891272652
+    },
+    "5.4 Write property tests for reminder propagation (fast-check)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782891277071
+    },
+    "12.5 Write property tests for Android propagation logic (Kotest)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782892653905
+    },
+    "13.2 Write property test for Android day pre-selection (Kotest)": {
+      "status": "passed",
+      "lastRunTimestamp": 1782897675141
+    }
+  },
+  "executionHistory": {}
+}

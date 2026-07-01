@@ -2,6 +2,7 @@ package com.codenized.planixor.ui.shifts
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.codenized.planixor.data.local.CalendarEventDao
 import com.codenized.planixor.data.local.ShiftDao
 import com.codenized.planixor.data.local.ShiftEntity
 import com.codenized.planixor.data.local.ShiftRepository
@@ -30,13 +31,18 @@ class ShiftFormViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var shiftDao: ShiftDao
     private lateinit var shiftRepository: ShiftRepository
+    private lateinit var calendarEventDao: CalendarEventDao
     private lateinit var viewModel: ShiftFormViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         shiftDao = mockk(relaxed = true)
+        calendarEventDao = mockk(relaxed = true)
         shiftRepository = ShiftRepository(shiftDao)
+
+        // Default: no affected events for propagation
+        coEvery { calendarEventDao.getAll() } returns emptyList()
     }
 
     @After
@@ -48,7 +54,7 @@ class ShiftFormViewModelTest {
         val savedStateHandle = SavedStateHandle().apply {
             if (shiftId != null) set("shiftId", shiftId)
         }
-        return ShiftFormViewModel(shiftRepository, savedStateHandle)
+        return ShiftFormViewModel(shiftRepository, calendarEventDao, savedStateHandle)
     }
 
     @Test

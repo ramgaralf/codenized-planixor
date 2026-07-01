@@ -1,8 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { ShiftForm } from '@features/shifts/components/ShiftForm';
 import { useShiftForm } from '@features/shifts/hooks/useShiftForm';
+import { PropagationModal } from '@shared/components/PropagationModal';
 
 const minutesToTimeString = (minutes: number | null): string => {
   if (minutes === null) return '';
@@ -22,9 +23,11 @@ const timeStringToMinutes = (value: string): number | null => {
 export const ShiftEditPage = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { fields, errors, setField, submit, isLoading, isSubmitting } = useShiftForm({
+  const { fields, errors, setField, submit, isLoading, isSubmitting, propagationState, confirmPropagation, declinePropagation } = useShiftForm({
     shiftId: id,
   });
+
+  const [submitSucceeded, setSubmitSucceeded] = useState(false);
 
   const handleFieldChange = useCallback(
     (field: string, value: string) => {
@@ -42,9 +45,27 @@ export const ShiftEditPage = () => {
   const handleSubmit = useCallback(async () => {
     const success = await submit();
     if (success) {
+      setSubmitSucceeded(true);
+    }
+  }, [submit]);
+
+  // Navigate after successful submit when propagation modal is not shown
+  useEffect(() => {
+    if (submitSucceeded && !propagationState.isOpen) {
+      setSubmitSucceeded(false);
       navigate('/shifts');
     }
-  }, [submit, navigate]);
+  }, [submitSucceeded, propagationState.isOpen, navigate]);
+
+  const handleConfirmPropagation = useCallback(async () => {
+    await confirmPropagation();
+    navigate('/shifts');
+  }, [confirmPropagation, navigate]);
+
+  const handleDeclinePropagation = useCallback(() => {
+    declinePropagation();
+    navigate('/shifts');
+  }, [declinePropagation, navigate]);
 
   const handleCancel = useCallback(() => {
     navigate('/shifts');
@@ -81,6 +102,14 @@ export const ShiftEditPage = () => {
         onCancel={handleCancel}
         isSubmitting={isSubmitting}
         mode="edit"
+      />
+      <PropagationModal
+        isOpen={propagationState.isOpen}
+        templateName={fields.name}
+        templateType="shift"
+        affectedEventCount={propagationState.affectedCount}
+        onConfirm={handleConfirmPropagation}
+        onDecline={handleDeclinePropagation}
       />
     </div>
   );

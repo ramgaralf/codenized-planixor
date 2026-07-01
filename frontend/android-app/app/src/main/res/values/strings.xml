@@ -141,7 +141,7 @@
     <string name="shift_validation_color_required">Selecciona un color de fondo</string>
     <string name="shift_validation_start_time_required">La hora de inicio es obligatoria</string>
     <string name="shift_validation_end_time_required">La hora de fin es obligatoria</string>
-    <string name="shift_validation_hours_worked_range">Las horas trabajadas deben estar entre 1 minuto y 24 horas</string>
+    <string name="shift_validation_hours_worked_range">Las horas trabajadas deben estar entre 0 y 24 horas</string>
 
     <!-- Reminders Screen -->
     <string name="reminders_empty">No hay recordatorios disponibles</string>
@@ -312,4 +312,12 @@
     <string name="settings_reset_confirmation">¿Estás seguro de que quieres restablecer la aplicación? Todos los datos locales se eliminarán permanentemente.</string>
     <string name="common_confirm">Confirmar</string>
     <string name="common_cancel">Cancelar</string>
+
+    <!-- Propagation Dialog -->
+    <string name="propagation_dialog_title">¿Actualizar eventos del calendario?</string>
+    <string name="propagation_dialog_description_shift">Modificaste el turno \"%1$s\". ¿Deseas actualizar todos los eventos del calendario que usan este turno en %2$d? Los eventos de años anteriores no se verán afectados.</string>
+    <string name="propagation_dialog_description_reminder">Modificaste el recordatorio \"%1$s\". ¿Deseas actualizar todos los eventos del calendario que usan este recordatorio en %2$d? Los eventos de años anteriores no se verán afectados.</string>
+    <string name="propagation_dialog_affected_count">%1$d evento(s) serán actualizados</string>
+    <string name="propagation_dialog_confirm">Actualizar</string>
+    <string name="propagation_dialog_decline">Omitir</string>
 </resources>

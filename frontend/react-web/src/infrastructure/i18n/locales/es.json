@@ -165,7 +165,7 @@
         "required": "La hora de fin es obligatoria"
       },
       "hoursWorked": {
-        "range": "Las horas trabajadas deben estar entre 1 minuto y 24 horas"
+        "range": "Las horas trabajadas deben estar entre 0 y 24 horas"
       }
     },
     "error": {
@@ -393,6 +393,18 @@
     "validation": {
       "urlRequired": "La URL del servidor es obligatoria",
       "apiKeyRequired": "La clave API es obligatoria"
+    }
+  },
+  "propagation": {
+    "modal": {
+      "title": "¿Actualizar eventos del calendario?",
+      "description": {
+        "shift": "Modificaste el turno \"{{name}}\". ¿Deseas actualizar todos los eventos del calendario que usan este turno en {{year}}? Los eventos de años anteriores no se verán afectados.",
+        "reminder": "Modificaste el recordatorio \"{{name}}\". ¿Deseas actualizar todos los eventos del calendario que usan este recordatorio en {{year}}? Los eventos de años anteriores no se verán afectados."
+      },
+      "affectedCount": "{{count}} evento(s) serán actualizados",
+      "confirm": "Actualizar",
+      "decline": "Omitir"
     }
   }
 }

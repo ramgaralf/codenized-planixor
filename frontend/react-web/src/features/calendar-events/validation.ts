@@ -33,12 +33,12 @@ export const validateDayRange = (startDay: string, endDay: string): boolean => {
  *
  * Returns true if:
  * - endDay > startDay (any times are valid for multi-day reminders), OR
- * - endDay == startDay AND endTime > startTime
+ * - endDay == startDay AND endTime >= startTime
  *
  * For shift events this function is not applicable (shifts always pass
  * time validation since their times are read-only from the definition).
  *
- * **Validates: Requirements 1.10, 11.6**
+ * **Validates: Requirements 3.1, 3.2, 4.1**
  */
 export const validateTimeForReminder = (
   startDay: string,
@@ -49,7 +49,7 @@ export const validateTimeForReminder = (
   if (endDay > startDay) {
     return true;
   }
-  return endTime > startTime;
+  return endTime >= startTime;
 };
 
 /**
@@ -81,10 +81,13 @@ export const computeTotalHours = (
 };
 
 /**
- * Computes the endDay for a shift event based on crossing midnight.
+ * Computes the endDay for a shift event based on crossing midnight or 24-hour shifts.
  *
- * If endTime < startTime (crossing midnight): returns startDay + 1 day.
- * Otherwise: returns startDay.
+ * If endTime <= startTime (crossing midnight or 24-hour shift): returns startDay + 1 day.
+ * If endTime > startTime (same-day shift): returns startDay.
+ *
+ * When startTime === endTime, the shift is 24 hours (per calculateHoursWorked which
+ * returns 1440 in this case), so endDay is startDay + 1.
  *
  * **Validates: Requirements 1.6, 11.7**
  */
@@ -93,7 +96,7 @@ export const computeEndDayForShift = (
   startTime: number,
   endTime: number,
 ): string => {
-  if (endTime < startTime) {
+  if (endTime <= startTime) {
     const date = new Date(startDay);
     date.setDate(date.getDate() + 1);
     const year = date.getFullYear();

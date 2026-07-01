@@ -46,6 +46,35 @@ When creating a new event (not editing), the form pre-populates default times:
 
 This applies on both platforms identically.
 
+## Shift event auto-computation rules
+
+These rules apply when a shift is selected as the event type in the calendar event form.
+
+### Rule 3: Shift selection auto-populates time and endDay
+
+**Trigger**: The user selects a shift as the event type.
+
+**Behavior**:
+- `startTime` and `endTime` are set from the shift definition (read-only, not user-editable)
+- `totalHours` is set from the shift's `hoursWorked` value
+- `endDay` is computed via `computeEndDayForShift(startDay, startTime, endTime)`:
+  - If `endTime <= startTime` (crossing midnight OR 24-hour shift): `endDay = startDay + 1`
+  - If `endTime > startTime` (same-day shift): `endDay = startDay`
+
+**24-hour shift special case**:
+- When a shift has `startTime === endTime`, it represents a 24-hour shift
+- `hoursWorked` = 1440 minutes (auto-calculated)
+- `endDay` = `startDay + 1` day
+- The event spans the full startDay but does NOT appear on endDay (since endTime=0 means it ends at the very start of that day)
+
+### Rule 4: Events ending at 00:00 do not display on the end day
+
+**Context**: When a multi-day event (startDay ≠ endDay) has `endTime = 0`, the event ended at the very beginning of `endDay` (midnight). It occupies zero time on that day.
+
+**Behavior**: The DayView (both platforms) filters out events where `effectiveEnd <= effectiveStart` on the current rendering day. This means:
+- A 24-hour shift (08:00→08:00, startDay=June 20, endDay=June 21) shows on June 20 (full day) but NOT on June 21
+- A midnight-crossing shift (22:00→06:00, startDay=June 20, endDay=June 21) shows on both days: June 20 (22:00→23:59) and June 21 (00:00→06:00)
+
 ## Rules
 
 - All auto-adjustments must be **silent** (no toast, no dialog) — the field simply updates.
@@ -53,3 +82,5 @@ This applies on both platforms identically.
 - These rules apply identically on both platforms (React Web and Android).
 - The adjustments are purely UX convenience — they do not prevent the user from setting any valid combination manually after the auto-adjustment.
 - Auto-adjustments only apply to editable fields (reminder time fields). For shifts, time fields are read-only and populated from the shift definition.
+- `computeEndDayForShift` uses `<=` (not `<`): when startTime equals endTime, it's a 24-hour shift ending the next day.
+- Events with `endTime = 0` on their `endDay` are not rendered on that day (they occupy zero time there).

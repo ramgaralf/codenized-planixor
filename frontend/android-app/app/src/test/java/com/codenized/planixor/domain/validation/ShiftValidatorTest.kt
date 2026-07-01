@@ -205,8 +205,8 @@ class ShiftValidatorTest {
     }
 
     @Test
-    fun `validateHoursWorked should return error for 0 minutes`() {
-        assertEquals("shift.validation.hoursWorked.range", ShiftValidator.validateHoursWorked(0))
+    fun `validateHoursWorked should return null for 0 minutes`() {
+        assertNull(ShiftValidator.validateHoursWorked(0))
     }
 
     @Test
@@ -271,7 +271,7 @@ class ShiftValidatorTest {
             startTimeMinutes = 0,
             endTimeHours = 24, // invalid
             endTimeMinutes = 0,
-            hoursWorked = 0, // invalid
+            hoursWorked = -1, // invalid
         )
         val result = ShiftValidator.validate(input)
         assertFalse(result.isValid)

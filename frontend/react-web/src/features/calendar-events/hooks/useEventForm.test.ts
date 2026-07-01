@@ -127,8 +127,8 @@ describe('useEventForm', () => {
     });
   });
 
-  describe('day pre-selection (Requirements 9.1–9.6)', () => {
-    it('should pre-select displayed day in day view (Req 9.1)', () => {
+  describe('day pre-selection (Requirements 5.1, 5.2, 5.3)', () => {
+    it('should pre-select navigated-to date in day view', () => {
       mockedUseCalendarStore.mockImplementation((selector) =>
         selector({
           activeView: 'day',
@@ -142,84 +142,58 @@ describe('useEventForm', () => {
       expect(result.current.formState.endDay).toBe('2024-08-20');
     });
 
-    it('should pre-select today in week view when today is within displayed week (Req 9.2)', () => {
-      const today = new Date();
+    it('should pre-select navigated-to date in week view (not today or Monday)', () => {
       mockedUseCalendarStore.mockImplementation((selector) =>
         selector({
           activeView: 'week',
-          currentDate: today,
+          currentDate: new Date(2030, 0, 9), // Jan 9, 2030 (a Wednesday)
         } as never),
       );
 
       const { result } = renderHook(() => useEventForm());
 
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      expect(result.current.formState.startDay).toBe(`${year}-${month}-${day}`);
+      expect(result.current.formState.startDay).toBe('2030-01-09');
     });
 
-    it('should pre-select Monday of displayed week when today is NOT within it (Req 9.3)', () => {
-      // Set displayed week far in the future so today is not within it
-      mockedUseCalendarStore.mockImplementation((selector) =>
-        selector({
-          activeView: 'week',
-          currentDate: new Date(2030, 0, 7), // Jan 7, 2030 (a Monday)
-        } as never),
-      );
-
-      const { result } = renderHook(() => useEventForm());
-
-      // Jan 7, 2030 is a Monday, so Monday of that week is Jan 7
-      expect(result.current.formState.startDay).toBe('2030-01-07');
-    });
-
-    it('should pre-select today in month view when today is within displayed month (Req 9.4)', () => {
-      const today = new Date();
+    it('should pre-select navigated-to date in month view (not first of month)', () => {
       mockedUseCalendarStore.mockImplementation((selector) =>
         selector({
           activeView: 'month',
-          currentDate: today,
+          currentDate: new Date(2030, 5, 15), // June 15, 2030
         } as never),
       );
 
       const { result } = renderHook(() => useEventForm());
 
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      expect(result.current.formState.startDay).toBe(`${year}-${month}-${day}`);
+      expect(result.current.formState.startDay).toBe('2030-06-15');
     });
 
-    it('should pre-select first day of displayed month when today is NOT within it (Req 9.5)', () => {
-      // Set displayed month far in the future
-      mockedUseCalendarStore.mockImplementation((selector) =>
-        selector({
-          activeView: 'month',
-          currentDate: new Date(2030, 5, 15), // June 2030
-        } as never),
-      );
-
-      const { result } = renderHook(() => useEventForm());
-
-      expect(result.current.formState.startDay).toBe('2030-06-01');
-    });
-
-    it('should pre-select current device date in year view when today is within displayed year (Req 9.6)', () => {
-      const today = new Date();
+    it('should pre-select navigated-to date in year view (not Jan 1st)', () => {
       mockedUseCalendarStore.mockImplementation((selector) =>
         selector({
           activeView: 'year',
-          currentDate: today,
+          currentDate: new Date(2030, 2, 10), // March 10, 2030
         } as never),
       );
 
       const { result } = renderHook(() => useEventForm());
 
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      expect(result.current.formState.startDay).toBe(`${year}-${month}-${day}`);
+      expect(result.current.formState.startDay).toBe('2030-03-10');
+    });
+
+    it('should use currentDate regardless of device date (Req 5.3)', () => {
+      // Even if currentDate differs from today, it should always use currentDate
+      mockedUseCalendarStore.mockImplementation((selector) =>
+        selector({
+          activeView: 'month',
+          currentDate: new Date(2025, 2, 15), // March 15, 2025
+        } as never),
+      );
+
+      const { result } = renderHook(() => useEventForm());
+
+      expect(result.current.formState.startDay).toBe('2025-03-15');
+      expect(result.current.formState.endDay).toBe('2025-03-15');
     });
   });
 

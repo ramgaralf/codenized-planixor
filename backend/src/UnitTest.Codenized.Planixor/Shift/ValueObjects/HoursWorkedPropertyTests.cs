@@ -7,6 +7,7 @@ namespace UnitTest.Codenized.Planixor.Shift.ValueObjects;
 using FsCheck;
 using FsCheck.Fluent;
 using FsCheck.NUnit;
+using global::Codenized.Planixor.Core.Exceptions;
 using global::Codenized.Planixor.Core.ValueObjects;
 using NUnit.Framework;
 
@@ -145,3 +146,87 @@ public sealed class HoursWorkedPropertyTests
         }
     }
 }
+
+/// <summary>
+/// Property-based tests for <see cref="HoursWorked.Create"/> method — full range 0–1440.
+/// Feature: gh18-calendar-shift-reminder-improvements, Property 1: HoursWorked accepts full range 0-1440.
+/// </summary>
+/// <remarks>
+/// <strong>Validates: Requirements 1.1, 1.2, 1.5, 1.6, 2.1, 2.3</strong>
+/// </remarks>
+[TestFixture]
+[Category("Feature: gh18-calendar-shift-reminder-improvements, Property 1: HoursWorked accepts full range 0-1440")]
+public sealed class HoursWorkedCreateRangePropertyTests
+{
+    /// <summary>
+    /// For any integer in [0, 1440], HoursWorked.Create() succeeds and returns the correct TotalMinutes.
+    /// </summary>
+    /// <remarks>
+    /// <strong>Validates: Requirements 1.1, 1.2, 1.5, 1.6, 2.1, 2.3</strong>
+    /// </remarks>
+    /// <param name="input">A valid total minutes value in [0, 1440].</param>
+    [FsCheck.NUnit.Property(MaxTest = 100, Arbitrary = new[] { typeof(ValidCreateRangeArbitrary) })]
+    [Category("Property 1: HoursWorked accepts full range 0-1440")]
+    public void Create_WithValueInRange0To1440_SucceedsAndReturnsCorrectTotalMinutes(ValidCreateRangeInput input)
+    {
+        HoursWorked result = HoursWorked.Create(input.TotalMinutes);
+
+        Assert.That(result.TotalMinutes, Is.EqualTo(input.TotalMinutes), $"Expected TotalMinutes={input.TotalMinutes}");
+    }
+
+    /// <summary>
+    /// For any integer outside [0, 1440] (negative or greater than 1440), HoursWorked.Create() throws DomainException.
+    /// </summary>
+    /// <remarks>
+    /// <strong>Validates: Requirements 1.1, 1.2, 1.5, 1.6, 2.1, 2.3</strong>
+    /// </remarks>
+    /// <param name="input">An invalid total minutes value outside [0, 1440].</param>
+    [FsCheck.NUnit.Property(MaxTest = 100, Arbitrary = new[] { typeof(InvalidCreateRangeArbitrary) })]
+    [Category("Property 1: HoursWorked accepts full range 0-1440")]
+    public void Create_WithValueOutsideRange0To1440_ThrowsDomainException(InvalidCreateRangeInput input)
+    {
+        Assert.Throws<DomainException>(() => HoursWorked.Create(input.TotalMinutes));
+    }
+
+    // ==================== Wrapper types ====================
+
+    /// <summary>Wrapper for valid Create range input (0–1440).</summary>
+    /// <param name="TotalMinutes">A valid total minutes value in [0, 1440].</param>
+    public record ValidCreateRangeInput(int TotalMinutes);
+
+    /// <summary>Wrapper for invalid Create range input (outside 0–1440).</summary>
+    /// <param name="TotalMinutes">An invalid total minutes value (negative or greater than 1440).</param>
+    public record InvalidCreateRangeInput(int TotalMinutes);
+
+    // ==================== Arbitrary classes ====================
+
+    /// <summary>Provides arbitrary for valid total minutes in [0, 1440].</summary>
+    public sealed class ValidCreateRangeArbitrary
+    {
+        /// <summary>Generates total minutes values in [0, 1440].</summary>
+        /// <returns>An arbitrary for <see cref="ValidCreateRangeInput"/>.</returns>
+        public static Arbitrary<ValidCreateRangeInput> Generate()
+        {
+            Gen<ValidCreateRangeInput> gen = Gen.Choose(0, 1440)
+                .Select(m => new ValidCreateRangeInput(m));
+
+            return gen.ToArbitrary();
+        }
+    }
+
+    /// <summary>Provides arbitrary for invalid total minutes (outside [0, 1440]).</summary>
+    public sealed class InvalidCreateRangeArbitrary
+    {
+        /// <summary>Generates total minutes values that are negative or greater than 1440.</summary>
+        /// <returns>An arbitrary for <see cref="InvalidCreateRangeInput"/>.</returns>
+        public static Arbitrary<InvalidCreateRangeInput> Generate()
+        {
+            Gen<InvalidCreateRangeInput> gen = Gen.OneOf(
+                Gen.Choose(-10000, -1).Select(m => new InvalidCreateRangeInput(m)),
+                Gen.Choose(1441, 10000).Select(m => new InvalidCreateRangeInput(m)));
+
+            return gen.ToArbitrary();
+        }
+    }
+}
+

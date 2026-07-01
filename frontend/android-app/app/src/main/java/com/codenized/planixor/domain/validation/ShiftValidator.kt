@@ -59,7 +59,7 @@ object ShiftValidator {
     private const val HOURS_MAX = 23
     private const val MINUTES_MIN = 0
     private const val MINUTES_MAX = 59
-    private const val HOURS_WORKED_MIN = 1
+    private const val HOURS_WORKED_MIN = 0
     private const val HOURS_WORKED_MAX = 1440
 
     fun validate(input: ShiftValidationInput): ShiftValidationResult {
@@ -127,7 +127,7 @@ object ShiftValidator {
     }
 
     /**
-     * Validates hours worked: must be between 1 and 1440 minutes inclusive.
+     * Validates hours worked: must be between 0 and 1440 minutes inclusive.
      */
     internal fun validateHoursWorked(hoursWorked: Int?): String? {
         if (hoursWorked == null) return "shift.validation.hoursWorked.range"

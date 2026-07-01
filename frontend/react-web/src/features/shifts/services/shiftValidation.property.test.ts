@@ -16,6 +16,97 @@ import { validateShift } from './shiftValidation';
 import type { ShiftFormInput } from './shiftValidation';
 
 /**
+ * Property 1: HoursWorked accepts full range 0-1440
+ *
+ * For any integer value in the range [0, 1440], the Zod schema (shiftValidation)
+ * SHALL accept it as valid. For any integer value outside [0, 1440], the Zod schema
+ * SHALL reject it.
+ *
+ * Feature: gh18-calendar-shift-reminder-improvements, Property 1: HoursWorked accepts full range 0-1440
+ *
+ * **Validates: Requirements 1.1, 1.2, 1.5, 1.6**
+ */
+
+const makeValidInput = (hoursWorked: number): ShiftFormInput => ({
+  name: 'Test Shift',
+  icon: '😀',
+  backgroundColor: PREDEFINED_PALETTE[0],
+  startTime: 480,
+  endTime: 960,
+  hoursWorked,
+});
+
+describe('Feature: gh18-calendar-shift-reminder-improvements, Property 1: HoursWorked accepts full range 0-1440', () => {
+  it('should accept any integer hoursWorked in [0, 1440]', () => {
+    const validHoursArb = fc.integer({ min: 0, max: 1440 });
+
+    fc.assert(
+      fc.property(validHoursArb, (hoursWorked) => {
+        const input = makeValidInput(hoursWorked);
+        const result = validateShift(input);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.hoursWorked).toBe(hoursWorked);
+        }
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it('should reject any integer hoursWorked below 0', () => {
+    const belowRangeArb = fc.integer({ min: -10000, max: -1 });
+
+    fc.assert(
+      fc.property(belowRangeArb, (hoursWorked) => {
+        const input = makeValidInput(hoursWorked);
+        const result = validateShift(input);
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.errors.hoursWorked).toBe(SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE);
+        }
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it('should reject any integer hoursWorked above 1440', () => {
+    const aboveRangeArb = fc.integer({ min: 1441, max: 10000 });
+
+    fc.assert(
+      fc.property(aboveRangeArb, (hoursWorked) => {
+        const input = makeValidInput(hoursWorked);
+        const result = validateShift(input);
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.errors.hoursWorked).toBe(SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE);
+        }
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it('should reject non-integer hoursWorked values within the numeric range', () => {
+    const nonIntegerArb = fc.double({ min: 0.01, max: 1439.99, noInteger: true });
+
+    fc.assert(
+      fc.property(nonIntegerArb, (hoursWorked) => {
+        const input = makeValidInput(hoursWorked);
+        const result = validateShift(input);
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.errors.hoursWorked).toBe(SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE);
+        }
+      }),
+      { numRuns: 100 },
+    );
+  });
+});
+
+/**
  * Property 2: Shift validation rejects invalid input
  *
  * For any shift form input where at least one field violates its constraint,
@@ -178,11 +269,11 @@ describe('Property 2: Shift validation rejects invalid input', () => {
     );
   });
 
-  it('should reject any input with invalid hoursWorked (not integer 1-1440)', () => {
+  it('should reject any input with invalid hoursWorked (not integer 0-1440)', () => {
     const invalidHoursWorkedArb = fc.oneof(
-      fc.integer({ min: -1000, max: 0 }),
+      fc.integer({ min: -1000, max: -1 }),
       fc.integer({ min: SHIFT_HOURS_WORKED_MAX + 1, max: 10000 }),
-      fc.double({ min: 1.01, max: 1439.99, noInteger: true }),
+      fc.double({ min: 0.01, max: 1439.99, noInteger: true }),
     );
 
     fc.assert(

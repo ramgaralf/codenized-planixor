@@ -2,6 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import * as reminderService from '@features/reminders/services/reminderService';
 import {
+  checkReminderPropagationNeeded,
+  propagateReminderChanges,
+} from '@features/reminders/services/reminderPropagation';
+import {
   validateReminder,
   type ReminderValidationErrors,
 } from '@features/reminders/services/reminderValidation';
@@ -26,6 +30,9 @@ export interface UseReminderFormReturn {
   setIcon: (value: string) => void;
   setBackgroundColor: (value: string) => void;
   handleSubmit: () => Promise<void>;
+  propagationState: { isOpen: boolean; affectedCount: number };
+  confirmPropagation: () => Promise<void>;
+  declinePropagation: () => void;
 }
 
 export const useReminderForm = (options: UseReminderFormOptions): UseReminderFormReturn => {
@@ -39,6 +46,10 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
   const [errors, setErrors] = useState<ReminderValidationErrors>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [propagationState, setPropagationState] = useState<{
+    isOpen: boolean;
+    affectedCount: number;
+  }>({ isOpen: false, affectedCount: 0 });
 
   const debounceTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
@@ -153,10 +164,17 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
           return;
         }
         await reminderService.update(reminderId, currentValues);
+
+        const count = await checkReminderPropagationNeeded(reminderId);
+        if (count > 0) {
+          setPropagationState({ isOpen: true, affectedCount: count });
+        } else {
+          onSuccess();
+        }
       } else {
         await reminderService.create(currentValues);
+        onSuccess();
       }
-      onSuccess();
     } catch (err) {
       console.error('Failed to save reminder:', err);
       setSaveError('reminder.error.saveFailed');
@@ -164,6 +182,17 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
       setIsSaving(false);
     }
   }, [name, icon, backgroundColor, reminderId, onSuccess]);
+
+  const confirmPropagation = useCallback(async () => {
+    await propagateReminderChanges(reminderId!);
+    setPropagationState({ isOpen: false, affectedCount: 0 });
+    onSuccess();
+  }, [reminderId, onSuccess]);
+
+  const declinePropagation = useCallback(() => {
+    setPropagationState({ isOpen: false, affectedCount: 0 });
+    onSuccess();
+  }, [onSuccess]);
 
   const isValid =
     name.trim().length > 0 &&
@@ -183,5 +212,8 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
     setIcon,
     setBackgroundColor,
     handleSubmit,
+    propagationState,
+    confirmPropagation,
+    declinePropagation,
   };
 };

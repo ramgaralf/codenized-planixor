@@ -57,8 +57,8 @@ class ShiftPropertyTest {
     /** Generates valid minutes (0-59). */
     private val validMinutesArb: Arb<Int> = Arb.int(0, 59)
 
-    /** Generates valid hours worked (1-1440). */
-    private val validHoursWorkedArb: Arb<Int> = Arb.int(1, 1440)
+    /** Generates valid hours worked (0-1440). */
+    private val validHoursWorkedArb: Arb<Int> = Arb.int(0, 1440)
 
     /** Generates an invalid name (null, empty, whitespace-only, or >50 chars). */
     private val invalidNameArb: Arb<String?> = Arb.choose(
@@ -96,13 +96,68 @@ class ShiftPropertyTest {
         1 to Arb.int(-100, -1).map { it as Int? },
     )
 
-    /** Generates invalid hours worked (null, 0, negative, or >1440). */
+    /** Generates invalid hours worked (null, negative, or >1440). */
     private val invalidHoursWorkedArb: Arb<Int?> = Arb.choose(
         1 to Arb.constant(null),
-        1 to Arb.constant(0 as Int?),
         1 to Arb.int(-1000, -1).map { it as Int? },
         1 to Arb.int(1441, 5000).map { it as Int? },
     )
+
+    // --- Property 1: HoursWorked accepts full range 0-1440 ---
+
+    /**
+     * **Validates: Requirements 1.1, 1.2, 1.5, 1.6, 8.1**
+     *
+     * Feature: gh18-calendar-shift-reminder-improvements, Property 1: HoursWorked accepts full range 0-1440
+     *
+     * For any integer in [0, 1440], the validation function returns null (no error).
+     * For any integer outside [0, 1440] (negative or > 1440), the validation returns an error string.
+     */
+    @Test
+    fun `Property 1 - any value in 0-1440 produces no hoursWorked validation error`() = runTest {
+        checkAll(config, Arb.int(0, 1440)) { validValue ->
+            val result = ShiftValidator.validateHoursWorked(validValue)
+            assertEquals(
+                "Expected null (no error) for valid hoursWorked value: $validValue",
+                null,
+                result,
+            )
+        }
+    }
+
+    @Test
+    fun `Property 1 - any negative value produces hoursWorked validation error`() = runTest {
+        checkAll(config, Arb.int(-10000, -1)) { negativeValue ->
+            val result = ShiftValidator.validateHoursWorked(negativeValue)
+            assertNotEquals(
+                "Expected error string for negative hoursWorked value: $negativeValue",
+                null,
+                result,
+            )
+        }
+    }
+
+    @Test
+    fun `Property 1 - any value above 1440 produces hoursWorked validation error`() = runTest {
+        checkAll(config, Arb.int(1441, 10000)) { tooLargeValue ->
+            val result = ShiftValidator.validateHoursWorked(tooLargeValue)
+            assertNotEquals(
+                "Expected error string for hoursWorked value above 1440: $tooLargeValue",
+                null,
+                result,
+            )
+        }
+    }
+
+    @Test
+    fun `Property 1 - null hoursWorked produces validation error`() = runTest {
+        val result = ShiftValidator.validateHoursWorked(null)
+        assertNotEquals(
+            "Expected error string for null hoursWorked",
+            null,
+            result,
+        )
+    }
 
     // --- Property 2: Shift validation rejects invalid input ---
 
@@ -322,7 +377,7 @@ class ShiftPropertyTest {
             val originalStart = Arb.int(0, 1439).bind()
             val endTime = Arb.int(0, 1439).bind()
             // Manual override is some arbitrary valid value different from what calculation would give
-            val manualOverride = Arb.int(1, 1440).bind()
+            val manualOverride = Arb.int(0, 1440).bind()
             // New start time must differ from original to trigger recalculation
             val newStart = Arb.int(0, 1439).filter { it != originalStart }.bind()
             Triple(Pair(originalStart, endTime), manualOverride, newStart)
@@ -359,7 +414,7 @@ class ShiftPropertyTest {
         val testCaseArb = arbitrary {
             val startTime = Arb.int(0, 1439).bind()
             val originalEnd = Arb.int(0, 1439).bind()
-            val manualOverride = Arb.int(1, 1440).bind()
+            val manualOverride = Arb.int(0, 1440).bind()
             // New end time must differ from original to trigger recalculation
             val newEnd = Arb.int(0, 1439).filter { it != originalEnd }.bind()
             Triple(Pair(startTime, originalEnd), manualOverride, newEnd)

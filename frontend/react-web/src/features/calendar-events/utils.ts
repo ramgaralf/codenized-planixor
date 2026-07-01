@@ -134,3 +134,32 @@ const formatISODate = (d: Date): string => {
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+/**
+ * Returns the effective start/end minutes for an event on a given day.
+ * Multi-day events span 00:00–23:59 on intermediate days.
+ *
+ * Used by DayView to compute event block position and height.
+ */
+export const getEffectiveTimes = (
+  event: { eventType: string; startDay: string; endDay: string; startTime: number; endTime: number },
+  currentDayStr: string,
+): { effectiveStart: number; effectiveEnd: number } => {
+  const isMultiDay = event.startDay !== event.endDay;
+  if (!isMultiDay) {
+    return { effectiveStart: event.startTime, effectiveEnd: event.endTime };
+  }
+
+  const isStartDay = event.startDay === currentDayStr;
+  const isEndDay = event.endDay === currentDayStr;
+
+  // If the event ends at 00:00 on this day, it doesn't occupy any time here
+  if (isEndDay && event.endTime === 0) {
+    return { effectiveStart: 0, effectiveEnd: 0 };
+  }
+
+  return {
+    effectiveStart: isStartDay ? event.startTime : 0,
+    effectiveEnd: isEndDay ? event.endTime : 1439,
+  };
+};

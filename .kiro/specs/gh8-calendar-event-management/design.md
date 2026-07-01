@@ -156,8 +156,8 @@ function computeTotalHours(eventType: 'shift' | 'reminder', startDay: string, en
 // For reminders: calculates based on day difference + time difference
 
 function computeEndDayForShift(startDay: string, startTime: number, endTime: number): string;
-// If endTime < startTime (crossing midnight): returns startDay + 1
-// Otherwise: returns startDay
+// If endTime <= startTime (crossing midnight or 24-hour shift): returns startDay + 1
+// If endTime > startTime (same-day shift): returns startDay
 
 function validateRequiredFields(event: Partial<CalendarEvent>): ValidationResult;
 function validateNotes(notes: string | null): boolean;

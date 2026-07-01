@@ -7,6 +7,7 @@ import { useTheme } from '@context/useTheme';
 import { ColorPicker } from '@features/reminders/components/ColorPicker';
 import { EmojiPicker } from '@features/reminders/components/EmojiPicker';
 import { useReminderForm } from '@features/reminders/hooks/useReminderForm';
+import { PropagationModal } from '@shared/components/PropagationModal';
 
 interface ReminderFormProps {
   initialValues?: { name: string; icon: string; backgroundColor: string };
@@ -70,6 +71,9 @@ export const ReminderForm = ({
     setIcon,
     setBackgroundColor,
     handleSubmit,
+    propagationState,
+    confirmPropagation,
+    declinePropagation,
   } = useReminderForm({
     initialValues,
     reminderId,
@@ -95,6 +99,7 @@ export const ReminderForm = ({
       : t('reminder.form.editTitle');
 
   return (
+    <>
     <form
       onSubmit={handleFormSubmit}
       style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '640px', paddingBottom: '64px' }}
@@ -224,5 +229,14 @@ export const ReminderForm = ({
         </button>
       </div>
     </form>
+    <PropagationModal
+      isOpen={propagationState.isOpen}
+      templateName={name}
+      templateType="reminder"
+      affectedEventCount={propagationState.affectedCount}
+      onConfirm={confirmPropagation}
+      onDecline={declinePropagation}
+    />
+    </>
   );
 };

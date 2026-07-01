@@ -38,6 +38,6 @@ public sealed class ShiftSyncItemValidator : ValidatorBase<ShiftSyncItem>
             .AddRequirement(x => x.EndTime >= 0 && x.EndTime <= 1439, "EndTime must be between 0 and 1439.");
 
         this.AddRuleFor<int>(x => x.HoursWorked)
-            .AddRequirement(x => x.HoursWorked >= 1 && x.HoursWorked <= 1440, "HoursWorked must be between 1 and 1440.");
+            .AddRequirement(x => x.HoursWorked >= 0 && x.HoursWorked <= 1440, "HoursWorked must be between 0 and 1440.");
     }
 }

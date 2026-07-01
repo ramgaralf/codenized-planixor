@@ -132,18 +132,18 @@ public sealed class ShiftSyncEndpointsTests
     }
 
     /// <summary>
-    /// Verifies that a shift sync item with HoursWorked of zero is rejected by the validation pipeline.
+    /// Verifies that a shift sync item with negative HoursWorked is rejected by the validation pipeline.
     /// </summary>
     [Test]
     public void PushEndpoint_WithInvalidPayload_InvalidHoursWorked_ProducesValidationFailure()
     {
-        ShiftSyncItem invalidItem = CreateValidItem() with { HoursWorked = 0 };
+        ShiftSyncItem invalidItem = CreateValidItem() with { HoursWorked = -1 };
 
         this.itemValidator.Validate(invalidItem);
 
         Assert.That(this.itemValidator.Failures, Is.Not.Empty);
         Assert.That(
-            this.itemValidator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 1 and 1440")),
+            this.itemValidator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 0 and 1440")),
             Is.True);
     }
 

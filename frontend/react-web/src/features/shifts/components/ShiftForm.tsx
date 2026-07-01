@@ -259,7 +259,10 @@ export const ShiftForm = ({
         </label>
         <input
           id="shift-hours-worked"
-          type="time"
+          type="text"
+          inputMode="numeric"
+          placeholder="HH:mm"
+          pattern="[0-2]?[0-9]:[0-5][0-9]"
           value={fields.hoursWorked}
           onChange={(e) => onFieldChange('hoursWorked', e.target.value)}
           aria-invalid={!!errors.hoursWorked}
