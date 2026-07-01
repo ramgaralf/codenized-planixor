@@ -5,8 +5,8 @@
 namespace Codenized.Planixor.Api.Endpoints.CalendarEvent;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
-using Codenized.CleanArchitecture.Abstractions.Exceptions;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
+using Codenized.CleanArchitecture.Exception.Abstractions.Unauthorized;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
 using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.CalendarEvent.Sync;

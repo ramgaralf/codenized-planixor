@@ -4,11 +4,9 @@
 
 namespace UnitTest.Codenized.Planixor.Security.Authentication;
 
-using System.Security.Claims;
-using System.Text.Encodings.Web;
-using global::Codenized.CleanArchitecture.Abstractions.Exceptions;
-using global::Codenized.Planixor.Services.Authentication;
+using global::Codenized.CleanArchitecture.Exception.Abstractions.Forbidden;
 using global::Codenized.Planixor.Core.Services.Security;
+using global::Codenized.Planixor.Services.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -16,6 +14,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using NUnit.Framework;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 
 /// <summary>
 /// Unit tests for <see cref="ApiKeyAuthenticationHandler"/>.

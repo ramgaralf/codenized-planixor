@@ -41,11 +41,13 @@ public sealed class HoursWorkedTests
         Assert.That(result.TotalMinutes, Is.EqualTo(1440));
     }
 
-    /// <summary>Verifies creation with zero throws DomainException.</summary>
+    /// <summary>Verifies creation with zero succeeds.</summary>
     [Test]
-    public void Create_WithZero_ThrowsDomainException()
+    public void Create_WithZero_ReturnsHoursWorkedInstance()
     {
-        Assert.Throws<DomainException>(() => HoursWorked.Create(0));
+        HoursWorked result = HoursWorked.Create(0);
+
+        Assert.That(result.TotalMinutes, Is.EqualTo(0));
     }
 
     /// <summary>Verifies creation with negative value throws DomainException.</summary>

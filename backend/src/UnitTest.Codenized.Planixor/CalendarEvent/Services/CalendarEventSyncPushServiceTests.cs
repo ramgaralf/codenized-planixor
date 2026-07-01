@@ -4,7 +4,7 @@
 
 namespace UnitTest.Codenized.Planixor.CalendarEvent.Services;
 
-using global::Codenized.CleanArchitecture.Abstractions.Exceptions;
+using global::Codenized.CleanArchitecture.Exception.Abstractions.BadRequest;
 using global::Codenized.Planixor.Dtos.CalendarEvent.Sync;
 using global::Codenized.Planixor.UseCases.CalendarEvent.SyncPush;
 using global::Codenized.Planixor.UseCases.CalendarEvent.SyncPush.Commands;

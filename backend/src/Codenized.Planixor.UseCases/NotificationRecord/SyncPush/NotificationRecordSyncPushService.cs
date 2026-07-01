@@ -4,8 +4,8 @@
 
 namespace Codenized.Planixor.UseCases.NotificationRecord.SyncPush;
 
-using Codenized.CleanArchitecture.Abstractions.Exceptions;
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.CleanArchitecture.Exception.Abstractions.BadRequest;
 using Codenized.Planixor.Dtos.NotificationRecord.Sync;
 using Codenized.Planixor.UseCases.NotificationRecord.SyncPush.Commands;
 using Codenized.Planixor.UseCases.NotificationRecord.SyncPush.Queries;

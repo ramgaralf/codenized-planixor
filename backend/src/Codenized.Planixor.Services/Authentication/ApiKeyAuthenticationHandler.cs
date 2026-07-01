@@ -4,13 +4,14 @@
 
 namespace Codenized.Planixor.Services.Authentication;
 
-using System.Security.Claims;
-using System.Text.Encodings.Web;
-using Codenized.CleanArchitecture.Abstractions.Exceptions;
+using Codenized.CleanArchitecture.Exception.Abstractions.Forbidden;
+using Codenized.CleanArchitecture.Exception.Abstractions.Unauthorized;
 using Codenized.Planixor.Core.Services.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 
 /// <summary>
 /// ASP.NET Core authentication handler that validates API keys provided via the Authorization header.

@@ -4,7 +4,7 @@
 
 namespace UnitTest.Codenized.Planixor.Reminder.Services;
 
-using global::Codenized.CleanArchitecture.Abstractions.Exceptions;
+using global::Codenized.CleanArchitecture.Exception.Abstractions.BadRequest;
 using global::Codenized.Planixor.Core.Entities;
 using global::Codenized.Planixor.Dtos.Reminder.Sync;
 using global::Codenized.Planixor.UseCases.Reminder.SyncPush;
