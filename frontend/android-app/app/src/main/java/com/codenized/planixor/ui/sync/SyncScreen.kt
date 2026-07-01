@@ -76,7 +76,11 @@ internal fun SyncContent(
         // Info fields
         InfoField(
             label = stringResource(R.string.sync_server_url),
-            value = uiState.config?.serverUrl ?: "",
+            value = if (uiState.config != null) {
+                "${uiState.config!!.serverUrl}${uiState.config!!.apiBasePath}"
+            } else {
+                ""
+            },
         )
 
         InfoField(
@@ -92,6 +96,11 @@ internal fun SyncContent(
         InfoField(
             label = stringResource(R.string.sync_last_synced),
             value = formatLastSynced(uiState.lastSyncedAt),
+        )
+
+        InfoField(
+            label = stringResource(R.string.sync_interval_display),
+            value = stringResource(R.string.sync_config_sync_interval_unit, uiState.config?.syncIntervalMinutes ?: 5),
         )
 
         Spacer(modifier = Modifier.height(8.dp))

@@ -62,4 +62,11 @@ interface CalendarEventDao {
      */
     @Query("SELECT * FROM calendar_events")
     suspend fun getAll(): List<CalendarEventEntity>
+
+    /**
+     * Physically deletes all calendar events from local storage.
+     * Used during username change to wipe all syncable data.
+     */
+    @Query("DELETE FROM calendar_events")
+    suspend fun deleteAll()
 }

@@ -20,6 +20,12 @@ export interface SyncConfig {
   /** Linked username from the validation endpoint */
   username: string;
 
+  /** Configurable API base path segment (default "/api") */
+  apiBasePath: string;
+
+  /** Configurable sync interval in minutes (default 5) */
+  syncIntervalMinutes: number;
+
   /** Whether sync is currently paused by the user */
   isPaused: boolean;
 

@@ -3,11 +3,16 @@ import { create } from 'zustand';
 import { db } from '@/data/db';
 import type { ConnectionStatus, SyncConfig } from '@features/sync/models';
 
+const DEFAULT_API_BASE_PATH = '/api';
+const DEFAULT_SYNC_INTERVAL_MINUTES = 5;
+
 interface SyncState {
   config: SyncConfig | null;
   connectionStatus: ConnectionStatus;
   isPaused: boolean;
   lastSyncedAt: string | null;
+  apiBasePath: string;
+  syncIntervalMinutes: number;
   loadConfig: () => Promise<void>;
   saveConfig: (config: SyncConfig) => Promise<void>;
   clearConfig: () => Promise<void>;
@@ -22,6 +27,8 @@ export const useSyncStore = create<SyncState>()((set) => ({
   connectionStatus: 'unconfigured',
   isPaused: false,
   lastSyncedAt: null,
+  apiBasePath: DEFAULT_API_BASE_PATH,
+  syncIntervalMinutes: DEFAULT_SYNC_INTERVAL_MINUTES,
 
   loadConfig: async () => {
     const record = await db.syncConfig.get('default');
@@ -30,6 +37,8 @@ export const useSyncStore = create<SyncState>()((set) => ({
         config: record,
         isPaused: record.isPaused,
         lastSyncedAt: record.lastSyncedAt,
+        apiBasePath: record.apiBasePath ?? DEFAULT_API_BASE_PATH,
+        syncIntervalMinutes: record.syncIntervalMinutes ?? DEFAULT_SYNC_INTERVAL_MINUTES,
         connectionStatus: record.isPaused ? 'paused' : 'active',
       });
     } else {
@@ -37,6 +46,8 @@ export const useSyncStore = create<SyncState>()((set) => ({
         config: null,
         isPaused: false,
         lastSyncedAt: null,
+        apiBasePath: DEFAULT_API_BASE_PATH,
+        syncIntervalMinutes: DEFAULT_SYNC_INTERVAL_MINUTES,
         connectionStatus: 'unconfigured',
       });
     }
@@ -49,6 +60,8 @@ export const useSyncStore = create<SyncState>()((set) => ({
       config: record,
       isPaused: record.isPaused,
       lastSyncedAt: record.lastSyncedAt,
+      apiBasePath: record.apiBasePath ?? DEFAULT_API_BASE_PATH,
+      syncIntervalMinutes: record.syncIntervalMinutes ?? DEFAULT_SYNC_INTERVAL_MINUTES,
       connectionStatus: 'active',
     });
   },
@@ -59,6 +72,8 @@ export const useSyncStore = create<SyncState>()((set) => ({
       config: null,
       isPaused: false,
       lastSyncedAt: null,
+      apiBasePath: DEFAULT_API_BASE_PATH,
+      syncIntervalMinutes: DEFAULT_SYNC_INTERVAL_MINUTES,
       connectionStatus: 'unconfigured',
     });
   },

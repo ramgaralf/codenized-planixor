@@ -50,4 +50,11 @@ interface ReminderDao {
      */
     @Query("SELECT * FROM reminders WHERE isDeleted = 0 AND isActive = 1 ORDER BY createdAt ASC")
     fun getActiveForCalendarSelection(): Flow<List<ReminderEntity>>
+
+    /**
+     * Physically deletes all reminders from local storage.
+     * Used during username change to wipe all syncable data.
+     */
+    @Query("DELETE FROM reminders")
+    suspend fun deleteAll()
 }

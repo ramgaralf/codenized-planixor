@@ -393,6 +393,30 @@
     "validation": {
       "urlRequired": "La URL del servidor es obligatoria",
       "apiKeyRequired": "La clave API es obligatoria"
+    },
+    "syncInterval": "Intervalo de sincronización",
+    "config": {
+      "apiBasePath": "Ruta Base de la API",
+      "apiBasePathPlaceholder": "/api",
+      "apiBasePathError": {
+        "tooLong": "La ruta base de la API debe tener 128 caracteres o menos",
+        "invalidChars": "Solo se permiten letras, números, guiones, guiones bajos, puntos y barras"
+      },
+      "syncInterval": "Intervalo de Sincronización",
+      "syncIntervalUnit": "min"
+    },
+    "usernameChange": {
+      "title": "Cambio de Usuario Detectado",
+      "message": "La nueva configuración está vinculada a un usuario diferente. Cambiar de \"{{previousUsername}}\" a \"{{newUsername}}\" eliminará permanentemente todos los datos locales existentes.",
+      "dataCategories": "Los siguientes datos serán eliminados:",
+      "categoryCalendarEvents": "Eventos del calendario",
+      "categoryShifts": "Turnos",
+      "categoryReminders": "Recordatorios",
+      "categoryNotificationRecords": "Registros de notificaciones",
+      "categoryAnnualHoursConfig": "Configuración de horas anuales",
+      "confirm": "Eliminar Datos y Cambiar",
+      "cancel": "Cancelar",
+      "dataResetFailed": "Error al restablecer los datos. Se ha conservado la configuración existente."
     }
   },
   "propagation": {

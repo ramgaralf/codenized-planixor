@@ -9,6 +9,8 @@ data class SyncConfig(
     val serverUrl: String,
     val apiKey: String,
     val username: String,
+    val apiBasePath: String = "/api",
+    val syncIntervalMinutes: Int = 5,
     val isPaused: Boolean = false,
     val lastSyncedAt: Long? = null,
 )

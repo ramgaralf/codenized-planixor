@@ -304,6 +304,27 @@
     <string name="sync_error_timeout">La conexión expiró. Revisa la URL e inténtalo de nuevo.</string>
     <string name="sync_validation_url_required">La URL del servidor es obligatoria</string>
     <string name="sync_validation_api_key_required">La clave API es obligatoria</string>
+    <string name="sync_api_base_path">Ruta Base de API</string>
+    <string name="sync_api_base_path_placeholder">/api</string>
+    <string name="sync_api_base_path_error">La ruta solo puede contener letras, números, guiones, guiones bajos, puntos y barras</string>
+    <string name="sync_config_api_base_path">Ruta Base de API</string>
+    <string name="sync_config_api_base_path_placeholder">/api</string>
+    <string name="sync_config_api_base_path_error_too_long">La ruta base de API debe tener 128 caracteres o menos</string>
+    <string name="sync_config_api_base_path_error_invalid_chars">Solo se permiten letras, números, guiones, guiones bajos, puntos y barras</string>
+    <string name="sync_config_sync_interval">Intervalo de Sincronización</string>
+    <string name="sync_config_sync_interval_unit">%1$d min</string>
+    <string name="sync_username_change_title">Cambio de Usuario Detectado</string>
+    <string name="sync_username_change_message">La nueva configuración está vinculada a un usuario diferente. Cambiar de \"%1$s\" a \"%2$s\" eliminará permanentemente todos los datos locales existentes.</string>
+    <string name="sync_username_change_data_categories">Los siguientes datos serán eliminados:</string>
+    <string name="sync_username_change_category_calendar_events">Eventos del calendario</string>
+    <string name="sync_username_change_category_shifts">Turnos</string>
+    <string name="sync_username_change_category_reminders">Recordatorios</string>
+    <string name="sync_username_change_category_notification_records">Registros de notificaciones</string>
+    <string name="sync_username_change_category_annual_hours">Configuración de horas anuales</string>
+    <string name="sync_username_change_confirm">Eliminar Datos y Cambiar</string>
+    <string name="sync_username_change_cancel">Cancelar</string>
+    <string name="sync_username_change_data_reset_failed">Error al restablecer los datos. Se ha mantenido la configuración existente.</string>
+    <string name="sync_interval_display">Intervalo de sincronización</string>
 
     <!-- Settings Reset -->
     <string name="settings_danger_zone_title">Zona de peligro</string>

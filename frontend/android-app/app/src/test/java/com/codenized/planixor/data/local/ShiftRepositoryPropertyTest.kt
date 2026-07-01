@@ -78,6 +78,11 @@ class FakeShiftDao : ShiftDao {
         emitUpdate()
     }
 
+    override suspend fun deleteAll() {
+        store.clear()
+        emitUpdate()
+    }
+
     fun clear() {
         store.clear()
         emitUpdate()

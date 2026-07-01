@@ -4,6 +4,7 @@ import { syncNotificationRecords, pushNotificationRecords } from '@features/noti
 import type { SyncApiClient as NotificationSyncApiClient } from '@features/notifications/services/notificationSync';
 import { syncAnnualHoursConfig, pushAnnualHoursConfig } from '@features/reports/services/annualHoursConfigSync';
 import type { AnnualHoursConfigSyncApiClient } from '@features/reports/services/annualHoursConfigSync';
+import { purgePastNotifications } from '@features/sync/services/notificationPurgeService';
 import { useSyncStore } from '@features/sync/stores/syncStore';
 
 import { db } from '@/data/db';
@@ -36,20 +37,30 @@ interface ReminderSyncRecord {
 }
 
 /**
- * Sync interval: 5 minutes in milliseconds.
+ * Default sync interval in minutes when no config is available.
  */
-const SYNC_INTERVAL_MS = 300_000;
+const DEFAULT_SYNC_INTERVAL_MINUTES = 5;
+
+/**
+ * Computes the sync interval in milliseconds from the configured minutes value.
+ * Falls back to 5 minutes (300000ms) if no config or invalid value.
+ */
+const getSyncIntervalMs = (): number => {
+  const { syncIntervalMinutes } = useSyncStore.getState();
+  const minutes = syncIntervalMinutes ?? DEFAULT_SYNC_INTERVAL_MINUTES;
+  return minutes * 60 * 1000;
+};
 
 let unsubscribe: (() => void) | null = null;
 let intervalId: ReturnType<typeof setInterval> | null = null;
 let isSyncRunning = false;
 
 /**
- * Creates a CalendarEvent sync API client from the given server URL and API key.
+ * Creates a CalendarEvent sync API client from the given server URL, API key, and base path.
  */
-const createCalendarApiClient = (serverUrl: string, apiKey: string): CalendarSyncApiClient => ({
+const createCalendarApiClient = (serverUrl: string, apiKey: string, apiBasePath: string): CalendarSyncApiClient => ({
   pushCalendarEvents: async (records) => {
-    const response = await fetch(`${serverUrl}/api/calendar-events/sync/push`, {
+    const response = await fetch(`${serverUrl}${apiBasePath}/calendar-events/sync/push`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -74,8 +85,8 @@ const createCalendarApiClient = (serverUrl: string, apiKey: string): CalendarSyn
 
     const queryString = params.toString();
     const pullUrl = queryString
-      ? `${serverUrl}/api/calendar-events/sync/pull?${queryString}`
-      : `${serverUrl}/api/calendar-events/sync/pull`;
+      ? `${serverUrl}${apiBasePath}/calendar-events/sync/pull?${queryString}`
+      : `${serverUrl}${apiBasePath}/calendar-events/sync/pull`;
     const response = await fetch(pullUrl, {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
@@ -91,11 +102,11 @@ const createCalendarApiClient = (serverUrl: string, apiKey: string): CalendarSyn
 });
 
 /**
- * Creates a NotificationRecord sync API client from the given server URL and API key.
+ * Creates a NotificationRecord sync API client from the given server URL, API key, and base path.
  */
-const createNotificationApiClient = (serverUrl: string, apiKey: string): NotificationSyncApiClient => ({
+const createNotificationApiClient = (serverUrl: string, apiKey: string, apiBasePath: string): NotificationSyncApiClient => ({
   pushNotificationRecords: async (records) => {
-    const response = await fetch(`${serverUrl}/api/notification-records/sync/push`, {
+    const response = await fetch(`${serverUrl}${apiBasePath}/notification-records/sync/push`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -120,8 +131,8 @@ const createNotificationApiClient = (serverUrl: string, apiKey: string): Notific
 
     const queryString = params.toString();
     const pullUrl = queryString
-      ? `${serverUrl}/api/notification-records/sync/pull?${queryString}`
-      : `${serverUrl}/api/notification-records/sync/pull`;
+      ? `${serverUrl}${apiBasePath}/notification-records/sync/pull?${queryString}`
+      : `${serverUrl}${apiBasePath}/notification-records/sync/pull`;
     const response = await fetch(pullUrl, {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
@@ -137,11 +148,11 @@ const createNotificationApiClient = (serverUrl: string, apiKey: string): Notific
 });
 
 /**
- * Creates an AnnualHoursConfig sync API client from the given server URL and API key.
+ * Creates an AnnualHoursConfig sync API client from the given server URL, API key, and base path.
  */
-const createAnnualHoursApiClient = (serverUrl: string, apiKey: string): AnnualHoursConfigSyncApiClient => ({
+const createAnnualHoursApiClient = (serverUrl: string, apiKey: string, apiBasePath: string): AnnualHoursConfigSyncApiClient => ({
   pushAnnualHoursConfig: async (records) => {
-    const response = await fetch(`${serverUrl}/api/annual-hours-config/sync/push`, {
+    const response = await fetch(`${serverUrl}${apiBasePath}/annual-hours-config/sync/push`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -166,8 +177,8 @@ const createAnnualHoursApiClient = (serverUrl: string, apiKey: string): AnnualHo
 
     const queryString = params.toString();
     const pullUrl = queryString
-      ? `${serverUrl}/api/annual-hours-config/sync/pull?${queryString}`
-      : `${serverUrl}/api/annual-hours-config/sync/pull`;
+      ? `${serverUrl}${apiBasePath}/annual-hours-config/sync/pull?${queryString}`
+      : `${serverUrl}${apiBasePath}/annual-hours-config/sync/pull`;
     const response = await fetch(pullUrl, {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
@@ -191,8 +202,8 @@ const PUSH_BATCH_SIZE = 100;
  * Syncs shifts with the backend (push unsynced + pull remote changes).
  */
 // eslint-disable-next-line sonarjs/cognitive-complexity
-const syncShifts = async (serverUrl: string, apiKey: string, lastSyncedAt: string | null): Promise<void> => {
-  await pushShifts(serverUrl, apiKey);
+const syncShifts = async (serverUrl: string, apiKey: string, apiBasePath: string, lastSyncedAt: string | null): Promise<void> => {
+  await pushShifts(serverUrl, apiKey, apiBasePath);
 
   // Pull
   let cursor: string | null = null;
@@ -203,8 +214,8 @@ const syncShifts = async (serverUrl: string, apiKey: string, lastSyncedAt: strin
 
     const queryString = params.toString();
     const pullUrl = queryString
-      ? `${serverUrl}/api/shifts/sync/pull?${queryString}`
-      : `${serverUrl}/api/shifts/sync/pull`;
+      ? `${serverUrl}${apiBasePath}/shifts/sync/pull?${queryString}`
+      : `${serverUrl}${apiBasePath}/shifts/sync/pull`;
 
     const response = await fetch(pullUrl, {
       headers: { Authorization: `Bearer ${apiKey}` },
@@ -258,7 +269,7 @@ const syncShifts = async (serverUrl: string, apiKey: string, lastSyncedAt: strin
 /**
  * Pushes unsynced shifts to the backend.
  */
-const pushShifts = async (serverUrl: string, apiKey: string): Promise<void> => {
+const pushShifts = async (serverUrl: string, apiKey: string, apiBasePath: string): Promise<void> => {
   const allShifts = await db.shifts.toArray();
   const pushCandidates = allShifts.filter(
     s => s.syncedAt === null || s.modifiedAt.getTime() > s.syncedAt.getTime(),
@@ -282,7 +293,7 @@ const pushShifts = async (serverUrl: string, apiKey: string): Promise<void> => {
       isDeleted: s.isDeleted,
     }));
 
-    const response = await fetch(`${serverUrl}/api/shifts/sync/push`, {
+    const response = await fetch(`${serverUrl}${apiBasePath}/shifts/sync/push`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -307,8 +318,8 @@ const pushShifts = async (serverUrl: string, apiKey: string): Promise<void> => {
  * Syncs reminders with the backend (push unsynced + pull remote changes).
  */
 // eslint-disable-next-line sonarjs/cognitive-complexity
-const syncReminders = async (serverUrl: string, apiKey: string, lastSyncedAt: string | null): Promise<void> => {
-  await pushReminders(serverUrl, apiKey);
+const syncReminders = async (serverUrl: string, apiKey: string, apiBasePath: string, lastSyncedAt: string | null): Promise<void> => {
+  await pushReminders(serverUrl, apiKey, apiBasePath);
 
   // Pull
   let cursor: string | null = null;
@@ -319,8 +330,8 @@ const syncReminders = async (serverUrl: string, apiKey: string, lastSyncedAt: st
 
     const queryString = params.toString();
     const pullUrl = queryString
-      ? `${serverUrl}/api/reminders/sync/pull?${queryString}`
-      : `${serverUrl}/api/reminders/sync/pull`;
+      ? `${serverUrl}${apiBasePath}/reminders/sync/pull?${queryString}`
+      : `${serverUrl}${apiBasePath}/reminders/sync/pull`;
 
     const response = await fetch(pullUrl, {
       headers: { Authorization: `Bearer ${apiKey}` },
@@ -371,7 +382,7 @@ const syncReminders = async (serverUrl: string, apiKey: string, lastSyncedAt: st
 /**
  * Pushes unsynced reminders to the backend.
  */
-const pushReminders = async (serverUrl: string, apiKey: string): Promise<void> => {
+const pushReminders = async (serverUrl: string, apiKey: string, apiBasePath: string): Promise<void> => {
   const allReminders = await db.reminders.toArray();
   const pushCandidates = allReminders.filter(
     r => r.syncedAt === null || r.modifiedAt.getTime() > r.syncedAt.getTime(),
@@ -392,7 +403,7 @@ const pushReminders = async (serverUrl: string, apiKey: string): Promise<void> =
       isDeleted: r.isDeleted,
     }));
 
-    const response = await fetch(`${serverUrl}/api/reminders/sync/push`, {
+    const response = await fetch(`${serverUrl}${apiBasePath}/reminders/sync/push`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -416,7 +427,8 @@ const pushReminders = async (serverUrl: string, apiKey: string): Promise<void> =
 /**
  * Runs a full sync cycle (push + pull) for all entities.
  * Each entity syncs independently — one failure doesn't block the others.
- * Updates lastSyncedAt always; sets connectionStatus to 'failing' if any entity errored.
+ * Updates lastSyncedAt only if at least one entity sync succeeds.
+ * Sets connectionStatus to 'failing' if any entity errored.
  */
 export const runFullSyncCycle = async (): Promise<void> => {
   const { config, lastSyncedAt } = useSyncStore.getState();
@@ -428,26 +440,36 @@ export const runFullSyncCycle = async (): Promise<void> => {
   // Use epoch date when lastSyncedAt is null (first sync) to ensure all records are pulled
   const effectiveLastSyncedAt = lastSyncedAt ?? '1970-01-01T00:00:00.000Z';
 
-  const { serverUrl, apiKey } = config;
-  const calendarClient = createCalendarApiClient(serverUrl, apiKey);
-  const notificationClient = createNotificationApiClient(serverUrl, apiKey);
-  const annualHoursClient = createAnnualHoursApiClient(serverUrl, apiKey);
+  const { serverUrl, apiKey, apiBasePath } = config;
+  const calendarClient = createCalendarApiClient(serverUrl, apiKey, apiBasePath);
+  const notificationClient = createNotificationApiClient(serverUrl, apiKey, apiBasePath);
+  const annualHoursClient = createAnnualHoursApiClient(serverUrl, apiKey, apiBasePath);
 
   let hasError = false;
+  let hasAnySuccess = false;
 
-  try { await syncCalendarEvents(calendarClient, effectiveLastSyncedAt); } catch { hasError = true; }
-  try { await syncNotificationRecords(notificationClient, effectiveLastSyncedAt); } catch { hasError = true; }
-  try { await syncAnnualHoursConfig(annualHoursClient, effectiveLastSyncedAt); } catch { hasError = true; }
-  try { await syncShifts(serverUrl, apiKey, effectiveLastSyncedAt); } catch { hasError = true; }
-  try { await syncReminders(serverUrl, apiKey, effectiveLastSyncedAt); } catch { hasError = true; }
+  try { await syncCalendarEvents(calendarClient, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
+  try { await syncNotificationRecords(notificationClient, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
+  try { await syncAnnualHoursConfig(annualHoursClient, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
+  try { await syncShifts(serverUrl, apiKey, apiBasePath, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
+  try { await syncReminders(serverUrl, apiKey, apiBasePath, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
 
-  // Always update lastSyncedAt after every cycle execution, regardless of errors
+  // Post-cycle notification purge — fire and forget, does not affect sync status
   try {
-    const now = new Date().toISOString();
-    useSyncStore.getState().setLastSyncedAt(now);
-    await db.syncConfig.update('default', { lastSyncedAt: now });
-  } catch {
-    // Silent — store update is best-effort
+    await purgePastNotifications();
+  } catch (err) {
+    console.error('Post-cycle notification purge failed:', err);
+  }
+
+  // Only update lastSyncedAt if at least one entity sync succeeded
+  if (hasAnySuccess) {
+    try {
+      const now = new Date().toISOString();
+      useSyncStore.getState().setLastSyncedAt(now);
+      await db.syncConfig.update('default', { lastSyncedAt: now });
+    } catch {
+      // Silent — store update is best-effort
+    }
   }
 
   if (hasError) {
@@ -468,16 +490,16 @@ export const runPushOnlyCycle = async (): Promise<void> => {
   const { config } = useSyncStore.getState();
   if (!config || config.isPaused) return;
 
-  const { serverUrl, apiKey } = config;
-  const calendarClient = createCalendarApiClient(serverUrl, apiKey);
-  const notificationClient = createNotificationApiClient(serverUrl, apiKey);
-  const annualHoursClient = createAnnualHoursApiClient(serverUrl, apiKey);
+  const { serverUrl, apiKey, apiBasePath } = config;
+  const calendarClient = createCalendarApiClient(serverUrl, apiKey, apiBasePath);
+  const notificationClient = createNotificationApiClient(serverUrl, apiKey, apiBasePath);
+  const annualHoursClient = createAnnualHoursApiClient(serverUrl, apiKey, apiBasePath);
 
   try { await pushCalendarEvents(calendarClient); } catch (e) { console.error('Push calendar events failed:', e); }
   try { await pushNotificationRecords(notificationClient); } catch (e) { console.error('Push notification records failed:', e); }
   try { await pushAnnualHoursConfig(annualHoursClient); } catch (e) { console.error('Push annual hours config failed:', e); }
-  try { await pushShifts(serverUrl, apiKey); } catch (e) { console.error('Push shifts failed:', e); }
-  try { await pushReminders(serverUrl, apiKey); } catch (e) { console.error('Push reminders failed:', e); }
+  try { await pushShifts(serverUrl, apiKey, apiBasePath); } catch (e) { console.error('Push shifts failed:', e); }
+  try { await pushReminders(serverUrl, apiKey, apiBasePath); } catch (e) { console.error('Push reminders failed:', e); }
 };
 
 /**
@@ -495,15 +517,22 @@ const handleVisibilityChange = () => {
 /**
  * Starts the sync service controller.
  * Monitors syncStore state and controls the sync worker lifecycle.
+ * Detects interval changes and restarts the timer with the new value.
  * Call on app initialization.
  */
 export const startSyncController = () => {
   if (unsubscribe) return;
 
   unsubscribe = useSyncStore.subscribe((state, prevState) => {
-    if (state.isPaused !== prevState.isPaused || state.config !== prevState.config) {
+    const pauseOrConfigChanged = state.isPaused !== prevState.isPaused || state.config !== prevState.config;
+    const intervalChanged = state.syncIntervalMinutes !== prevState.syncIntervalMinutes;
+
+    if (pauseOrConfigChanged || intervalChanged) {
       if (state.isPaused || !state.config) {
         stopSyncWorker();
+      } else if (intervalChanged && intervalId !== null) {
+        // Interval changed while running — restart with new interval
+        restartSyncInterval();
       } else {
         resumeSyncWorker();
       }
@@ -541,8 +570,25 @@ export const stopSyncWorker = () => {
 };
 
 /**
+ * Restarts the periodic sync interval with the current config-driven value.
+ * Called when the sync interval is modified while the worker is already running.
+ * Does NOT run an immediate sync cycle — only adjusts the timer.
+ */
+const restartSyncInterval = () => {
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+
+  const intervalMs = getSyncIntervalMs();
+  intervalId = setInterval(() => {
+    void runFullSyncCycle();
+  }, intervalMs);
+};
+
+/**
  * Starts the periodic sync worker: runs an immediate full sync,
- * then starts a 5-minute interval, and listens for visibility changes.
+ * then starts an interval based on the configured sync interval, and listens for visibility changes.
  */
 export const resumeSyncWorker = () => {
   // Don't restart if already running
@@ -551,10 +597,11 @@ export const resumeSyncWorker = () => {
   // Run an immediate sync cycle
   void runFullSyncCycle();
 
-  // Start the periodic timer
+  // Start the periodic timer with config-driven interval
+  const intervalMs = getSyncIntervalMs();
   intervalId = setInterval(() => {
     void runFullSyncCycle();
-  }, SYNC_INTERVAL_MS);
+  }, intervalMs);
 
   // Listen for visibility changes
   document.addEventListener('visibilitychange', handleVisibilityChange);

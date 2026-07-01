@@ -126,6 +126,7 @@ export const SyncScreen = () => {
   const config = useSyncStore((state) => state.config);
   const connectionStatus = useSyncStore((state) => state.connectionStatus);
   const lastSyncedAt = useSyncStore((state) => state.lastSyncedAt);
+  const syncIntervalMinutes = useSyncStore((state) => state.syncIntervalMinutes);
   const pause = useSyncStore((state) => state.pause);
   const resume = useSyncStore((state) => state.resume);
 
@@ -193,7 +194,9 @@ export const SyncScreen = () => {
 
       <div style={fieldGroupStyle}>
         <span style={labelStyle}>{t('sync.serverUrl')}</span>
-        <span style={valueStyle}>{config?.serverUrl ?? ''}</span>
+        <span style={valueStyle}>
+          {config ? `${config.serverUrl}${config.apiBasePath}` : ''}
+        </span>
       </div>
 
       <div style={fieldGroupStyle}>
@@ -209,6 +212,11 @@ export const SyncScreen = () => {
       <div style={fieldGroupStyle}>
         <span style={labelStyle}>{t('sync.lastSynced')}</span>
         <span style={valueStyle}>{formatLastSynced(lastSyncedAt)}</span>
+      </div>
+
+      <div style={fieldGroupStyle}>
+        <span style={labelStyle}>{t('sync.syncInterval')}</span>
+        <span style={valueStyle}>{syncIntervalMinutes} min</span>
       </div>
 
       {showPauseButton && (
