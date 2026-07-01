@@ -184,12 +184,9 @@ describe('shiftValidation', () => {
   });
 
   describe('should reject invalid hoursWorked', () => {
-    it('should reject hoursWorked of 0', () => {
+    it('should accept hoursWorked of 0', () => {
       const result = validateShift({ ...validInput, hoursWorked: 0 });
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.errors.hoursWorked).toBe(SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE);
-      }
+      expect(result.success).toBe(true);
     });
 
     it('should reject hoursWorked exceeding 1440', () => {
@@ -225,7 +222,7 @@ describe('shiftValidation', () => {
         backgroundColor: '#FFFFFF',
         startTime: -1,
         endTime: 1440,
-        hoursWorked: 0,
+        hoursWorked: -1,
       });
       expect(result.success).toBe(false);
       if (!result.success) {

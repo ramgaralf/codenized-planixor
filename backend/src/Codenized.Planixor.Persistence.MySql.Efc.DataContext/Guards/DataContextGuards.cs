@@ -4,8 +4,8 @@
 
 namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Guards;
 
+using Codenized.CleanArchitecture.Exception.Abstractions.Database;
 using Microsoft.EntityFrameworkCore;
-using Codenized.CleanArchitecture.Abstractions.Exceptions;
 
 /// <summary>Guard methods for database context operations.</summary>
 public static class DataContextGuards

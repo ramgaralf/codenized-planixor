@@ -65,6 +65,19 @@ class FakeShiftDao : ShiftDao {
         }
     }
 
+    override suspend fun getUnsynced(): List<ShiftEntity> {
+        return store.values.filter { it.syncedAt == null || it.modifiedAt > (it.syncedAt ?: 0) }
+    }
+
+    override suspend fun getAll(): List<ShiftEntity> {
+        return store.values.toList()
+    }
+
+    override suspend fun upsertAll(shifts: List<ShiftEntity>) {
+        shifts.forEach { store[it.id] = it }
+        emitUpdate()
+    }
+
     fun clear() {
         store.clear()
         emitUpdate()

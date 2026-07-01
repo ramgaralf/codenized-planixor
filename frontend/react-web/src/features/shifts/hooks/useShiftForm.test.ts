@@ -9,11 +9,19 @@ vi.mock('@features/shifts/services/shiftService', () => ({
   update: vi.fn(),
 }));
 
+vi.mock('@features/shifts/services/shiftPropagation', () => ({
+  checkShiftPropagationNeeded: vi.fn().mockResolvedValue(0),
+  propagateShiftChanges: vi.fn().mockResolvedValue(undefined),
+}));
+
 import * as shiftService from '@features/shifts/services/shiftService';
+import * as shiftPropagation from '@features/shifts/services/shiftPropagation';
 
 const mockedGetById = vi.mocked(shiftService.getById);
 const mockedCreate = vi.mocked(shiftService.create);
 const mockedUpdate = vi.mocked(shiftService.update);
+const mockedCheckPropagation = vi.mocked(shiftPropagation.checkShiftPropagationNeeded);
+const mockedPropagate = vi.mocked(shiftPropagation.propagateShiftChanges);
 
 describe('useShiftForm', () => {
   beforeEach(() => {
@@ -420,6 +428,172 @@ describe('useShiftForm', () => {
 
       expect(success).toBe(false);
       expect(result.current.isSubmitting).toBe(false);
+    });
+  });
+
+  describe('propagation flow', () => {
+    const setupEditMode = async () => {
+      vi.useRealTimers();
+
+      mockedGetById.mockResolvedValue({
+        id: 'shift-1',
+        name: 'Morning',
+        icon: '☀️',
+        backgroundColor: '#EF4444',
+        startTime: 480,
+        endTime: 960,
+        hoursWorked: 480,
+        isActive: true,
+        createdAt: new Date(),
+        modifiedAt: new Date(),
+        syncedAt: null,
+        isDeleted: false,
+      });
+      mockedUpdate.mockResolvedValue(undefined);
+
+      const hookResult = renderHook(() => useShiftForm({ shiftId: 'shift-1' }));
+
+      await waitFor(() => {
+        expect(hookResult.result.current.isLoading).toBe(false);
+      });
+
+      return hookResult;
+    };
+
+    it('should show propagation modal when affected events > 0 after edit', async () => {
+      const { result } = await setupEditMode();
+      mockedCheckPropagation.mockResolvedValue(5);
+
+      act(() => {
+        result.current.setField('startTime', 540);
+      });
+
+      await act(async () => {
+        await result.current.submit();
+      });
+
+      expect(mockedCheckPropagation).toHaveBeenCalledWith('shift-1');
+      expect(result.current.propagationState.isOpen).toBe(true);
+      expect(result.current.propagationState.affectedCount).toBe(5);
+    });
+
+    /**
+     * **Property 8: Propagation modal is skipped when no affected events exist**
+     * Validates: Requirements 6.4, 6.5, 7.4, 7.5
+     */
+    it('should skip propagation modal when 0 affected events exist', async () => {
+      const { result } = await setupEditMode();
+      mockedCheckPropagation.mockResolvedValue(0);
+
+      act(() => {
+        result.current.setField('name', 'Updated Name');
+      });
+
+      const success = await act(async () => {
+        return result.current.submit();
+      });
+
+      expect(success).toBe(true);
+      expect(mockedCheckPropagation).toHaveBeenCalledWith('shift-1');
+      expect(result.current.propagationState.isOpen).toBe(false);
+      expect(result.current.propagationState.affectedCount).toBe(0);
+    });
+
+    /**
+     * **Property 9: Declining propagation preserves all calendar events unchanged**
+     * Validates: Requirements 6.4, 6.5, 7.4, 7.5
+     */
+    it('should reset propagation state and not call propagateShiftChanges when declined', async () => {
+      const { result } = await setupEditMode();
+      mockedCheckPropagation.mockResolvedValue(3);
+
+      act(() => {
+        result.current.setField('endTime', 1020);
+      });
+
+      await act(async () => {
+        await result.current.submit();
+      });
+
+      expect(result.current.propagationState.isOpen).toBe(true);
+
+      act(() => {
+        result.current.declinePropagation();
+      });
+
+      expect(result.current.propagationState.isOpen).toBe(false);
+      expect(result.current.propagationState.affectedCount).toBe(0);
+      expect(result.current.propagationState.shiftData).toBeNull();
+      expect(mockedPropagate).not.toHaveBeenCalled();
+    });
+
+    it('should call propagateShiftChanges with correct parameters when confirmed', async () => {
+      const { result } = await setupEditMode();
+      mockedCheckPropagation.mockResolvedValue(7);
+
+      act(() => {
+        result.current.setField('startTime', 600);
+        result.current.setField('endTime', 1080);
+        result.current.setField('hoursWorked', 480);
+      });
+
+      await act(async () => {
+        await result.current.submit();
+      });
+
+      expect(result.current.propagationState.isOpen).toBe(true);
+      expect(result.current.propagationState.shiftData).not.toBeNull();
+
+      await act(async () => {
+        await result.current.confirmPropagation();
+      });
+
+      expect(mockedPropagate).toHaveBeenCalledWith(
+        'shift-1',
+        600,
+        1080,
+        480,
+      );
+      expect(result.current.propagationState.isOpen).toBe(false);
+      expect(result.current.propagationState.affectedCount).toBe(0);
+      expect(result.current.propagationState.shiftData).toBeNull();
+    });
+
+    it('should not check propagation when creating a new shift (no shiftId)', async () => {
+      vi.useRealTimers();
+
+      mockedCreate.mockResolvedValue({
+        id: 'new-id',
+        name: 'Afternoon',
+        icon: '🌅',
+        backgroundColor: '#7C3AED',
+        startTime: 840,
+        endTime: 1320,
+        hoursWorked: 480,
+        isActive: true,
+        createdAt: new Date(),
+        modifiedAt: new Date(),
+        syncedAt: null,
+        isDeleted: false,
+      });
+
+      const { result } = renderHook(() => useShiftForm());
+
+      act(() => {
+        result.current.setField('name', 'Afternoon');
+        result.current.setField('icon', '🌅');
+        result.current.setField('backgroundColor', '#7C3AED');
+        result.current.setField('startTime', 840);
+        result.current.setField('endTime', 1320);
+        result.current.setField('hoursWorked', 480);
+      });
+
+      await act(async () => {
+        await result.current.submit();
+      });
+
+      expect(mockedCheckPropagation).not.toHaveBeenCalled();
+      expect(result.current.propagationState.isOpen).toBe(false);
     });
   });
 });

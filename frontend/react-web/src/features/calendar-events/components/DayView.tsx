@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 
 import type { CalendarEventDisplay } from '../models';
-import { formatTimeFromMinutes } from '../utils';
+import { formatTimeFromMinutes, getEffectiveTimes } from '../utils';
 
 import { CurrentTimeIndicator } from './CurrentTimeIndicator';
 import { EventCard } from './EventCard';
@@ -63,30 +63,17 @@ const placeEventsInColumns = (
   return columns;
 };
 
-/**
- * Returns the effective start/end minutes for an event on a given day.
- * Multi-day events span 00:00–23:59 on intermediate days.
- */
-const getEffectiveTimes = (event: CalendarEventDisplay, currentDayStr: string): { effectiveStart: number; effectiveEnd: number } => {
-  const isMultiDay = event.startDay !== event.endDay;
-  if (!isMultiDay) {
-    return { effectiveStart: event.startTime, effectiveEnd: event.endTime };
-  }
-  const isStartDay = event.startDay === currentDayStr;
-  const isEndDay = event.endDay === currentDayStr;
-  return {
-    effectiveStart: isStartDay ? event.startTime : 0,
-    effectiveEnd: isEndDay ? event.endTime : 1439,
-  };
-};
-
 const computeEventPositions = (events: CalendarEventDisplay[], currentDayStr: string): PositionedEvent[] => {
   if (events.length === 0) return [];
 
-  const withEffective = events.map((event) => ({
-    ...getEffectiveTimes(event, currentDayStr),
-    event,
-  }));
+  const withEffective = events
+    .map((event) => ({
+      ...getEffectiveTimes(event, currentDayStr),
+      event,
+    }))
+    .filter(({ effectiveStart, effectiveEnd }) => effectiveEnd > effectiveStart);
+
+  if (withEffective.length === 0) return [];
 
   const sorted = [...withEffective].sort((a, b) => a.effectiveStart - b.effectiveStart || a.effectiveEnd - b.effectiveEnd);
   const columns = placeEventsInColumns(sorted);

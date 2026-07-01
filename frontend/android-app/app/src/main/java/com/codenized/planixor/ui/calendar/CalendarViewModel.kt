@@ -154,6 +154,31 @@ class CalendarViewModel @Inject constructor(
     }
 
     /**
+     * Initializes form state for creating a new event with a specific pre-selected date.
+     * Used when navigating from a calendar view with a date different from today.
+     * This ensures the navigated date is used instead of LocalDate.now().
+     *
+     * Validates: Requirements 5.1, 5.2, 5.3, 8.4
+     */
+    fun initCreateFormWithDate(preSelectedDate: LocalDate) {
+        val now = LocalTime.now()
+        val currentMinutes = now.hour * 60 + now.minute
+        val roundedStart = ((currentMinutes + 29) / 30 * 30).coerceAtMost(1410)
+        val defaultEndMinutes = (roundedStart + 60).coerceAtMost(1439)
+
+        _formState.value = EventFormUiState(
+            startDay = preSelectedDate,
+            endDay = preSelectedDate,
+            startTimeHours = roundedStart / 60,
+            startTimeMinutes = roundedStart % 60,
+            endTimeHours = defaultEndMinutes / 60,
+            endTimeMinutes = defaultEndMinutes % 60,
+            isLoading = true,
+        )
+        loadEventTypeOptions()
+    }
+
+    /**
      * Initializes form state for editing an existing event.
      * Pre-populates all fields from the existing event.
      */
@@ -545,38 +570,13 @@ class CalendarViewModel @Inject constructor(
     // region Private helpers
 
     /**
-     * Computes the pre-selected day based on the active view and current navigated date.
+     * Computes the pre-selected day based on the current navigated date.
+     * All view modes consistently use the navigated-to date from the ViewModel state.
      *
-     * Validates: Requirements 9.1–9.7
+     * Validates: Requirements 5.1, 5.2, 5.3, 8.4
      */
     private fun computePreSelectedDay(): LocalDate {
-        val today = LocalDate.now()
-        val displayDate = _currentDate.value
-
-        return when (_activeView.value) {
-            CalendarView.Day -> {
-                // 9.1: Pre-select the day currently displayed
-                displayDate
-            }
-            CalendarView.Week -> {
-                val monday = displayDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                val sunday = monday.plusDays(6)
-                // 9.2/9.3: If today falls within displayed week, use today; otherwise use Monday
-                if (today in monday..sunday) today else monday
-            }
-            CalendarView.Month -> {
-                val firstOfMonth = displayDate.withDayOfMonth(1)
-                val lastOfMonth = displayDate.with(TemporalAdjusters.lastDayOfMonth())
-                // 9.4/9.5: If today falls within displayed month, use today; otherwise use first day
-                if (today in firstOfMonth..lastOfMonth) today else firstOfMonth
-            }
-            CalendarView.Year -> {
-                val firstOfYear = LocalDate.of(displayDate.year, 1, 1)
-                val lastOfYear = LocalDate.of(displayDate.year, 12, 31)
-                // 9.6/9.7: If today falls within displayed year, use today; otherwise use Jan 1st
-                if (today in firstOfYear..lastOfYear) today else firstOfYear
-            }
-        }
+        return _currentDate.value
     }
 
     /**

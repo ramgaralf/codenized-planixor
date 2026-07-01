@@ -48,8 +48,8 @@ class CalendarEventValidationTest {
     }
 
     @Test
-    fun `validateTimeForReminder should return false when same day and endTime equals startTime`() {
-        assertFalse(CalendarEventValidation.validateTimeForReminder("2024-01-15", "2024-01-15", 720, 720))
+    fun `validateTimeForReminder should return true when same day and endTime equals startTime`() {
+        assertTrue(CalendarEventValidation.validateTimeForReminder("2024-01-15", "2024-01-15", 720, 720))
     }
 
     @Test
@@ -80,9 +80,14 @@ class CalendarEventValidationTest {
     // --- computeEndDayForShift ---
 
     @Test
-    fun `computeEndDayForShift should return startDay when endTime is greater than or equal to startTime`() {
+    fun `computeEndDayForShift should return startDay when endTime is greater than startTime`() {
         assertEquals("2024-01-15", CalendarEventValidation.computeEndDayForShift("2024-01-15", 480, 1020))
-        assertEquals("2024-01-15", CalendarEventValidation.computeEndDayForShift("2024-01-15", 480, 480))
+    }
+
+    @Test
+    fun `computeEndDayForShift should return startDay plus 1 when endTime equals startTime (24-hour shift)`() {
+        assertEquals("2024-01-16", CalendarEventValidation.computeEndDayForShift("2024-01-15", 480, 480))
+        assertEquals("2024-01-16", CalendarEventValidation.computeEndDayForShift("2024-01-15", 0, 0))
     }
 
     @Test

@@ -7,12 +7,12 @@ namespace Codenized.Planixor.Core.ValueObjects;
 using Codenized.Planixor.Core.Exceptions;
 
 /// <summary>
-/// Represents the validated hours worked for a shift in total minutes (1–1440).
+/// Represents the validated hours worked for a shift in total minutes (0–1440).
 /// </summary>
 public record HoursWorked
 {
     /// <summary>
-    /// Gets the total minutes worked (1–1440).
+    /// Gets the total minutes worked (0–1440).
     /// </summary>
     public int TotalMinutes { get; }
 
@@ -24,13 +24,13 @@ public record HoursWorked
     /// <summary>
     /// Creates a validated hours worked value.
     /// </summary>
-    /// <param name="totalMinutes">Total minutes worked (1–1440).</param>
+    /// <param name="totalMinutes">Total minutes worked (0–1440).</param>
     /// <returns>A validated <see cref="HoursWorked"/> instance.</returns>
     public static HoursWorked Create(int totalMinutes)
     {
-        if (totalMinutes < 1 || totalMinutes > 1440)
+        if (totalMinutes < 0 || totalMinutes > 1440)
         {
-            throw new DomainException("Hours worked must be between 1 and 1440 minutes.");
+            throw new DomainException("Hours worked must be between 0 and 1440 minutes.");
         }
 
         return new HoursWorked(totalMinutes);

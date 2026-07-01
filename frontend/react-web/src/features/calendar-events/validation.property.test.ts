@@ -4,6 +4,7 @@ import {
   validateDayRange,
   validateTimeForReminder,
   computeEndDayForShift,
+  computeTotalHours,
   checkOneShiftPerDay,
   validateRequiredFields,
 } from './validation';
@@ -76,41 +77,50 @@ describe('Property 16: Day range validation rejects invalid intervals', () => {
   });
 });
 
-describe('Property 2: Time validation for reminders rejects invalid intervals on same day', () => {
+describe('Feature: gh18-calendar-shift-reminder-improvements, Property 2: Reminder same-day time validation allows equality', () => {
   /**
-   * Validates: Requirements 1.10, 11.6
+   * **Validates: Requirements 3.1, 3.2, 4.1**
    *
-   * For same-day reminders (endDay == startDay), if endTime <= startTime
-   * then validateTimeForReminder returns false. If endTime > startTime, returns true.
-   * For multi-day (endDay > startDay), always returns true regardless of time values.
+   * For any reminder event where endDay == startDay:
+   *   - If endTime >= startTime → validation should return true
+   *   - If endTime < startTime → validation should return false
+   * For any reminder event where endDay > startDay:
+   *   - Any combination of startTime (0-1439) and endTime (0-1439) should return true
    */
 
-  it('should return false for same-day reminder with endTime <= startTime', () => {
-    fc.assert(
-      fc.property(dateArb, minutesArb, (day, startTime) => {
-        // endTime can be 0..startTime (i.e. endTime <= startTime)
-        const endTime = fc.sample(fc.integer({ min: 0, max: startTime }), 1)[0];
-
-        expect(validateTimeForReminder(day, day, startTime, endTime)).toBe(false);
-      }),
-    );
-  });
-
-  it('should return true for same-day reminder with endTime > startTime', () => {
+  it('should return true for same-day reminder with endTime >= startTime (includes equality)', () => {
     fc.assert(
       fc.property(
         dateArb,
-        fc.integer({ min: 0, max: 1438 }),
-        (day, startTime) => {
-          // endTime must be strictly greater than startTime (startTime+1..1439)
-          const endTime = fc.sample(
-            fc.integer({ min: startTime + 1, max: 1439 }),
-            1,
-          )[0];
+        fc.integer({ min: 0, max: 1439 }),
+        fc.integer({ min: 0, max: 1439 }),
+        (day, startTime, offset) => {
+          // endTime = startTime + offset clamped to 1439 ensures endTime >= startTime
+          const endTime = Math.min(startTime + offset, 1439);
+          // Only test when endTime >= startTime
+          fc.pre(endTime >= startTime);
 
           expect(validateTimeForReminder(day, day, startTime, endTime)).toBe(true);
         },
       ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('should return false for same-day reminder with endTime < startTime', () => {
+    fc.assert(
+      fc.property(
+        dateArb,
+        fc.integer({ min: 1, max: 1439 }),
+        fc.integer({ min: 0, max: 1438 }),
+        (day, startTime, endTime) => {
+          // Only test when endTime < startTime
+          fc.pre(endTime < startTime);
+
+          expect(validateTimeForReminder(day, day, startTime, endTime)).toBe(false);
+        },
+      ),
+      { numRuns: 100 },
     );
   });
 
@@ -119,8 +129,8 @@ describe('Property 2: Time validation for reminders rejects invalid intervals on
       fc.property(
         dateArb,
         fc.integer({ min: 1, max: 365 }),
-        minutesArb,
-        minutesArb,
+        fc.integer({ min: 0, max: 1439 }),
+        fc.integer({ min: 0, max: 1439 }),
         (startDay, daysForward, startTime, endTime) => {
           const startDate = new Date(startDay);
           const endDate = new Date(startDate);
@@ -132,17 +142,18 @@ describe('Property 2: Time validation for reminders rejects invalid intervals on
           );
         },
       ),
+      { numRuns: 100 },
     );
   });
 });
 
-describe('Property 17: Crossing midnight shift auto-sets endDay', () => {
+describe('Property 17: Crossing midnight or 24-hour shift auto-sets endDay', () => {
   /**
    * Validates: Requirements 1.6, 11.7
    *
-   * For any startDay and times where endTime < startTime,
+   * For any startDay and times where endTime <= startTime (crossing midnight or 24-hour shift),
    * computeEndDayForShift returns a day that is exactly 1 day after startDay.
-   * Where endTime >= startTime, returns startDay itself.
+   * Where endTime > startTime, returns startDay itself.
    */
 
   it('should return startDay + 1 when endTime < startTime (crossing midnight)', () => {
@@ -169,15 +180,33 @@ describe('Property 17: Crossing midnight shift auto-sets endDay', () => {
     );
   });
 
-  it('should return startDay when endTime >= startTime (no crossing midnight)', () => {
+  it('should return startDay + 1 when endTime === startTime (24-hour shift)', () => {
+    fc.assert(
+      fc.property(
+        dateArb,
+        fc.integer({ min: 0, max: 1439 }),
+        (startDay, time) => {
+          const result = computeEndDayForShift(startDay, time, time);
+
+          const expectedDate = new Date(startDay);
+          expectedDate.setDate(expectedDate.getDate() + 1);
+          const expectedEndDay = formatDate(expectedDate);
+
+          expect(result).toBe(expectedEndDay);
+        },
+      ),
+    );
+  });
+
+  it('should return startDay when endTime > startTime (same-day shift)', () => {
     fc.assert(
       fc.property(
         dateArb,
         fc.integer({ min: 0, max: 1438 }),
         (startDay, startTime) => {
-          // endTime >= startTime (startTime..1439)
+          // endTime > startTime (startTime+1..1439)
           const endTime = fc.sample(
-            fc.integer({ min: startTime, max: 1439 }),
+            fc.integer({ min: startTime + 1, max: 1439 }),
             1,
           )[0];
 
@@ -366,6 +395,72 @@ describe('Property 14: Required fields validation rejects incomplete events', ()
           expect(Object.keys(result.errors)).toHaveLength(0);
         },
       ),
+    );
+  });
+});
+
+describe('Feature: gh18-calendar-shift-reminder-improvements, Property 10: TotalHours computation allows zero for reminders', () => {
+  /**
+   * **Validates: Requirements 3.1, 3.3, 3.4**
+   *
+   * For any reminder event where startDay == endDay and startTime == endTime,
+   * computeTotalHours('reminder', ...) returns 0.
+   */
+
+  it('should return 0 for any reminder event where startDay == endDay and startTime == endTime', () => {
+    fc.assert(
+      fc.property(
+        dateArb,
+        minutesArb,
+        (day, time) => {
+          const result = computeTotalHours('reminder', day, day, time, time);
+          expect(result).toBe(0);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+});
+
+describe('Feature: gh18-calendar-shift-reminder-improvements, Property 11: TotalHours for shift events reflects shift\'s HoursWorked including zero', () => {
+  /**
+   * **Validates: Requirements 3.5**
+   *
+   * For any shift event with shiftHoursWorked = 0, computeTotalHours('shift', ...) returns 0.
+   * For any shift event with any valid shiftHoursWorked in [0, 1440],
+   * computeTotalHours('shift', ...) returns that value exactly.
+   */
+
+  it('should return 0 for any shift event with shiftHoursWorked = 0', () => {
+    fc.assert(
+      fc.property(
+        dateArb,
+        dateArb,
+        minutesArb,
+        minutesArb,
+        (startDay, endDay, startTime, endTime) => {
+          const result = computeTotalHours('shift', startDay, endDay, startTime, endTime, 0);
+          expect(result).toBe(0);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('should return shiftHoursWorked exactly for any valid value in [0, 1440]', () => {
+    fc.assert(
+      fc.property(
+        dateArb,
+        dateArb,
+        minutesArb,
+        minutesArb,
+        fc.integer({ min: 0, max: 1440 }),
+        (startDay, endDay, startTime, endTime, shiftHoursWorked) => {
+          const result = computeTotalHours('shift', startDay, endDay, startTime, endTime, shiftHoursWorked);
+          expect(result).toBe(shiftHoursWorked);
+        },
+      ),
+      { numRuns: 100 },
     );
   });
 });

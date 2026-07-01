@@ -49,91 +49,15 @@ export interface UseEventFormReturn {
 }
 
 /**
- * Computes the pre-selected day based on the calendar's active view and navigated date.
+ * Computes the pre-selected day for the event form.
+ * Always uses `currentDate` from the calendar store — this represents the date
+ * the user is currently navigated to, regardless of view mode.
+ * The `activeView` parameter is kept for API compatibility but is not used.
  *
- * **Validates: Requirements 9.1–9.7**
+ * **Validates: Requirements 5.1, 5.2, 5.3**
  */
-const computePreSelectedDay = (activeView: string, currentDate: Date): string => {
-  const today = new Date();
-
-  switch (activeView) {
-    case 'day': {
-      // 9.1: Pre-select the day currently displayed
-      return formatDateToISO(currentDate);
-    }
-    case 'week': {
-      const monday = getMonday(currentDate);
-      const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
-
-      // 9.2: If current device date falls within displayed week, use today
-      if (isDateInRange(today, monday, sunday)) {
-        return formatDateToISO(today);
-      }
-      // 9.3: Otherwise, use Monday of displayed week
-      return formatDateToISO(monday);
-    }
-    case 'month': {
-      const firstOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1,
-      );
-      const lastOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
-        0,
-      );
-
-      // 9.4: If current device date falls within displayed month, use today
-      if (isDateInRange(today, firstOfMonth, lastOfMonth)) {
-        return formatDateToISO(today);
-      }
-      // 9.5: Otherwise, use first day of displayed month
-      return formatDateToISO(firstOfMonth);
-    }
-    case 'year': {
-      const firstOfYear = new Date(currentDate.getFullYear(), 0, 1);
-      const lastOfYear = new Date(currentDate.getFullYear(), 11, 31);
-
-      // 9.6: If current device date falls within displayed year, use today
-      if (isDateInRange(today, firstOfYear, lastOfYear)) {
-        return formatDateToISO(today);
-      }
-      // 9.7: Otherwise, use January 1st of displayed year
-      return formatDateToISO(firstOfYear);
-    }
-    default: {
-      return formatDateToISO(today);
-    }
-  }
-};
-
-/**
- * Returns the Monday of the week containing the given date.
- * Uses ISO 8601 (Monday = first day of week).
- */
-const getMonday = (date: Date): Date => {
-  const d = new Date(date);
-  const dayOfWeek = d.getDay();
-  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  d.setDate(d.getDate() + diff);
-  return d;
-};
-
-/**
- * Checks if a date falls within a range (inclusive, date-only comparison).
- */
-const isDateInRange = (date: Date, start: Date, end: Date): boolean => {
-  const d = stripTime(date).getTime();
-  return d >= stripTime(start).getTime() && d <= stripTime(end).getTime();
-};
-
-/**
- * Strips time component, returning a date at midnight.
- */
-const stripTime = (date: Date): Date => {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const computePreSelectedDay = (_activeView: string, currentDate: Date): string => {
+  return formatDateToISO(currentDate);
 };
 
 /**

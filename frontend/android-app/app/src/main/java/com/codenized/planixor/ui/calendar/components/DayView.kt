@@ -240,7 +240,10 @@ private fun computeEventColumns(
             start = getEffectiveStartMinutes(event, currentDayStr),
             end = getEffectiveEndMinutes(event, currentDayStr),
         )
-    }.sortedWith(compareBy({ it.start }, { it.end }))
+    }.filter { it.end > it.start }
+        .sortedWith(compareBy({ it.start }, { it.end }))
+
+    if (withTimes.isEmpty()) return emptyList()
 
     // Greedy column assignment
     val columns = mutableListOf<MutableList<EventWithTimes>>()
@@ -293,6 +296,8 @@ private fun getEffectiveStartMinutes(event: CalendarEventDisplay, currentDayStr:
  */
 private fun getEffectiveEndMinutes(event: CalendarEventDisplay, currentDayStr: String): Int {
     if (event.startDay == event.endDay) return event.endTime
+    // If the event ends at 00:00 on this day, it doesn't occupy any time here
+    if (event.endDay == currentDayStr && event.endTime == 0) return 0
     return if (event.endDay == currentDayStr) event.endTime else 1439
 }
 

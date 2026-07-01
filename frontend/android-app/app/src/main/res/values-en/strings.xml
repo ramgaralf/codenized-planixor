@@ -141,7 +141,7 @@
     <string name="shift_validation_color_required">Select a background color</string>
     <string name="shift_validation_start_time_required">Start time is required</string>
     <string name="shift_validation_end_time_required">End time is required</string>
-    <string name="shift_validation_hours_worked_range">Hours worked must be between 1 minute and 24 hours</string>
+    <string name="shift_validation_hours_worked_range">Hours worked must be between 0 and 24 hours</string>
 
     <!-- Reminder Card -->
     <string name="reminder_card_deactivated">Deactivated</string>
@@ -300,4 +300,12 @@
     <string name="settings_reset_confirmation">Are you sure you want to reset the application? All local data will be permanently deleted.</string>
     <string name="common_confirm">Confirm</string>
     <string name="common_cancel">Cancel</string>
+
+    <!-- Propagation Dialog -->
+    <string name="propagation_dialog_title">Update Calendar Events?</string>
+    <string name="propagation_dialog_description_shift">You modified the shift \"%1$s\". Do you want to update all calendar events that use this shift in %2$d? Events in previous years will not be affected.</string>
+    <string name="propagation_dialog_description_reminder">You modified the reminder \"%1$s\". Do you want to update all calendar events that use this reminder in %2$d? Events in previous years will not be affected.</string>
+    <string name="propagation_dialog_affected_count">%1$d event(s) will be updated</string>
+    <string name="propagation_dialog_confirm">Update</string>
+    <string name="propagation_dialog_decline">Skip</string>
 </resources>

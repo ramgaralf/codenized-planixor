@@ -1,6 +1,21 @@
 import { db } from '@/data/db';
 
+import {
+  SHIFT_HOURS_WORKED_MAX,
+  SHIFT_HOURS_WORKED_MIN,
+  SHIFT_I18N_KEYS,
+} from '@features/shifts/constants';
 import type { Shift } from '@features/shifts/models';
+
+/**
+ * Validates that hoursWorked falls within [SHIFT_HOURS_WORKED_MIN, SHIFT_HOURS_WORKED_MAX].
+ * Throws an error with the i18n key if out of range.
+ */
+const validateHoursWorkedRange = (hoursWorked: number): void => {
+  if (hoursWorked < SHIFT_HOURS_WORKED_MIN || hoursWorked > SHIFT_HOURS_WORKED_MAX) {
+    throw new Error(SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE);
+  }
+};
 
 /**
  * Input type for creating a new shift.
@@ -35,6 +50,8 @@ export const getById = async (id: string): Promise<Shift | undefined> => {
  * Duplicate names are permitted (no uniqueness check on name).
  */
 export const create = async (input: CreateShiftInput): Promise<Shift> => {
+  validateHoursWorkedRange(input.hoursWorked);
+
   const now = new Date();
 
   const shift: Shift = {
@@ -60,6 +77,10 @@ export const update = async (
   id: string,
   data: Partial<Omit<Shift, 'id' | 'syncedAt' | 'isDeleted'>>,
 ): Promise<void> => {
+  if (data.hoursWorked !== undefined) {
+    validateHoursWorkedRange(data.hoursWorked);
+  }
+
   await db.shifts.update(id, {
     ...data,
     modifiedAt: new Date(),

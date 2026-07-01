@@ -42,8 +42,8 @@ describe('validateTimeForReminder', () => {
     expect(validateTimeForReminder('2024-01-15', '2024-01-15', 480, 960)).toBe(true);
   });
 
-  it('should return false when same day and endTime equals startTime', () => {
-    expect(validateTimeForReminder('2024-01-15', '2024-01-15', 480, 480)).toBe(false);
+  it('should return true when same day and endTime equals startTime', () => {
+    expect(validateTimeForReminder('2024-01-15', '2024-01-15', 480, 480)).toBe(true);
   });
 
   it('should return false when same day and endTime < startTime', () => {
@@ -89,7 +89,7 @@ describe('computeTotalHours', () => {
 });
 
 describe('computeEndDayForShift', () => {
-  it('should return startDay when endTime >= startTime (no crossing midnight)', () => {
+  it('should return startDay when endTime > startTime (same-day shift)', () => {
     expect(computeEndDayForShift('2024-01-15', 480, 960)).toBe('2024-01-15');
   });
 
@@ -97,8 +97,8 @@ describe('computeEndDayForShift', () => {
     expect(computeEndDayForShift('2024-01-15', 960, 480)).toBe('2024-01-16');
   });
 
-  it('should return startDay when endTime equals startTime', () => {
-    expect(computeEndDayForShift('2024-01-15', 480, 480)).toBe('2024-01-15');
+  it('should return startDay + 1 when endTime equals startTime (24-hour shift)', () => {
+    expect(computeEndDayForShift('2024-01-15', 480, 480)).toBe('2024-01-16');
   });
 
   it('should handle month boundary crossing', () => {

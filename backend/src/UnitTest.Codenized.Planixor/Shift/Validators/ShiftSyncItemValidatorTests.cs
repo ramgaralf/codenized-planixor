@@ -188,17 +188,28 @@ public sealed class ShiftSyncItemValidatorTests
             Is.True);
     }
 
-    /// <summary>Verifies validation fails when HoursWorked is zero.</summary>
+    /// <summary>Verifies validation passes when HoursWorked is zero.</summary>
     [Test]
-    public void Validate_WithZeroHoursWorked_HasFailure()
+    public void Validate_WithZeroHoursWorked_HasNoFailures()
     {
         ShiftSyncItem item = CreateValidItem() with { HoursWorked = 0 };
 
         this.validator.Validate(item);
 
+        Assert.That(this.validator.Failures, Is.Empty);
+    }
+
+    /// <summary>Verifies validation fails when HoursWorked is negative.</summary>
+    [Test]
+    public void Validate_WithNegativeHoursWorked_HasFailure()
+    {
+        ShiftSyncItem item = CreateValidItem() with { HoursWorked = -1 };
+
+        this.validator.Validate(item);
+
         Assert.That(this.validator.Failures, Is.Not.Empty);
         Assert.That(
-            this.validator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 1 and 1440")),
+            this.validator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 0 and 1440")),
             Is.True);
     }
 
@@ -212,7 +223,7 @@ public sealed class ShiftSyncItemValidatorTests
 
         Assert.That(this.validator.Failures, Is.Not.Empty);
         Assert.That(
-            this.validator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 1 and 1440")),
+            this.validator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 0 and 1440")),
             Is.True);
     }
 

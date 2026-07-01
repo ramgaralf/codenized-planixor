@@ -9,11 +9,19 @@ vi.mock('@features/reminders/services/reminderService', () => ({
   getById: vi.fn(),
 }));
 
+vi.mock('@features/reminders/services/reminderPropagation', () => ({
+  checkReminderPropagationNeeded: vi.fn(),
+  propagateReminderChanges: vi.fn(),
+}));
+
 import * as reminderService from '@features/reminders/services/reminderService';
+import * as reminderPropagation from '@features/reminders/services/reminderPropagation';
 
 const mockedCreate = vi.mocked(reminderService.create);
 const mockedUpdate = vi.mocked(reminderService.update);
 const mockedGetById = vi.mocked(reminderService.getById);
+const mockedCheckPropagation = vi.mocked(reminderPropagation.checkReminderPropagationNeeded);
+const mockedPropagate = vi.mocked(reminderPropagation.propagateReminderChanges);
 
 const VALID_VALUES = {
   name: 'Morning Reminder',
@@ -333,6 +341,7 @@ describe('useReminderForm', () => {
         modifiedAt: new Date(),
         syncedAt: null,
       });
+      mockedCheckPropagation.mockResolvedValue(0);
 
       const { result } = renderHook(() =>
         useReminderForm({
@@ -355,6 +364,7 @@ describe('useReminderForm', () => {
         icon: VALID_VALUES.icon,
         backgroundColor: VALID_VALUES.backgroundColor,
       });
+      expect(mockedCheckPropagation).toHaveBeenCalledWith('abc-123');
       expect(mockOnSuccess).toHaveBeenCalled();
     });
 
@@ -451,6 +461,142 @@ describe('useReminderForm', () => {
       expect(result.current.name).toBe('Evening Reminder');
       expect(result.current.icon).toBe('🌙');
       expect(result.current.backgroundColor).toBe('#7C3AED');
+    });
+  });
+
+  describe('propagation flow', () => {
+    it('should open propagation modal when edit affects calendar events', async () => {
+      mockedUpdate.mockResolvedValue(undefined);
+      mockedGetById.mockResolvedValue({
+        id: 'abc-123',
+        name: 'Morning Reminder',
+        icon: '☀️',
+        backgroundColor: '#EF4444',
+        isActive: true,
+        isDeleted: false,
+        createdAt: new Date(),
+        modifiedAt: new Date(),
+        syncedAt: null,
+      });
+      mockedCheckPropagation.mockResolvedValue(5);
+
+      const { result } = renderHook(() =>
+        useReminderForm({
+          initialValues: VALID_VALUES,
+          reminderId: 'abc-123',
+          onSuccess: mockOnSuccess,
+        }),
+      );
+
+      await act(async () => {
+        await result.current.handleSubmit();
+      });
+
+      expect(result.current.propagationState).toEqual({ isOpen: true, affectedCount: 5 });
+      expect(mockOnSuccess).not.toHaveBeenCalled();
+    });
+
+    it('should not check propagation in create mode', async () => {
+      mockedCreate.mockResolvedValue({
+        id: 'new-id',
+        ...VALID_VALUES,
+        isActive: true,
+        createdAt: new Date(),
+        modifiedAt: new Date(),
+        syncedAt: null,
+        isDeleted: false,
+      });
+
+      const { result } = renderHook(() =>
+        useReminderForm({
+          initialValues: VALID_VALUES,
+          onSuccess: mockOnSuccess,
+        }),
+      );
+
+      await act(async () => {
+        await result.current.handleSubmit();
+      });
+
+      expect(mockedCheckPropagation).not.toHaveBeenCalled();
+      expect(mockOnSuccess).toHaveBeenCalled();
+    });
+
+    it('should propagate changes and call onSuccess when confirmed', async () => {
+      mockedUpdate.mockResolvedValue(undefined);
+      mockedGetById.mockResolvedValue({
+        id: 'abc-123',
+        name: 'Morning Reminder',
+        icon: '☀️',
+        backgroundColor: '#EF4444',
+        isActive: true,
+        isDeleted: false,
+        createdAt: new Date(),
+        modifiedAt: new Date(),
+        syncedAt: null,
+      });
+      mockedCheckPropagation.mockResolvedValue(3);
+      mockedPropagate.mockResolvedValue(undefined);
+
+      const { result } = renderHook(() =>
+        useReminderForm({
+          initialValues: VALID_VALUES,
+          reminderId: 'abc-123',
+          onSuccess: mockOnSuccess,
+        }),
+      );
+
+      await act(async () => {
+        await result.current.handleSubmit();
+      });
+
+      expect(result.current.propagationState.isOpen).toBe(true);
+
+      await act(async () => {
+        await result.current.confirmPropagation();
+      });
+
+      expect(mockedPropagate).toHaveBeenCalledWith('abc-123');
+      expect(result.current.propagationState).toEqual({ isOpen: false, affectedCount: 0 });
+      expect(mockOnSuccess).toHaveBeenCalled();
+    });
+
+    it('should skip propagation and call onSuccess when declined', async () => {
+      mockedUpdate.mockResolvedValue(undefined);
+      mockedGetById.mockResolvedValue({
+        id: 'abc-123',
+        name: 'Morning Reminder',
+        icon: '☀️',
+        backgroundColor: '#EF4444',
+        isActive: true,
+        isDeleted: false,
+        createdAt: new Date(),
+        modifiedAt: new Date(),
+        syncedAt: null,
+      });
+      mockedCheckPropagation.mockResolvedValue(2);
+
+      const { result } = renderHook(() =>
+        useReminderForm({
+          initialValues: VALID_VALUES,
+          reminderId: 'abc-123',
+          onSuccess: mockOnSuccess,
+        }),
+      );
+
+      await act(async () => {
+        await result.current.handleSubmit();
+      });
+
+      expect(result.current.propagationState.isOpen).toBe(true);
+
+      act(() => {
+        result.current.declinePropagation();
+      });
+
+      expect(mockedPropagate).not.toHaveBeenCalled();
+      expect(result.current.propagationState).toEqual({ isOpen: false, affectedCount: 0 });
+      expect(mockOnSuccess).toHaveBeenCalled();
     });
   });
 });

@@ -68,6 +68,8 @@ import com.codenized.planixor.ui.sync.SyncViewModel
 import com.codenized.planixor.ui.theme.PrimaryBlue
 import com.codenized.planixor.ui.theme.TextSecondary
 import com.codenized.planixor.data.notification.NotificationChannel
+import kotlinx.coroutines.flow.MutableStateFlow
+import java.time.LocalDate
 
 /**
  * Main navigation graph for the Planixor application.
@@ -81,6 +83,17 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Observe CalendarViewModel's current navigated date for pre-selection when creating events
+    val calendarBackStackEntry = navBackStackEntry?.takeIf { it.destination.route == Screen.Calendar.route }
+    val calendarViewModel: CalendarViewModel? = if (calendarBackStackEntry != null) {
+        hiltViewModel<CalendarViewModel>(calendarBackStackEntry)
+    } else {
+        null
+    }
+    val fallbackDateFlow = androidx.compose.runtime.remember { MutableStateFlow(LocalDate.now()) }
+    val calendarCurrentDate by (calendarViewModel?.currentDate
+        ?: fallbackDateFlow).collectAsStateWithLifecycle()
 
     // Observe ReportsViewModel mode when on Reports screen for top bar config button
     val isOnReportsScreen = currentRoute == Screen.Reports.route
@@ -200,7 +213,9 @@ fun AppNavigation() {
                 actions = {
                     // New event button (only on Calendar screen)
                     if (currentRoute == Screen.Calendar.route) {
-                        IconButton(onClick = { navController.navigate(Screen.EventCreate.route) }) {
+                        IconButton(onClick = {
+                            navController.navigate(Screen.EventCreate.createRoute(calendarCurrentDate.toString()))
+                        }) {
                             Box(
                                 modifier = Modifier
                                     .size(32.dp)
@@ -324,9 +339,20 @@ fun AppNavigation() {
                     },
                 )
             }
-            composable(Screen.EventCreate.route) {
+            composable(
+                route = "calendar/new?preSelectedDate={preSelectedDate}",
+                arguments = listOf(
+                    navArgument("preSelectedDate") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                ),
+            ) { backStackEntry ->
+                val preSelectedDate = backStackEntry.arguments?.getString("preSelectedDate")
                 CalendarEventFormDestination(
                     eventId = null,
+                    preSelectedDate = preSelectedDate,
                     onNavigateBack = { navController.popBackStack() },
                 )
             }
@@ -428,10 +454,12 @@ fun AppNavigation() {
  * Destination composable for the calendar event create/edit form.
  * Obtains the CalendarViewModel via Hilt and wires it to EventFormScreen.
  * If eventId is provided, loads the existing event for editing.
+ * If preSelectedDate is provided (from calendar navigation), uses that date for the form.
  */
 @Composable
 private fun CalendarEventFormDestination(
     eventId: String?,
+    preSelectedDate: String? = null,
     onNavigateBack: () -> Unit,
 ) {
     val viewModel: CalendarViewModel = hiltViewModel()
@@ -442,6 +470,9 @@ private fun CalendarEventFormDestination(
     androidx.compose.runtime.LaunchedEffect(eventId) {
         if (eventId != null) {
             viewModel.loadEventForEdit(eventId)
+        } else if (preSelectedDate != null) {
+            val date = LocalDate.parse(preSelectedDate)
+            viewModel.initCreateFormWithDate(date)
         } else {
             viewModel.initCreateForm()
         }

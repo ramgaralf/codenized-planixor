@@ -57,6 +57,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.codenized.planixor.R
 import com.codenized.planixor.ui.components.ColorPickerDialog
+import com.codenized.planixor.ui.components.PropagationDialog
 import com.codenized.planixor.ui.theme.PlanixorTheme
 
 private val EMOJI_CATEGORIES = mapOf(
@@ -76,6 +77,7 @@ private val EMOJI_CATEGORY_LABELS = listOf("😀", "👋", "🌞", "🐶", "🍎
 /**
  * Shift form screen composable that supports create and edit modes.
  * Observes ShiftFormViewModel state and renders form fields with per-field validation errors.
+ * Also observes propagation state to show the PropagationDialog after edit-mode saves.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +86,20 @@ fun ShiftFormScreen(
     viewModel: ShiftFormViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val propagationState by viewModel.propagationState.collectAsStateWithLifecycle()
+
+    // Show propagation dialog when state is Showing
+    if (propagationState is PropagationUiState.Showing) {
+        val showing = propagationState as PropagationUiState.Showing
+        PropagationDialog(
+            isOpen = true,
+            templateName = showing.name,
+            templateType = "shift",
+            affectedEventCount = showing.count,
+            onConfirm = viewModel::confirmPropagation,
+            onDecline = viewModel::declinePropagation,
+        )
+    }
 
     if (uiState.isLoading) {
         Box(
@@ -168,7 +184,14 @@ internal fun ShiftFormContent(
             error = uiState.errors["hoursWorked"],
             onTimeSelected = { h, m ->
                 val totalMinutes = h * 60 + m
-                onFieldChange("hoursWorked", totalMinutes.toString())
+                // If hours worked is 1440 (24h) and user kept the picker at 23:59 (the
+                // display approximation), don't downgrade to 1439 — preserve 1440
+                val effectiveMinutes = if (totalMinutes == 1439 && uiState.hoursWorked == 1440) {
+                    1440
+                } else {
+                    totalMinutes
+                }
+                onFieldChange("hoursWorked", effectiveMinutes.toString())
             },
         )
 
@@ -564,8 +587,8 @@ private fun HoursWorkedField(
 
     if (showPicker) {
         TimePickerDialog(
-            initialHour = hoursWorked?.let { it / 60 } ?: 0,
-            initialMinute = hoursWorked?.let { it % 60 } ?: 0,
+            initialHour = hoursWorked?.let { if (it >= 1440) 23 else it / 60 } ?: 0,
+            initialMinute = hoursWorked?.let { if (it >= 1440) 59 else it % 60 } ?: 0,
             onTimeSelected = onTimeSelected,
             onDismiss = { showPicker = false },
         )

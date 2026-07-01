@@ -4,8 +4,8 @@
 
 namespace Codenized.Planixor.UseCases.CalendarEvent.SyncPush;
 
-using Codenized.CleanArchitecture.Abstractions.Exceptions;
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.CleanArchitecture.Exception.Abstractions.BadRequest;
 using Codenized.Planixor.Dtos.CalendarEvent.Sync;
 using Codenized.Planixor.UseCases.CalendarEvent.SyncPush.Commands;
 using Codenized.Planixor.UseCases.CalendarEvent.SyncPush.Queries;

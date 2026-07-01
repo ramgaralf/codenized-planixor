@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { calculateHoursWorked } from '@features/shifts/services/hoursWorkedCalculation';
+import { checkShiftPropagationNeeded, propagateShiftChanges } from '@features/shifts/services/shiftPropagation';
 import * as shiftService from '@features/shifts/services/shiftService';
 import {
   validateShift,
@@ -41,6 +42,9 @@ export interface UseShiftFormReturn {
   submit: () => Promise<boolean>;
   isLoading: boolean;
   isSubmitting: boolean;
+  propagationState: { isOpen: boolean; affectedCount: number; shiftData: { startTime: number; endTime: number; hoursWorked: number } | null };
+  confirmPropagation: () => Promise<void>;
+  declinePropagation: () => void;
 }
 
 export const useShiftForm = (options?: UseShiftFormOptions): UseShiftFormReturn => {
@@ -50,6 +54,11 @@ export const useShiftForm = (options?: UseShiftFormOptions): UseShiftFormReturn 
   const [errors, setErrors] = useState<ShiftValidationErrors>({});
   const [isLoading, setIsLoading] = useState(!!shiftId);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [propagationState, setPropagationState] = useState<{
+    isOpen: boolean;
+    affectedCount: number;
+    shiftData: { startTime: number; endTime: number; hoursWorked: number } | null;
+  }>({ isOpen: false, affectedCount: 0, shiftData: null });
 
   const manualOverrideRef = useRef(false);
   const debounceTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -200,6 +209,19 @@ export const useShiftForm = (options?: UseShiftFormOptions): UseShiftFormReturn 
           endTime: result.data.endTime,
           hoursWorked: result.data.hoursWorked,
         });
+
+        const count = await checkShiftPropagationNeeded(shiftId);
+        if (count > 0) {
+          setPropagationState({
+            isOpen: true,
+            affectedCount: count,
+            shiftData: {
+              startTime: result.data.startTime,
+              endTime: result.data.endTime,
+              hoursWorked: result.data.hoursWorked,
+            },
+          });
+        }
       } else {
         await shiftService.create({
           name: result.data.name,
@@ -219,7 +241,24 @@ export const useShiftForm = (options?: UseShiftFormOptions): UseShiftFormReturn 
     }
   }, [fields, shiftId]);
 
-  return { fields, errors, setField, submit, isLoading, isSubmitting };
+  const confirmPropagation = useCallback(async (): Promise<void> => {
+    if (!shiftId || !propagationState.shiftData) return;
+
+    await propagateShiftChanges(
+      shiftId,
+      propagationState.shiftData.startTime,
+      propagationState.shiftData.endTime,
+      propagationState.shiftData.hoursWorked,
+    );
+
+    setPropagationState({ isOpen: false, affectedCount: 0, shiftData: null });
+  }, [shiftId, propagationState.shiftData]);
+
+  const declinePropagation = useCallback((): void => {
+    setPropagationState({ isOpen: false, affectedCount: 0, shiftData: null });
+  }, []);
+
+  return { fields, errors, setField, submit, isLoading, isSubmitting, propagationState, confirmPropagation, declinePropagation };
 };
 
 /**

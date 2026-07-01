@@ -214,7 +214,7 @@ class CalendarEventRepositoryTest {
     // --- Create: time validation for reminders (same day only) ---
 
     @Test
-    fun `create should reject reminder when endTime equals startTime on same day`() = runTest {
+    fun `create should accept reminder when endTime equals startTime on same day`() = runTest {
         val result = repository.create(
             eventType = "reminder",
             eventTypeId = "reminder-1",
@@ -224,11 +224,7 @@ class CalendarEventRepositoryTest {
             endTime = 480,
             notes = null,
         )
-        assertTrue(result is CalendarEventResult.ValidationError)
-        assertEquals(
-            "End time must be after start time for same-day reminders",
-            (result as CalendarEventResult.ValidationError).message,
-        )
+        assertTrue(result is CalendarEventResult.Success)
     }
 
     @Test
@@ -467,7 +463,7 @@ class CalendarEventRepositoryTest {
     // --- Update: validates time for reminders (same day only) ---
 
     @Test
-    fun `update should reject reminder when endTime not greater than startTime on same day`() = runTest {
+    fun `update should reject reminder when endTime less than startTime on same day`() = runTest {
         val createResult = repository.create(
             eventType = "reminder",
             eventTypeId = "reminder-1",
@@ -491,7 +487,7 @@ class CalendarEventRepositoryTest {
         )
         assertTrue(updateResult is CalendarEventResult.ValidationError)
         assertEquals(
-            "End time must be after start time for same-day reminders",
+            "End time must be on or after start time for same-day reminders",
             (updateResult as CalendarEventResult.ValidationError).message,
         )
     }

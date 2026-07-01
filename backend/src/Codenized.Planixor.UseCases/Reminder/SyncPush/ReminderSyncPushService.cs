@@ -4,8 +4,8 @@
 
 namespace Codenized.Planixor.UseCases.Reminder.SyncPush;
 
-using Codenized.CleanArchitecture.Abstractions.Exceptions;
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.CleanArchitecture.Exception.Abstractions.BadRequest;
 using Codenized.Planixor.Core.Entities;
 using Codenized.Planixor.Core.ValueObjects;
 using Codenized.Planixor.Dtos.Reminder.Sync;

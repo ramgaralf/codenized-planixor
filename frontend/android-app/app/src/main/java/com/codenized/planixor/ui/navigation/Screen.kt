@@ -5,7 +5,15 @@ package com.codenized.planixor.ui.navigation
  */
 sealed class Screen(val route: String) {
     data object Calendar : Screen("calendar")
-    data object EventCreate : Screen("calendar/new")
+    data object EventCreate : Screen("calendar/new?preSelectedDate={preSelectedDate}") {
+        fun createRoute(preSelectedDate: String? = null): String {
+            return if (preSelectedDate != null) {
+                "calendar/new?preSelectedDate=$preSelectedDate"
+            } else {
+                "calendar/new"
+            }
+        }
+    }
     data object EventEdit : Screen("calendar/{eventId}/edit") {
         fun createRoute(eventId: String): String = "calendar/$eventId/edit"
     }

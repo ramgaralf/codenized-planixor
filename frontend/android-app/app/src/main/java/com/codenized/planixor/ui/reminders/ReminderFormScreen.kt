@@ -42,11 +42,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.codenized.planixor.R
 import com.codenized.planixor.ui.components.ColorPickerDialog
 import com.codenized.planixor.ui.components.EmojiPickerDialog
+import com.codenized.planixor.ui.components.PropagationDialog
+import com.codenized.planixor.ui.shifts.PropagationUiState
 import com.codenized.planixor.ui.theme.PlanixorTheme
 
 /**
  * Reminder form screen composable that supports create and edit modes.
  * Observes ReminderFormViewModel state and renders form fields with per-field validation errors.
+ * Also observes propagation state to show the PropagationDialog after edit-mode saves.
  * This is a sub-screen: does NOT have its own Scaffold/TopAppBar (handled by global AppNavigation).
  */
 @Composable
@@ -55,6 +58,20 @@ fun ReminderFormScreen(
     viewModel: ReminderFormViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val propagationState by viewModel.propagationState.collectAsStateWithLifecycle()
+
+    // Show propagation dialog when state is Showing
+    if (propagationState is PropagationUiState.Showing) {
+        val showing = propagationState as PropagationUiState.Showing
+        PropagationDialog(
+            isOpen = true,
+            templateName = showing.name,
+            templateType = "reminder",
+            affectedEventCount = showing.count,
+            onConfirm = viewModel::confirmPropagation,
+            onDecline = viewModel::declinePropagation,
+        )
+    }
 
     if (uiState.shouldNavigateBack) {
         LaunchedEffect(Unit) {

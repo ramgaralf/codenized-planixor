@@ -47,7 +47,9 @@ class ReminderFormViewModelTest {
         val savedStateHandle = SavedStateHandle().apply {
             if (reminderId != null) set("reminderId", reminderId)
         }
-        return ReminderFormViewModel(reminderRepository, savedStateHandle)
+        val calendarEventDao = mockk<com.codenized.planixor.data.local.CalendarEventDao>(relaxed = true)
+        coEvery { calendarEventDao.getAll() } returns emptyList()
+        return ReminderFormViewModel(reminderRepository, calendarEventDao, savedStateHandle)
     }
 
     private fun createReminderEntity(

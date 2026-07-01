@@ -3,6 +3,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 import { db } from '@/data/db';
 
+import { SHIFT_I18N_KEYS } from '@features/shifts/constants';
+
 import { create, getAll, getById, update, softDelete, deactivate, activate } from './shiftService';
 
 const validInput = {
@@ -72,6 +74,30 @@ describe('shiftService', () => {
 
       expect(shift1.id).not.toBe(shift2.id);
       expect(shift1.name).toBe(shift2.name);
+    });
+
+    it('should accept hoursWorked of 0', async () => {
+      const shift = await create({ ...validInput, hoursWorked: 0 });
+
+      expect(shift.hoursWorked).toBe(0);
+    });
+
+    it('should accept hoursWorked of 1440', async () => {
+      const shift = await create({ ...validInput, hoursWorked: 1440 });
+
+      expect(shift.hoursWorked).toBe(1440);
+    });
+
+    it('should reject hoursWorked below 0', async () => {
+      await expect(create({ ...validInput, hoursWorked: -1 })).rejects.toThrow(
+        SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE,
+      );
+    });
+
+    it('should reject hoursWorked above 1440', async () => {
+      await expect(create({ ...validInput, hoursWorked: 1441 })).rejects.toThrow(
+        SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE,
+      );
     });
   });
 
@@ -158,6 +184,37 @@ describe('shiftService', () => {
 
       expect(retrieved!.modifiedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
       expect(retrieved!.modifiedAt.getTime()).toBeLessThanOrEqual(after.getTime());
+    });
+
+    it('should accept hoursWorked of 0 in update', async () => {
+      const shift = await create(validInput);
+      await update(shift.id, { hoursWorked: 0 });
+
+      const retrieved = await db.shifts.get(shift.id);
+
+      expect(retrieved!.hoursWorked).toBe(0);
+    });
+
+    it('should reject hoursWorked below 0 in update', async () => {
+      const shift = await create(validInput);
+
+      await expect(update(shift.id, { hoursWorked: -1 })).rejects.toThrow(
+        SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE,
+      );
+    });
+
+    it('should reject hoursWorked above 1440 in update', async () => {
+      const shift = await create(validInput);
+
+      await expect(update(shift.id, { hoursWorked: 1441 })).rejects.toThrow(
+        SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE,
+      );
+    });
+
+    it('should not validate hoursWorked when not provided in update', async () => {
+      const shift = await create(validInput);
+
+      await expect(update(shift.id, { name: 'New Name' })).resolves.not.toThrow();
     });
   });
 

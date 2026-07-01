@@ -29,6 +29,9 @@ class SyncServiceControllerTest {
     private val mockCalendarEventSyncAdapter = mockk<CalendarEventSyncAdapter>(relaxed = true)
     private val mockNotificationRecordSyncAdapter = mockk<NotificationRecordSyncAdapter>(relaxed = true)
     private val mockAnnualHoursConfigSyncAdapter = mockk<AnnualHoursConfigSyncAdapter>(relaxed = true)
+    private val mockShiftSyncAdapter = mockk<ShiftSyncAdapter>(relaxed = true)
+    private val mockReminderSyncAdapter = mockk<ReminderSyncAdapter>(relaxed = true)
+    private val mockDynamicBaseUrlInterceptor = mockk<DynamicBaseUrlInterceptor>(relaxed = true)
     private val syncConfigFlow = MutableStateFlow<SyncConfig?>(null)
     private lateinit var controller: SyncServiceController
 
@@ -43,6 +46,9 @@ class SyncServiceControllerTest {
             mockCalendarEventSyncAdapter,
             mockNotificationRecordSyncAdapter,
             mockAnnualHoursConfigSyncAdapter,
+            mockShiftSyncAdapter,
+            mockReminderSyncAdapter,
+            mockDynamicBaseUrlInterceptor,
         )
     }
 
@@ -245,10 +251,10 @@ class SyncServiceControllerTest {
 
         // Should not crash — error is caught and logged
         coVerify { mockCalendarEventSyncAdapter.sync(500L) }
-        // Subsequent adapters should not be called since first threw
-        coVerify(exactly = 0) { mockNotificationRecordSyncAdapter.sync(any()) }
-        // lastSyncedAt should not be updated on failure
-        coVerify(exactly = 0) { mockPreferencesRepository.setSyncLastSyncedAt(any()) }
+        // Subsequent adapters should still be called (resilient cycle — each entity syncs independently)
+        coVerify(exactly = 1) { mockNotificationRecordSyncAdapter.sync(any()) }
+        // lastSyncedAt should still be updated at end of cycle regardless of individual failures
+        coVerify(exactly = 1) { mockPreferencesRepository.setSyncLastSyncedAt(any()) }
 
         controller.stop()
     }

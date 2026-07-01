@@ -41,12 +41,12 @@ object CalendarEventValidation {
      *
      * Returns true if:
      * - endDay > startDay (any times are valid for multi-day reminders), OR
-     * - endDay == startDay AND endTime > startTime
+     * - endDay == startDay AND endTime >= startTime (allows 0 totalHours)
      *
      * For shift events this function is not applicable (shifts always pass
      * time validation since their times are read-only from the definition).
      *
-     * Validates: Requirements 1.10, 11.6
+     * Validates: Requirements 3.1, 3.2, 8.2
      */
     fun validateTimeForReminder(
         startDay: String,
@@ -57,7 +57,7 @@ object CalendarEventValidation {
         if (endDay > startDay) {
             return true
         }
-        return endTime > startTime
+        return endTime >= startTime
     }
 
     /**
@@ -88,10 +88,13 @@ object CalendarEventValidation {
     }
 
     /**
-     * Computes the endDay for a shift event based on crossing midnight.
+     * Computes the endDay for a shift event based on crossing midnight or 24-hour shifts.
      *
-     * If endTime < startTime (crossing midnight): returns startDay + 1 day.
-     * Otherwise: returns startDay.
+     * If endTime <= startTime (crossing midnight or 24-hour shift): returns startDay + 1 day.
+     * If endTime > startTime (same-day shift): returns startDay.
+     *
+     * When startTime === endTime, the shift is 24 hours (per calculateHoursWorked which
+     * returns 1440 in this case), so endDay is startDay + 1.
      *
      * Validates: Requirements 1.6, 11.7
      */
@@ -100,7 +103,7 @@ object CalendarEventValidation {
         startTime: Int,
         endTime: Int,
     ): String {
-        if (endTime < startTime) {
+        if (endTime <= startTime) {
             val date = LocalDate.parse(startDay)
             return date.plusDays(1).toString()
         }

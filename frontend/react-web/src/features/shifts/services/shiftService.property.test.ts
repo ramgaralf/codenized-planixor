@@ -3,7 +3,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
 
 import { db } from '@/data/db';
-import { PREDEFINED_PALETTE } from '@features/shifts/constants';
+import {
+  PREDEFINED_PALETTE,
+  SHIFT_HOURS_WORKED_MIN,
+  SHIFT_HOURS_WORKED_MAX,
+  SHIFT_I18N_KEYS,
+} from '@features/shifts/constants';
 
 import { create, getAll, update, softDelete, deactivate, activate } from './shiftService';
 
@@ -400,6 +405,96 @@ describe('shiftService — Property Tests', () => {
           expect(deleted!.hoursWorked).toBe(shift.hoursWorked);
           expect(deleted!.isActive).toBe(shift.isActive);
         }),
+        { numRuns: 100 },
+      );
+    });
+  });
+
+  /**
+   * Feature: gh18-calendar-shift-reminder-improvements, Property 3: Shift store-level validation enforces HoursWorked range
+   *
+   * For any shift create or update operation at the persistence layer, if the hoursWorked
+   * value is outside [0, 1440], the operation SHALL be rejected with a validation error,
+   * regardless of whether form-level validation was bypassed.
+   *
+   * For any integer in [0, 1440], create() should succeed (not throw).
+   * For any integer outside [0, 1440], create() should throw with SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE.
+   * For any integer outside [0, 1440], update() should throw with SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE.
+   *
+   * **Validates: Requirements 1.5, 1.6**
+   */
+  describe('Property 3: Shift store-level validation enforces HoursWorked range', () => {
+    const validRangeArb = fc.integer({ min: SHIFT_HOURS_WORKED_MIN, max: SHIFT_HOURS_WORKED_MAX });
+
+    const belowRangeArb = fc.integer({ min: -10000, max: SHIFT_HOURS_WORKED_MIN - 1 });
+
+    const aboveRangeArb = fc.integer({ min: SHIFT_HOURS_WORKED_MAX + 1, max: 10000 });
+
+    const invalidHoursWorkedArb = fc.oneof(belowRangeArb, aboveRangeArb);
+
+    const baseValidInputArb: fc.Arbitrary<CreateShiftInput> = fc.record({
+      name: validNameArb,
+      icon: validIconArb,
+      backgroundColor: validBackgroundColorArb,
+      startTime: validStartTimeArb,
+      endTime: validEndTimeArb,
+      hoursWorked: validRangeArb,
+    });
+
+    it('should accept create() for any hoursWorked in [0, 1440]', async () => {
+      await fc.assert(
+        fc.asyncProperty(baseValidInputArb, async (input) => {
+          const shift = await create(input);
+          expect(shift).toBeDefined();
+          expect(shift.hoursWorked).toBe(input.hoursWorked);
+        }),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should reject create() for any hoursWorked outside [0, 1440]', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          validNameArb,
+          validIconArb,
+          validBackgroundColorArb,
+          validStartTimeArb,
+          validEndTimeArb,
+          invalidHoursWorkedArb,
+          async (name, icon, backgroundColor, startTime, endTime, hoursWorked) => {
+            const input: CreateShiftInput = {
+              name,
+              icon,
+              backgroundColor,
+              startTime,
+              endTime,
+              hoursWorked,
+            };
+
+            await expect(create(input)).rejects.toThrow(
+              SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE,
+            );
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should reject update() for any hoursWorked outside [0, 1440]', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          baseValidInputArb,
+          invalidHoursWorkedArb,
+          async (input, invalidHoursWorked) => {
+            // First create a valid shift
+            const shift = await create(input);
+
+            // Then attempt to update with invalid hoursWorked
+            await expect(update(shift.id, { hoursWorked: invalidHoursWorked })).rejects.toThrow(
+              SHIFT_I18N_KEYS.VALIDATION_HOURS_WORKED_RANGE,
+            );
+          },
+        ),
         { numRuns: 100 },
       );
     });

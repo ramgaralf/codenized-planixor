@@ -18,7 +18,7 @@ sealed class CalendarEventResult {
  * Repository wrapping CalendarEventDao with business logic for calendar event CRUD operations.
  * Handles UUID generation, change tracking (modifiedAt/syncedAt), and dual validation:
  * - Day range: endDay must be on or after startDay
- * - Time validation: for reminders where endDay == startDay, endTime > startTime
+ * - Time validation: for reminders where endDay == startDay, endTime >= startTime
  * - Crossing midnight: for shifts where endTime < startTime, auto-sets endDay = startDay + 1
  * - One-shift-per-day: only one non-deleted shift event allowed per startDay
  * - TotalHours computation: shifts use shiftHoursWorked, reminders use day/time difference
@@ -78,7 +78,7 @@ class CalendarEventRepository @Inject constructor(
      * Creates a new calendar event with dual validation:
      * 1. Day range validation: endDay >= startDay
      * 2. Crossing midnight for shifts: auto-sets endDay = startDay + 1 if endTime < startTime
-     * 3. Time validation for reminders: endTime > startTime when endDay == startDay
+     * 3. Time validation for reminders: endTime >= startTime when endDay == startDay
      * 4. One-shift-per-day constraint: no other non-deleted shift on the same startDay
      * 5. Computes totalHours based on event type rules
      *
@@ -109,11 +109,11 @@ class CalendarEventRepository @Inject constructor(
             return CalendarEventResult.ValidationError("End day must be on or after start day")
         }
 
-        // Validate time for reminders: endTime > startTime when endDay == startDay
+        // Validate time for reminders: endTime >= startTime when endDay == startDay
         if (eventType == "reminder" &&
             !CalendarEventValidation.validateTimeForReminder(startDay, computedEndDay, startTime, endTime)
         ) {
-            return CalendarEventResult.ValidationError("End time must be after start time for same-day reminders")
+            return CalendarEventResult.ValidationError("End time must be on or after start time for same-day reminders")
         }
 
         // Validate notes length
@@ -158,7 +158,7 @@ class CalendarEventRepository @Inject constructor(
      * Updates an existing calendar event with dual validation:
      * 1. Day range validation: endDay >= startDay
      * 2. Crossing midnight for shifts: auto-sets endDay = startDay + 1 if endTime < startTime
-     * 3. Time validation for reminders: endTime > startTime when endDay == startDay
+     * 3. Time validation for reminders: endTime >= startTime when endDay == startDay
      * 4. One-shift-per-day constraint (excludes the event being edited) using startDay
      * 5. Recomputes totalHours based on event type rules
      *
@@ -193,11 +193,11 @@ class CalendarEventRepository @Inject constructor(
             return CalendarEventResult.ValidationError("End day must be on or after start day")
         }
 
-        // Validate time for reminders: endTime > startTime when endDay == startDay
+        // Validate time for reminders: endTime >= startTime when endDay == startDay
         if (eventType == "reminder" &&
             !CalendarEventValidation.validateTimeForReminder(startDay, computedEndDay, startTime, endTime)
         ) {
-            return CalendarEventResult.ValidationError("End time must be after start time for same-day reminders")
+            return CalendarEventResult.ValidationError("End time must be on or after start time for same-day reminders")
         }
 
         // Validate notes length

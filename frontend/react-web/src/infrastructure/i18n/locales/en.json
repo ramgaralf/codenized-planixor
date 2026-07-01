@@ -165,7 +165,7 @@
         "required": "End time is required"
       },
       "hoursWorked": {
-        "range": "Hours worked must be between 1 minute and 24 hours"
+        "range": "Hours worked must be between 0 and 24 hours"
       }
     },
     "error": {
@@ -393,6 +393,18 @@
     "validation": {
       "urlRequired": "Server URL is required",
       "apiKeyRequired": "API key is required"
+    }
+  },
+  "propagation": {
+    "modal": {
+      "title": "Update Calendar Events?",
+      "description": {
+        "shift": "You modified the shift \"{{name}}\". Do you want to update all calendar events that use this shift in {{year}}? Events in previous years will not be affected.",
+        "reminder": "You modified the reminder \"{{name}}\". Do you want to update all calendar events that use this reminder in {{year}}? Events in previous years will not be affected."
+      },
+      "affectedCount": "{{count}} event(s) will be updated",
+      "confirm": "Update",
+      "decline": "Skip"
     }
   }
 }
