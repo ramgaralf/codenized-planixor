@@ -393,6 +393,30 @@
     "validation": {
       "urlRequired": "Server URL is required",
       "apiKeyRequired": "API key is required"
+    },
+    "syncInterval": "Sync interval",
+    "config": {
+      "apiBasePath": "API Base Path",
+      "apiBasePathPlaceholder": "/api",
+      "apiBasePathError": {
+        "tooLong": "API base path must be 128 characters or fewer",
+        "invalidChars": "Only letters, numbers, hyphens, underscores, dots, and slashes are allowed"
+      },
+      "syncInterval": "Sync Interval",
+      "syncIntervalUnit": "min"
+    },
+    "usernameChange": {
+      "title": "Username Change Detected",
+      "message": "The new configuration is linked to a different username. Switching from \"{{previousUsername}}\" to \"{{newUsername}}\" will permanently delete all existing local data.",
+      "dataCategories": "The following data will be deleted:",
+      "categoryCalendarEvents": "Calendar events",
+      "categoryShifts": "Shifts",
+      "categoryReminders": "Reminders",
+      "categoryNotificationRecords": "Notification records",
+      "categoryAnnualHoursConfig": "Annual hours configuration",
+      "confirm": "Delete Data & Switch",
+      "cancel": "Cancel",
+      "dataResetFailed": "Data reset failed. Existing configuration has been retained."
     }
   },
   "propagation": {

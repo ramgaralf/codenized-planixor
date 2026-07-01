@@ -28,4 +28,11 @@ interface AnnualHoursConfigDao {
 
     @Upsert
     suspend fun upsert(entity: AnnualHoursConfigEntity)
+
+    /**
+     * Physically deletes all annual hours config entries from local storage.
+     * Used during username change to wipe all syncable data.
+     */
+    @Query("DELETE FROM annual_hours_config")
+    suspend fun deleteAll()
 }

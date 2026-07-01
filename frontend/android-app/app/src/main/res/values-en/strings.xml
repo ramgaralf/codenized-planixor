@@ -292,6 +292,27 @@
     <string name="sync_error_timeout">Connection timed out. Please check the URL and try again.</string>
     <string name="sync_validation_url_required">Server URL is required</string>
     <string name="sync_validation_api_key_required">API key is required</string>
+    <string name="sync_api_base_path">API Base Path</string>
+    <string name="sync_api_base_path_placeholder">/api</string>
+    <string name="sync_api_base_path_error">Path can only contain letters, numbers, hyphens, underscores, dots, and forward slashes</string>
+    <string name="sync_config_api_base_path">API Base Path</string>
+    <string name="sync_config_api_base_path_placeholder">/api</string>
+    <string name="sync_config_api_base_path_error_too_long">API base path must be 128 characters or fewer</string>
+    <string name="sync_config_api_base_path_error_invalid_chars">Only letters, numbers, hyphens, underscores, dots, and slashes are allowed</string>
+    <string name="sync_config_sync_interval">Sync Interval</string>
+    <string name="sync_config_sync_interval_unit">%1$d min</string>
+    <string name="sync_username_change_title">Username Change Detected</string>
+    <string name="sync_username_change_message">The new configuration is linked to a different username. Switching from \"%1$s\" to \"%2$s\" will permanently delete all existing local data.</string>
+    <string name="sync_username_change_data_categories">The following data will be deleted:</string>
+    <string name="sync_username_change_category_calendar_events">Calendar events</string>
+    <string name="sync_username_change_category_shifts">Shifts</string>
+    <string name="sync_username_change_category_reminders">Reminders</string>
+    <string name="sync_username_change_category_notification_records">Notification records</string>
+    <string name="sync_username_change_category_annual_hours">Annual hours configuration</string>
+    <string name="sync_username_change_confirm">Delete Data &amp; Switch</string>
+    <string name="sync_username_change_cancel">Cancel</string>
+    <string name="sync_username_change_data_reset_failed">Data reset failed. Existing configuration has been retained.</string>
+    <string name="sync_interval_display">Sync interval</string>
 
     <!-- Settings Reset -->
     <string name="settings_danger_zone_title">Danger Zone</string>

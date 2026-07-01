@@ -10,6 +10,8 @@ const createTestConfig = (overrides?: Partial<SyncConfig>): SyncConfig => ({
   serverUrl: 'https://backend.planixor.com',
   apiKey: 'sk-test-key-123',
   username: 'pepito',
+  apiBasePath: '/api',
+  syncIntervalMinutes: 5,
   isPaused: false,
   lastSyncedAt: null,
   ...overrides,
@@ -23,6 +25,8 @@ describe('syncStore', () => {
       connectionStatus: 'unconfigured',
       isPaused: false,
       lastSyncedAt: null,
+      apiBasePath: '/api',
+      syncIntervalMinutes: 5,
     });
   });
 

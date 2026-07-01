@@ -1,0 +1,925 @@
+{
+  "pbtResults": {
+    "3.3 Write unit tests for API base path normalization and validation": {
+      "status": "passed",
+      "lastRunTimestamp": 1782917532100
+    },
+    "13.3 Write unit tests for NotificationPurgeService": {
+      "status": "passed",
+      "lastRunTimestamp": 1782920278318
+    }
+  },
+  "executionHistory": {
+    "1.1 Add `PurgePastRecordsAsync` method to `INotificationRecordSyncPushCommands` interface": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917077931
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917088259
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917349501
+      }
+    ],
+    "1.2 Implement `PurgePastRecordsAsync` in the repository": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917077982
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917364560
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917593926
+      }
+    ],
+    "1.3 Call purge in `NotificationRecordSyncPushService` before processing the push batch": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078018
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917607572
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918845429
+      }
+    ],
+    "1.4 Write unit tests for purge logic": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078051
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918863265
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920066743
+      }
+    ],
+    "2. Checkpoint — Backend purge complete": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078084
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925334943
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925342898
+      }
+    ],
+    "3.1 Expand `SyncConfig` model with `apiBasePath` and `syncIntervalMinutes`": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078118
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917089040
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917350768
+      }
+    ],
+    "3.2 Create API base path normalization and validation utility": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078161
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917090306
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917351853
+      }
+    ],
+    "3.3 Write unit tests for API base path normalization and validation": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078212
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917365258
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917594612
+      }
+    ],
+    "4.1 Create `notificationPurgeService.ts`": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078258
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917365986
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917595421
+      }
+    ],
+    "4.2 Write unit tests for notification purge service": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078300
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917608263
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918846129
+      }
+    ],
+    "5.1 Replace hardcoded `SYNC_INTERVAL_MS` with config-driven value": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078338
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917609009
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918847024
+      }
+    ],
+    "5.2 Replace hardcoded `/api` with `apiBasePath` in all URL constructions": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078384
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917609897
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918847908
+      }
+    ],
+    "5.3 Fix `lastSyncedAt` to only update on at least one entity success": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078422
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918864006
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920067421
+      }
+    ],
+    "5.4 Add post-cycle notification purge call": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078461
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918864694
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920068104
+      }
+    ],
+    "5.5 Write unit tests for syncServiceController changes": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078538
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920082775
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921364368
+      }
+    ],
+    "6.1 Update validation URL construction": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078639
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918865320
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920070522
+      }
+    ],
+    "7.1 Add API base path input field to SyncConfigScreen": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078673
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920083454
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921366411
+      }
+    ],
+    "7.2 Add sync interval selector to SyncConfigScreen": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078712
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920084149
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921368037
+      }
+    ],
+    "7.3 Implement username change detection and confirmation dialog": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078765
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921382522
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921750138
+      }
+    ],
+    "7.4 Write unit tests for username change detection": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078797
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921383213
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921750869
+      }
+    ],
+    "8.1 Display configured sync interval on SyncScreen": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078830
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921383927
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921751564
+      }
+    ],
+    "9.1 Add English and Spanish translation keys for all new UI strings": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078864
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920084921
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921369130
+      }
+    ],
+    "10. Checkpoint — React Web complete": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078896
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925347766
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925353209
+      }
+    ],
+    "11.1 Expand `SyncConfig.kt` with `apiBasePath` and `syncIntervalMinutes`": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078929
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917090520
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917352924
+      }
+    ],
+    "11.2 Update `PreferencesRepository` to persist new SyncConfig fields": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917078964
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917366819
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917596258
+      }
+    ],
+    "12.1 Add `apiBasePath` property to `DynamicBaseUrlInterceptor`": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079004
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917610665
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918848571
+      }
+    ],
+    "12.2 Write unit tests for DynamicBaseUrlInterceptor with apiBasePath": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079040
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918866068
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920070831
+      }
+    ],
+    "13.1 Add Room DAO query for past notification records": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079080
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917611476
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918849633
+      }
+    ],
+    "13.2 Create `NotificationPurgeService`": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079114
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918866808
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920071070
+      }
+    ],
+    "13.3 Write unit tests for NotificationPurgeService": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079148
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920085603
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921367163
+      }
+    ],
+    "14.1 Implement error classification in `SyncServiceController`": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079178
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920086273
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921365017
+      }
+    ],
+    "14.2 Fix `lastSyncedAt` conditional update": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079210
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920087013
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921365716
+      }
+    ],
+    "14.3 Replace hardcoded `SYNC_INTERVAL_MS` with config-driven value": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079242
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921384663
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921752401
+      }
+    ],
+    "14.4 Set `apiBasePath` on `DynamicBaseUrlInterceptor` from config": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079272
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921385445
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921753229
+      }
+    ],
+    "14.5 Add post-cycle notification purge call": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079304
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921386119
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921754011
+      }
+    ],
+    "14.6 Write unit tests for SyncServiceController changes": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079339
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921768543
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782922341051
+      }
+    ],
+    "15. Checkpoint — Android sync controller complete": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079383
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925358359
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925364966
+      }
+    ],
+    "16.1 Add API base path field to SyncConfigScreen": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079415
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921769351
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782922340160
+      }
+    ],
+    "16.2 Add sync interval dropdown to SyncConfigScreen": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079445
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921770025
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782922341788
+      }
+    ],
+    "16.3 Implement username change detection in SyncViewModel": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079478
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782922353180
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925202108
+      }
+    ],
+    "16.4 Add username change confirmation dialog composable": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079511
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782922353962
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925202596
+      }
+    ],
+    "16.5 Write unit tests for username change detection in SyncViewModel": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079543
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925214790
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925323548
+      }
+    ],
+    "17.1 Display configured sync interval on SyncScreen": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079574
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782922354661
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925203299
+      }
+    ],
+    "18.1 Add English and Spanish string resources for all new UI strings": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079608
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921770765
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782922342829
+      }
+    ],
+    "19.1 Create shared normalization/validation utility for API base path": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079640
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917367569
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917597264
+      }
+    ],
+    "19.2 Write unit tests for API base path normalization and validation": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079682
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917612152
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918850696
+      }
+    ],
+    "20. Final checkpoint — All platforms complete": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917079736
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925370195
+      },
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925376459
+      }
+    ],
+    "3. React Web — SyncConfig model expansion and base path normalization": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917594678
+      }
+    ],
+    "11. Android — SyncConfig expansion and preferences persistence": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782917596335
+      }
+    ],
+    "4. React Web — Notification purge service": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918846165
+      }
+    ],
+    "19. Android — API base path normalization and validation utility": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782918850785
+      }
+    ],
+    "1. Backend — Notification Record Purge During Push": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920066827
+      }
+    ],
+    "6. React Web — Update syncValidationService to use apiBasePath": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920070567
+      }
+    ],
+    "12. Android — DynamicBaseUrlInterceptor update for apiBasePath": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782920071039
+      }
+    ],
+    "5. React Web — Update syncServiceController for dynamic interval, base path, conditional lastSyncedAt, and purge": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921364419
+      }
+    ],
+    "13. Android — NotificationPurgeService": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921367199
+      }
+    ],
+    "9. React Web — Add i18n translation keys": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921369178
+      }
+    ],
+    "7. React Web — SyncConfigScreen updates (base path, interval, username change)": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921750914
+      }
+    ],
+    "8. React Web — SyncScreen display sync interval": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782921751611
+      }
+    ],
+    "14. Android — SyncServiceController fixes (error classification, lastSyncedAt, interval, purge)": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782922341091
+      }
+    ],
+    "18. Android — Add i18n string resources": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782922342869
+      }
+    ],
+    "17. Android — SyncScreen display sync interval": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925203361
+      }
+    ],
+    "16. Android — SyncConfigScreen updates (base path, interval, username change)": [
+      {
+        "executionId": "a48a6441-de6b-494a-adcc-8a0807974ce3",
+        "chatSessionId": "sess_aabd3583-27e9-4788-a02a-6fcfc2396b57",
+        "timestamp": 1782925323587
+      }
+    ]
+  }
+}

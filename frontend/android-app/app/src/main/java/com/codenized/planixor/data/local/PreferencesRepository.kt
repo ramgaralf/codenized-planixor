@@ -4,8 +4,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.codenized.planixor.data.sync.ConnectionStatus
 import com.codenized.planixor.data.sync.SyncConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -47,11 +49,29 @@ class PreferencesRepository @Inject constructor(
                 serverUrl = serverUrl,
                 apiKey = apiKey,
                 username = username,
+                apiBasePath = preferences[KEY_SYNC_API_BASE_PATH] ?: "/api",
+                syncIntervalMinutes = preferences[KEY_SYNC_INTERVAL_MINUTES] ?: 5,
                 isPaused = preferences[KEY_SYNC_IS_PAUSED] ?: false,
                 lastSyncedAt = preferences[KEY_SYNC_LAST_SYNCED_AT],
             )
         } else {
             null
+        }
+    }
+
+    /**
+     * Emits the persisted ConnectionStatus, defaulting to UNCONFIGURED if not set.
+     */
+    val connectionStatusFlow: Flow<ConnectionStatus> = dataStore.data.map { preferences ->
+        val statusName = preferences[KEY_SYNC_CONNECTION_STATUS]
+        if (statusName != null) {
+            try {
+                ConnectionStatus.valueOf(statusName)
+            } catch (_: IllegalArgumentException) {
+                ConnectionStatus.UNCONFIGURED
+            }
+        } else {
+            ConnectionStatus.UNCONFIGURED
         }
     }
 
@@ -82,6 +102,8 @@ class PreferencesRepository @Inject constructor(
             preferences[KEY_SYNC_SERVER_URL] = config.serverUrl
             preferences[KEY_SYNC_API_KEY] = config.apiKey
             preferences[KEY_SYNC_USERNAME] = config.username
+            preferences[KEY_SYNC_API_BASE_PATH] = config.apiBasePath
+            preferences[KEY_SYNC_INTERVAL_MINUTES] = config.syncIntervalMinutes
             preferences[KEY_SYNC_IS_PAUSED] = config.isPaused
             if (config.lastSyncedAt != null) {
                 preferences[KEY_SYNC_LAST_SYNCED_AT] = config.lastSyncedAt
@@ -100,8 +122,11 @@ class PreferencesRepository @Inject constructor(
             preferences.remove(KEY_SYNC_SERVER_URL)
             preferences.remove(KEY_SYNC_API_KEY)
             preferences.remove(KEY_SYNC_USERNAME)
+            preferences.remove(KEY_SYNC_API_BASE_PATH)
+            preferences.remove(KEY_SYNC_INTERVAL_MINUTES)
             preferences.remove(KEY_SYNC_IS_PAUSED)
             preferences.remove(KEY_SYNC_LAST_SYNCED_AT)
+            preferences.remove(KEY_SYNC_CONNECTION_STATUS)
         }
     }
 
@@ -124,6 +149,15 @@ class PreferencesRepository @Inject constructor(
     }
 
     /**
+     * Persists the ConnectionStatus so it survives app restarts.
+     */
+    suspend fun saveConnectionStatus(status: ConnectionStatus) {
+        dataStore.edit { preferences ->
+            preferences[KEY_SYNC_CONNECTION_STATUS] = status.name
+        }
+    }
+
+    /**
      * Clears all preferences from the DataStore.
      * Used during application reset to wipe all local configuration.
      */
@@ -139,7 +173,10 @@ class PreferencesRepository @Inject constructor(
         private val KEY_SYNC_SERVER_URL = stringPreferencesKey("sync_server_url")
         private val KEY_SYNC_API_KEY = stringPreferencesKey("sync_api_key")
         private val KEY_SYNC_USERNAME = stringPreferencesKey("sync_username")
+        private val KEY_SYNC_API_BASE_PATH = stringPreferencesKey("sync_api_base_path")
+        private val KEY_SYNC_INTERVAL_MINUTES = intPreferencesKey("sync_interval_minutes")
         private val KEY_SYNC_IS_PAUSED = booleanPreferencesKey("sync_is_paused")
         private val KEY_SYNC_LAST_SYNCED_AT = longPreferencesKey("sync_last_synced_at")
+        private val KEY_SYNC_CONNECTION_STATUS = stringPreferencesKey("sync_connection_status")
     }
 }

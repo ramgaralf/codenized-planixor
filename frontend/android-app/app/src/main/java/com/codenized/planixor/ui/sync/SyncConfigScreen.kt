@@ -16,9 +16,14 @@ import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -36,6 +41,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.codenized.planixor.R
+import com.codenized.planixor.data.sync.ApiBasePathUtils
+
+/**
+ * Valid selectable sync interval values in minutes.
+ */
+private val SYNC_INTERVAL_OPTIONS = listOf(5, 10, 15, 20, 25, 30, 45, 60)
 
 /**
  * Sync configuration screen allowing the user to enter a server URL and API key,
@@ -53,15 +64,29 @@ fun SyncConfigScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var serverUrl by remember { mutableStateOf(uiState.config?.serverUrl ?: "") }
+    var serverUrl by remember {
+        mutableStateOf(
+            if (uiState.config != null) {
+                ApiBasePathUtils.buildFullServerUrl(
+                    uiState.config!!.serverUrl,
+                    uiState.config!!.apiBasePath,
+                )
+            } else {
+                ""
+            },
+        )
+    }
     var apiKey by remember { mutableStateOf(uiState.config?.apiKey ?: "") }
+    var syncIntervalMinutes by remember {
+        mutableStateOf(uiState.config?.syncIntervalMinutes ?: 5)
+    }
     var localError by remember { mutableStateOf<String?>(null) }
     var apiKeyVisible by remember { mutableStateOf(false) }
     var hasSubmitted by remember { mutableStateOf(false) }
 
     // Navigate to sync screen on successful validation (only after user submitted)
-    LaunchedEffect(uiState.isValidating, uiState.config, uiState.validationError) {
-        if (hasSubmitted && !uiState.isValidating && uiState.config != null && uiState.validationError == null) {
+    LaunchedEffect(uiState.isValidating, uiState.config, uiState.validationError, uiState.pendingUsernameChange) {
+        if (hasSubmitted && !uiState.isValidating && uiState.config != null && uiState.validationError == null && uiState.pendingUsernameChange == null) {
             onNavigateToSync()
         }
     }
@@ -73,6 +98,7 @@ fun SyncConfigScreen(
         "server_error" -> stringResource(R.string.sync_error_server)
         "network_error" -> stringResource(R.string.sync_error_network)
         "timeout" -> stringResource(R.string.sync_error_timeout)
+        "data_reset_failed" -> stringResource(R.string.sync_username_change_data_reset_failed)
         "invalid_input" -> localError
         null -> null
         else -> uiState.validationError
@@ -80,9 +106,21 @@ fun SyncConfigScreen(
 
     val errorText = localError ?: remoteError
 
+    // Username change confirmation dialog
+    uiState.pendingUsernameChange?.let { pending ->
+        UsernameChangeConfirmationDialog(
+            previousUsername = pending.previousUsername,
+            newUsername = pending.newUsername,
+            isDeletingData = uiState.isDeletingData,
+            onConfirm = { viewModel.confirmUsernameChange() },
+            onCancel = { viewModel.cancelUsernameChange() },
+        )
+    }
+
     SyncConfigContent(
         serverUrl = serverUrl,
         apiKey = apiKey,
+        syncIntervalMinutes = syncIntervalMinutes,
         apiKeyVisible = apiKeyVisible,
         errorText = errorText,
         isValidating = uiState.isValidating,
@@ -96,6 +134,7 @@ fun SyncConfigScreen(
             localError = null
             viewModel.clearValidationError()
         },
+        onSyncIntervalChange = { value -> syncIntervalMinutes = value },
         onToggleApiKeyVisibility = { apiKeyVisible = !apiKeyVisible },
         onValidate = {
             val urlTrimmed = serverUrl.trim()
@@ -103,23 +142,24 @@ fun SyncConfigScreen(
 
             when {
                 urlTrimmed.isBlank() -> {
-                    localError = null
                     localError = "url_required"
                 }
                 keyTrimmed.isBlank() -> {
-                    localError = null
                     localError = "api_key_required"
                 }
                 else -> {
                     localError = null
                     hasSubmitted = true
-                    viewModel.validateAndSave(urlTrimmed, keyTrimmed)
+                    val (origin, path) = ApiBasePathUtils.parseServerUrl(urlTrimmed)
+                    val normalizedBasePath = ApiBasePathUtils.normalizeApiBasePath(path)
+                    viewModel.validateAndSave(origin, keyTrimmed, normalizedBasePath, syncIntervalMinutes)
                 }
             }
         },
         onCancel = {
             serverUrl = ""
             apiKey = ""
+            syncIntervalMinutes = 5
             localError = null
             viewModel.clearValidationError()
             onNavigateBack()
@@ -127,15 +167,18 @@ fun SyncConfigScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SyncConfigContent(
     serverUrl: String,
     apiKey: String,
+    syncIntervalMinutes: Int,
     apiKeyVisible: Boolean,
     errorText: String?,
     isValidating: Boolean,
     onServerUrlChange: (String) -> Unit,
     onApiKeyChange: (String) -> Unit,
+    onSyncIntervalChange: (Int) -> Unit,
     onToggleApiKeyVisibility: () -> Unit,
     onValidate: () -> Unit,
     onCancel: () -> Unit,
@@ -197,6 +240,42 @@ internal fun SyncConfigContent(
             modifier = Modifier.fillMaxWidth(),
             enabled = !isValidating,
         )
+
+        // Sync interval dropdown
+        var intervalExpanded by remember { mutableStateOf(false) }
+
+        ExposedDropdownMenuBox(
+            expanded = intervalExpanded,
+            onExpandedChange = { if (!isValidating) intervalExpanded = it },
+        ) {
+            OutlinedTextField(
+                value = stringResource(R.string.sync_config_sync_interval_unit, syncIntervalMinutes),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(R.string.sync_config_sync_interval)) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = intervalExpanded) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                enabled = !isValidating,
+            )
+            ExposedDropdownMenu(
+                expanded = intervalExpanded,
+                onDismissRequest = { intervalExpanded = false },
+            ) {
+                SYNC_INTERVAL_OPTIONS.forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(stringResource(R.string.sync_config_sync_interval_unit, option))
+                        },
+                        onClick = {
+                            onSyncIntervalChange(option)
+                            intervalExpanded = false
+                        },
+                    )
+                }
+            }
+        }
 
         if (displayError != null) {
             Text(

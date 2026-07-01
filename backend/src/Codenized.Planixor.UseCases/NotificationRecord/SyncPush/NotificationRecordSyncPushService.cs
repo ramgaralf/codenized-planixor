@@ -62,6 +62,19 @@ public sealed class NotificationRecordSyncPushService : IInteractorService<Notif
             request.UserId,
             request.Records.Count);
 
+        // Purge past notification records before processing the push batch
+        try
+        {
+            await this.commands.PurgePastRecordsAsync(request.UserId);
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogWarning(
+                ex,
+                "Purge of past notification records failed for user {UserId}. Continuing with push processing.",
+                request.UserId);
+        }
+
         var acknowledgedIds = new List<Guid>();
         var rejectedIds = new List<NotificationRecordRejectedRecord>();
 

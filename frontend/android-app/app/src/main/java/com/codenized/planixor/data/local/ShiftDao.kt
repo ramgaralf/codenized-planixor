@@ -42,4 +42,11 @@ interface ShiftDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(shifts: List<ShiftEntity>)
+
+    /**
+     * Physically deletes all shifts from local storage.
+     * Used during username change to wipe all syncable data.
+     */
+    @Query("DELETE FROM shifts")
+    suspend fun deleteAll()
 }

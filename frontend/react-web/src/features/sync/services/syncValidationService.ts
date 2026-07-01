@@ -18,7 +18,7 @@ const TIMEOUT_MS = 10_000;
 /**
  * Validates a connection to the synchronization server.
  *
- * Sends a GET request to `{url}/api/security/validate` with the provided API key
+ * Sends a GET request to `{url}{apiBasePath}/security/validate` with the provided API key
  * as a Bearer token. Maps the response to a ValidationResult.
  *
  * Input validation: rejects empty or whitespace-only url/apiKey without making a network request.
@@ -26,6 +26,7 @@ const TIMEOUT_MS = 10_000;
 export const validateConnection = async (
   url: string,
   apiKey: string,
+  apiBasePath: string = '/api',
 ): Promise<ValidationResult> => {
   if (!url || url.trim().length === 0) {
     return { success: false, error: 'url_required' };
@@ -40,7 +41,7 @@ export const validateConnection = async (
 
   try {
     const response = await fetch(
-      `${url.trim()}/api/security/validate`,
+      `${url.trim()}${apiBasePath}/security/validate`,
       {
         method: 'GET',
         headers: {

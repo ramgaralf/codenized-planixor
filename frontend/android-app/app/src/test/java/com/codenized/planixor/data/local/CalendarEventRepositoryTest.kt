@@ -66,6 +66,11 @@ class FakeCalendarEventDao : CalendarEventDao {
         return store.values.toList()
     }
 
+    override suspend fun deleteAll() {
+        store.clear()
+        emitUpdate()
+    }
+
     fun clear() {
         store.clear()
         emitUpdate()

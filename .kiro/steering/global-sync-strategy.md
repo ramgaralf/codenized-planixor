@@ -27,7 +27,7 @@ All CRUD operations happen against local storage first. No network connection is
 1. **Subscription-gated** — only authenticated users with an active subscription can sync.
 2. **Bidirectional** — local → API (push) and API → local (pull) in each sync cycle.
 3. **User-scoped** — a user can only sync their own data. The API enforces ownership on every request.
-4. **Automatic background sync** — a periodic background process runs on both PWA (Service Worker / Web Worker) and Android (WorkManager) that syncs every **5 minutes** when connectivity is detected.
+4. **Automatic background sync** — a periodic background process runs on both PWA and Android that syncs at a configurable interval (default **5 minutes**, selectable: 5, 10, 15, 20, 25, 30, 45, 60 minutes) when connectivity is detected.
 5. **App lifecycle sync** — a sync cycle triggers when the application is opened (PWA gains focus / Android Activity resumes) and a push cycle triggers when the application is about to close (PWA loses focus / Android Activity pauses).
 6. **Manual sync** — the user can trigger a sync manually at any time.
 7. **Connectivity-aware** — the sync service monitors network status. If offline, it does not attempt any network calls. When connectivity is restored, sync resumes automatically.
@@ -115,7 +115,7 @@ When `lastSyncedAt` is null (first sync after configuration), clients pass `1970
 
 ### Each entity syncs independently (resilient cycle)
 
-If one entity's sync fails (e.g., calendar events 400), the other entities still sync. `lastSyncedAt` always updates at the end of the cycle regardless of individual failures.
+If one entity's sync fails (e.g., calendar events 400), the other entities still sync. `lastSyncedAt` updates at the end of the cycle only if at least one entity sync succeeded. If ALL entities fail, `lastSyncedAt` remains unchanged.
 
 ### Backend API endpoint pattern
 
@@ -167,3 +167,31 @@ The sync URL comes from user configuration (DataStore), not a hardcoded Retrofit
 ### Settings: Reset Application
 
 Both platforms include a "Reset Application" button in Settings that wipes all local data (IndexedDB/Room + DataStore preferences) for clean re-sync scenarios.
+
+### Configurable sync interval
+
+The sync interval is no longer hardcoded to 5 minutes. Users can select from: 5, 10, 15, 20, 25, 30, 45, 60 minutes. The default is 5 minutes. The interval is stored in `SyncConfig` as `syncIntervalMinutes`. When changed, the sync timer restarts with the new interval without requiring app restart.
+
+### Configurable API base path (unified URL field)
+
+The API base path is no longer hardcoded as `/api`. It is extracted from the server URL that the user enters in the sync configuration screen. Internally, `SyncConfig` stores `serverUrl` (scheme + host + port) and `apiBasePath` (path segment) as separate fields. The UI presents a single "Server URL" field where users type the full URL (e.g., `https://backend.planixor.com/api` or `https://backend.planixor.com/custom/v2`). On save, the system parses the URL into its components. If no path is provided, it defaults to `/api`.
+
+URL construction pattern: `{serverUrl}{apiBasePath}/{entity-kebab}/sync/{action}`
+
+### Notification record purge (automatic cleanup)
+
+Past notification records are automatically purged during sync:
+- **Backend**: During notification record push, the server hard-deletes records whose CalendarEvent.EndDay < today (or orphaned records with no matching CalendarEvent). Runs before processing the push batch; failures are logged but don't abort the push.
+- **Clients**: After each completed sync cycle, clients permanently delete local NotificationRecord entries whose CalendarEvent.startDay < today (or orphaned). This is a physical delete, not soft-delete.
+
+### lastSyncedAt conditional update
+
+`lastSyncedAt` is only updated when at least one entity sync succeeds in a cycle. If ALL entities fail (e.g., server unreachable), `lastSyncedAt` remains unchanged. This prevents the timestamp from advancing when no actual sync occurred.
+
+### Android: ConnectionStatus persistence and ViewModel
+
+The `ConnectionStatus` enum (UNCONFIGURED, ACTIVE, FAILING, PAUSED) is persisted to DataStore via `PreferencesRepository.saveConnectionStatus()`. The `SyncServiceController` writes FAILING on connectivity errors and ACTIVE on successful cycles. The `SyncViewModel` reads this persisted status via `connectionStatusFlow` (combined with `syncConfigFlow`) — it does NOT hardcode ACTIVE based on config presence alone.
+
+### Username change detection
+
+When sync configuration is validated and the returned username differs from the stored username (case-sensitive comparison), a confirmation dialog warns the user that all local syncable data will be deleted. On confirm: all 5 entity tables are cleared, lastSyncedAt is reset, and the new config is saved. On cancel: existing config is retained. First-time configuration or same username saves directly without dialog.

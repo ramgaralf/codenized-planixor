@@ -94,4 +94,25 @@ interface NotificationRecordDao {
 
     @Update
     suspend fun updateAll(records: List<NotificationRecordEntity>)
+
+    /**
+     * Returns all notification records (including soft-deleted).
+     * Used by the purge service to identify past/orphaned records.
+     */
+    @Query("SELECT * FROM notification_records")
+    suspend fun getAll(): List<NotificationRecordEntity>
+
+    /**
+     * Physically deletes notification records by their IDs.
+     * Used by the purge service to permanently remove past/orphaned records.
+     */
+    @Query("DELETE FROM notification_records WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<String>)
+
+    /**
+     * Physically deletes all notification records from local storage.
+     * Used during username change to wipe all syncable data.
+     */
+    @Query("DELETE FROM notification_records")
+    suspend fun deleteAll()
 }

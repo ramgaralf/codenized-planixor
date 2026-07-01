@@ -11,6 +11,7 @@ import com.codenized.planixor.data.sync.AnnualHoursConfigSyncManager
 import com.codenized.planixor.data.sync.CalendarEventSyncAdapter
 import com.codenized.planixor.data.sync.CalendarEventSyncApiService
 import com.codenized.planixor.data.sync.DynamicBaseUrlInterceptor
+import com.codenized.planixor.data.sync.NotificationPurgeService
 import com.codenized.planixor.data.sync.NotificationRecordSyncAdapter
 import com.codenized.planixor.data.sync.NotificationRecordSyncApiService
 import com.codenized.planixor.data.sync.ReminderSyncAdapter
@@ -117,6 +118,7 @@ object SyncModule {
         shiftSyncAdapter: ShiftSyncAdapter,
         reminderSyncAdapter: ReminderSyncAdapter,
         dynamicBaseUrlInterceptor: DynamicBaseUrlInterceptor,
+        notificationPurgeService: NotificationPurgeService,
     ): SyncServiceController {
         return SyncServiceController(
             preferencesRepository,
@@ -126,6 +128,7 @@ object SyncModule {
             shiftSyncAdapter,
             reminderSyncAdapter,
             dynamicBaseUrlInterceptor,
+            notificationPurgeService,
         )
     }
 }

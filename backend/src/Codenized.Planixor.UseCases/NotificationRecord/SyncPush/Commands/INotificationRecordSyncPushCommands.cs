@@ -22,4 +22,15 @@ public interface INotificationRecordSyncPushCommands
     /// <param name="records">The batch of notification record entities to upsert.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task UpsertAsync(string userId, IReadOnlyList<NotificationRecord> records);
+
+    /// <summary>
+    /// Purges past notification records for the specified user.
+    /// Identifies and permanently deletes (hard delete) all NotificationRecord entities
+    /// whose associated CalendarEvent has an EndDay strictly before the current UTC date,
+    /// or whose associated CalendarEvent does not exist (orphaned records).
+    /// Only records belonging to the specified user are affected.
+    /// </summary>
+    /// <param name="userId">The user identifier whose past records should be purged.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task PurgePastRecordsAsync(string userId);
 }

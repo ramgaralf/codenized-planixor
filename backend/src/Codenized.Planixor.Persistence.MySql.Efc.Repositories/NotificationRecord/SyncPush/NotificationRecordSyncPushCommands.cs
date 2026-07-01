@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.Persistence.MySql.Efc.Repositories.NotificationRecord.SyncPush;
 
 using Codenized.CleanArchitecture.Persistence.Abstractions.Interfaces;
+using Codenized.Planixor.Core.Entities;
 using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 using Codenized.Planixor.UseCases.NotificationRecord.SyncPush.Commands;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,61 @@ public sealed class NotificationRecordSyncPushCommands : INotificationRecordSync
     public NotificationRecordSyncPushCommands(ApplicationWriteContext context)
     {
         this.context = context;
+    }
+
+    /// <summary>
+    /// Purges past notification records for the specified user.
+    /// Identifies and permanently deletes (hard delete) all NotificationRecord entities
+    /// whose associated CalendarEvent has an EndDay strictly before the current UTC date,
+    /// or whose associated CalendarEvent does not exist (orphaned records).
+    /// Only records belonging to the specified user are affected.
+    /// </summary>
+    /// <param name="userId">The user identifier whose past records should be purged.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public async Task PurgePastRecordsAsync(string userId)
+    {
+        List<NotificationRecordEntity> userRecords = await this.context.NotificationRecords
+            .Where(n => n.UserId == userId)
+            .ToListAsync();
+
+        if (userRecords.Count == 0)
+        {
+            return;
+        }
+
+        HashSet<Guid> calendarEventIds = userRecords
+            .Select(n => n.CalendarEventId)
+            .ToHashSet();
+
+        List<CalendarEvent> calendarEvents = await this.context.CalendarEvents
+            .Where(ce => ce.UserId == userId)
+            .ToListAsync();
+
+        Dictionary<Guid, CalendarEvent> calendarEventLookup = calendarEvents
+            .Where(ce => calendarEventIds.Contains(ce.Id))
+            .ToDictionary(ce => ce.Id);
+
+        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        List<NotificationRecordEntity> recordsToPurge = userRecords
+            .Where(record =>
+            {
+                if (!calendarEventLookup.TryGetValue(record.CalendarEventId, out CalendarEvent? calendarEvent))
+                {
+                    return true;
+                }
+
+                return calendarEvent.EndDay < today;
+            })
+            .ToList();
+
+        if (recordsToPurge.Count == 0)
+        {
+            return;
+        }
+
+        this.context.NotificationRecords.RemoveRange(recordsToPurge);
+        await this.context.SaveChangesAsync();
     }
 
     /// <summary>

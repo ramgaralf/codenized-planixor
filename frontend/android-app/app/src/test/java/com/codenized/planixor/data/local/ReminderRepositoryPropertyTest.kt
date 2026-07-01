@@ -84,6 +84,11 @@ class FakeReminderDao : ReminderDao {
         }
     }
 
+    override suspend fun deleteAll() {
+        store.clear()
+        emitUpdate()
+    }
+
     fun clear() {
         store.clear()
         emitUpdate()
