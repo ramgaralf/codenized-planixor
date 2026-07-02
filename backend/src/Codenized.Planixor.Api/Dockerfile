@@ -28,4 +28,4 @@ RUN dotnet publish "./Codenized.Planixor.Api.csproj" -c $BUILD_CONFIGURATION -o 
 FROM base AS final
 WORKDIR /srv/planixor/api
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "planixor-api.dll"]
+ENTRYPOINT ["dotnet", "Codenized.Planixor.Api.dll"]
