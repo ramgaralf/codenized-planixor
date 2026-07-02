@@ -5,7 +5,6 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
-ARG GITHUB_TOKEN
 WORKDIR /
 COPY ["nuget.config", "./"]
 COPY ["src/Codenized.Planixor.Api/Codenized.Planixor.Api.csproj", "src/Codenized.Planixor.Api/"]
@@ -18,7 +17,8 @@ COPY ["src/Codenized.Planixor.Persistence.MySql.Efc.DataContext/Codenized.Planix
 COPY ["src/Codenized.Planixor.Persistence.MySql.Efc.Repositories/Codenized.Planixor.Persistence.MySql.Efc.Repositories.csproj", "src/Codenized.Planixor.Persistence.MySql.Efc.Repositories/"]
 COPY ["src/Codenized.Planixor.UseCases/Codenized.Planixor.UseCases.csproj", "src/Codenized.Planixor.UseCases/"]
 COPY ["src/Codenized.Planixor.Services/Codenized.Planixor.Services.csproj", "src/Codenized.Planixor.Services/"]
-RUN sed -i "s/%GITHUB_TOKEN%/${GITHUB_TOKEN}/g" nuget.config && \
+RUN --mount=type=secret,id=github_token \
+    sed -i "s/%GITHUB_TOKEN%/$(cat /run/secrets/github_token)/g" nuget.config && \
     dotnet restore "./src/Codenized.Planixor.Api/Codenized.Planixor.Api.csproj" && \
     rm -f nuget.config
 COPY . .
