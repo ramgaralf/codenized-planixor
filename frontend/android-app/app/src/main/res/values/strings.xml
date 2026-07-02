@@ -64,6 +64,10 @@
     <string name="annual_config_button">Configurar horas anuales</string>
 
     <!-- Settings -->
+    <!-- User Manual -->
+    <string name="settings_user_manual_title">Manual de Usuario</string>
+    <string name="settings_user_manual_description">Consulta la guía completa con instrucciones de todas las funcionalidades.</string>
+    <string name="settings_user_manual_button">Abrir Manual</string>
     <string name="settings_title">Ajustes</string>
     <string name="settings_theme_title">Tema</string>
     <string name="settings_theme_light">Claro</string>
