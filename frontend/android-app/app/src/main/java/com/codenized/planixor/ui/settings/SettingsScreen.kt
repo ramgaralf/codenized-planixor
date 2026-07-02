@@ -1,7 +1,9 @@
 package com.codenized.planixor.ui.settings
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -105,6 +107,35 @@ fun SettingsScreen(
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
+        // User Manual section
+        Text(
+            text = stringResource(R.string.settings_user_manual_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(R.string.settings_user_manual_description),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://planixor.codenized.com/help"))
+                context.startActivity(intent)
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.settings_user_manual_button))
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         // Theme section
         Text(
             text = stringResource(R.string.settings_theme_title),

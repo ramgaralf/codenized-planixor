@@ -57,6 +57,31 @@ export const SettingsPage = () => {
   return (
     <div className={styles.settingsPage}>
       <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>{t('settings.userManual')}</h2>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '13px', marginBottom: '12px' }}>
+          {t('settings.userManualDescription')}
+        </p>
+        <a
+          href="https://planixor.codenized.com/help"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-block',
+            padding: '8px 16px',
+            borderRadius: '8px',
+            backgroundColor: '#2563EB',
+            color: '#FFFFFF',
+            fontSize: '14px',
+            fontWeight: 600,
+            textDecoration: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          {t('settings.userManualButton')}
+        </a>
+      </section>
+
+      <section className={styles.section}>
         <h2 className={styles.sectionTitle}>{t('settings.theme')}</h2>
         <div className={styles.optionGroup} role="radiogroup" aria-label={t('settings.theme')}>
           {THEME_OPTIONS.map((option) => (

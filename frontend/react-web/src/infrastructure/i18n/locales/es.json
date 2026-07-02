@@ -108,6 +108,9 @@
   },
   "settings": {
     "title": "Ajustes",
+    "userManual": "Manual de Usuario",
+    "userManualDescription": "Consulta la guía completa con instrucciones de todas las funcionalidades.",
+    "userManualButton": "Abrir Manual",
     "theme": "Tema",
     "themeLight": "Claro",
     "themeDark": "Oscuro",
