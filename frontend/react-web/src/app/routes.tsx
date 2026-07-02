@@ -4,19 +4,25 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { HeaderBar } from '@/components/layout/HeaderBar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { FAB } from '@/components/shared/FAB';
 import { CalendarDashboard } from '@/pages/CalendarDashboard';
 import { ShiftsPage } from '@/pages/ShiftsPage';
+import { ShiftNewPage } from '@/pages/ShiftNewPage';
+import { ShiftEditPage } from '@/pages/ShiftEditPage';
 import { RemindersPage } from '@/pages/RemindersPage';
+import { ReminderNewPage } from '@/pages/ReminderNewPage';
+import { ReminderEditPage } from '@/pages/ReminderEditPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { PrivacyPolicyPage } from '@/pages/PrivacyPolicyPage';
+import { HelpPage } from '@/pages/HelpPage';
+import { SyncConfigScreen } from '@features/sync/components/SyncConfigScreen';
+import { SyncScreen } from '@features/sync/components/SyncScreen';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <AppLayout
       sidebar={<Sidebar />}
       bottomNav={<BottomNav />}
-      fab={<FAB />}
     >
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         <HeaderBar />
@@ -46,10 +52,42 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/shifts/new',
+    element: (
+      <AppShell>
+        <ShiftNewPage />
+      </AppShell>
+    ),
+  },
+  {
+    path: '/shifts/:id/edit',
+    element: (
+      <AppShell>
+        <ShiftEditPage />
+      </AppShell>
+    ),
+  },
+  {
     path: '/reminders',
     element: (
       <AppShell>
         <RemindersPage />
+      </AppShell>
+    ),
+  },
+  {
+    path: '/reminders/new',
+    element: (
+      <AppShell>
+        <ReminderNewPage />
+      </AppShell>
+    ),
+  },
+  {
+    path: '/reminders/:id/edit',
+    element: (
+      <AppShell>
+        <ReminderEditPage />
       </AppShell>
     ),
   },
@@ -68,5 +106,29 @@ export const router = createBrowserRouter([
         <SettingsPage />
       </AppShell>
     ),
+  },
+  {
+    path: '/sync/config',
+    element: (
+      <AppShell>
+        <SyncConfigScreen />
+      </AppShell>
+    ),
+  },
+  {
+    path: '/sync',
+    element: (
+      <AppShell>
+        <SyncScreen />
+      </AppShell>
+    ),
+  },
+  {
+    path: '/privacy-policy',
+    element: <PrivacyPolicyPage />,
+  },
+  {
+    path: '/help',
+    element: <HelpPage />,
   },
 ]);

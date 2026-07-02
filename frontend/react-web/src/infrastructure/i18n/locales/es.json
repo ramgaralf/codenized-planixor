@@ -1,4 +1,12 @@
 {
+  "common": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "loading": "Cargando",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "retry": "Reintentar"
+  },
   "app": {
     "name": "Planixor",
     "description": "Organiza tu tiempo. Potencia tu día."
@@ -12,7 +20,7 @@
   },
   "views": {
     "day": "Día",
-    "week": "Semana",
+    "week": "Sem",
     "month": "Mes",
     "year": "Año"
   },
@@ -21,7 +29,11 @@
     "weekNumber": "Semana {{week}}, {{year}}",
     "noEvents": "No hay eventos programados para este período",
     "allDay": "Todo el día",
-    "currentTime": "Hora actual"
+    "currentTime": "Hora actual",
+    "yearView": {
+      "label": "Vista anual {{year}}",
+      "navigationError": "Error al navegar. Inténtalo de nuevo."
+    }
   },
   "dates": {
     "monday": "Lunes",
@@ -73,30 +85,377 @@
     "totalHours": "Total de horas",
     "shiftMorning": "Mañana",
     "shiftAfternoon": "Tarde",
-    "shiftNight": "Noche"
+    "shiftNight": "Noche",
+    "timeRangeSelector": "Selector de rango de tiempo",
+    "dateNavigation": "Navegación de fecha del informe",
+    "loading": "Cargando...",
+    "shiftsSection": "Turnos",
+    "remindersSection": "Recordatorios",
+    "emptyState": "Sin datos para mostrar",
+    "today": "Hoy",
+    "table": {
+      "label": "Desglose del informe",
+      "total": "Total",
+      "configured": "Configurado",
+      "difference": "Diferencia"
+    },
+    "annualConfig": {
+      "button": "Config anual",
+      "title": "Horas anuales — {{year}}",
+      "label": "Horas de trabajo configuradas",
+      "rangeError": "El valor debe estar entre 1 y 8.784"
+    }
   },
   "settings": {
     "title": "Ajustes",
+    "userManual": "Manual de Usuario",
+    "userManualDescription": "Consulta la guía completa con instrucciones de todas las funcionalidades.",
+    "userManualButton": "Abrir Manual",
     "theme": "Tema",
     "themeLight": "Claro",
     "themeDark": "Oscuro",
     "themeSystem": "Sistema",
     "language": "Idioma",
     "languageEs": "Español",
-    "languageEn": "English"
+    "languageEn": "English",
+    "notifications": "Notificaciones",
+    "notificationChannelApp": "Aplicación",
+    "notificationChannelSystem": "Sistema",
+    "notificationChannelBoth": "Ambos",
+    "notificationPermissionWarning": "Las notificaciones del sistema están bloqueadas. Habilítalas en la configuración del navegador.",
+    "notificationWebLimitation": "Las notificaciones solo se enviarán mientras la aplicación esté abierta o minimizada en el navegador.",
+    "dangerZone": "Zona de peligro",
+    "resetButton": "Restablecer aplicación",
+    "resetDescription": "Esto eliminará todos los datos de este dispositivo incluyendo eventos, turnos, recordatorios, notificaciones y configuración de sincronización. Esta acción no se puede deshacer.",
+    "resetConfirmation": "¿Estás seguro de que quieres restablecer la aplicación? Todos los datos locales se eliminarán permanentemente."
   },
   "actions": {
     "createEvent": "Crear nuevo evento",
     "signIn": "Iniciar sesión",
     "newEvent": "Nuevo evento"
   },
+  "shift": {
+    "form": {
+      "createTitle": "Nuevo Turno",
+      "editTitle": "Editar Turno",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Nombre del turno",
+      "iconLabel": "Ícono",
+      "searchEmoji": "Buscar emoji...",
+      "colorLabel": "Color de Fondo",
+      "colorHint": "Los colores resaltados son los recomendados para tu tema actual",
+      "startTimeLabel": "Hora de Inicio",
+      "endTimeLabel": "Hora de Fin",
+      "hoursWorkedLabel": "Horas Trabajadas",
+      "submit": "Guardar",
+      "cancel": "Cancelar"
+    },
+    "validation": {
+      "name": {
+        "required": "El nombre es obligatorio",
+        "maxLength": "El nombre debe tener 50 caracteres o menos"
+      },
+      "icon": {
+        "required": "Selecciona un ícono"
+      },
+      "color": {
+        "required": "Selecciona un color de fondo"
+      },
+      "startTime": {
+        "required": "La hora de inicio es obligatoria"
+      },
+      "endTime": {
+        "required": "La hora de fin es obligatoria"
+      },
+      "hoursWorked": {
+        "range": "Las horas trabajadas deben estar entre 0 y 24 horas"
+      }
+    },
+    "error": {
+      "loadFailed": "No se pudieron cargar los turnos"
+    },
+    "empty": "No hay turnos disponibles",
+    "newShift": "Nuevo turno",
+    "deactivated": "Desactivado",
+    "deactivate": {
+      "title": "Desactivar turno",
+      "confirm": "¿Estás seguro de desactivar \"{{name}}\"?"
+    },
+    "delete": {
+      "title": "Eliminar turno",
+      "confirm": "Esta acción es permanente y no se puede deshacer. ¿Eliminar \"{{name}}\"?"
+    },
+    "actions": {
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "activate": "Activar",
+      "delete": "Eliminar"
+    }
+  },
+  "reminder": {
+    "form": {
+      "createTitle": "Nuevo Recordatorio",
+      "editTitle": "Editar Recordatorio",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Nombre del recordatorio",
+      "iconLabel": "Ícono",
+      "colorLabel": "Color de fondo",
+      "colorHint": "Los colores resaltados son los recomendados para tu tema actual",
+      "submit": "Guardar",
+      "cancel": "Cancelar",
+      "selectIcon": "Selecciona un ícono",
+      "changeIcon": "Cambiar ícono",
+      "searchEmoji": "Buscar emoji...",
+      "emojiPickerLabel": "Selector de emojis"
+    },
+    "validation": {
+      "name": {
+        "required": "El nombre es obligatorio",
+        "maxLength": "El nombre debe tener 50 caracteres o menos"
+      },
+      "icon": {
+        "required": "Selecciona un ícono"
+      },
+      "color": {
+        "required": "Selecciona un color de fondo"
+      }
+    },
+    "error": {
+      "loadFailed": "No se pudieron cargar los recordatorios",
+      "saveFailed": "No se pudo guardar el recordatorio"
+    },
+    "empty": "No hay recordatorios disponibles",
+    "newReminder": "Nuevo Recordatorio",
+    "deactivate": {
+      "title": "Desactivar recordatorio",
+      "confirm": "¿Estás seguro de desactivar \"{{name}}\"?"
+    },
+    "delete": {
+      "title": "Eliminar recordatorio",
+      "confirm": "Esta acción es permanente y no se puede deshacer. ¿Eliminar '{{name}}'?"
+    },
+    "badge": {
+      "deactivated": "Desactivado"
+    },
+    "actions": {
+      "edit": "Editar",
+      "deactivate": "Desactivar",
+      "activate": "Activar",
+      "delete": "Eliminar"
+    }
+  },
+  "calendarEvent": {
+    "eventTypeSelector": {
+      "label": "Tipo de Evento",
+      "placeholder": "Selecciona un turno o recordatorio...",
+      "shiftPrefix": "Turno",
+      "reminderPrefix": "Recordatorio",
+      "selectedDetails": "Detalles del tipo de evento seleccionado"
+    },
+    "form": {
+      "createTitle": "Nuevo Evento",
+      "editTitle": "Editar Evento",
+      "startDayLabel": "Día de Inicio",
+      "startDay": "Día de Inicio",
+      "endDayLabel": "Día de Fin",
+      "endDay": "Día de Fin",
+      "totalHoursLabel": "Horas Totales",
+      "totalHours": "Horas Totales",
+      "startTimeLabel": "Hora de Inicio",
+      "startTime": "Hora de Inicio",
+      "endTimeLabel": "Hora de Fin",
+      "endTime": "Hora de Fin",
+      "notesLabel": "Notas (opcional)",
+      "notes": "Notas (opcional)",
+      "notesPlaceholder": "Agregar notas...",
+      "submit": "Guardar",
+      "cancel": "Cancelar",
+      "submitting": "Guardando..."
+    },
+    "validation": {
+      "eventType": {
+        "required": "El tipo de evento es obligatorio"
+      },
+      "eventTypeId": {
+        "required": "La selección del tipo de evento es obligatoria"
+      },
+      "startDay": {
+        "required": "El día de inicio es obligatorio"
+      },
+      "endDay": {
+        "required": "El día de fin es obligatorio"
+      },
+      "totalHours": {
+        "required": "Las horas totales son obligatorias"
+      },
+      "startTime": {
+        "required": "La hora de inicio es obligatoria"
+      },
+      "endTime": {
+        "required": "La hora de fin es obligatoria"
+      },
+      "dayRange": {
+        "invalid": "El día de fin debe ser igual o posterior al día de inicio"
+      },
+      "timeForReminder": {
+        "invalid": "La hora de fin debe ser posterior a la hora de inicio para recordatorios del mismo día"
+      },
+      "crossingMidnight": {
+        "info": "Este turno cruza la medianoche — el día de fin se ha establecido al día siguiente"
+      },
+      "notes": {
+        "maxLength": "Las notas deben tener 250 caracteres o menos"
+      },
+      "oneShiftPerDay": "Solo se permite un turno por día"
+    },
+    "error": {
+      "loadFailed": "No se pudieron cargar los eventos del calendario",
+      "saveFailed": "No se pudo guardar el evento. Inténtalo de nuevo.",
+      "deleteFailed": "No se pudo eliminar el evento. Inténtalo de nuevo."
+    },
+    "delete": {
+      "title": "¿Eliminar '{{name}}'?",
+      "message": "Esta acción es permanente y no se puede deshacer.",
+      "confirm": "Eliminar",
+      "cancel": "Cancelar"
+    },
+    "detail": {
+      "delete": "Eliminar",
+      "deleteAriaLabel": "Eliminar {{name}}"
+    }
+  },
+  "notifications": {
+    "alertConfig": {
+      "label": "Alertas",
+      "atStartTime": "Al inicio",
+      "tenMinutesBefore": "10 minutos antes",
+      "oneHourBefore": "1 hora antes",
+      "oneDayBefore": "1 día antes"
+    },
+    "title": "Notificaciones",
+    "markAllAsRead": "Marcar todas como leídas",
+    "empty": "No hay notificaciones pendientes",
+    "time": {
+      "justNow": "Ahora",
+      "minutesAgo": "hace {{count}} min",
+      "hoursAgo": "hace {{count}} h"
+    },
+    "alertLabel": {
+      "atStart": "Al inicio",
+      "tenMinutes": "10 minutos antes",
+      "oneHour": "1 hora antes",
+      "oneDay": "1 día antes"
+    }
+  },
   "accessibility": {
     "fabLabel": "Crear nuevo evento",
     "previousPeriod": "Período anterior",
     "nextPeriod": "Período siguiente",
+    "previousMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "previousYear": "Año anterior",
+    "nextYear": "Año siguiente",
+    "previousDay": "Día anterior",
+    "nextDay": "Día siguiente",
+    "dayNavigation": "Navegación de día",
+    "monthNavigation": "Navegación de mes",
+    "yearNavigation": "Navegación de año",
     "notifications": "Notificaciones",
     "userMenu": "Menú de usuario",
     "mainNavigation": "Navegación principal",
     "calendarNavigation": "Navegación del calendario"
+  },
+  "sync": {
+    "configTitle": "Configurar Sincronización",
+    "title": "Sincronización",
+    "serverUrl": "URL del Servidor",
+    "apiKey": "Clave API",
+    "username": "Usuario",
+    "lastSynced": "Última sincronización",
+    "never": "Nunca",
+    "status": {
+      "unconfigured": "No configurada",
+      "active": "Activa",
+      "failing": "Error de conexión",
+      "paused": "Pausada"
+    },
+    "actions": {
+      "validate": "Validar",
+      "cancel": "Cancelar",
+      "pause": "Pausar Sincronización",
+      "resume": "Reanudar Sincronización",
+      "configuration": "Configuración"
+    },
+    "errors": {
+      "networkError": "No se pudo conectar. Revisa tu conexión a internet.",
+      "invalidCredentials": "Clave API inválida. Revisa tu configuración.",
+      "notFound": "Servidor no encontrado. Revisa la URL.",
+      "serverError": "Error del servidor. Inténtalo más tarde.",
+      "timeout": "La conexión expiró. Revisa la URL e inténtalo de nuevo."
+    },
+    "validation": {
+      "urlRequired": "La URL del servidor es obligatoria",
+      "apiKeyRequired": "La clave API es obligatoria"
+    },
+    "syncInterval": "Intervalo de sincronización",
+    "config": {
+      "apiBasePath": "Ruta Base de la API",
+      "apiBasePathPlaceholder": "/api",
+      "apiBasePathError": {
+        "tooLong": "La ruta base de la API debe tener 128 caracteres o menos",
+        "invalidChars": "Solo se permiten letras, números, guiones, guiones bajos, puntos y barras"
+      },
+      "syncInterval": "Intervalo de Sincronización",
+      "syncIntervalUnit": "min"
+    },
+    "usernameChange": {
+      "title": "Cambio de Usuario Detectado",
+      "message": "La nueva configuración está vinculada a un usuario diferente. Cambiar de \"{{previousUsername}}\" a \"{{newUsername}}\" eliminará permanentemente todos los datos locales existentes.",
+      "dataCategories": "Los siguientes datos serán eliminados:",
+      "categoryCalendarEvents": "Eventos del calendario",
+      "categoryShifts": "Turnos",
+      "categoryReminders": "Recordatorios",
+      "categoryNotificationRecords": "Registros de notificaciones",
+      "categoryAnnualHoursConfig": "Configuración de horas anuales",
+      "confirm": "Eliminar Datos y Cambiar",
+      "cancel": "Cancelar",
+      "dataResetFailed": "Error al restablecer los datos. Se ha conservado la configuración existente."
+    }
+  },
+  "propagation": {
+    "modal": {
+      "title": "¿Actualizar eventos del calendario?",
+      "description": {
+        "shift": "Modificaste el turno \"{{name}}\". ¿Deseas actualizar todos los eventos del calendario que usan este turno en {{year}}? Los eventos de años anteriores no se verán afectados.",
+        "reminder": "Modificaste el recordatorio \"{{name}}\". ¿Deseas actualizar todos los eventos del calendario que usan este recordatorio en {{year}}? Los eventos de años anteriores no se verán afectados."
+      },
+      "affectedCount": "{{count}} evento(s) serán actualizados",
+      "confirm": "Actualizar",
+      "decline": "Omitir"
+    }
+  },
+  "backup": {
+    "sectionTitle": "Respaldo",
+    "create": "Crear",
+    "restore": "Restaurar",
+    "createCancelled": "Creación de respaldo cancelada.",
+    "permissionRequired": "Se requiere acceso al almacenamiento para realizar esta operación.",
+    "notSupported": "La función de respaldo no es compatible con este entorno.",
+    "createFailed": "No se pudo completar el respaldo. Inténtalo de nuevo.",
+    "fileTooLarge": "El respaldo excede el tamaño máximo permitido (50 MB).",
+    "saveFailed": "No se pudo guardar el archivo de respaldo.",
+    "createSuccess": "Respaldo creado exitosamente.",
+    "restoreCancelled": "Operación de restauración cancelada.",
+    "invalidJson": "El archivo seleccionado no es un respaldo válido (formato inválido).",
+    "invalidSchema": "El archivo seleccionado tiene una estructura de respaldo inválida.",
+    "incompatibleVersion": "Este respaldo fue creado con una versión más reciente. Actualiza la aplicación.",
+    "verificationFailed": "No se pudieron verificar los datos existentes. Inténtalo de nuevo.",
+    "restoreFailed": "La restauración falló. No se modificó ningún dato.",
+    "restoreSuccess": "Respaldo restaurado exitosamente. {{count}} registro(s) restaurado(s).",
+    "restorePartial": "Restauración parcial: {{succeeded}} exitoso(s), {{failed}} fallido(s).",
+    "confirmTitle": "Restaurar Respaldo",
+    "confirmMessage": "Se detectaron datos existentes. Continuar fusionará los datos del respaldo con tus datos actuales.",
+    "confirmCancel": "Cancelar",
+    "confirmContinue": "Continuar"
   }
 }

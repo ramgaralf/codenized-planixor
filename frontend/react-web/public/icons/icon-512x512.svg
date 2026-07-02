@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0" stop-color="#3555FF"/>
+      <stop offset="0.55" stop-color="#5B4DFF"/>
+      <stop offset="1" stop-color="#1FD4E8"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="20%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0" stop-color="#2F55FF"/>
+      <stop offset="0.65" stop-color="#4A6BFF"/>
+      <stop offset="1" stop-color="#2CCEEB"/>
+    </linearGradient>
+    <bx:export>
+      <bx:file format="svg" path="Sin título.svg"/>
+    </bx:export>
+  </defs>
+  <path fill="url(#g2)" d="M 66.762 92.686 C 65.373 65.927 82.504 38.148 112.504 38.148 L 315 40 C 392 40 450 99 450 176 C 450 254 392 312 315 312 L 245 312 C 204 312 170 346 170 387 L 170 432 C 170 462 145 487 115 487 C 85 487 60 462 60 432 L 60 377 C 60 276 134.667 196.241 236.667 196.241 L 315 196.703 C 332 196.703 340.833 187.407 340.833 170.407 C 340.833 153.407 325.056 146.425 308.056 146.425 L 115.746 144.109 C 85.746 144.109 68.151 119.445 66.762 92.686 Z"/>
+  <path fill="url(#g1)" opacity="0.9" d="M315 40 C392 40 450 99 450 176 C450 254 392 312 315 312 H285 C365 312 420 253 420 176 C420 115 378 63 315 40Z"/>
+  <path fill="#FFFFFF" opacity="0.08" d="M 175 55 L 315 55 C 383 55 435 107 435 176 C 435 188 433 199 430 210 C 425 143 373 93 305 93 L 175 93 C 152 93 86.707 75.685 81.707 55.685 C 94.707 54.685 157 55 175 55 Z"/>
+</svg>

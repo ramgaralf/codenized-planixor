@@ -1,5 +1,7 @@
 package com.codenized.planixor.ui.reports
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,30 +10,36 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.codenized.planixor.R
-import com.codenized.planixor.model.CalendarView
+import com.codenized.planixor.domain.model.AnnualHoursConfig
+import com.codenized.planixor.domain.model.TypeAggregate
+import com.codenized.planixor.domain.util.formatDuration
+import com.codenized.planixor.domain.util.formatHoursComparison
+import com.codenized.planixor.ui.components.DateNavigator
+import com.codenized.planixor.ui.components.TimeRangeSelector
 import com.codenized.planixor.ui.theme.PlanixorTheme
-import com.codenized.planixor.ui.theme.PrimaryBlue
 
 /**
  * Reports screen displaying analytics in a single-column vertical layout.
- * Components from top to bottom: TimeRangeSelector, BarChart, DonutChart, UpcomingList.
- * Currently renders in empty state — real data will be loaded in a future issue.
+ * Components from top to bottom: TimeRangeSelector, DateNavigator, Charts/Tables.
+ * Observes ReportsViewModel state for navigation and aggregated report data.
+ * Also renders the AnnualConfigDialog when opened via the top bar config button.
  */
 @Composable
 fun ReportsScreen(
@@ -41,15 +49,30 @@ fun ReportsScreen(
 
     ReportsContent(
         uiState = uiState,
-        onTimeRangeSelected = viewModel::selectTimeRange,
+        onModeChange = viewModel::switchMode,
+        onPrevious = viewModel::navigatePrevious,
+        onNext = viewModel::navigateNext,
+        onToday = viewModel::navigateToday,
+    )
+
+    // Annual config dialog — controlled by ViewModel state
+    AnnualConfigDialog(
+        isOpen = uiState.isConfigDialogOpen,
+        selectedYear = uiState.selectedYear,
+        existingValue = uiState.reportData?.annualConfig?.configuredHours,
+        onSave = viewModel::saveAnnualConfig,
+        onDelete = viewModel::deleteAnnualConfig,
+        onDismiss = viewModel::closeConfigDialog,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReportsContent(
     uiState: ReportsUiState,
-    onTimeRangeSelected: (CalendarView) -> Unit,
+    onModeChange: (ReportMode) -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onToday: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -57,124 +80,327 @@ private fun ReportsContent(
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
-        // Screen title
-        Text(
-            text = stringResource(R.string.reports_title),
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
+        TimeRangeSelector(
+            selectedMode = uiState.mode,
+            onModeChange = onModeChange,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Time Range Selector (Day/Week/Month/Year tabs)
-        TimeRangeSelector(
-            selectedRange = uiState.selectedRange,
-            onRangeSelected = onTimeRangeSelected,
+        DateNavigator(
+            mode = uiState.mode,
+            selectedMonth = uiState.selectedMonth,
+            selectedYear = uiState.selectedYear,
+            onPrevious = onPrevious,
+            onNext = onNext,
+            onToday = onToday,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Error state
-        if (uiState.error != null) {
-            Text(
-                text = uiState.error,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(vertical = 8.dp),
-            )
-        }
-
-        // Bar Chart
-        Text(
-            text = stringResource(R.string.widget_hours_worked),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        ReportsBarChart()
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Donut Chart
-        Text(
-            text = stringResource(R.string.reports_total_hours),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        ReportsDonutChart(totalHours = uiState.totalHours)
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Empty state message when no data
-        if (!uiState.hasData) {
-            Text(
-                text = stringResource(R.string.reports_empty_state),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(vertical = 16.dp),
-            )
-        }
-    }
-}
-
-/**
- * Time range selector using segmented buttons (Day/Week/Month/Year).
- * Follows the same pattern as CalendarScreen's ViewSelector.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TimeRangeSelector(
-    selectedRange: CalendarView,
-    onRangeSelected: (CalendarView) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val views = CalendarView.entries
-
-    SingleChoiceSegmentedButtonRow(
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        views.forEachIndexed { index, view ->
-            SegmentedButton(
-                selected = selectedRange == view,
-                onClick = { onRangeSelected(view) },
-                shape = SegmentedButtonDefaults.itemShape(
-                    index = index,
-                    count = views.size,
-                ),
-                icon = {},
-                colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = PrimaryBlue,
-                    activeContentColor = Color.White,
-                ),
-            ) {
-                Text(text = stringResource(view.labelResId()))
+        when {
+            // Loading state
+            uiState.isLoading || uiState.reportData == null -> {
+                LoadingIndicator()
+            }
+            // Empty state: both shifts and reminders are empty
+            uiState.reportData.shifts.isEmpty() && uiState.reportData.reminders.isEmpty() -> {
+                EmptyStateMessage()
+            }
+            // Data available: render sections conditionally
+            else -> {
+                ReportSections(
+                    reportData = uiState.reportData,
+                    mode = uiState.mode,
+                )
             }
         }
     }
 }
 
-/**
- * Maps each CalendarView to its localized string resource ID for the reports time range.
- */
-private fun CalendarView.labelResId(): Int = when (this) {
-    CalendarView.Day -> R.string.calendar_view_day
-    CalendarView.Week -> R.string.calendar_view_week
-    CalendarView.Month -> R.string.calendar_view_month
-    CalendarView.Year -> R.string.calendar_view_year
+@Composable
+private fun LoadingIndicator(
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun EmptyStateMessage(
+    modifier: Modifier = Modifier,
+) {
+    val emptyMessage = stringResource(R.string.reports_empty_state)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp)
+            .semantics {
+                contentDescription = emptyMessage
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = emptyMessage,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun ReportSections(
+    reportData: ReportData,
+    mode: ReportMode,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        // Shifts section: only if shifts have data
+        if (reportData.shifts.isNotEmpty()) {
+            ShiftsSection(
+                shifts = reportData.shifts,
+                totalShiftMinutes = reportData.totalShiftMinutes,
+                annualConfig = reportData.annualConfig,
+                mode = mode,
+            )
+        }
+
+        // Reminders section: only if reminders have data
+        if (reportData.reminders.isNotEmpty()) {
+            if (reportData.shifts.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+            RemindersSection(
+                reminders = reportData.reminders,
+                totalReminderMinutes = reportData.totalReminderMinutes,
+                mode = mode,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ShiftsSection(
+    shifts: List<TypeAggregate>,
+    totalShiftMinutes: Int,
+    annualConfig: AnnualHoursConfig?,
+    mode: ReportMode,
+    modifier: Modifier = Modifier,
+) {
+    val sortedForBar = shifts // already sorted descending by ViewModel
+    val sortedForTable = when (mode) {
+        ReportMode.MONTH -> shifts.sortedBy { it.name }
+        ReportMode.YEAR -> shifts // descending by hours (already sorted)
+    }
+
+    val useComparison = mode == ReportMode.YEAR && annualConfig != null
+    val configuredMinutes = if (useComparison) annualConfig!!.configuredHours * 60 else 0
+
+    // Build donut data: add "remaining" segment when annual config exists and total < configured
+    val donutData: List<TypeAggregate>
+    val donutTotalMinutes: Int
+
+    if (useComparison && totalShiftMinutes < configuredMinutes) {
+        val remainingMinutes = configuredMinutes - totalShiftMinutes
+        donutData = sortedForBar + TypeAggregate(
+            typeId = "__remaining__",
+            name = "Remaining",
+            icon = "",
+            backgroundColor = "#E5E7EB",
+            totalMinutes = remainingMinutes,
+            eventCount = 0,
+            percentage = 0.0,
+        )
+        donutTotalMinutes = configuredMinutes
+    } else if (useComparison) {
+        donutData = sortedForBar
+        donutTotalMinutes = totalShiftMinutes
+    } else {
+        donutData = sortedForBar
+        donutTotalMinutes = totalShiftMinutes
+    }
+
+    val showDonut = donutTotalMinutes > 0
+    val centerText = if (useComparison) {
+        formatHoursComparison(totalShiftMinutes, annualConfig!!.configuredHours)
+    } else {
+        formatDuration(totalShiftMinutes)
+    }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        SectionHeader(title = stringResource(R.string.reports_shifts_section))
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        HorizontalBarChart(data = sortedForBar)
+
+        if (showDonut) {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ReportDonutChart(
+                data = donutData,
+                totalMinutes = donutTotalMinutes,
+                centerText = centerText,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ReportTable(
+            data = sortedForTable,
+            totalMinutes = totalShiftMinutes,
+            annualConfig = if (mode == ReportMode.YEAR) annualConfig else null,
+        )
+    }
+}
+
+@Composable
+private fun RemindersSection(
+    reminders: List<TypeAggregate>,
+    totalReminderMinutes: Int,
+    mode: ReportMode,
+    modifier: Modifier = Modifier,
+) {
+    val sortedForBar = reminders // already sorted descending by ViewModel
+    val sortedForTable = when (mode) {
+        ReportMode.MONTH -> reminders.sortedByDescending { it.totalMinutes }
+        ReportMode.YEAR -> reminders // descending by hours (already sorted)
+    }
+
+    val showDonut = totalReminderMinutes > 0
+    val centerText = formatDuration(totalReminderMinutes)
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        SectionHeader(title = stringResource(R.string.reports_reminders_section))
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        HorizontalBarChart(data = sortedForBar)
+
+        if (showDonut) {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ReportDonutChart(
+                data = sortedForBar,
+                totalMinutes = totalReminderMinutes,
+                centerText = centerText,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ReportTable(
+            data = sortedForTable,
+            totalMinutes = totalReminderMinutes,
+        )
+    }
+}
+
+@Composable
+private fun SectionHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = modifier,
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun ReportsContentPreview() {
+private fun ReportsContentEmptyPreview() {
     PlanixorTheme {
         ReportsContent(
-            uiState = ReportsUiState(),
-            onTimeRangeSelected = {},
+            uiState = ReportsUiState(
+                reportData = ReportData(
+                    shifts = emptyList(),
+                    reminders = emptyList(),
+                    totalShiftMinutes = 0,
+                    totalReminderMinutes = 0,
+                    annualConfig = null,
+                ),
+            ),
+            onModeChange = {},
+            onPrevious = {},
+            onNext = {},
+            onToday = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ReportsContentLoadingPreview() {
+    PlanixorTheme {
+        ReportsContent(
+            uiState = ReportsUiState(isLoading = true),
+            onModeChange = {},
+            onPrevious = {},
+            onNext = {},
+            onToday = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ReportsContentWithShiftsOnlyPreview() {
+    PlanixorTheme {
+        ReportsContent(
+            uiState = ReportsUiState(
+                reportData = ReportData(
+                    shifts = listOf(
+                        TypeAggregate("1", "Morning", "☀️", "#10B981", 480, 5, 60.0),
+                        TypeAggregate("2", "Night", "🌙", "#2563EB", 320, 3, 40.0),
+                    ),
+                    reminders = emptyList(),
+                    totalShiftMinutes = 800,
+                    totalReminderMinutes = 0,
+                    annualConfig = null,
+                ),
+            ),
+            onModeChange = {},
+            onPrevious = {},
+            onNext = {},
+            onToday = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ReportsContentFullPreview() {
+    PlanixorTheme {
+        ReportsContent(
+            uiState = ReportsUiState(
+                reportData = ReportData(
+                    shifts = listOf(
+                        TypeAggregate("1", "Morning", "☀️", "#10B981", 480, 5, 60.0),
+                        TypeAggregate("2", "Night", "🌙", "#2563EB", 320, 3, 40.0),
+                    ),
+                    reminders = listOf(
+                        TypeAggregate("3", "Exercise", "🏃", "#F97316", 120, 4, 100.0),
+                    ),
+                    totalShiftMinutes = 800,
+                    totalReminderMinutes = 120,
+                    annualConfig = null,
+                ),
+            ),
+            onModeChange = {},
+            onPrevious = {},
+            onNext = {},
+            onToday = {},
         )
     }
 }

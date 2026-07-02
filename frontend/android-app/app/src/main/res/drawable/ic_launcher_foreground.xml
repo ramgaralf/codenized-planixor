@@ -1,12 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
+<vector xmlns:aapt="http://schemas.android.com/aapt"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <!-- Stylized "P" letter matching the Planixor brand logo -->
-    <!-- The letter is centered within the 108x108 adaptive icon safe zone (66x66 inner area) -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M38,32 L38,76 L46,76 L46,60 L56,60 C64.8,60 72,53.6 72,45.5 C72,37.4 64.8,32 56,32 L38,32 Z M46,40 L55,40 C60.5,40 64,42.8 64,46 C64,49.2 60.5,52 55,52 L46,52 L46,40 Z"/>
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <!--
+      Planixor stylized "P" logo for adaptive icon foreground.
+      Adaptive icons use a 108dp canvas but only the center 72dp (66.7%) is guaranteed visible.
+      In a 512 viewport, the safe zone is the center ~341 units (from ~85 to ~427).
+      The original paths span X:60-450 and Y:38-487 (center ~255, ~262).
+      We scale to 0.55 around the content center to fit within the safe zone.
+    -->
+    <group
+        android:scaleX="0.55"
+        android:scaleY="0.55"
+        android:pivotX="255"
+        android:pivotY="262"
+        android:translateX="1"
+        android:translateY="-6">
+        <path android:pathData="M66.76,92.69C65.37,65.93 82.5,38.15 112.5,38.15L315,40C392,40 450,99 450,176C450,254 392,312 315,312L245,312C204,312 170,346 170,387L170,432C170,462 145,487 115,487C85,487 60,462 60,432L60,377C60,276 134.67,196.24 236.67,196.24L315,196.7C332,196.7 340.83,187.41 340.83,170.41C340.83,153.41 325.06,146.43 308.06,146.43L115.75,144.11C85.75,144.11 68.15,119.44 66.76,92.69Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="138"
+                    android:startY="38.15"
+                    android:endX="450"
+                    android:endY="487">
+                    <item android:offset="0" android:color="#FF2F55FF"/>
+                    <item android:offset="0.65" android:color="#FF4A6BFF"/>
+                    <item android:offset="1" android:color="#FF2CCEEB"/>
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:fillAlpha="0.9"
+            android:strokeAlpha="0.9"
+            android:pathData="M315,40C392,40 450,99 450,176C450,254 392,312 315,312H285C365,312 420,253 420,176C420,115 378,63 315,40Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="285"
+                    android:startY="40"
+                    android:endX="450"
+                    android:endY="312">
+                    <item android:offset="0" android:color="#FF3555FF"/>
+                    <item android:offset="0.55" android:color="#FF5B4DFF"/>
+                    <item android:offset="1" android:color="#FF1FD4E8"/>
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:fillAlpha="0.08"
+            android:strokeAlpha="0.08"
+            android:fillColor="#FFFFFF"
+            android:pathData="M175,55L315,55C383,55 435,107 435,176C435,188 433,199 430,210C425,143 373,93 305,93L175,93C152,93 86.71,75.68 81.71,55.69C94.71,54.69 157,55 175,55Z"/>
+    </group>
 </vector>

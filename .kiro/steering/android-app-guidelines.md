@@ -244,6 +244,66 @@ Every screen must handle:
 | Drawables | snake_case with prefix | `ic_calendar`, `bg_shift_card` |
 | Dimensions | snake_case with prefix | `margin_medium`, `text_size_title` |
 
+## Navigation patterns for sub-screens (forms, detail views)
+
+- Sub-screens (e.g., ShiftFormScreen) do NOT have their own Scaffold/TopAppBar
+- The global AppNavigation Scaffold handles the top bar for ALL screens
+- For sub-screens: the global top bar shows a back arrow (← ) + screen title (e.g., "Nuevo turno")
+- The `isSubScreen` flag in AppNavigation determines when to show the back arrow vs the brand bar
+- Bottom nav selection uses `bottomNavRoute` which maps sub-routes to their parent (e.g., `shifts/new` → `shifts`)
+- Page title uses `startsWith` matching for sub-routes (e.g., `currentRoute?.startsWith("shifts")` → "Turnos")
+
+## Touch targets (accessibility)
+
+- Action buttons (edit, delete, toggle) must be minimum 44×44dp
+- Icons inside action buttons: 20dp
+- Gap between action buttons: 8dp minimum
+- Color indicator strips on cards: 8dp wide
+
+---
+
+## Storage Access Framework (SAF) file picker
+
+When using `ActivityResultContracts.CreateDocument` or `ActivityResultContracts.OpenDocument` for file I/O:
+
+### MIME type: always use `"*/*"`
+
+```kotlin
+// ✅ Works across all file managers and custom extensions
+ActivityResultContracts.CreateDocument("*/*")
+openDocumentLauncher.launch(arrayOf("*/*"))
+
+// ❌ Fails on many file managers for non-standard extensions (.bak, .dat, etc.)
+ActivityResultContracts.CreateDocument("application/octet-stream")
+openDocumentLauncher.launch(arrayOf("application/octet-stream"))
+```
+
+**Why:** Files with custom extensions (`.bak`, `.dat`, etc.) are not consistently mapped to `application/octet-stream` across Android file managers. Using a specific MIME type causes:
+- **CreateDocument**: some file managers fail to return to the app after the file is created
+- **OpenDocument**: files appear greyed out / unselectable in the picker
+
+Using `"*/*"` ensures the picker works reliably regardless of the file extension or the user's default file manager.
+
+### Composable integration pattern
+
+Register SAF launchers inside the composable using `rememberLauncherForActivityResult`. Use a `LaunchedEffect` on a ViewModel state flag to trigger the picker after async preparation (e.g., serialization) completes:
+
+```kotlin
+val createDocumentLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.CreateDocument("*/*"),
+) { uri ->
+    if (uri != null) viewModel.onSaveLocationSelected(uri, context)
+    else viewModel.onSaveCancelled()
+}
+
+LaunchedEffect(uiState.readyToSave) {
+    if (uiState.readyToSave) {
+        viewModel.onSavePickerLaunched() // reset flag to prevent re-trigger
+        createDocumentLauncher.launch(filename)
+    }
+}
+```
+
 ---
 
 ## Dependency injection

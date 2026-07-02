@@ -12,29 +12,62 @@
     <string name="nav_settings">Ajustes</string>
 
     <!-- Calendar Views -->
-    <string name="calendar_view_day">Día</string>
-    <string name="calendar_view_week">Semana</string>
-    <string name="calendar_view_month">Mes</string>
-    <string name="calendar_view_year">Año</string>
+    <string name="calendar_view_day">D</string>
+    <string name="calendar_view_week">S</string>
+    <string name="calendar_view_month">M</string>
+    <string name="calendar_view_year">A</string>
 
     <!-- Calendar Navigation -->
     <string name="calendar_today">Hoy</string>
-    <string name="calendar_week_label">Semana</string>
+    <string name="calendar_week_label">Sem</string>
     <string name="calendar_week_format">Semana %1$d, %2$d</string>
     <string name="calendar_empty_state">No hay eventos programados para este período</string>
 
+    <!-- Date Navigator Accessibility -->
+    <string name="content_description_previous_day">Día anterior</string>
+    <string name="content_description_next_day">Día siguiente</string>
+    <string name="content_description_previous_month">Mes anterior</string>
+    <string name="content_description_next_month">Mes siguiente</string>
+    <string name="content_description_previous_year">Año anterior</string>
+    <string name="content_description_next_year">Año siguiente</string>
+    <string name="content_description_previous_week">Semana anterior</string>
+    <string name="content_description_next_week">Semana siguiente</string>
+
     <!-- Reports -->
     <string name="reports_title">Informes</string>
-    <string name="reports_empty_state">No hay registros disponibles para el período seleccionado</string>
+    <string name="reports_empty_state">Sin datos para mostrar</string>
     <string name="reports_total_hours">Total de horas</string>
+    <string name="reports_total_label">Total</string>
+    <string name="reports_configured_hours_label">Horas configuradas</string>
+    <string name="reports_difference_label">Diferencia</string>
+    <string name="reports_shifts_section">Turnos</string>
+    <string name="reports_reminders_section">Recordatorios</string>
     <string name="reports_hours_per_day">Horas por día</string>
     <string name="reports_hours_per_week">Horas por semana</string>
     <string name="reports_hours_per_month">Horas por mes</string>
     <string name="reports_shift_morning">Mañana</string>
     <string name="reports_shift_afternoon">Tarde</string>
     <string name="reports_shift_night">Noche</string>
+    <string name="reports_mode_month">Mes</string>
+    <string name="reports_mode_year">Año</string>
+    <string name="reports_navigate_previous">Período anterior</string>
+    <string name="reports_navigate_next">Período siguiente</string>
+
+    <!-- Annual Config Dialog -->
+    <string name="annual_config_title">Configurar horas anuales</string>
+    <string name="annual_config_subtitle">Año %1$d</string>
+    <string name="annual_config_input_label">Horas anuales</string>
+    <string name="annual_config_input_placeholder">1800</string>
+    <string name="annual_config_range_error">El valor debe estar entre 1 y 8.784</string>
+    <string name="annual_config_save">Guardar</string>
+    <string name="annual_config_cancel">Cancelar</string>
+    <string name="annual_config_button">Configurar horas anuales</string>
 
     <!-- Settings -->
+    <!-- User Manual -->
+    <string name="settings_user_manual_title">Manual de Usuario</string>
+    <string name="settings_user_manual_description">Consulta la guía completa con instrucciones de todas las funcionalidades.</string>
+    <string name="settings_user_manual_button">Abrir Manual</string>
     <string name="settings_title">Ajustes</string>
     <string name="settings_theme_title">Tema</string>
     <string name="settings_theme_light">Claro</string>
@@ -43,6 +76,11 @@
     <string name="settings_language_title">Idioma</string>
     <string name="settings_language_spanish">Español</string>
     <string name="settings_language_english">English</string>
+    <string name="settings_notifications_title">Notificaciones</string>
+    <string name="settings_notifications_channel_app">App</string>
+    <string name="settings_notifications_channel_system">Sistema</string>
+    <string name="settings_notifications_channel_both">Ambas</string>
+    <string name="settings_notifications_permission_warning">Las notificaciones del sistema están bloqueadas. Actívalas en los ajustes del dispositivo.</string>
 
     <!-- Actions -->
     <string name="action_create_event">Crear evento</string>
@@ -57,6 +95,7 @@
     <string name="content_description_navigate_next">Navegar al período siguiente</string>
     <string name="content_description_notifications">Notificaciones</string>
     <string name="content_description_user_menu">Menú de usuario</string>
+    <string name="content_description_sync_status">Estado de sincronización</string>
 
     <!-- Widgets -->
     <string name="widget_hours_worked">Horas trabajadas</string>
@@ -64,10 +103,270 @@
     <string name="widget_upcoming">Próximos</string>
     <string name="widget_summary">Resumen</string>
 
+    <!-- Shift Card -->
+    <string name="shift_card_deactivated">Desactivado</string>
+    <string name="shift_card_edit">Editar turno</string>
+    <string name="shift_card_toggle_active">Activar o desactivar turno</string>
+    <string name="shift_card_delete">Eliminar turno</string>
+    <string name="shift_card_hours_worked_format">%1$dh %2$dm</string>
+
+    <!-- Shifts Screen -->
+    <string name="shifts_empty">No hay turnos disponibles</string>
+    <string name="shifts_error_load">No se pudieron cargar los turnos</string>
+    <string name="shifts_new_shift">Nuevo turno</string>
+    <string name="shifts_deactivate_confirm_title">¿Desactivar este turno?</string>
+    <string name="shifts_deactivate_confirm_text">¿Estás seguro de desactivar \"%1$s\"?</string>
+    <string name="shifts_delete_confirm_title">¿Eliminar este turno?</string>
+    <string name="shifts_delete_confirm_text">Esta acción es permanente y no se puede deshacer. ¿Eliminar \"%1$s\"?</string>
+    <string name="shifts_confirm">Confirmar</string>
+    <string name="shifts_cancel">Cancelar</string>
+
+    <!-- Shift Form -->
+    <string name="shift_form_title_create">Nuevo turno</string>
+    <string name="shift_form_title_edit">Editar turno</string>
+    <string name="shift_form_field_name">Nombre</string>
+    <string name="shift_form_field_icon">Ícono</string>
+    <string name="shift_form_field_color">Color de fondo</string>
+    <string name="shift_form_field_start_time">Hora de inicio</string>
+    <string name="shift_form_field_end_time">Hora de fin</string>
+    <string name="shift_form_field_hours_worked">Horas trabajadas</string>
+    <string name="shift_form_select_icon">Seleccionar ícono</string>
+    <string name="shift_form_select_time">Seleccionar hora</string>
+    <string name="shift_form_hours_worked_format">%1$dh %2$dm</string>
+    <string name="shift_form_action_save">Guardar</string>
+    <string name="shift_form_action_cancel">Cancelar</string>
+    <string name="shift_form_not_set">No establecido</string>
+    <string name="shift_form_color_hint">Los colores resaltados son los recomendados para tu tema actual</string>
+
+    <!-- Shift Form Validation -->
+    <string name="shift_validation_name_required">El nombre es obligatorio</string>
+    <string name="shift_validation_name_max_length">El nombre debe tener 50 caracteres o menos</string>
+    <string name="shift_validation_icon_required">Selecciona un ícono</string>
+    <string name="shift_validation_color_required">Selecciona un color de fondo</string>
+    <string name="shift_validation_start_time_required">La hora de inicio es obligatoria</string>
+    <string name="shift_validation_end_time_required">La hora de fin es obligatoria</string>
+    <string name="shift_validation_hours_worked_range">Las horas trabajadas deben estar entre 0 y 24 horas</string>
+
+    <!-- Reminders Screen -->
+    <string name="reminders_empty">No hay recordatorios disponibles</string>
+    <string name="reminders_error_load">No se pudieron cargar los recordatorios</string>
+    <string name="reminders_new_reminder">Nuevo recordatorio</string>
+    <string name="reminders_deactivate_confirm_title">¿Desactivar este recordatorio?</string>
+    <string name="reminders_deactivate_confirm_text">¿Estás seguro de desactivar \"%1$s\"?</string>
+    <string name="reminders_delete_confirm_title">¿Eliminar este recordatorio?</string>
+    <string name="reminders_delete_confirm_text">Esta acción es permanente y no se puede deshacer. ¿Eliminar \"%1$s\"?</string>
+    <string name="reminders_confirm">Confirmar</string>
+    <string name="reminders_cancel">Cancelar</string>
+
+    <!-- Reminder Card -->
+    <string name="reminder_card_deactivated">Desactivado</string>
+    <string name="reminder_card_edit">Editar recordatorio</string>
+    <string name="reminder_card_toggle_active">Activar o desactivar recordatorio</string>
+    <string name="reminder_card_delete">Eliminar recordatorio</string>
+
+    <!-- Reminders Screen -->
+    <string name="reminder_screen_title">Recordatorios</string>
+    <string name="reminder_empty">No hay recordatorios disponibles</string>
+    <string name="reminder_error_load">No se pudieron cargar los recordatorios</string>
+    <string name="reminder_new_reminder">Nuevo recordatorio</string>
+    <string name="reminder_deactivate_confirm_title">¿Desactivar este recordatorio?</string>
+    <string name="reminder_deactivate_confirm_text">¿Estás seguro de desactivar \"%1$s\"?</string>
+    <string name="reminder_delete_confirm_title">¿Eliminar este recordatorio?</string>
+    <string name="reminder_delete_confirm_text">Esta acción es permanente. ¿Eliminar \"%1$s\"?</string>
+    <string name="reminder_confirm">Confirmar</string>
+    <string name="reminder_cancel">Cancelar</string>
+
+    <!-- Reminder Form -->
+    <string name="reminder_form_title_create">Nuevo recordatorio</string>
+    <string name="reminder_form_title_edit">Editar recordatorio</string>
+    <string name="reminder_form_name_label">Nombre</string>
+    <string name="reminder_form_name_placeholder">Nombre del recordatorio</string>
+    <string name="reminder_form_icon_label">Ícono</string>
+    <string name="reminder_form_color_label">Color de fondo</string>
+    <string name="reminder_form_save">Guardar</string>
+    <string name="reminder_form_cancel">Cancelar</string>
+    <string name="reminder_form_select_icon">Seleccionar ícono</string>
+    <string name="reminder_form_color_hint">Los colores resaltados son los recomendados para tu tema actual</string>
+    <string name="reminder_form_error_save">No se pudo guardar el recordatorio</string>
+
+    <!-- Reminder Form Validation -->
+    <string name="reminder_validation_name_required">El nombre es obligatorio</string>
+    <string name="reminder_validation_name_max_length">El nombre debe tener 50 caracteres o menos</string>
+    <string name="reminder_validation_icon_required">Selecciona un ícono</string>
+    <string name="reminder_validation_color_required">Selecciona un color de fondo</string>
+
+    <!-- Color Picker Dialog -->
+    <string name="color_picker_title">Seleccionar color</string>
+    <string name="color_picker_hint">Los colores resaltados son los recomendados para tu tema actual</string>
+    <string name="color_picker_dismiss">Cerrar</string>
+
+    <!-- Emoji Picker Dialog -->
+    <string name="emoji_picker_title">Seleccionar ícono</string>
+    <string name="emoji_picker_dismiss">Cerrar</string>
+
+    <!-- Calendar Event Form -->
+    <string name="event_form_title_create">Nuevo evento</string>
+    <string name="event_form_title_edit">Editar evento</string>
+    <string name="event_form_field_event_type">Tipo de evento</string>
+    <string name="event_form_field_day">Día</string>
+    <string name="event_form_field_start_day">Día de inicio</string>
+    <string name="event_form_field_end_day">Día de fin</string>
+    <string name="event_form_field_start_time">Hora de inicio</string>
+    <string name="event_form_field_end_time">Hora de fin</string>
+    <string name="event_form_field_total_hours">Duración total</string>
+    <string name="event_form_field_notes">Notas</string>
+    <string name="event_form_notes_counter">%1$d / 250</string>
+    <string name="event_form_action_save">Guardar</string>
+    <string name="event_form_action_cancel">Cancelar</string>
+    <string name="event_form_action_delete">Eliminar</string>
+    <string name="event_form_select_type">Seleccionar tipo</string>
+    <string name="event_form_select_date">Seleccionar fecha</string>
+    <string name="event_form_select_time">Seleccionar hora</string>
+    <string name="event_form_not_set">No establecido</string>
+    <string name="event_form_type_shift">Turno</string>
+    <string name="event_form_type_reminder">Recordatorio</string>
+    <string name="event_form_time_read_only">Tiempo definido por el turno</string>
+
+    <!-- Calendar Event Validation -->
+    <string name="event_validation_type_required">Selecciona un tipo de evento</string>
+    <string name="event_validation_day_required">El día es obligatorio</string>
+    <string name="event_validation_start_day_required">El día de inicio es obligatorio</string>
+    <string name="event_validation_end_day_required">El día de fin es obligatorio</string>
+    <string name="event_validation_start_time_required">La hora de inicio es obligatoria</string>
+    <string name="event_validation_end_time_required">La hora de fin es obligatoria</string>
+    <string name="event_validation_end_before_start">La hora de fin debe ser posterior a la hora de inicio</string>
+    <string name="event_validation_invalid_day_range">El día de fin debe ser igual o posterior al día de inicio</string>
+    <string name="event_validation_invalid_time_for_reminder">La hora de fin debe ser posterior a la hora de inicio en el mismo día</string>
+    <string name="event_validation_notes_max_length">Las notas deben tener 250 caracteres o menos</string>
+    <string name="event_validation_one_shift_per_day">Solo se permite un turno por día</string>
+
+    <!-- Calendar Event Detail -->
+    <string name="event_detail_title">Detalle del evento</string>
+    <string name="event_detail_delete_title">¿Eliminar este evento?</string>
+    <string name="event_detail_delete_text">Esta acción es permanente y no se puede deshacer. ¿Eliminar \"%1$s\"?</string>
+    <string name="event_detail_confirm">Confirmar</string>
+    <string name="event_detail_cancel">Cancelar</string>
+    <string name="event_detail_error_delete">No se pudo eliminar el evento</string>
+    <string name="event_detail_error_save">No se pudo guardar el evento</string>
+
+    <!-- Calendar Event Card -->
+    <string name="event_card_duration_format">%1$s – %2$s · %3$s</string>
+
     <!-- Empty States -->
     <string name="empty_no_data">Sin datos disponibles</string>
     <string name="empty_no_events">No hay eventos</string>
     <string name="empty_no_shifts">No hay turnos</string>
     <string name="empty_no_upcoming">No hay eventos próximos</string>
     <string name="empty_no_records">No hay registros</string>
+
+    <!-- Notification Channel -->
+    <string name="notification_channel_name">Planixor Alerts</string>
+
+    <!-- Notification Alert Config -->
+    <string name="alert_config_section_title">Alertas</string>
+    <string name="notification_alert_at_start">Al inicio</string>
+    <string name="notification_alert_10_min">10 minutos antes</string>
+    <string name="notification_alert_1_hour">1 hora antes</string>
+    <string name="notification_alert_1_day">1 día antes</string>
+
+    <!-- Notifications Screen -->
+    <string name="notifications_title">Notificaciones</string>
+    <string name="notifications_empty">No hay notificaciones pendientes</string>
+    <string name="notifications_mark_all_read">Marcar todas como leídas</string>
+    <string name="notifications_time_just_now">Ahora</string>
+    <string name="notifications_time_minutes_ago">Hace %1$d min</string>
+    <string name="notifications_time_hours_ago">Hace %1$d h</string>
+    <string name="notifications_badge_overflow">99+</string>
+
+    <!-- Notification Remaining Time -->
+    <string name="notification_remaining_now">Ahora</string>
+    <string name="notification_remaining_minutes">En %1$d minutos</string>
+    <string name="notification_remaining_1_hour">En 1 hora</string>
+    <string name="notification_remaining_1_day">En 1 día</string>
+
+    <!-- Sync Configuration -->
+    <string name="sync_config_title">Configurar Sincronización</string>
+    <string name="sync_title">Sincronización</string>
+    <string name="sync_server_url">URL del Servidor</string>
+    <string name="sync_api_key">Clave API</string>
+    <string name="sync_username">Usuario</string>
+    <string name="sync_last_synced">Última sincronización</string>
+    <string name="sync_never">Nunca</string>
+    <string name="sync_status_unconfigured">No configurada</string>
+    <string name="sync_status_active">Activa</string>
+    <string name="sync_status_failing">Error de conexión</string>
+    <string name="sync_status_paused">Pausada</string>
+    <string name="sync_action_validate">Validar</string>
+    <string name="sync_action_cancel">Cancelar</string>
+    <string name="sync_action_pause">Pausar Sincronización</string>
+    <string name="sync_action_resume">Reanudar Sincronización</string>
+    <string name="sync_action_configuration">Configuración</string>
+    <string name="sync_error_network">No se pudo conectar. Revisa tu conexión a internet.</string>
+    <string name="sync_error_invalid_credentials">Clave API inválida. Revisa tu configuración.</string>
+    <string name="sync_error_not_found">Servidor no encontrado. Revisa la URL.</string>
+    <string name="sync_error_server">Error del servidor. Inténtalo más tarde.</string>
+    <string name="sync_error_timeout">La conexión expiró. Revisa la URL e inténtalo de nuevo.</string>
+    <string name="sync_validation_url_required">La URL del servidor es obligatoria</string>
+    <string name="sync_validation_api_key_required">La clave API es obligatoria</string>
+    <string name="sync_api_base_path">Ruta Base de API</string>
+    <string name="sync_api_base_path_placeholder">/api</string>
+    <string name="sync_api_base_path_error">La ruta solo puede contener letras, números, guiones, guiones bajos, puntos y barras</string>
+    <string name="sync_config_api_base_path">Ruta Base de API</string>
+    <string name="sync_config_api_base_path_placeholder">/api</string>
+    <string name="sync_config_api_base_path_error_too_long">La ruta base de API debe tener 128 caracteres o menos</string>
+    <string name="sync_config_api_base_path_error_invalid_chars">Solo se permiten letras, números, guiones, guiones bajos, puntos y barras</string>
+    <string name="sync_config_sync_interval">Intervalo de Sincronización</string>
+    <string name="sync_config_sync_interval_unit">%1$d min</string>
+    <string name="sync_username_change_title">Cambio de Usuario Detectado</string>
+    <string name="sync_username_change_message">La nueva configuración está vinculada a un usuario diferente. Cambiar de \"%1$s\" a \"%2$s\" eliminará permanentemente todos los datos locales existentes.</string>
+    <string name="sync_username_change_data_categories">Los siguientes datos serán eliminados:</string>
+    <string name="sync_username_change_category_calendar_events">Eventos del calendario</string>
+    <string name="sync_username_change_category_shifts">Turnos</string>
+    <string name="sync_username_change_category_reminders">Recordatorios</string>
+    <string name="sync_username_change_category_notification_records">Registros de notificaciones</string>
+    <string name="sync_username_change_category_annual_hours">Configuración de horas anuales</string>
+    <string name="sync_username_change_confirm">Eliminar Datos y Cambiar</string>
+    <string name="sync_username_change_cancel">Cancelar</string>
+    <string name="sync_username_change_data_reset_failed">Error al restablecer los datos. Se ha mantenido la configuración existente.</string>
+    <string name="sync_interval_display">Intervalo de sincronización</string>
+
+    <!-- Settings Reset -->
+    <string name="settings_danger_zone_title">Zona de peligro</string>
+    <string name="settings_reset_button">Restablecer aplicación</string>
+    <string name="settings_reset_description">Esto eliminará todos los datos de este dispositivo incluyendo eventos, turnos, recordatorios, notificaciones y configuración de sincronización.</string>
+    <string name="settings_reset_confirmation">¿Estás seguro de que quieres restablecer la aplicación? Todos los datos locales se eliminarán permanentemente.</string>
+    <string name="common_confirm">Confirmar</string>
+    <string name="common_cancel">Cancelar</string>
+
+    <!-- Backup -->
+    <string name="backup_section_title">Respaldo</string>
+    <string name="backup_create">Crear</string>
+    <string name="backup_restore">Restaurar</string>
+    <string name="backup_create_cancelled">Creación de respaldo cancelada.</string>
+    <string name="backup_permission_required">Se requiere acceso al almacenamiento para realizar esta operación.</string>
+    <string name="backup_not_supported">La función de respaldo no es compatible con este entorno.</string>
+    <string name="backup_create_failed">No se pudo completar el respaldo. Inténtalo de nuevo.</string>
+    <string name="backup_file_too_large">El respaldo excede el tamaño máximo permitido (50 MB).</string>
+    <string name="backup_save_failed">No se pudo guardar el archivo de respaldo.</string>
+    <string name="backup_create_success">Respaldo creado exitosamente.</string>
+    <string name="backup_restore_cancelled">Operación de restauración cancelada.</string>
+    <string name="backup_invalid_json">El archivo seleccionado no es un respaldo válido (formato inválido).</string>
+    <string name="backup_invalid_schema">El archivo seleccionado tiene una estructura de respaldo inválida.</string>
+    <string name="backup_incompatible_version">Este respaldo fue creado con una versión más reciente. Actualiza la aplicación.</string>
+    <string name="backup_verification_failed">No se pudieron verificar los datos existentes. Inténtalo de nuevo.</string>
+    <string name="backup_restore_failed">La restauración falló. No se modificó ningún dato.</string>
+    <string name="backup_restore_success">Respaldo restaurado exitosamente. %d registro(s) restaurado(s).</string>
+    <string name="backup_restore_partial">Restauración parcial: %1$s exitoso(s), %2$s fallido(s).</string>
+    <string name="backup_confirm_title">Restaurar Respaldo</string>
+    <string name="backup_confirm_message">Se detectaron datos existentes. Continuar fusionará los datos del respaldo con tus datos actuales.</string>
+    <string name="backup_confirm_cancel">Cancelar</string>
+    <string name="backup_confirm_continue">Continuar</string>
+
+    <!-- Propagation Dialog -->
+    <string name="propagation_dialog_title">¿Actualizar eventos del calendario?</string>
+    <string name="propagation_dialog_description_shift">Modificaste el turno \"%1$s\". ¿Deseas actualizar todos los eventos del calendario que usan este turno en %2$d? Los eventos de años anteriores no se verán afectados.</string>
+    <string name="propagation_dialog_description_reminder">Modificaste el recordatorio \"%1$s\". ¿Deseas actualizar todos los eventos del calendario que usan este recordatorio en %2$d? Los eventos de años anteriores no se verán afectados.</string>
+    <string name="propagation_dialog_affected_count">%1$d evento(s) serán actualizados</string>
+    <string name="propagation_dialog_confirm">Actualizar</string>
+    <string name="propagation_dialog_decline">Omitir</string>
 </resources>

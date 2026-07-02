@@ -4,8 +4,34 @@
 
 namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 
+using Codenized.Planixor.Core.Entities;
+using Microsoft.EntityFrameworkCore;
+
 /// <summary>Interface for the application context.</summary>
 public interface IApplicationContext
 {
-    // DbSet properties added here as entities are created
+    /// <summary>
+    /// Gets shifts.
+    /// </summary>
+    DbSet<Shift> Shifts { get; }
+
+    /// <summary>
+    /// Gets reminders.
+    /// </summary>
+    DbSet<Reminder> Reminders { get; }
+
+    /// <summary>
+    /// Gets calendar events.
+    /// </summary>
+    DbSet<CalendarEvent> CalendarEvents { get; }
+
+    /// <summary>
+    /// Gets annual hours configs.
+    /// </summary>
+    DbSet<AnnualHoursConfig> AnnualHoursConfigs { get; }
+
+    /// <summary>
+    /// Gets notification records.
+    /// </summary>
+    DbSet<NotificationRecord> NotificationRecords { get; }
 }

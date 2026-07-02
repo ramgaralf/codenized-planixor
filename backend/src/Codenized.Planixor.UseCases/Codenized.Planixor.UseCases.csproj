@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Codenized.Planixor.Core\Codenized.Planixor.Core.csproj" />
@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Codenized.CleanArchitecture.Abstractions" Version="10.*" />
+    <PackageReference Include="Codenized.CleanArchitecture.Exceptions.Abstractions" Version="10.*" />
     <PackageReference Include="Codenized.CleanArchitecture.Persistence.Abstractions" Version="10.*" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">

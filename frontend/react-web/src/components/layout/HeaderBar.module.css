@@ -32,15 +32,8 @@
   width: 28px;
   height: 28px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
-  color: #ffffff;
-  font-family: var(--font-family);
-  font-size: 16px;
-  font-weight: var(--font-weight-bold);
+  object-fit: contain;
 }
 
 .mobileLogoText {
@@ -105,33 +98,14 @@
   outline-offset: 2px;
 }
 
-.userAvatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-surface);
-  color: var(--color-text-secondary);
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.userAvatar:hover {
-  background-color: var(--color-border);
-}
-
-.userAvatar:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
 /* Mobile: <768px */
 @media (max-width: 767px) {
   .mobileLogo {
     display: flex;
+  }
+
+  .mobileLogoText {
+    display: none;
   }
 
   .pageTitle {

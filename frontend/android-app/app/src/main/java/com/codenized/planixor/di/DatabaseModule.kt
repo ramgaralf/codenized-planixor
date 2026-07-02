@@ -2,8 +2,12 @@ package com.codenized.planixor.di
 
 import android.content.Context
 import androidx.room.Room
+import com.codenized.planixor.data.local.AnnualHoursConfigDao
 import com.codenized.planixor.data.local.CalendarEventDao
+import com.codenized.planixor.data.local.NotificationRecordDao
 import com.codenized.planixor.data.local.PlanixorDatabase
+import com.codenized.planixor.data.local.ReminderDao
+import com.codenized.planixor.data.local.ShiftDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,12 +31,39 @@ object DatabaseModule {
             context,
             PlanixorDatabase::class.java,
             "planixor_database",
-        ).build()
+        )
+            .addMigrations(PlanixorDatabase.MIGRATION_3_4, PlanixorDatabase.MIGRATION_4_5, PlanixorDatabase.MIGRATION_5_6, PlanixorDatabase.MIGRATION_6_7)
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
     @Singleton
     fun provideCalendarEventDao(database: PlanixorDatabase): CalendarEventDao {
         return database.calendarEventDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideShiftDao(database: PlanixorDatabase): ShiftDao {
+        return database.shiftDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideReminderDao(database: PlanixorDatabase): ReminderDao {
+        return database.reminderDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnnualHoursConfigDao(database: PlanixorDatabase): AnnualHoursConfigDao {
+        return database.annualHoursConfigDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationRecordDao(database: PlanixorDatabase): NotificationRecordDao {
+        return database.notificationRecordDao()
     }
 }

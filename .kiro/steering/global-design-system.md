@@ -76,6 +76,27 @@ Rules:
 | Meetings | Red | `#EF4444` |
 | Personal | Teal | `#0B86D4` |
 
+### Expanded Shift Background Palette
+
+The predefined palette for shift backgrounds consists of 9 color families × 5 intensity shades:
+
+| Family | Shades (light → dark) |
+|---|---|
+| Red | #FCA5A5, #F87171, #EF4444, #DC2626, #991B1B |
+| Orange | #FDBA74, #FB923C, #F97316, #EA580C, #9A3412 |
+| Amber | #FCD34D, #FBBF24, #F59E0B, #D97706, #92400E |
+| Green | #6EE7B7, #34D399, #10B981, #059669, #065F46 |
+| Teal | #67E8F9, #22D3EE, #0B86D4, #0E7490, #155E75 |
+| Blue | #93C5FD, #60A5FA, #2563EB, #1D4ED8, #1E3A8A |
+| Purple | #C4B5FD, #A78BFA, #7C3AED, #6D28D9, #4C1D95 |
+| Pink | #F9A8D4, #F472B6, #EC4899, #DB2777, #9D174D |
+| Gray | #D1D5DB, #9CA3AF, #6B7280, #4B5563, #1F2937 |
+
+**Theme-aware recommendations:**
+- Light mode: recommend indices 2–4 (medium to dark shades) — better contrast on white/light backgrounds
+- Dark mode: recommend indices 0–2 (light to medium shades) — better contrast on dark backgrounds
+- Non-recommended shades display at 50% opacity but remain selectable
+
 ---
 
 ## Typography
@@ -256,12 +277,15 @@ Dark mode: reduce shadow opacity by 50%, rely more on surface color differentiat
 - **Calendar views do NOT show empty state text** — an empty grid/timeline is sufficient; no "No events" message overlaid
 - **Android bottom nav**: icons only, no text labels at all (removed `alwaysShowLabel` entirely)
 - **Mobile web bottom nav**: icons only, no text labels
-- **Android top bar**: Logo "P" (gradient) + "Planixor · {PageTitle}" format left; "+" button (only on Calendar) + notifications bell + user avatar right (mirrors web mobile layout)
+- **Android top bar**: Logo "P" (gradient) + "Planixor · {PageTitle}" format left; "+" button (Calendar, Shifts, Reminders pages only) + notifications bell + user avatar right (mirrors web mobile layout)
 - **Android segmented buttons** (ViewSelector + Reports TimeRangeSelector): no checkmark icon — use `icon = {}` to hide the default selected check indicator
 - **Top bar is global** (defined at route/AppShell level, not per-page): shows page title on the left, actions on the right
 - **Page titles only in top bar** — individual pages (ReportsPage, SettingsPage, etc.) do NOT render their own title heading
-- **"New Event" button**: only visible when the user is on the Calendar page (both web and Android top bar)
+- **"New Event" button**: only visible when the user is on the Calendar page (both web and Android top bar). Similarly, "New Shift" on Shifts page and "New Reminder" on Reminders page.
 - **Recordatorios (Reminders) icon**: AlarmClock (web: `lucide-react`) / Alarm (Android: `Icons.Outlined.Alarm`). Bell/Notifications icon is reserved exclusively for the top bar notifications button.
+- **Activate/Deactivate toggle icon**: Use Pause icon (desactivar) when item is active, Play icon (activar) when inactive. Web: `lucide-react` Pause/Play. Android: `Icons.Outlined.Pause` / `Icons.Outlined.PlayArrow`. Never use Power icon for this action.
+- **Color picker pattern**: Button + dropdown/dialog. A circular button shows the selected color (or 🎨 if empty). Clicking opens the full palette grid in a dropdown (web) or dialog (Android). NOT an inline grid directly in the form.
+- **Emoji picker pattern**: A button shows the selected emoji (or ➕ if empty). Clicking opens the picker inline below (web: `emoji-picker-react`, full width, 350px, with search) or as a dialog (Android: category tabs + scrollable grid). Closes on selection or outside click.
 - **Default calendar view**: Day (not Week) on both platforms. Persisted view restores on subsequent launches.
 - **Current time indicator** (Day View): horizontal blue line with circle marker (Google Calendar style) shown on both platforms; view auto-scrolls to center the current hour on open
 - **Android app icon**: White "P" letter on blue→purple gradient background (adaptive icon format)

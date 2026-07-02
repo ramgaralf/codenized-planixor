@@ -23,7 +23,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 import com.codenized.planixor.ui.theme.PlanixorTheme
-import com.codenized.planixor.ui.theme.PrimaryBlue
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -33,7 +32,7 @@ import java.util.Locale
 
 /**
  * Month view composable displaying a day grid (7 columns × 5-6 rows).
- * Current day is highlighted with a PrimaryBlue circle.
+ * Current day is highlighted with a primary theme color circle.
  * Days from adjacent months are shown in secondary text color.
  * First day of week is locale-dependent.
  *
@@ -119,7 +118,7 @@ private fun MonthDayCell(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(PrimaryBlue),
+                    .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

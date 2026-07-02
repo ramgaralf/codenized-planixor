@@ -1,0 +1,510 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Fix DROP CHECK constraint syntax in existing migration": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066632555
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066642355
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066745280
+      }
+    ],
+    "2.1 Create SecuritySettings class in Core/Settings": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066632689
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066643167
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066746268
+      }
+    ],
+    "2.2 Register SecuritySettings with validation in DependencyContainer": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066632752
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066751892
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066850421
+      }
+    ],
+    "2.3 Add SecuritySettings section to appsettings.Development.json": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066632804
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066752654
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066851269
+      }
+    ],
+    "3.1 Create ISecurityService interface in Core/Services/Security": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066632841
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066753430
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066851994
+      }
+    ],
+    "3.2 Write unit tests for SecurityService (TDD — write tests FIRST)": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066632871
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066857096
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066988148
+      }
+    ],
+    "3.3 Implement SecurityService in Services/Security": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066632915
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066993878
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067170687
+      }
+    ],
+    "4.1 Write unit tests for ApiKeyAuthenticationHandler (TDD — write tests FIRST)": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066632949
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066994677
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067171716
+      }
+    ],
+    "4.2 Implement ApiKeyAuthenticationHandler in Api/Authentication": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066632993
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067176070
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067387178
+      }
+    ],
+    "5.1 Register authentication scheme in DependencyContainer": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633026
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067391431
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067524485
+      }
+    ],
+    "5.2 Add authentication and authorization middleware in Program.cs": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633075
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067392130
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067525232
+      }
+    ],
+    "6. Checkpoint - Verify security infrastructure": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633119
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067542616
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067629383
+      }
+    ],
+    "7.1 Create SecurityRegisterEndpoints in Api/Endpoints/Security": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633153
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067392902
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067526149
+      }
+    ],
+    "7.2 Register security endpoints in RegisterEndpoints.cs": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633185
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067541905
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067630051
+      }
+    ],
+    "8.1 Change UserId type in all entity classes": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633216
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067635326
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067759807
+      }
+    ],
+    "8.2 Change UserId type in all sync DTOs": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633248
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067636095
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067760604
+      }
+    ],
+    "8.3 Change userId parameter type in all repository interfaces and implementations": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633279
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067765906
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068367439
+      }
+    ],
+    "8.4 Update EF Core entity configurations for UserId column type": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633310
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067766786
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068366722
+      }
+    ],
+    "9. Checkpoint - Verify UserId refactor compiles": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633348
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068377208
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068535588
+      }
+    ],
+    "10.1 Add new EF Core migration for UserId varchar(50)": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633399
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068378003
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068536302
+      }
+    ],
+    "11.1 Update Shift sync endpoints": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633430
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068542889
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068739385
+      }
+    ],
+    "11.2 Update Reminder sync endpoints": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633459
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068543587
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068739962
+      }
+    ],
+    "11.3 Update CalendarEvent sync endpoints": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633491
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068544259
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068740646
+      }
+    ],
+    "11.4 Update AnnualHoursConfig sync endpoints": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633520
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068545034
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068741361
+      }
+    ],
+    "11.5 Update NotificationRecord sync endpoints": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633552
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068545785
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068742086
+      }
+    ],
+    "12. Final checkpoint - Build and test verification": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066633582
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068749113
+      },
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068843499
+      }
+    ],
+    "1. Fix MySQL migration compatibility": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066745313
+      }
+    ],
+    "2. Implement SecuritySettings configuration": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782066851304
+      }
+    ],
+    "3. Implement ISecurityService interface and SecurityService (TDD)": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067170740
+      }
+    ],
+    "4. Implement ApiKeyAuthenticationHandler (TDD)": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067387217
+      }
+    ],
+    "5. Wire up authentication in Program.cs and DependencyContainer": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067525268
+      }
+    ],
+    "7. Implement validation endpoint": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782067630084
+      }
+    ],
+    "8. Refactor UserId from Guid to string across entities and DTOs": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068367483
+      }
+    ],
+    "10. Create database migration for UserId column type change": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068536337
+      }
+    ],
+    "11. Update sync endpoints to use SecurityService for username resolution": [
+      {
+        "executionId": "be54e4bc-0fe1-4170-99c8-80e98ff8da68",
+        "chatSessionId": "sess_8fdfb4ea-09c6-4401-800b-8bc295b38988",
+        "timestamp": 1782068742126
+      }
+    ]
+  }
+}

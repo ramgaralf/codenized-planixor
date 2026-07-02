@@ -1,74 +1,164 @@
 package com.codenized.planixor.ui.reports
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.codenized.planixor.domain.model.TypeAggregate
+import com.codenized.planixor.domain.util.formatDuration
 import com.codenized.planixor.ui.theme.PlanixorTheme
-import com.codenized.planixor.ui.theme.PrimaryBlue
-import com.codenized.planixor.ui.theme.TextSecondary
 
 /**
- * Bar chart for the Reports screen.
- * Displays hours worked per subdivision of the active time range.
- * Currently renders in empty state with brand colors (all bars at minimal height
- * to indicate bar positions).
+ * Horizontal bar chart for the Reports screen.
+ * Displays one horizontal bar per event type, ordered descending by total hours (highest first).
+ * Each row shows: emoji icon | colored bar (proportional width) | duration label.
  *
- * Uses Canvas-based drawing for reliable rendering without Vico API version concerns.
- * Will be replaced with Vico CartesianChartHost when real data is available.
+ * @param data List of TypeAggregate, already sorted descending by totalMinutes.
+ * @param modifier Optional modifier.
  */
 @Composable
-fun ReportsBarChart(
+fun HorizontalBarChart(
+    data: List<TypeAggregate>,
     modifier: Modifier = Modifier,
 ) {
-    val barColor = PrimaryBlue
-    val axisColor = TextSecondary
+    if (data.isEmpty()) return
 
-    Canvas(
+    val maxMinutes = data.maxOf { it.totalMinutes }.coerceAtLeast(1)
+    val labelColor = MaterialTheme.colorScheme.onSurface
+    val barHeight = 28.dp
+    val rowSpacing = 12.dp
+
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .height(200.dp)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(vertical = 8.dp),
     ) {
-        val barCount = 7
-        val chartWidth = size.width
-        val chartHeight = size.height
-        val barSpacing = chartWidth / (barCount + 1)
-        val maxBarWidth = barSpacing * 0.6f
-        val minBarHeight = 4.dp.toPx()
+        data.forEach { aggregate ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(barHeight),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Emoji icon as y-axis label
+                Text(
+                    text = aggregate.icon,
+                    fontSize = 20.sp,
+                    modifier = Modifier.width(32.dp),
+                )
 
-        // Draw horizontal axis line
-        drawLine(
-            color = axisColor,
-            start = Offset(0f, chartHeight - 24.dp.toPx()),
-            end = Offset(chartWidth, chartHeight - 24.dp.toPx()),
-            strokeWidth = 1.dp.toPx(),
-        )
+                Spacer(modifier = Modifier.width(8.dp))
 
-        // Draw empty bars (minimal height to show positions)
-        for (i in 0 until barCount) {
-            val x = barSpacing * (i + 0.5f)
-            val barTop = chartHeight - 24.dp.toPx() - minBarHeight
+                // Horizontal bar with proportional width
+                val barFraction = if (maxMinutes > 0) {
+                    aggregate.totalMinutes.toFloat() / maxMinutes.toFloat()
+                } else {
+                    0f
+                }
 
-            drawRect(
-                color = barColor.copy(alpha = 0.3f),
-                topLeft = Offset(x, barTop),
-                size = Size(maxBarWidth, minBarHeight),
-            )
+                val barColor = parseHexColor(aggregate.backgroundColor)
+
+                Canvas(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(barHeight),
+                ) {
+                    val barWidth = size.width * barFraction.coerceIn(0f, 1f)
+                    val barHeightPx = size.height * 0.6f
+                    val yOffset = (size.height - barHeightPx) / 2f
+
+                    drawRoundRect(
+                        color = barColor,
+                        topLeft = Offset(0f, yOffset),
+                        size = Size(barWidth.coerceAtLeast(4.dp.toPx()), barHeightPx),
+                        cornerRadius = CornerRadius(4.dp.toPx()),
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Duration label beside bar
+                Text(
+                    text = formatDuration(aggregate.totalMinutes),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = labelColor,
+                    fontSize = 12.sp,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(rowSpacing))
         }
+    }
+}
+
+/**
+ * Parses a hex color string (e.g., "#2563EB") to a Compose Color.
+ * Falls back to gray if parsing fails.
+ */
+internal fun parseHexColor(hex: String): Color {
+    return try {
+        val colorStr = hex.removePrefix("#")
+        val colorLong = colorStr.toLong(16)
+        when (colorStr.length) {
+            6 -> Color(0xFF000000 or colorLong)
+            8 -> Color(colorLong)
+            else -> Color(0xFF6B7280)
+        }
+    } catch (_: Exception) {
+        Color(0xFF6B7280)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun ReportsBarChartPreview() {
+private fun HorizontalBarChartPreview() {
     PlanixorTheme {
-        ReportsBarChart()
+        HorizontalBarChart(
+            data = listOf(
+                TypeAggregate(
+                    typeId = "1",
+                    name = "Morning",
+                    icon = "☀️",
+                    backgroundColor = "#10B981",
+                    totalMinutes = 480,
+                    eventCount = 5,
+                    percentage = 60.0,
+                ),
+                TypeAggregate(
+                    typeId = "2",
+                    name = "Afternoon",
+                    icon = "🌤️",
+                    backgroundColor = "#7C3AED",
+                    totalMinutes = 240,
+                    eventCount = 3,
+                    percentage = 30.0,
+                ),
+                TypeAggregate(
+                    typeId = "3",
+                    name = "Night",
+                    icon = "🌙",
+                    backgroundColor = "#2563EB",
+                    totalMinutes = 80,
+                    eventCount = 1,
+                    percentage = 10.0,
+                ),
+            ),
+        )
     }
 }

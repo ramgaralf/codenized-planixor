@@ -23,7 +23,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.codenized.planixor.ui.theme.PlanixorTheme
-import com.codenized.planixor.ui.theme.PrimaryBlue
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -89,7 +88,7 @@ private fun CurrentTimeIndicator(
     modifier: Modifier = Modifier,
 ) {
     val minuteFraction = LocalTime.now().minute / 60f
-    val indicatorColor = PrimaryBlue
+    val indicatorColor = MaterialTheme.colorScheme.primary
 
     Box(
         modifier = modifier

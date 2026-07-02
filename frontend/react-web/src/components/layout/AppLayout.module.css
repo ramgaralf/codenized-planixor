@@ -82,6 +82,10 @@
     z-index: 100;
   }
 
+  .main {
+    padding-bottom: 56px;
+  }
+
   .fab {
     display: block;
     position: fixed;
