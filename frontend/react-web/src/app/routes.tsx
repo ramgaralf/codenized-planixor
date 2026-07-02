@@ -14,6 +14,7 @@ import { ReminderEditPage } from '@/pages/ReminderEditPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { PrivacyPolicyPage } from '@/pages/PrivacyPolicyPage';
+import { HelpPage } from '@/pages/HelpPage';
 import { SyncConfigScreen } from '@features/sync/components/SyncConfigScreen';
 import { SyncScreen } from '@features/sync/components/SyncScreen';
 
@@ -125,5 +126,9 @@ export const router = createBrowserRouter([
   {
     path: '/privacy-policy',
     element: <PrivacyPolicyPage />,
+  },
+  {
+    path: '/help',
+    element: <HelpPage />,
   },
 ]);
