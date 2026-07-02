@@ -13,18 +13,20 @@ Planixor is designed to work **fully offline**. The local data store is the prim
 
 All CRUD operations happen against local storage first. No network connection is required for core functionality.
 
-## User tiers
+## Usage model
 
-| Tier | Capabilities |
+Planixor works fully offline without any backend. Synchronization is an **opt-in capability** that requires the user to deploy their own backend instance.
+
+| Mode | Description |
 |---|---|
-| **Free (anonymous)** | Full offline functionality on a single device. No account required. Data lives only on the device. |
-| **Subscribed (authenticated)** | Everything in Free + bidirectional sync across devices via the API. Requires a valid API key configured in the backend's SecuritySettings. |
+| **Local-only (default)** | Full functionality on a single device. No server, no account, no internet required. Data lives only on the device. |
+| **With sync (self-hosted backend)** | The user deploys their own backend instance (Docker) and configures the client with the server URL + API key. This enables bidirectional sync across devices. |
 
-**Single account constraint**: A user can only sync with one account at a time per device. All local data belongs implicitly to the device owner. The client does not store `userId` per record — ownership is determined by the authenticated API key (username from SecuritySettings). If a user signs out and signs in with a different account, local data from the previous account is not accessible to the new account (it remains in local storage but is not visible or syncable until the original account signs back in).
+**Single account constraint**: A user can only sync with one backend at a time per device. All local data belongs implicitly to the device owner. The client does not store `userId` per record — ownership is determined by the authenticated API key (username from SecuritySettings). If a user changes their sync configuration to a different backend/username, local data from the previous configuration is not accessible (it remains in local storage but is not visible or syncable until the original configuration is restored).
 
 ## Synchronization rules
 
-1. **Subscription-gated** — only authenticated users with an active subscription can sync.
+1. **Configuration-gated** — only users who have configured their self-hosted backend can sync.
 2. **Bidirectional** — local → API (push) and API → local (pull) in each sync cycle.
 3. **User-scoped** — a user can only sync their own data. The API enforces ownership on every request.
 4. **Automatic background sync** — a periodic background process runs on both PWA and Android that syncs at a configurable interval (default **5 minutes**, selectable: 5, 10, 15, 20, 25, 30, 45, 60 minutes) when connectivity is detected.
@@ -98,7 +100,7 @@ Every syncable record includes:
 - Client code MUST NOT assume network availability — all operations must succeed offline.
 - Sync logic is a cross-cutting concern — implement it as a reusable service/module, not per-feature.
 - The sync service MUST be inactive (no network attempts) when connectivity is unavailable.
-- The `backend` API sync endpoints MUST reject requests from users without an active subscription.
+- The `backend` API sync endpoints MUST reject requests without a valid API key.
 - The `backend` API identifies users by the `username` string from SecuritySettings (not a GUID). The `UserId` field on syncable entities is `string` type stored as `varchar(50)` in the database.
 
 ## Implementation notes (learned during development)
