@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -21,6 +22,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
@@ -47,6 +50,8 @@ import com.codenized.planixor.LocalThemeViewModel
 import com.codenized.planixor.R
 import com.codenized.planixor.data.notification.NotificationChannel
 import com.codenized.planixor.model.ThemeMode
+import com.codenized.planixor.ui.backup.BackupSection
+import com.codenized.planixor.ui.backup.BackupViewModel
 
 @Composable
 fun SettingsScreen(
@@ -166,6 +171,11 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = 8.dp),
             )
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Backup section
+        BackupSection()
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -324,6 +334,105 @@ private fun SettingsRadioOption(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground,
+        )
+    }
+}
+
+
+@Composable
+private fun BackupSection(
+    backupViewModel: BackupViewModel = hiltViewModel(),
+) {
+    val uiState by backupViewModel.uiState.collectAsStateWithLifecycle()
+    val isOperating = uiState.isCreating || uiState.isRestoring
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.backup_section_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            FilledTonalButton(
+                onClick = { backupViewModel.prepareBackup() },
+                enabled = !isOperating,
+                modifier = Modifier.weight(1f),
+            ) {
+                if (uiState.isCreating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(stringResource(R.string.backup_create))
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            OutlinedButton(
+                onClick = { /* SAF open picker handled in task 12.3 */ },
+                enabled = !isOperating,
+                modifier = Modifier.weight(1f),
+            ) {
+                if (uiState.isRestoring) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(stringResource(R.string.backup_restore))
+            }
+        }
+    }
+
+    // Confirmation dialog for restore
+    if (uiState.showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { backupViewModel.onCancelRestore() },
+            title = { Text(stringResource(R.string.backup_confirm_title)) },
+            text = { Text(stringResource(R.string.backup_confirm_message)) },
+            confirmButton = {
+                Button(onClick = { backupViewModel.onConfirmRestore() }) {
+                    Text(stringResource(R.string.backup_confirm_continue))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { backupViewModel.onCancelRestore() }) {
+                    Text(stringResource(R.string.backup_confirm_cancel))
+                }
+            },
+        )
+    }
+
+    // Show success/error messages as inline text (Snackbar integration in task 12.3)
+    uiState.successMessage?.let { msgRes ->
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = if (msgRes == R.string.backup_restore_success) {
+                stringResource(msgRes, uiState.restoredCount)
+            } else {
+                stringResource(msgRes)
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 8.dp),
+        )
+    }
+
+    uiState.error?.let { errorRes ->
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(errorRes),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(horizontal = 8.dp),
         )
     }
 }

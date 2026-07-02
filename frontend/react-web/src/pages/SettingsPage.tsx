@@ -5,6 +5,7 @@ import { useTheme } from '@context/useTheme';
 import type { ThemeMode } from '@context/ThemeContextValue';
 import { db } from '@/data/db';
 import { NotificationSettingsSection } from '@features/notifications/components/NotificationSettingsSection';
+import { Backup } from '@features/backup/backup';
 
 import styles from './SettingsPage.module.css';
 
@@ -104,6 +105,10 @@ export const SettingsPage = () => {
         optionLabelClassName={styles.optionLabel}
         optionLabelActiveClassName={styles.optionLabelActive}
       />
+
+      <section className={styles.section}>
+        <Backup />
+      </section>
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>{t('settings.dangerZone')}</h2>

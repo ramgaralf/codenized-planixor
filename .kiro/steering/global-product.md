@@ -14,6 +14,7 @@ Planixor unifies work shift management, calendar (appointments, reminders, meeti
 - **Notifications** — push, email, and in-app alerts for upcoming shifts, events, and reminders
 - **Reports** — hours worked per day/week/month/year, shift summaries, exportable data
 - **Synchronization** — bidirectional sync across devices for subscribed users; sync configuration UI (server URL with configurable base path + API key validation); pause/resume controls; connection status indicator in top bar (persisted across restarts); configurable periodic background sync (5–60 min, default 5) + on app open/close; per-entity resilient sync (calendar events, notifications, annual hours, shifts, reminders); automatic purge of past notification records; username change detection with data wipe confirmation
+- **Backups** — client-side backup creation and restoration accessible from Settings; exports all local data (calendar events, shifts, reminders, notifications, annual hours config, sync config) to a portable `.bak` JSON file; cross-platform restore with LWW merge logic; no backend involvement; both React Web and Android
 
 ## Architecture
 

@@ -430,5 +430,29 @@
       "confirm": "Actualizar",
       "decline": "Omitir"
     }
+  },
+  "backup": {
+    "sectionTitle": "Respaldo",
+    "create": "Crear",
+    "restore": "Restaurar",
+    "createCancelled": "Creación de respaldo cancelada.",
+    "permissionRequired": "Se requiere acceso al almacenamiento para realizar esta operación.",
+    "notSupported": "La función de respaldo no es compatible con este entorno.",
+    "createFailed": "No se pudo completar el respaldo. Inténtalo de nuevo.",
+    "fileTooLarge": "El respaldo excede el tamaño máximo permitido (50 MB).",
+    "saveFailed": "No se pudo guardar el archivo de respaldo.",
+    "createSuccess": "Respaldo creado exitosamente.",
+    "restoreCancelled": "Operación de restauración cancelada.",
+    "invalidJson": "El archivo seleccionado no es un respaldo válido (formato inválido).",
+    "invalidSchema": "El archivo seleccionado tiene una estructura de respaldo inválida.",
+    "incompatibleVersion": "Este respaldo fue creado con una versión más reciente. Actualiza la aplicación.",
+    "verificationFailed": "No se pudieron verificar los datos existentes. Inténtalo de nuevo.",
+    "restoreFailed": "La restauración falló. No se modificó ningún dato.",
+    "restoreSuccess": "Respaldo restaurado exitosamente. {{count}} registro(s) restaurado(s).",
+    "restorePartial": "Restauración parcial: {{succeeded}} exitoso(s), {{failed}} fallido(s).",
+    "confirmTitle": "Restaurar Respaldo",
+    "confirmMessage": "Se detectaron datos existentes. Continuar fusionará los datos del respaldo con tus datos actuales.",
+    "confirmCancel": "Cancelar",
+    "confirmContinue": "Continuar"
   }
 }

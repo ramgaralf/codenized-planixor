@@ -44,12 +44,14 @@ class SyncViewModelTest {
     private val mockAnnualHoursConfigDao = mockk<AnnualHoursConfigDao>(relaxed = true)
 
     private val syncConfigFlow = MutableStateFlow<SyncConfig?>(null)
+    private val connectionStatusFlow = MutableStateFlow(ConnectionStatus.UNCONFIGURED)
 
     private lateinit var viewModel: SyncViewModel
 
     @Before
     fun setup() {
         every { mockPreferencesRepository.syncConfigFlow } returns syncConfigFlow
+        every { mockPreferencesRepository.connectionStatusFlow } returns connectionStatusFlow
     }
 
     private fun createViewModel(): SyncViewModel {
@@ -186,6 +188,7 @@ class SyncViewModelTest {
             lastSyncedAt = null,
         )
         syncConfigFlow.value = config
+        connectionStatusFlow.value = ConnectionStatus.ACTIVE
 
         viewModel = createViewModel()
         advanceUntilIdle()

@@ -274,7 +274,7 @@ class CalendarViewModelTest {
         val mockShift = com.codenized.planixor.domain.model.Shift(
             id = "shift-1",
             name = "Morning",
-            icon = "☀️",
+            icon = "\u2600\uFE0F",
             backgroundColor = "#10B981",
             startTime = 480,
             endTime = 1020,
@@ -306,7 +306,7 @@ class CalendarViewModelTest {
         val mockReminder = com.codenized.planixor.domain.model.Reminder(
             id = "reminder-1",
             name = "Meeting",
-            icon = "📝",
+            icon = "\uD83D\uDCDD",
             backgroundColor = "#2563EB",
             isActive = true,
             createdAt = System.currentTimeMillis(),
@@ -334,7 +334,7 @@ class CalendarViewModelTest {
         val mockShift = com.codenized.planixor.domain.model.Shift(
             id = "shift-night",
             name = "Night",
-            icon = "🌙",
+            icon = "\uD83C\uDF19",
             backgroundColor = "#2563EB",
             startTime = 1320,
             endTime = 360,
@@ -367,7 +367,7 @@ class CalendarViewModelTest {
         val mockReminder = com.codenized.planixor.domain.model.Reminder(
             id = "reminder-1",
             name = "Meeting",
-            icon = "📝",
+            icon = "\uD83D\uDCDD",
             backgroundColor = "#2563EB",
             isActive = true,
             createdAt = System.currentTimeMillis(),

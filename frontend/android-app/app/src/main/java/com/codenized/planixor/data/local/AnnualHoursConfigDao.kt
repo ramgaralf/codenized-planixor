@@ -30,6 +30,13 @@ interface AnnualHoursConfigDao {
     suspend fun upsert(entity: AnnualHoursConfigEntity)
 
     /**
+     * Returns all annual hours config entries including soft-deleted ones.
+     * Used for backup serialization and sync merging.
+     */
+    @Query("SELECT * FROM annual_hours_config")
+    suspend fun getAllIncludingDeleted(): List<AnnualHoursConfigEntity>
+
+    /**
      * Physically deletes all annual hours config entries from local storage.
      * Used during username change to wipe all syncable data.
      */

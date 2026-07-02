@@ -262,6 +262,50 @@ Every screen must handle:
 
 ---
 
+## Storage Access Framework (SAF) file picker
+
+When using `ActivityResultContracts.CreateDocument` or `ActivityResultContracts.OpenDocument` for file I/O:
+
+### MIME type: always use `"*/*"`
+
+```kotlin
+// ✅ Works across all file managers and custom extensions
+ActivityResultContracts.CreateDocument("*/*")
+openDocumentLauncher.launch(arrayOf("*/*"))
+
+// ❌ Fails on many file managers for non-standard extensions (.bak, .dat, etc.)
+ActivityResultContracts.CreateDocument("application/octet-stream")
+openDocumentLauncher.launch(arrayOf("application/octet-stream"))
+```
+
+**Why:** Files with custom extensions (`.bak`, `.dat`, etc.) are not consistently mapped to `application/octet-stream` across Android file managers. Using a specific MIME type causes:
+- **CreateDocument**: some file managers fail to return to the app after the file is created
+- **OpenDocument**: files appear greyed out / unselectable in the picker
+
+Using `"*/*"` ensures the picker works reliably regardless of the file extension or the user's default file manager.
+
+### Composable integration pattern
+
+Register SAF launchers inside the composable using `rememberLauncherForActivityResult`. Use a `LaunchedEffect` on a ViewModel state flag to trigger the picker after async preparation (e.g., serialization) completes:
+
+```kotlin
+val createDocumentLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.CreateDocument("*/*"),
+) { uri ->
+    if (uri != null) viewModel.onSaveLocationSelected(uri, context)
+    else viewModel.onSaveCancelled()
+}
+
+LaunchedEffect(uiState.readyToSave) {
+    if (uiState.readyToSave) {
+        viewModel.onSavePickerLaunched() // reset flag to prevent re-trigger
+        createDocumentLauncher.launch(filename)
+    }
+}
+```
+
+---
+
 ## Dependency injection
 
 ### Constructor injection (preferred)

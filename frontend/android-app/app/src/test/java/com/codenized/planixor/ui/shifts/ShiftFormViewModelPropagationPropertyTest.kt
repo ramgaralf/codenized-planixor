@@ -499,17 +499,17 @@ class ShiftFormViewModelPropagationPropertyTest {
                 updated.endDay,
             )
 
-            // Verify crossing-midnight logic: endTime < startTime → endDay = startDay + 1
-            if (newEndTime < newStartTime) {
+            // Verify crossing-midnight logic: endTime <= startTime → endDay = startDay + 1
+            if (newEndTime <= newStartTime) {
                 val expectedNextDay = LocalDate.parse(event.startDay).plusDays(1).toString()
                 assertEquals(
-                    "When endTime ($newEndTime) < startTime ($newStartTime), endDay should be startDay + 1",
+                    "When endTime ($newEndTime) <= startTime ($newStartTime), endDay should be startDay + 1",
                     expectedNextDay,
                     updated.endDay,
                 )
             } else {
                 assertEquals(
-                    "When endTime ($newEndTime) >= startTime ($newStartTime), endDay should equal startDay",
+                    "When endTime ($newEndTime) > startTime ($newStartTime), endDay should equal startDay",
                     event.startDay,
                     updated.endDay,
                 )

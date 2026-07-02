@@ -660,9 +660,10 @@ class CalendarViewModel @Inject constructor(
     /**
      * Monitors for midnight crossing and advances the calendar date.
      * Checks every 30 seconds if the day has changed.
+     * Uses Dispatchers.Default to avoid blocking test dispatchers.
      */
     private fun observeMidnight() {
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.Default) {
             var lastKnownDay = LocalDate.now()
             while (true) {
                 kotlinx.coroutines.delay(30_000L)
@@ -682,9 +683,10 @@ class CalendarViewModel @Inject constructor(
     /**
      * Observes calendar events reactively based on current date and active view.
      * Computes the date range for the view, queries the repository, and resolves display fields.
+     * Uses Dispatchers.Default to avoid blocking test dispatchers.
      */
     private fun observeEvents() {
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.Default) {
             combine(_currentDate, _activeView) { date, view ->
                 getDateRangeForView(date, view)
             }.flatMapLatest { (start, end) ->
