@@ -389,13 +389,16 @@ const pushCandidateRecordArb: fc.Arbitrary<NotificationRecord> = fc.oneof(
   // Case 1: syncedAt is null (never synced)
   notificationRecordArb({ syncedAt: fc.constant(null) }),
   // Case 2: modifiedAt > syncedAt (modified since last sync)
-  dateArb.chain((syncedAt) =>
-    notificationRecordArb({
-      syncedAt: fc.constant(syncedAt),
-      modifiedAt: fc.date({ min: new Date(syncedAt.getTime() + 1), max: new Date('2035-12-31') })
-        .filter((d) => !isNaN(d.getTime())),
-    }),
-  ),
+  // Use a slightly earlier max for syncedAt to ensure modifiedAt can always be after it
+  fc.date({ min: new Date('2020-01-01'), max: new Date('2035-12-30') })
+    .filter((d) => !isNaN(d.getTime()))
+    .chain((syncedAt) =>
+      notificationRecordArb({
+        syncedAt: fc.constant(syncedAt),
+        modifiedAt: fc.date({ min: new Date(syncedAt.getTime() + 1), max: new Date('2035-12-31') })
+          .filter((d) => !isNaN(d.getTime())),
+      }),
+    ),
 );
 
 /**

@@ -430,5 +430,29 @@
       "confirm": "Update",
       "decline": "Skip"
     }
+  },
+  "backup": {
+    "sectionTitle": "Backup",
+    "create": "Create",
+    "restore": "Restore",
+    "createCancelled": "Backup creation cancelled.",
+    "permissionRequired": "Storage access is required to perform this operation.",
+    "notSupported": "Backup feature is not supported in this environment.",
+    "createFailed": "Could not complete the backup. Please try again.",
+    "fileTooLarge": "Backup exceeds the maximum allowed size (50 MB).",
+    "saveFailed": "Could not save the backup file.",
+    "createSuccess": "Backup created successfully.",
+    "restoreCancelled": "Restore operation cancelled.",
+    "invalidJson": "The selected file is not a valid backup (invalid format).",
+    "invalidSchema": "The selected file has an invalid backup structure.",
+    "incompatibleVersion": "This backup was created with a newer version. Please update the application.",
+    "verificationFailed": "Could not verify existing data. Please try again.",
+    "restoreFailed": "Restoration failed. No data was modified.",
+    "restoreSuccess": "Backup restored successfully. {{count}} record(s) restored.",
+    "restorePartial": "Partial restore: {{succeeded}} succeeded, {{failed}} failed.",
+    "confirmTitle": "Restore Backup",
+    "confirmMessage": "Existing data was detected. Continuing will merge the backup data with your current data.",
+    "confirmCancel": "Cancel",
+    "confirmContinue": "Continue"
   }
 }

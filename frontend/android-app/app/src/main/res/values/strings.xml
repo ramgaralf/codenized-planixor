@@ -334,6 +334,30 @@
     <string name="common_confirm">Confirmar</string>
     <string name="common_cancel">Cancelar</string>
 
+    <!-- Backup -->
+    <string name="backup_section_title">Respaldo</string>
+    <string name="backup_create">Crear</string>
+    <string name="backup_restore">Restaurar</string>
+    <string name="backup_create_cancelled">Creación de respaldo cancelada.</string>
+    <string name="backup_permission_required">Se requiere acceso al almacenamiento para realizar esta operación.</string>
+    <string name="backup_not_supported">La función de respaldo no es compatible con este entorno.</string>
+    <string name="backup_create_failed">No se pudo completar el respaldo. Inténtalo de nuevo.</string>
+    <string name="backup_file_too_large">El respaldo excede el tamaño máximo permitido (50 MB).</string>
+    <string name="backup_save_failed">No se pudo guardar el archivo de respaldo.</string>
+    <string name="backup_create_success">Respaldo creado exitosamente.</string>
+    <string name="backup_restore_cancelled">Operación de restauración cancelada.</string>
+    <string name="backup_invalid_json">El archivo seleccionado no es un respaldo válido (formato inválido).</string>
+    <string name="backup_invalid_schema">El archivo seleccionado tiene una estructura de respaldo inválida.</string>
+    <string name="backup_incompatible_version">Este respaldo fue creado con una versión más reciente. Actualiza la aplicación.</string>
+    <string name="backup_verification_failed">No se pudieron verificar los datos existentes. Inténtalo de nuevo.</string>
+    <string name="backup_restore_failed">La restauración falló. No se modificó ningún dato.</string>
+    <string name="backup_restore_success">Respaldo restaurado exitosamente. %d registro(s) restaurado(s).</string>
+    <string name="backup_restore_partial">Restauración parcial: %1$s exitoso(s), %2$s fallido(s).</string>
+    <string name="backup_confirm_title">Restaurar Respaldo</string>
+    <string name="backup_confirm_message">Se detectaron datos existentes. Continuar fusionará los datos del respaldo con tus datos actuales.</string>
+    <string name="backup_confirm_cancel">Cancelar</string>
+    <string name="backup_confirm_continue">Continuar</string>
+
     <!-- Propagation Dialog -->
     <string name="propagation_dialog_title">¿Actualizar eventos del calendario?</string>
     <string name="propagation_dialog_description_shift">Modificaste el turno \"%1$s\". ¿Deseas actualizar todos los eventos del calendario que usan este turno en %2$d? Los eventos de años anteriores no se verán afectados.</string>

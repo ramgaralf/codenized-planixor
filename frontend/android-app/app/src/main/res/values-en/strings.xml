@@ -322,6 +322,30 @@
     <string name="common_confirm">Confirm</string>
     <string name="common_cancel">Cancel</string>
 
+    <!-- Backup -->
+    <string name="backup_section_title">Backup</string>
+    <string name="backup_create">Create</string>
+    <string name="backup_restore">Restore</string>
+    <string name="backup_create_cancelled">Backup creation cancelled.</string>
+    <string name="backup_permission_required">Storage access is required to perform this operation.</string>
+    <string name="backup_not_supported">Backup feature is not supported in this environment.</string>
+    <string name="backup_create_failed">Could not complete the backup. Please try again.</string>
+    <string name="backup_file_too_large">Backup exceeds the maximum allowed size (50 MB).</string>
+    <string name="backup_save_failed">Could not save the backup file.</string>
+    <string name="backup_create_success">Backup created successfully.</string>
+    <string name="backup_restore_cancelled">Restore operation cancelled.</string>
+    <string name="backup_invalid_json">The selected file is not a valid backup (invalid format).</string>
+    <string name="backup_invalid_schema">The selected file has an invalid backup structure.</string>
+    <string name="backup_incompatible_version">This backup was created with a newer version. Please update the application.</string>
+    <string name="backup_verification_failed">Could not verify existing data. Please try again.</string>
+    <string name="backup_restore_failed">Restoration failed. No data was modified.</string>
+    <string name="backup_restore_success">Backup restored successfully. %d record(s) restored.</string>
+    <string name="backup_restore_partial">Partial restore: %1$s succeeded, %2$s failed.</string>
+    <string name="backup_confirm_title">Restore Backup</string>
+    <string name="backup_confirm_message">Existing data was detected. Continuing will merge the backup data with your current data.</string>
+    <string name="backup_confirm_cancel">Cancel</string>
+    <string name="backup_confirm_continue">Continue</string>
+
     <!-- Propagation Dialog -->
     <string name="propagation_dialog_title">Update Calendar Events?</string>
     <string name="propagation_dialog_description_shift">You modified the shift \"%1$s\". Do you want to update all calendar events that use this shift in %2$d? Events in previous years will not be affected.</string>

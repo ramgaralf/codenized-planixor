@@ -9,21 +9,22 @@ Planixor unifies work shift management, calendar (appointments, reminders, meeti
 ## Core features
 
 - **Shift management** — create, assign, and visualize work shifts (daily, weekly, monthly views)
-- **Reminder management** — create, view, edit, deactivate, and delete reusable reminder templates (name, emoji icon, color from 45-color palette); cross-device sync for subscribed users; reminders serve as assignable templates for calendar events
-- **Calendar event management** — create, view (Day/Week/Month/Year), edit, and delete calendar events that reference shifts or reminders; one-shift-per-day constraint; offline-first CRUD with bidirectional sync for subscribed users; four view modes with per-view navigation; day pre-selection based on view context; cross-platform (React Web + Android + backend sync endpoints)
+- **Reminder management** — create, view, edit, deactivate, and delete reusable reminder templates (name, emoji icon, color from 45-color palette); cross-device sync when sync is configured; reminders serve as assignable templates for calendar events
+- **Calendar event management** — create, view (Day/Week/Month/Year), edit, and delete calendar events that reference shifts or reminders; one-shift-per-day constraint; offline-first CRUD with bidirectional sync when sync is configured; four view modes with per-view navigation; day pre-selection based on view context; cross-platform (React Web + Android + backend sync endpoints)
 - **Notifications** — push, email, and in-app alerts for upcoming shifts, events, and reminders
 - **Reports** — hours worked per day/week/month/year, shift summaries, exportable data
-- **Synchronization** — bidirectional sync across devices for subscribed users; sync configuration UI (server URL with configurable base path + API key validation); pause/resume controls; connection status indicator in top bar (persisted across restarts); configurable periodic background sync (5–60 min, default 5) + on app open/close; per-entity resilient sync (calendar events, notifications, annual hours, shifts, reminders); automatic purge of past notification records; username change detection with data wipe confirmation
+- **Synchronization** — bidirectional sync across devices for users with a self-hosted backend; sync configuration UI (server URL with configurable base path + API key validation); pause/resume controls; connection status indicator in top bar (persisted across restarts); configurable periodic background sync (5–60 min, default 5) + on app open/close; per-entity resilient sync (calendar events, notifications, annual hours, shifts, reminders); automatic purge of past notification records; username change detection with data wipe confirmation
+- **Backups** — client-side backup creation and restoration accessible from Settings; exports all local data (calendar events, shifts, reminders, notifications, annual hours config, sync config) to a portable `.bak` JSON file; cross-platform restore with LWW merge logic; no backend involvement; both React Web and Android
 
 ## Architecture
 
 | Project | Technology | Description |
 |---|---|---|
-| `backend` | .NET 10 (C#) | Backend REST API + background services — sync hub and source of truth for subscribed users' synchronized data |
+| `backend` | .NET 10 (C#) | Backend REST API + background services — sync hub (self-hosted) — source of truth for synchronized data when the user deploys their own instance |
 | `frontend/react-web` | React (TypeScript) | Progressive Web App — offline-first, uses IndexedDB as primary data store |
 | `frontend/android-app` | Android / Kotlin | Native Android app — offline-first, uses SQLite as primary data store |
 
-The application is **offline-first**: both clients store all user data locally and function fully without internet. The `backend` API serves as the synchronization hub exclusively for subscribed users who opt into cross-device sync. See `global-sync-strategy.md` for full details.
+The application is **offline-first**: both clients store all user data locally and function fully without internet. The `backend` API serves as the synchronization hub exclusively for users who deploy their own backend instance for cross-device sync. See `global-sync-strategy.md` for full details.
 
 ## Organization context
 
@@ -44,9 +45,10 @@ The application is **offline-first**: both clients store all user data locally a
 ### Authentication
 
 - **Backend API**: API key authentication via `Authorization: Bearer <key>` header. API keys are configured in `appsettings` under `SecuritySettings` (username → key dictionary). No OAuth/JWT at the API level.
-- **Frontend clients**: Will use the API key to authenticate with the backend. The validation endpoint (`GET /api/security/validate`) returns the username linked to the key.
-- Authentication is **optional** — free users operate fully offline without an account or API key
-- Subscribed users authenticate (with a valid API key) to unlock sync capabilities
+- **Frontend clients**: Use the API key to authenticate with the self-hosted backend. The validation endpoint (`GET /api/security/validate`) returns the username linked to the key.
+- Authentication is only relevant when using a self-hosted backend for sync
+- Users who don't need sync operate fully offline without any backend or API key
+- Users who want sync deploy their own backend and configure API keys in SecuritySettings
 
 ### Versioning
 
