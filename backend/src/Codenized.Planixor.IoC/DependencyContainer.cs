@@ -4,19 +4,21 @@
 
 namespace Codenized.Planixor.IoC;
 
-using System.Net.Mime;
-using System.Runtime.InteropServices;
-using System.Security.Authentication;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Codenized.Planixor.Core.Settings;
-using Codenized.Planixor.Persistence.IoC;
 using Codenized.CleanArchitecture.Abstractions;
+using Codenized.CleanArchitecture.Persistence.MySql.HealthChecks;
 using Codenized.Exceptions.GlobalExceptionStrategy;
 using Codenized.HealthChecks.AspNetCore.Entities;
 using Codenized.HealthChecks.AspNetCore.HealthChecks;
+using Codenized.Planixor.Core.Settings;
+using Codenized.Planixor.Persistence.IoC;
+using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting;
+using System.Net.Mime;
+using System.Runtime.InteropServices;
+using System.Security.Authentication;
 
 /// <summary>Dependency container.</summary>
 public static class DependencyContainer
@@ -44,17 +46,36 @@ public static class DependencyContainer
     {
         Codenized.HealthChecks.AspNetCore.DependencyContainer.AddAppHealthChecks(services, configuration);
         services.AddHealthChecks()
-            .AddCheck<InternetHealthCheck>("InternetConnection", failureStatus: HealthStatus.Unhealthy, tags: new[] { HealthChecksTags.HEALTH, HealthChecksTags.STATUS });
+            .AddCheck<InternetHealthCheck>(
+                "InternetConnection",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: new[] { HealthChecksTags.HEALTH, HealthChecksTags.STATUS })
+            .AddCheck<DbContextHealthCheck<ApplicationReadContext>>(
+                "ApplicationReadContext",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: new[] { HealthChecksTags.STATUS })
+            .AddCheck<DbContextHealthCheck<ApplicationWriteContext>>(
+                "ApplicationWriteContext",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: new[] { HealthChecksTags.STATUS });
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             services.AddHealthChecks()
-                .AddCheck(@$"HardDisk (c:\)", new DriveHealthCheck(@"c:\"), failureStatus: HealthStatus.Unhealthy, tags: new[] { HealthChecksTags.STATUS });
+                .AddCheck(
+                    @$"HardDisk (c:\)",
+                    new DriveHealthCheck(@"c:\"),
+                    failureStatus: HealthStatus.Unhealthy,
+                    tags: new[] { HealthChecksTags.STATUS });
         }
         else
         {
             services.AddHealthChecks()
-                .AddCheck($"HardDisk (/)", new DriveHealthCheck("/"), failureStatus: HealthStatus.Unhealthy, tags: new[] { HealthChecksTags.STATUS });
+                .AddCheck(
+                    $"HardDisk (/)",
+                    new DriveHealthCheck("/"),
+                    failureStatus: HealthStatus.Unhealthy,
+                    tags: new[] { HealthChecksTags.STATUS });
         }
 
         return services;

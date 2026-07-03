@@ -14,7 +14,7 @@
   <ItemGroup>
     <PackageReference Include="Codenized.CleanArchitecture.Abstractions" Version="10.*" />
     <PackageReference Include="Codenized.Exceptions.GlobalExceptionStrategy" Version="10.*" />
-    <PackageReference Include="Codenized.HealthChecks.AspNetCore" Version="10.*" />
+    <PackageReference Include="Codenized.HealthChecks.AspNetCore" Version="10.0.2" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
