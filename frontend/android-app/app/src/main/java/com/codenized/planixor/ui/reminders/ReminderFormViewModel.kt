@@ -3,13 +3,12 @@ package com.codenized.planixor.ui.reminders
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.codenized.planixor.R
 import com.codenized.planixor.data.local.CalendarEventDao
 import com.codenized.planixor.data.local.ReminderRepository
 import com.codenized.planixor.domain.validation.ReminderValidator
 import com.codenized.planixor.ui.shifts.PropagationUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,8 +30,6 @@ class ReminderFormViewModel @Inject constructor(
     private val _propagationState = MutableStateFlow<PropagationUiState>(PropagationUiState.Hidden)
     val propagationState: StateFlow<PropagationUiState> = _propagationState.asStateFlow()
 
-    private var validationJob: Job? = null
-
     /** Stores the reminder ID needed if the user confirms propagation */
     private var savedReminderId: String? = null
 
@@ -53,11 +50,13 @@ class ReminderFormViewModel @Inject constructor(
             "icon" -> _uiState.update { it.copy(icon = value) }
             "backgroundColor" -> _uiState.update { it.copy(backgroundColor = value) }
         }
-        scheduleDebouncedValidation()
+        clearFieldErrorIfValid(field)
     }
 
     fun onSubmit(onSuccess: () -> Unit) {
         val state = _uiState.value
+        _uiState.update { it.copy(hasAttemptedSubmit = true) }
+
         val validationResult = ReminderValidator.validate(
             name = state.name,
             icon = state.icon,
@@ -65,11 +64,13 @@ class ReminderFormViewModel @Inject constructor(
         )
 
         if (!validationResult.isValid) {
+            val fieldErrors = buildReminderFieldErrors(validationResult)
             _uiState.update {
                 it.copy(
                     nameError = validationResult.nameError,
                     iconError = validationResult.iconError,
                     backgroundColorError = validationResult.backgroundColorError,
+                    fieldErrors = fieldErrors,
                     isValid = false,
                 )
             }
@@ -212,29 +213,66 @@ class ReminderFormViewModel @Inject constructor(
         navigateBack()
     }
 
-    private fun scheduleDebouncedValidation() {
-        validationJob?.cancel()
-        validationJob = viewModelScope.launch {
-            delay(VALIDATION_DEBOUNCE_MS)
-            validateAllFields()
-        }
-    }
-
-    private fun validateAllFields() {
+    /**
+     * Clears the field error for the given field if the field value is now valid.
+     * Only applies if the user has already attempted submit.
+     */
+    private fun clearFieldErrorIfValid(field: String) {
         val state = _uiState.value
+        if (!state.hasAttemptedSubmit) return
+        if (field !in state.fieldErrors) return
+
         val result = ReminderValidator.validate(
             name = state.name,
             icon = state.icon,
             backgroundColor = state.backgroundColor,
         )
-        _uiState.update {
-            it.copy(
-                nameError = result.nameError,
-                iconError = result.iconError,
-                backgroundColorError = result.backgroundColorError,
-                isValid = result.isValid,
-            )
+
+        val fieldHasError = when (field) {
+            "name" -> result.nameError != null
+            "icon" -> result.iconError != null
+            "backgroundColor" -> result.backgroundColorError != null
+            else -> false
         }
+
+        if (!fieldHasError) {
+            _uiState.update {
+                when (field) {
+                    "name" -> it.copy(
+                        nameError = null,
+                        fieldErrors = it.fieldErrors - field,
+                    )
+                    "icon" -> it.copy(
+                        iconError = null,
+                        fieldErrors = it.fieldErrors - field,
+                    )
+                    "backgroundColor" -> it.copy(
+                        backgroundColorError = null,
+                        fieldErrors = it.fieldErrors - field,
+                    )
+                    else -> it
+                }
+            }
+        }
+    }
+
+    /**
+     * Builds field errors map with R.string resource IDs from validation result.
+     */
+    private fun buildReminderFieldErrors(
+        result: com.codenized.planixor.domain.validation.ReminderValidationResult,
+    ): Map<String, Int> {
+        val errors = mutableMapOf<String, Int>()
+        if (result.nameError != null) {
+            errors["name"] = R.string.reminder_validation_name_required
+        }
+        if (result.iconError != null) {
+            errors["icon"] = R.string.reminder_validation_icon_required
+        }
+        if (result.backgroundColorError != null) {
+            errors["backgroundColor"] = R.string.reminder_validation_color_required
+        }
+        return errors
     }
 
     private fun loadReminder(reminderId: String) {
@@ -255,9 +293,5 @@ class ReminderFormViewModel @Inject constructor(
                 )
             }
         }
-    }
-
-    companion object {
-        private const val VALIDATION_DEBOUNCE_MS = 1000L
     }
 }

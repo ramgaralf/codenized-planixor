@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- NU1903: Vulnerable NuGet package audit warning — addressed in dependency update task (Task 1.2) -->
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+  </PropertyGroup>
+</Project>

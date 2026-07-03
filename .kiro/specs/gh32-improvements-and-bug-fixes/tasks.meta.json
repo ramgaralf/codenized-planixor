@@ -1,0 +1,652 @@
+{
+  "pbtResults": {
+    "3.3 Write property tests for sync pause persistence (Properties 1–4)": {
+      "status": "passed",
+      "lastRunTimestamp": 1783118108363
+    },
+    "13.2 Write property tests for Android form validation (Properties 7–8)": {
+      "status": "passed",
+      "lastRunTimestamp": 1783118835825
+    },
+    "15.2 Write property tests for URL parsing (Properties 11–13)": {
+      "status": "passed",
+      "lastRunTimestamp": 1783118870255
+    },
+    "5.4 Write property tests for prerequisite classification (Properties 5–6)": {
+      "status": "passed",
+      "lastRunTimestamp": 1783119009396
+    },
+    "12.3 Write property tests for Android prerequisite classification (Properties 5–6)": {
+      "status": "passed",
+      "lastRunTimestamp": 1783119086172
+    },
+    "6.3 Write property tests for form validation (Properties 7–9)": {
+      "status": "passed",
+      "lastRunTimestamp": 1783119105649
+    },
+    "7.3 Write property test for modal queue ordering (Property 10)": {
+      "status": "passed",
+      "lastRunTimestamp": 1783119148054
+    }
+  },
+  "executionHistory": {
+    "1.1 Fix all compiler and StyleCop warnings in the Backend API": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114393587
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114411500
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783115889766
+      }
+    ],
+    "1.2 Update all Codenized.* NuGet packages to latest stable versions": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114393629
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783115902297
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116165256
+      }
+    ],
+    "2.1 Update all React Web dependencies to latest compatible versions": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114393687
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114412492
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783115890733
+      }
+    ],
+    "3.1 Update SyncStore pause/resume actions to persist to IndexedDB": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114393728
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783115903097
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116164378
+      }
+    ],
+    "3.2 Guard SyncServiceController against paused state": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114393775
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116178776
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116685369
+      }
+    ],
+    "3.3 Write property tests for sync pause persistence (Properties 1–4)": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114393823
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783117704116
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118401333
+      }
+    ],
+    "4. Checkpoint - Backend and React Web foundations": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114393872
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119173876
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119178850
+      }
+    ],
+    "5.1 Implement prerequisite check service and hook": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114393913
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116179526
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116687941
+      }
+    ],
+    "5.2 Create PrerequisiteModal component": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114393956
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783117704853
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118402099
+      }
+    ],
+    "5.3 Wire prerequisite check into \"New Event\" button flow": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394017
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783117705620
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118402925
+      }
+    ],
+    "5.4 Write property tests for prerequisite classification (Properties 5–6)": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394060
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118898572
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119164804
+      }
+    ],
+    "6.1 Implement useFormValidation hook and ValidationError component": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394098
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116180288
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116686954
+      }
+    ],
+    "6.2 Integrate form validation into all existing forms": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394134
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783117706375
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118403672
+      }
+    ],
+    "6.3 Write property tests for form validation (Properties 7–9)": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394180
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118899383
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119164907
+      }
+    ],
+    "7.1 Implement Modal system (ModalProvider, useModal, InfoModal, ConfirmModal)": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394225
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116693225
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783117690525
+      }
+    ],
+    "7.2 Replace all browser alert/confirm/prompt calls with modal system": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394278
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783117707165
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118404505
+      }
+    ],
+    "7.3 Write property test for modal queue ordering (Property 10)": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394311
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118900184
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119165310
+      }
+    ],
+    "8.1 Inject app version at build time and display in Settings": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394344
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116181110
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116684675
+      }
+    ],
+    "9. Checkpoint - React Web complete": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394377
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119183865
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119189476
+      }
+    ],
+    "10.1 Update all Android dependencies in gradle/libs.versions.toml": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394411
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114413289
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783115891911
+      }
+    ],
+    "11.1 Update SyncViewModel pause/resume to persist to DataStore": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394467
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783115903880
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116166970
+      }
+    ],
+    "11.2 Ensure SyncServiceController respects persisted pause state on startup": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394502
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116181952
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116686112
+      }
+    ],
+    "12.1 Implement prerequisite check in CalendarViewModel": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394535
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116693968
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783117693080
+      }
+    ],
+    "12.2 Create PrerequisiteDialog composable": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394567
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118410139
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118890446
+      }
+    ],
+    "12.3 Write property tests for Android prerequisite classification (Properties 5–6)": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394597
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118901021
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119166317
+      }
+    ],
+    "13.1 Implement form validation in ViewModels": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394628
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116694724
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783117692308
+      }
+    ],
+    "13.2 Write property tests for Android form validation (Properties 7–8)": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394659
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118410849
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118891482
+      }
+    ],
+    "14.1 Add version display to Android Settings screen": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394712
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783115904637
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116166065
+      }
+    ],
+    "15.1 Fix URL parsing in ApiBasePathUtils and DynamicBaseUrlInterceptor": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394772
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116695575
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783117691459
+      }
+    ],
+    "15.2 Write property tests for URL parsing (Properties 11–13)": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394817
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118411705
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118892319
+      }
+    ],
+    "16. Final checkpoint - All platforms complete": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783114394853
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119195100
+      },
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119200652
+      }
+    ],
+    "2. React Web: Update dependencies": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783115890774
+      }
+    ],
+    "10. Android: Update dependencies": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783115891944
+      }
+    ],
+    "1. Backend: Remove compilation/analyzer warnings and update NuGet packages": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116165291
+      }
+    ],
+    "14. Android: Display version in Settings": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116166101
+      }
+    ],
+    "8. React Web: Display version in Settings": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116684722
+      }
+    ],
+    "11. Android: Persist sync pause state across restarts": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783116686146
+      }
+    ],
+    "3. React Web: Persist sync pause state across restarts": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118401390
+      }
+    ],
+    "13. Android: Form validation for mandatory fields": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118891517
+      }
+    ],
+    "15. Android: Fix sync URL parsing after field merge": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783118892350
+      }
+    ],
+    "5. React Web: Calendar event prerequisite check": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119164869
+      }
+    ],
+    "6. React Web: Form validation for mandatory fields": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119164944
+      }
+    ],
+    "7. React Web: Replace browser alerts with modal system": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119165356
+      }
+    ],
+    "12. Android: Calendar event prerequisite check": [
+      {
+        "executionId": "b01353d5-1448-4e2c-ade1-9824280d0656",
+        "chatSessionId": "sess_6ae26807-09cc-403e-b1cf-197b7b61e860",
+        "timestamp": 1783119166372
+      }
+    ]
+  }
+}

@@ -43,17 +43,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.codenized.planixor.BuildConfig
 import com.codenized.planixor.LocalThemeViewModel
 import com.codenized.planixor.R
 import com.codenized.planixor.data.notification.NotificationChannel
 import com.codenized.planixor.model.ThemeMode
 import com.codenized.planixor.ui.backup.BackupSection
 import com.codenized.planixor.ui.backup.BackupViewModel
+import com.codenized.planixor.ui.theme.Poppins
 
 @Composable
 fun SettingsScreen(
@@ -265,6 +269,20 @@ fun SettingsScreen(
                 },
             )
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Version display
+        Text(
+            text = "v${BuildConfig.VERSION_NAME}",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontFamily = Poppins,
+                fontWeight = FontWeight.Medium,
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
     }
 }
 

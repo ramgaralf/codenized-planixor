@@ -151,6 +151,14 @@ export const useShiftForm = (options?: UseShiftFormOptions): UseShiftFormReturn 
 
   const setField = useCallback(
     <K extends ShiftFormFieldKey>(field: K, value: ShiftFormFields[K]) => {
+      // Clear field error immediately on input change (Req 8.5)
+      setErrors((prev) => {
+        if (!prev[field as keyof ShiftValidationErrors]) return prev;
+        const next = { ...prev };
+        delete next[field as keyof ShiftValidationErrors];
+        return next;
+      });
+
       setFields((prev) => {
         const next = { ...prev, [field]: value };
 
@@ -195,6 +203,20 @@ export const useShiftForm = (options?: UseShiftFormOptions): UseShiftFormReturn 
 
     if (!result.success) {
       setErrors(result.errors);
+
+      // Scroll to and focus the first error field (Req 8.6)
+      const errorFields = Object.keys(result.errors) as (keyof ShiftValidationErrors)[];
+      if (errorFields.length > 0) {
+        requestAnimationFrame(() => {
+          const firstField = errorFields[0];
+          const selector = `[name="${String(firstField)}"], [data-field="${String(firstField)}"], #shift-${String(firstField).replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+          const element = document.querySelector<HTMLElement>(selector);
+          if (element) {
+            element.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+            element.focus();
+          }
+        });
+      }
       return false;
     }
 

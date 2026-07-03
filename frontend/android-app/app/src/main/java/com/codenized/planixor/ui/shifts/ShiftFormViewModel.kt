@@ -3,6 +3,7 @@ package com.codenized.planixor.ui.shifts
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.codenized.planixor.R
 import com.codenized.planixor.data.local.CalendarEventDao
 import com.codenized.planixor.data.local.ShiftRepository
 import com.codenized.planixor.domain.util.calculateHoursWorked
@@ -10,8 +11,6 @@ import com.codenized.planixor.domain.validation.CalendarEventValidation
 import com.codenized.planixor.domain.validation.ShiftValidationInput
 import com.codenized.planixor.domain.validation.ShiftValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +42,6 @@ class ShiftFormViewModel @Inject constructor(
     private val _propagationState = MutableStateFlow<PropagationUiState>(PropagationUiState.Hidden)
     val propagationState: StateFlow<PropagationUiState> = _propagationState.asStateFlow()
 
-    private var validationJob: Job? = null
     private var isHoursWorkedManuallyOverridden = false
 
     /** Stores the saved shift data needed if the user confirms propagation */
@@ -71,19 +69,22 @@ class ShiftFormViewModel @Inject constructor(
             "endTimeMinutes" -> handleTimeChange(field, value)
             "hoursWorked" -> handleHoursWorkedChange(value)
         }
-        scheduleDebouncedValidation()
+        clearFieldErrorIfValid(field)
     }
 
     fun onSubmit(onSuccess: () -> Unit) {
         val state = _uiState.value
+        _uiState.update { it.copy(hasAttemptedSubmit = true) }
+
         val validationResult = ShiftValidator.validate(buildValidationInput(state))
 
         if (!validationResult.isValid) {
-            _uiState.update { it.copy(errors = validationResult.errors) }
+            val fieldErrors = mapValidationErrorsToResIds(validationResult.errors)
+            _uiState.update { it.copy(errors = validationResult.errors, fieldErrors = fieldErrors) }
             return
         }
 
-        _uiState.update { it.copy(isSubmitting = true, errors = emptyMap()) }
+        _uiState.update { it.copy(isSubmitting = true, errors = emptyMap(), fieldErrors = emptyMap()) }
 
         viewModelScope.launch {
             val startTime = state.startTimeHours!! * 60 + state.startTimeMinutes!!
@@ -187,18 +188,51 @@ class ShiftFormViewModel @Inject constructor(
         return state.copy(hoursWorked = computed)
     }
 
-    private fun scheduleDebouncedValidation() {
-        validationJob?.cancel()
-        validationJob = viewModelScope.launch {
-            delay(VALIDATION_DEBOUNCE_MS)
-            validateAllFields()
+    /**
+     * Clears the field error for the given field if the field value is now valid.
+     * Only applies if the user has already attempted submit.
+     */
+    private fun clearFieldErrorIfValid(field: String) {
+        val state = _uiState.value
+        if (!state.hasAttemptedSubmit) return
+
+        val fieldKey = when (field) {
+            "startTimeHours", "startTimeMinutes" -> "startTime"
+            "endTimeHours", "endTimeMinutes" -> "endTime"
+            "backgroundColor" -> "color"
+            else -> field
+        }
+
+        if (fieldKey !in state.fieldErrors) return
+
+        val input = buildValidationInput(state)
+        val result = ShiftValidator.validate(input)
+        if (fieldKey !in result.errors) {
+            _uiState.update {
+                it.copy(
+                    errors = it.errors - fieldKey,
+                    fieldErrors = it.fieldErrors - fieldKey,
+                )
+            }
         }
     }
 
-    private fun validateAllFields() {
-        val state = _uiState.value
-        val result = ShiftValidator.validate(buildValidationInput(state))
-        _uiState.update { it.copy(errors = result.errors) }
+    /**
+     * Maps validation error keys to R.string resource IDs.
+     */
+    private fun mapValidationErrorsToResIds(errors: Map<String, String>): Map<String, Int> {
+        return errors.mapValues { (_, errorKey) ->
+            when (errorKey) {
+                "shift.validation.name.required" -> R.string.shift_validation_name_required
+                "shift.validation.name.maxLength" -> R.string.shift_validation_name_max_length
+                "shift.validation.icon.required" -> R.string.shift_validation_icon_required
+                "shift.validation.color.required" -> R.string.shift_validation_color_required
+                "shift.validation.startTime.required" -> R.string.shift_validation_start_time_required
+                "shift.validation.endTime.required" -> R.string.shift_validation_end_time_required
+                "shift.validation.hoursWorked.range" -> R.string.shift_validation_hours_worked_range
+                else -> R.string.validation_field_required
+            }
+        }
     }
 
     private fun buildValidationInput(state: ShiftFormUiState): ShiftValidationInput {
@@ -330,9 +364,6 @@ class ShiftFormViewModel @Inject constructor(
         navigateBack()
     }
 
-    companion object {
-        private const val VALIDATION_DEBOUNCE_MS = 1000L
-    }
 }
 
 /**

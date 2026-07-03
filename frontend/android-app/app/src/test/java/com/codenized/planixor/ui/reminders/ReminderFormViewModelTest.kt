@@ -19,6 +19,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -149,86 +150,76 @@ class ReminderFormViewModelTest {
     // --- Validation trigger timing ---
 
     @Test
-    fun `should trigger validation after debounce period on field change`() = runTest {
+    fun `should not show errors before first submit attempt`() = runTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.onFieldChange("name", "Test")
 
-        // Before debounce: no validation errors yet
+        // No errors shown before submit attempt (Requirement 9.6)
         assertNull(viewModel.uiState.value.nameError)
         assertNull(viewModel.uiState.value.iconError)
-
-        // Advance past debounce period (1000ms)
-        advanceTimeBy(1100)
-
-        // Validation has fired — icon and backgroundColor are empty so errors appear
-        assertEquals("reminder.validation.icon.required", viewModel.uiState.value.iconError)
-        assertEquals("reminder.validation.color.required", viewModel.uiState.value.backgroundColorError)
-        // Name is valid (not empty, ≤50 chars)
-        assertNull(viewModel.uiState.value.nameError)
+        assertNull(viewModel.uiState.value.backgroundColorError)
+        assertTrue(viewModel.uiState.value.fieldErrors.isEmpty())
+        assertFalse(viewModel.uiState.value.hasAttemptedSubmit)
     }
 
     @Test
-    fun `should not trigger validation before debounce period elapses`() = runTest {
+    fun `should not trigger validation before submit even after time passes`() = runTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.onFieldChange("name", "Test")
 
-        // Advance less than debounce (900ms < 1000ms)
-        advanceTimeBy(900)
+        // Advance time — no validation fires without submit
+        advanceTimeBy(2000)
 
-        // Validation should NOT have triggered yet
+        // No errors
         assertNull(viewModel.uiState.value.iconError)
         assertNull(viewModel.uiState.value.backgroundColorError)
     }
 
     @Test
-    fun `should reset debounce timer on consecutive field changes`() = runTest {
+    fun `should show errors only after submit attempt`() = runTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.onFieldChange("name", "A")
-        advanceTimeBy(800)
+        viewModel.onFieldChange("name", "Test")
 
-        // Another change resets the timer
-        viewModel.onFieldChange("name", "AB")
-        advanceTimeBy(800)
+        // Submit with icon and color missing
+        viewModel.onSubmit {}
+        advanceUntilIdle()
 
-        // Validation should NOT have run (timer was reset)
-        assertNull(viewModel.uiState.value.iconError)
-
-        // Complete the debounce from the second change
-        advanceTimeBy(300)
-
-        // Now validation should have fired
-        assertEquals("reminder.validation.icon.required", viewModel.uiState.value.iconError)
+        assertTrue(viewModel.uiState.value.hasAttemptedSubmit)
+        assertTrue(viewModel.uiState.value.fieldErrors.isNotEmpty())
+        assertNotNull(viewModel.uiState.value.iconError)
+        assertNotNull(viewModel.uiState.value.backgroundColorError)
+        assertNull(viewModel.uiState.value.nameError)
     }
 
     @Test
-    fun `should clear validation errors when all fields become valid`() = runTest {
+    fun `should clear validation errors when fields become valid after submit`() = runTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        // Trigger validation with invalid state
+        // Trigger validation via submit with missing fields
         viewModel.onFieldChange("name", "Test")
-        advanceTimeBy(1100)
+        viewModel.onSubmit {}
+        advanceUntilIdle()
 
         // Errors should be present for icon and color
-        assertEquals("reminder.validation.icon.required", viewModel.uiState.value.iconError)
-        assertEquals("reminder.validation.color.required", viewModel.uiState.value.backgroundColorError)
+        assertNotNull(viewModel.uiState.value.iconError)
+        assertNotNull(viewModel.uiState.value.backgroundColorError)
 
-        // Fill all fields validly
+        // Fill all fields validly — errors clear immediately
         viewModel.onFieldChange("icon", "💊")
         viewModel.onFieldChange("backgroundColor", "#EF4444")
-        advanceTimeBy(1100)
 
-        // All errors should be cleared
+        // All errors should be cleared immediately (no debounce needed)
         assertNull(viewModel.uiState.value.nameError)
         assertNull(viewModel.uiState.value.iconError)
         assertNull(viewModel.uiState.value.backgroundColorError)
-        assertTrue(viewModel.uiState.value.isValid)
+        assertTrue(viewModel.uiState.value.fieldErrors.isEmpty())
     }
 
     // --- Field changes ---

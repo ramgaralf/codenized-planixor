@@ -1,4 +1,7 @@
 {
+  "validation": {
+    "fieldRequired": "Este campo es obligatorio"
+  },
   "common": {
     "confirm": "Confirmar",
     "cancel": "Cancelar",
@@ -6,6 +9,9 @@
     "save": "Guardar",
     "saving": "Guardando...",
     "retry": "Reintentar"
+  },
+  "modal": {
+    "close": "Cerrar"
   },
   "app": {
     "name": "Planixor",
@@ -127,7 +133,9 @@
     "dangerZone": "Zona de peligro",
     "resetButton": "Restablecer aplicación",
     "resetDescription": "Esto eliminará todos los datos de este dispositivo incluyendo eventos, turnos, recordatorios, notificaciones y configuración de sincronización. Esta acción no se puede deshacer.",
-    "resetConfirmation": "¿Estás seguro de que quieres restablecer la aplicación? Todos los datos locales se eliminarán permanentemente."
+    "resetConfirmation": "¿Estás seguro de que quieres restablecer la aplicación? Todos los datos locales se eliminarán permanentemente.",
+    "resetConfirmTitle": "Restablecer aplicación",
+    "resetConfirmMessage": "¿Estás seguro de que quieres restablecer la aplicación? Todos los datos locales se eliminarán permanentemente. Esta acción no se puede deshacer."
   },
   "actions": {
     "createEvent": "Crear nuevo evento",
@@ -243,6 +251,14 @@
       "activate": "Activar",
       "delete": "Eliminar"
     }
+  },
+  "prerequisite": {
+    "title": "No se puede crear evento",
+    "messageBoth": "Necesitas crear al menos un turno y un recordatorio antes de poder crear un evento del calendario.",
+    "messageShifts": "Necesitas crear al menos un turno antes de poder crear un evento del calendario.",
+    "messageReminders": "Necesitas crear al menos un recordatorio antes de poder crear un evento del calendario.",
+    "goToShifts": "Ir a Turnos",
+    "goToReminders": "Ir a Recordatorios"
   },
   "calendarEvent": {
     "eventTypeSelector": {

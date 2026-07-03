@@ -6,6 +6,7 @@ import { ThemeProvider } from '@context/ThemeContext';
 import { registerNotificationWorker } from '@features/notifications/services/notificationWorkerManager';
 import { startSyncController } from '@features/sync/services/syncServiceController';
 import { useSyncStore } from '@features/sync/stores/syncStore';
+import { ModalProvider } from '@shared/components/modal';
 import i18n from '@/infrastructure/i18n';
 import { router } from '@/app/routes';
 
@@ -21,7 +22,9 @@ export const App = () => {
   return (
     <ThemeProvider>
       <I18nextProvider i18n={i18n}>
-        <RouterProvider router={router} />
+        <ModalProvider>
+          <RouterProvider router={router} />
+        </ModalProvider>
       </I18nextProvider>
     </ThemeProvider>
   );

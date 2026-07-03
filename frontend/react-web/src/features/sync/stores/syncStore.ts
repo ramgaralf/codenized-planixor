@@ -16,13 +16,13 @@ interface SyncState {
   loadConfig: () => Promise<void>;
   saveConfig: (config: SyncConfig) => Promise<void>;
   clearConfig: () => Promise<void>;
-  pause: () => void;
-  resume: () => void;
+  pause: () => Promise<void>;
+  resume: () => Promise<void>;
   setConnectionStatus: (status: ConnectionStatus) => void;
   setLastSyncedAt: (timestamp: string) => void;
 }
 
-export const useSyncStore = create<SyncState>()((set) => ({
+export const useSyncStore = create<SyncState>()((set, get) => ({
   config: null,
   connectionStatus: 'unconfigured',
   isPaused: false,
@@ -78,12 +78,28 @@ export const useSyncStore = create<SyncState>()((set) => ({
     });
   },
 
-  pause: () => {
-    set({ isPaused: true, connectionStatus: 'paused' });
+  pause: async () => {
+    const { config } = get();
+    if (config) {
+      await db.syncConfig.update('default', { isPaused: true });
+      set({
+        config: { ...config, isPaused: true },
+        isPaused: true,
+        connectionStatus: 'paused',
+      });
+    }
   },
 
-  resume: () => {
-    set({ isPaused: false, connectionStatus: 'active' });
+  resume: async () => {
+    const { config } = get();
+    if (config) {
+      await db.syncConfig.update('default', { isPaused: false });
+      set({
+        config: { ...config, isPaused: false },
+        isPaused: false,
+        connectionStatus: 'active',
+      });
+    }
   },
 
   setConnectionStatus: (status: ConnectionStatus) => {
