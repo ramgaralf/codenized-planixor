@@ -197,6 +197,7 @@ private fun MonthDayCell(
 
             // Emoji indicators — wrap to multiple lines
             if (emojisToShow.isNotEmpty()) {
+                @Suppress("DEPRECATION")
                 androidx.compose.foundation.layout.FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
