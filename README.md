@@ -135,6 +135,22 @@ docker run -d -p 80:80 \
 
 The image is built and pushed automatically on every push to `main` or when a version tag (`v*`) is created.
 
+**Default API key (for testing only):**
+
+The Docker image ships with a pre-configured API key for quick testing:
+
+| Username | API Key |
+|---|---|
+| `testuser` | `4f034mWW3AyTAbMnQ1hqcwjq6xUNaBjUrn5aIkeYpwELHRnh0j` |
+
+> **Important:** For personal/production deployments, you MUST change this configuration. Edit the `SecuritySettings` section in `backend/src/Codenized.Planixor.Api/appsettings.json` or override it via environment variables:
+>
+> ```bash
+> -e SecuritySettings__ApiKeys__myusername="my-secure-api-key"
+> ```
+>
+> Using the default key in a public-facing deployment is a security risk.
+
 ### Android (APK)
 
 The Android APK is available for download from [GitHub Releases](https://github.com/ramgaralf/codenized-planixor/releases). Each release includes the signed APK ready to install.
