@@ -8,6 +8,7 @@ Planixor is a shift management and scheduling tool developed by **Codenized**. I
 
 - [Project Description](#project-description)
 - [Tech Stack](#tech-stack)
+- [Deployment](#deployment)
 - [Installation and Setup](#installation-and-setup)
 - [Project Structure](#project-structure)
 - [Features](#features)
@@ -98,6 +99,61 @@ The backend API serves exclusively as a sync hub for users who have configured s
 | Gradle | 8.13 | Build system |
 | AGP | 8.12 | Android Gradle Plugin |
 | Min SDK 26 / Target SDK 36 | - | Android 8.0+ compatibility |
+
+## Deployment
+
+Planixor is available through multiple channels:
+
+| Platform | URL | Notes |
+|---|---|---|
+| **Web (PWA)** | [planixor.codenized.com](https://planixor.codenized.com) | Auto-deployed via Vercel on push to `main` |
+| **Backend (Docker)** | `ghcr.io/ramgaralf/planixor-api` | Self-hosted by users who want sync |
+| **Android (APK)** | [GitHub Releases](https://github.com/ramgaralf/codenized-planixor/releases) | Download from the latest release |
+
+### Web (PWA)
+
+The React Web application is automatically deployed to [planixor.codenized.com](https://planixor.codenized.com) via Vercel. Every push to `main` triggers a new deployment.
+
+### Backend (Docker Image)
+
+The backend API is published as a Docker image to GitHub Container Registry. Users who want cross-device sync can self-host it:
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/ramgaralf/planixor-api:latest
+
+# Or a specific version
+docker pull ghcr.io/ramgaralf/planixor-api:1.0.1
+
+# Run the container
+docker run -d -p 80:80 \
+  -e ConnectionStrings__AppReadDb="your-mysql-connection-string" \
+  -e ConnectionStrings__AppWriteDb="your-mysql-connection-string" \
+  -e SecuritySettings__ApiKeys__yourusername="your-api-key" \
+  ghcr.io/ramgaralf/planixor-api:latest
+```
+
+The image is built and pushed automatically on every push to `main` or when a version tag (`v*`) is created.
+
+**Default API key (for testing only):**
+
+The Docker image ships with a pre-configured API key for quick testing:
+
+| Username | API Key |
+|---|---|
+| `testuser` | `4f034mWW3AyTAbMnQ1hqcwjq6xUNaBjUrn5aIkeYpwELHRnh0j` |
+
+> **Important:** For personal/production deployments, you MUST change this configuration. Edit the `SecuritySettings` section in `backend/src/Codenized.Planixor.Api/appsettings.json` or override it via environment variables:
+>
+> ```bash
+> -e SecuritySettings__ApiKeys__myusername="my-secure-api-key"
+> ```
+>
+> Using the default key in a public-facing deployment is a security risk.
+
+### Android (APK)
+
+The Android APK is available for download from [GitHub Releases](https://github.com/ramgaralf/codenized-planixor/releases). Each release includes the signed APK ready to install.
 
 ## Installation and Setup
 
