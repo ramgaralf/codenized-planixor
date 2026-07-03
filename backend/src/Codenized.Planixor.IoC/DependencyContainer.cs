@@ -66,6 +66,7 @@ public static class DependencyContainer
         builder.Configuration.SetBasePath(Directory.GetCurrentDirectory());
         builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
         builder.Configuration.AddJsonFile("appsettings.localhost.json", optional: true, reloadOnChange: false);
+        builder.Configuration.AddEnvironmentVariables();
         return builder;
     }
 

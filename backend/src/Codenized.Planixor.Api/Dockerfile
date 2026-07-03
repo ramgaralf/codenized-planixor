@@ -6,7 +6,6 @@ EXPOSE 80
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /
-COPY ["nuget.config", "./"]
 COPY ["src/Codenized.Planixor.Api/Codenized.Planixor.Api.csproj", "src/Codenized.Planixor.Api/"]
 COPY ["src/Codenized.Planixor.IoC/Codenized.Planixor.IoC.csproj", "src/Codenized.Planixor.IoC/"]
 COPY ["src/Codenized.Planixor.Dtos/Codenized.Planixor.Dtos.csproj", "src/Codenized.Planixor.Dtos/"]
@@ -18,9 +17,12 @@ COPY ["src/Codenized.Planixor.Persistence.MySql.Efc.Repositories/Codenized.Plani
 COPY ["src/Codenized.Planixor.UseCases/Codenized.Planixor.UseCases.csproj", "src/Codenized.Planixor.UseCases/"]
 COPY ["src/Codenized.Planixor.Services/Codenized.Planixor.Services.csproj", "src/Codenized.Planixor.Services/"]
 RUN --mount=type=secret,id=github_token \
-    sed -i "s/%GITHUB_TOKEN%/$(cat /run/secrets/github_token)/g" nuget.config && \
-    dotnet restore "./src/Codenized.Planixor.Api/Codenized.Planixor.Api.csproj" && \
-    rm -f nuget.config
+    dotnet nuget add source "https://nuget.pkg.github.com/ramgaralf/index.json" \
+        --name github \
+        --username ramgaralf \
+        --password "$(cat /run/secrets/github_token)" \
+        --store-password-in-clear-text && \
+    dotnet restore "./src/Codenized.Planixor.Api/Codenized.Planixor.Api.csproj"
 COPY . .
 WORKDIR "/src/Codenized.Planixor.Api"
 RUN dotnet build "./Codenized.Planixor.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build

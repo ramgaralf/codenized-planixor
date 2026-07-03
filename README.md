@@ -4,6 +4,8 @@
 
 Planixor is a shift management and scheduling tool developed by **Codenized**. It unifies work shift management, calendar (appointments, reminders, meetings), notifications, and reporting into a single application.
 
+> **Want to learn more about Planixor?** Check out the [Marketing Presentation (PowerPoint)](./Planixor_Marketing.pptx) for a visual overview of all features, architecture, and value proposition.
+
 ## Table of Contents
 
 - [Project Description](#project-description)
