@@ -42,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.codenized.planixor.R
 import com.codenized.planixor.data.sync.ApiBasePathUtils
+import com.codenized.planixor.data.sync.UrlValidationError
+import com.codenized.planixor.data.sync.UrlValidationException
 
 /**
  * Valid selectable sync interval values in minutes.
@@ -128,11 +130,13 @@ fun SyncConfigScreen(
             serverUrl = value
             localError = null
             viewModel.clearValidationError()
+            viewModel.clearFieldError("serverUrl")
         },
         onApiKeyChange = { value ->
             apiKey = value
             localError = null
             viewModel.clearValidationError()
+            viewModel.clearFieldError("apiKey")
         },
         onSyncIntervalChange = { value -> syncIntervalMinutes = value },
         onToggleApiKeyVisibility = { apiKeyVisible = !apiKeyVisible },
@@ -148,11 +152,24 @@ fun SyncConfigScreen(
                     localError = "api_key_required"
                 }
                 else -> {
-                    localError = null
-                    hasSubmitted = true
-                    val (origin, path) = ApiBasePathUtils.parseServerUrl(urlTrimmed)
-                    val normalizedBasePath = ApiBasePathUtils.normalizeApiBasePath(path)
-                    viewModel.validateAndSave(origin, keyTrimmed, normalizedBasePath, syncIntervalMinutes)
+                    val parseResult = ApiBasePathUtils.validateAndParseServerUrl(urlTrimmed)
+                    parseResult.fold(
+                        onSuccess = { parsedUrl ->
+                            localError = null
+                            hasSubmitted = true
+                            val normalizedBasePath = ApiBasePathUtils.normalizeApiBasePath(parsedUrl.apiBasePath)
+                            viewModel.validateAndSave(parsedUrl.serverUrl, keyTrimmed, normalizedBasePath, syncIntervalMinutes)
+                        },
+                        onFailure = { throwable ->
+                            val validationError = (throwable as? UrlValidationException)?.error
+                            localError = when (validationError) {
+                                UrlValidationError.MISSING_SCHEME -> "url_missing_scheme"
+                                UrlValidationError.CONTAINS_WHITESPACE -> "url_contains_whitespace"
+                                UrlValidationError.INVALID_HOST -> "url_invalid_host"
+                                null -> "url_invalid_host"
+                            }
+                        },
+                    )
                 }
             }
         },
@@ -185,11 +202,17 @@ internal fun SyncConfigContent(
 ) {
     val urlRequiredText = stringResource(R.string.sync_validation_url_required)
     val apiKeyRequiredText = stringResource(R.string.sync_validation_api_key_required)
+    val urlMissingSchemeText = stringResource(R.string.sync_validation_url_missing_scheme)
+    val urlContainsWhitespaceText = stringResource(R.string.sync_validation_url_contains_whitespace)
+    val urlInvalidHostText = stringResource(R.string.sync_validation_url_invalid_host)
 
     // Resolve the error display string
     val displayError = when (errorText) {
         "url_required" -> urlRequiredText
         "api_key_required" -> apiKeyRequiredText
+        "url_missing_scheme" -> urlMissingSchemeText
+        "url_contains_whitespace" -> urlContainsWhitespaceText
+        "url_invalid_host" -> urlInvalidHostText
         else -> errorText
     }
 

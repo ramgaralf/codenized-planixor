@@ -250,20 +250,16 @@ class ShiftFormViewModelTest {
     }
 
     @Test
-    fun `should trigger debounced validation after field change`() = runTest {
+    fun `should not show errors before first submit attempt`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.onFieldChange("name", "A")
 
-        // Before debounce: no validation triggered yet (errors empty from initial state)
+        // No errors shown before submit attempt (Requirement 9.6)
         assertTrue(viewModel.uiState.value.errors.isEmpty())
-
-        // Advance past debounce period
-        advanceTimeBy(1100)
-
-        // Validation should have run — other required fields are empty so errors should exist
-        assertTrue(viewModel.uiState.value.errors.isNotEmpty())
+        assertTrue(viewModel.uiState.value.fieldErrors.isEmpty())
+        assertFalse(viewModel.uiState.value.hasAttemptedSubmit)
     }
 
     @Test
@@ -273,34 +269,30 @@ class ShiftFormViewModelTest {
 
         viewModel.onFieldChange("name", "A")
 
-        // Advance less than debounce (900ms < 1000ms)
-        advanceTimeBy(900)
+        // Advance time — no validation triggered without submit
+        advanceTimeBy(2000)
 
-        // Validation should NOT have triggered yet
+        // Validation should NOT trigger before first submit attempt
         assertTrue(viewModel.uiState.value.errors.isEmpty())
     }
 
     @Test
-    fun `should reset debounce timer on consecutive field changes`() = runTest {
+    fun `should clear field error when field becomes valid after submit`() = runTest {
         viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.onFieldChange("name", "A")
-        advanceTimeBy(800)
+        // Submit with empty form to trigger validation
+        viewModel.onSubmit {}
+        advanceUntilIdle()
 
-        // Another change resets the timer
-        viewModel.onFieldChange("name", "AB")
-        advanceTimeBy(800)
+        assertTrue(viewModel.uiState.value.hasAttemptedSubmit)
+        assertTrue(viewModel.uiState.value.fieldErrors.isNotEmpty())
+        assertTrue("name" in viewModel.uiState.value.fieldErrors)
 
-        // Total 1600ms elapsed but validation should NOT have run
-        // because the second change reset the 1000ms timer at 800ms
-        assertTrue(viewModel.uiState.value.errors.isEmpty())
+        // Now fill in name — error for name should clear
+        viewModel.onFieldChange("name", "Valid Name")
 
-        // Advance remaining time to complete the debounce from second change
-        advanceTimeBy(300)
-
-        // Now validation should have fired (800ms + 300ms = 1100ms from second change)
-        assertTrue(viewModel.uiState.value.errors.isNotEmpty())
+        assertFalse("name" in viewModel.uiState.value.fieldErrors)
     }
 
     @Test

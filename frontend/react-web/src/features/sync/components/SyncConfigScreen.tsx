@@ -11,6 +11,8 @@ import {
   parseServerUrl,
   buildFullServerUrl,
 } from '@features/sync/services/apiBasePathUtils';
+import { useFormValidation } from '@shared/hooks/useFormValidation';
+import { ValidationError } from '@shared/components/ValidationError';
 
 import type { SyncConfig } from '@features/sync/models';
 
@@ -260,12 +262,12 @@ export const SyncConfigScreen = () => {
   const saveConfig = useSyncStore((state) => state.saveConfig);
   const existingConfig = useSyncStore((state) => state.config);
 
-  const [serverUrl, setServerUrl] = useState(
+  const [serverUrl, setServerUrlState] = useState(
     existingConfig
       ? buildFullServerUrl(existingConfig.serverUrl, existingConfig.apiBasePath)
       : '',
   );
-  const [apiKey, setApiKey] = useState(existingConfig?.apiKey ?? '');
+  const [apiKey, setApiKeyState] = useState(existingConfig?.apiKey ?? '');
   const [syncIntervalMinutes, setSyncIntervalMinutes] = useState(
     existingConfig?.syncIntervalMinutes ?? 5,
   );
@@ -273,6 +275,27 @@ export const SyncConfigScreen = () => {
   const [isValidating, setIsValidating] = useState(false);
   const [pendingConfig, setPendingConfig] = useState<PendingConfig | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Form validation for mandatory fields (Req 8.1, 8.5, 8.6)
+  const { errors: fieldErrors, validateAll, clearFieldError } = useFormValidation<{ serverUrl: string; apiKey: string }>(
+    {
+      serverUrl: { required: true },
+      apiKey: { required: true },
+    },
+    { serverUrl, apiKey },
+  );
+
+  const setServerUrl = useCallback((value: string) => {
+    setServerUrlState(value);
+    clearFieldError('serverUrl');
+    setError(null);
+  }, [clearFieldError]);
+
+  const setApiKey = useCallback((value: string) => {
+    setApiKeyState(value);
+    clearFieldError('apiKey');
+    setError(null);
+  }, [clearFieldError]);
 
   const saveAndNavigate = useCallback(
     async (config: SyncConfig) => {
@@ -285,13 +308,8 @@ export const SyncConfigScreen = () => {
   const handleValidate = useCallback(async () => {
     setError(null);
 
-    if (!serverUrl.trim()) {
-      setError(t('sync.validation.urlRequired'));
-      return;
-    }
-
-    if (!apiKey.trim()) {
-      setError(t('sync.validation.apiKeyRequired'));
+    // Validate mandatory fields using useFormValidation (Req 8.1, 8.6)
+    if (!validateAll()) {
       return;
     }
 
@@ -337,7 +355,7 @@ export const SyncConfigScreen = () => {
     } finally {
       setIsValidating(false);
     }
-  }, [serverUrl, apiKey, syncIntervalMinutes, existingConfig, saveAndNavigate, t]);
+  }, [serverUrl, apiKey, syncIntervalMinutes, existingConfig, saveAndNavigate, t, validateAll]);
 
   const handleConfirmUsernameChange = useCallback(async () => {
     if (!pendingConfig) return;
@@ -363,8 +381,8 @@ export const SyncConfigScreen = () => {
   }, []);
 
   const handleCancel = useCallback(() => {
-    setServerUrl('');
-    setApiKey('');
+    setServerUrlState('');
+    setApiKeyState('');
     navigate(-1);
   }, [navigate]);
 
@@ -397,13 +415,18 @@ export const SyncConfigScreen = () => {
           </label>
           <input
             id="sync-server-url"
+            name="serverUrl"
+            data-field="serverUrl"
             type="text"
             value={serverUrl}
             onChange={(e) => setServerUrl(e.target.value)}
             placeholder="https://backend.planixor.com/api"
-            style={inputStyle}
+            aria-invalid={!!fieldErrors.serverUrl}
+            aria-describedby={fieldErrors.serverUrl ? 'sync-server-url-error' : undefined}
+            style={fieldErrors.serverUrl ? { ...inputStyle, borderColor: 'var(--color-error)' } : inputStyle}
             autoComplete="url"
           />
+          <ValidationError message={fieldErrors.serverUrl} />
         </div>
 
         <div style={fieldGroupStyle}>
@@ -412,12 +435,17 @@ export const SyncConfigScreen = () => {
           </label>
           <input
             id="sync-api-key"
+            name="apiKey"
+            data-field="apiKey"
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            style={inputStyle}
+            aria-invalid={!!fieldErrors.apiKey}
+            aria-describedby={fieldErrors.apiKey ? 'sync-api-key-error' : undefined}
+            style={fieldErrors.apiKey ? { ...inputStyle, borderColor: 'var(--color-error)' } : inputStyle}
             autoComplete="current-password"
           />
+          <ValidationError message={fieldErrors.apiKey} />
         </div>
 
         <div style={fieldGroupStyle}>

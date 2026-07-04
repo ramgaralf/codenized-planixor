@@ -24,7 +24,6 @@ public sealed class ReminderColorPropertyTests
 {
     private static readonly string[] AllPaletteColors =
     [
-        // Red
         "#FCA5A5", "#F87171", "#EF4444", "#DC2626", "#991B1B",
 
         // Orange

@@ -209,7 +209,7 @@ public sealed class ReminderSyncPropertyTests
             false);
 
         // Verify precondition: local is unmodified (ModifiedAt <= SyncedAt)
-        Assert.That(localReminder.ModifiedAt, Is.LessThanOrEqualTo(localReminder.SyncedAt), "Precondition: local is unmodified");
+        Assert.That(localReminder.ModifiedAt, Is.LessThanOrEqualTo(localReminder.SyncedAt!), "Precondition: local is unmodified");
 
         DateTime before = DateTime.UtcNow;
 

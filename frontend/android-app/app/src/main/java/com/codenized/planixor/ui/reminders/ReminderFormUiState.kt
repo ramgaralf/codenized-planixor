@@ -19,6 +19,8 @@ data class ReminderFormUiState(
     val nameError: String? = null,
     val iconError: String? = null,
     val backgroundColorError: String? = null,
+    val fieldErrors: Map<String, Int> = emptyMap(),
+    val hasAttemptedSubmit: Boolean = false,
     val isValid: Boolean = false,
     val isSaving: Boolean = false,
     val saveError: String? = null,

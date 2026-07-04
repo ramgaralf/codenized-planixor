@@ -158,6 +158,18 @@ The MySQL provider for EF Core 10 cannot translate `list.Contains(entity.Id)` to
 
 The backend serializes `DateTime` as `"2026-06-20T13:07:59.878"` (without `Z` or offset). Clients must normalize this before parsing (e.g., append `Z` if no timezone indicator is present).
 
+**Critical:** EVERY sync adapter's `parseIsoToTimestamp` function MUST include this normalization. The pattern is:
+```kotlin
+val normalized = if (iso.endsWith("Z") || iso.contains("+") || iso.indexOf('-', 10) >= 0) {
+    iso
+} else {
+    "${iso}Z"
+}
+val instant = java.time.Instant.parse(normalized)
+```
+
+Using `Instant.parse(iso)` directly WITHOUT normalization will crash with `DateTimeParseException` on any DateTime field from the backend. This applies to all adapters: CalendarEvent, NotificationRecord, AnnualHoursConfig, Shift, Reminder.
+
 ### Android: `android:usesCleartextTraffic="true"` required for HTTP
 
 Android blocks HTTP (non-HTTPS) connections by default since API 28. For local development with `http://` URLs, the manifest must include this attribute.

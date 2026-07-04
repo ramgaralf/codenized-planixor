@@ -4,6 +4,7 @@ import EmojiPicker, { Theme } from 'emoji-picker-react';
 import type { EmojiClickData } from 'emoji-picker-react';
 
 import { ColorPicker } from '@features/reminders/components/ColorPicker';
+import { ValidationError } from '@shared/components/ValidationError';
 import type { ShiftValidationErrors } from '@features/shifts/services/shiftValidation';
 
 import { useTheme } from '@context/useTheme';
@@ -49,12 +50,6 @@ const labelStyle: React.CSSProperties = {
   fontSize: '14px',
   fontWeight: 500,
   color: 'var(--color-text-primary)',
-};
-
-const errorStyle: React.CSSProperties = {
-  fontSize: '12px',
-  color: 'var(--color-error)',
-  marginTop: '4px',
 };
 
 const fieldGroupStyle: React.CSSProperties = {
@@ -126,6 +121,8 @@ export const ShiftForm = ({
         </label>
         <input
           id="shift-name"
+          name="name"
+          data-field="name"
           type="text"
           maxLength={50}
           value={fields.name}
@@ -136,9 +133,7 @@ export const ShiftForm = ({
           style={errors.name ? inputErrorStyle : inputStyle}
         />
         {errors.name && (
-          <p id="shift-name-error" style={errorStyle} role="alert">
-            {t(errors.name)}
-          </p>
+          <ValidationError message={errors.name} />
         )}
       </div>
 
@@ -186,9 +181,7 @@ export const ShiftForm = ({
         )}
 
         {errors.icon && (
-          <p id="shift-icon-error" style={errorStyle} role="alert">
-            {t(errors.icon)}
-          </p>
+          <ValidationError message={errors.icon} />
         )}
       </div>
 
@@ -204,9 +197,7 @@ export const ShiftForm = ({
           {t('shift.form.colorHint')}
         </p>
         {errors.backgroundColor && (
-          <p id="shift-color-error" style={errorStyle} role="alert">
-            {t(errors.backgroundColor)}
-          </p>
+          <ValidationError message={errors.backgroundColor} />
         )}
       </div>
 
@@ -217,6 +208,8 @@ export const ShiftForm = ({
         </label>
         <input
           id="shift-start-time"
+          name="startTime"
+          data-field="startTime"
           type="time"
           value={fields.startTime}
           onChange={(e) => onFieldChange('startTime', e.target.value)}
@@ -225,9 +218,7 @@ export const ShiftForm = ({
           style={errors.startTime ? inputErrorStyle : inputStyle}
         />
         {errors.startTime && (
-          <p id="shift-start-time-error" style={errorStyle} role="alert">
-            {t(errors.startTime)}
-          </p>
+          <ValidationError message={errors.startTime} />
         )}
       </div>
 
@@ -238,6 +229,8 @@ export const ShiftForm = ({
         </label>
         <input
           id="shift-end-time"
+          name="endTime"
+          data-field="endTime"
           type="time"
           value={fields.endTime}
           onChange={(e) => onFieldChange('endTime', e.target.value)}
@@ -246,9 +239,7 @@ export const ShiftForm = ({
           style={errors.endTime ? inputErrorStyle : inputStyle}
         />
         {errors.endTime && (
-          <p id="shift-end-time-error" style={errorStyle} role="alert">
-            {t(errors.endTime)}
-          </p>
+          <ValidationError message={errors.endTime} />
         )}
       </div>
 
@@ -259,6 +250,8 @@ export const ShiftForm = ({
         </label>
         <input
           id="shift-hours-worked"
+          name="hoursWorked"
+          data-field="hoursWorked"
           type="text"
           inputMode="numeric"
           placeholder="HH:mm"
@@ -270,9 +263,7 @@ export const ShiftForm = ({
           style={errors.hoursWorked ? inputErrorStyle : inputStyle}
         />
         {errors.hoursWorked && (
-          <p id="shift-hours-worked-error" style={errorStyle} role="alert">
-            {t(errors.hoursWorked)}
-          </p>
+          <ValidationError message={errors.hoursWorked} />
         )}
       </div>
 

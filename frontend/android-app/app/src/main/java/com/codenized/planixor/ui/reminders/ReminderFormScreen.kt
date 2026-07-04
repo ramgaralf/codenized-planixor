@@ -165,7 +165,7 @@ internal fun ReminderFormContent(
             Button(
                 onClick = onSubmit,
                 modifier = Modifier.weight(1f),
-                enabled = uiState.isValid && !uiState.isSaving,
+                enabled = !uiState.isSaving,
             ) {
                 if (uiState.isSaving) {
                     CircularProgressIndicator(

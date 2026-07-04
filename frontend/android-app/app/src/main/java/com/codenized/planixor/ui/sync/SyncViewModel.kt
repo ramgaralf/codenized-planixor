@@ -3,6 +3,7 @@ package com.codenized.planixor.ui.sync
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.codenized.planixor.R
 import com.codenized.planixor.data.local.AnnualHoursConfigDao
 import com.codenized.planixor.data.local.CalendarEventDao
 import com.codenized.planixor.data.local.NotificationRecordDao
@@ -68,8 +69,23 @@ class SyncViewModel @Inject constructor(
     }
 
     fun validateAndSave(url: String, apiKey: String, apiBasePath: String = "/api", syncIntervalMinutes: Int = 5) {
+        _uiState.update { it.copy(hasAttemptedSubmit = true) }
+
+        // Validate mandatory fields
+        val fieldErrors = mutableMapOf<String, Int>()
+        if (url.isBlank()) {
+            fieldErrors["serverUrl"] = R.string.sync_validation_url_required
+        }
+        if (apiKey.isBlank()) {
+            fieldErrors["apiKey"] = R.string.sync_validation_api_key_required
+        }
+        if (fieldErrors.isNotEmpty()) {
+            _uiState.update { it.copy(fieldErrors = fieldErrors, validationError = "invalid_input") }
+            return
+        }
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isValidating = true, validationError = null) }
+            _uiState.update { it.copy(isValidating = true, validationError = null, fieldErrors = emptyMap()) }
 
             val result = syncValidationService.validate(url, apiKey)
 
@@ -167,12 +183,16 @@ class SyncViewModel @Inject constructor(
     fun pause() {
         viewModelScope.launch {
             preferencesRepository.setSyncPaused(true)
+            preferencesRepository.saveConnectionStatus(ConnectionStatus.PAUSED)
+            _uiState.update { it.copy(connectionStatus = ConnectionStatus.PAUSED) }
         }
     }
 
     fun resume() {
         viewModelScope.launch {
             preferencesRepository.setSyncPaused(false)
+            preferencesRepository.saveConnectionStatus(ConnectionStatus.ACTIVE)
+            _uiState.update { it.copy(connectionStatus = ConnectionStatus.ACTIVE) }
         }
     }
 
@@ -184,6 +204,10 @@ class SyncViewModel @Inject constructor(
 
     fun clearValidationError() {
         _uiState.update { it.copy(validationError = null) }
+    }
+
+    fun clearFieldError(field: String) {
+        _uiState.update { it.copy(fieldErrors = it.fieldErrors - field) }
     }
 
     companion object {

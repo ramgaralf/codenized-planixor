@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { AlertConfigField } from '@features/notifications/components/AlertConfigField';
+import { ValidationError } from '@shared/components/ValidationError';
 
 import { MAX_NOTES_LENGTH } from '../constants';
 import { useEventForm } from '../hooks/useEventForm';
@@ -73,29 +74,10 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--color-text-primary)',
 };
 
-const errorStyle: React.CSSProperties = {
-  fontSize: '12px',
-  color: 'var(--color-error)',
-  marginTop: '4px',
-  margin: 0,
-};
-
 const fieldGroupStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: '8px',
-};
-
-/**
- * Renders an inline field error message if an error key is present.
- */
-const FieldError = ({ id, errorKey, t }: { id: string; errorKey: string | undefined; t: (key: string) => string }) => {
-  if (!errorKey) return null;
-  return (
-    <p id={id} style={errorStyle} role="alert">
-      {t(errorKey)}
-    </p>
-  );
 };
 
 /**
@@ -173,6 +155,8 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
         </label>
         <input
           id="event-start-day"
+          name="startDay"
+          data-field="startDay"
           type="date"
           value={formState.startDay}
           onChange={(e) => setField('startDay', e.target.value)}
@@ -180,7 +164,7 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
           aria-describedby={fieldErrors.startDay ? 'event-start-day-error' : undefined}
           style={fieldErrors.startDay ? inputErrorStyle : inputStyle}
         />
-        <FieldError id="event-start-day-error" errorKey={fieldErrors.startDay} t={t} />
+        <ValidationError message={fieldErrors.startDay} />
       </div>
 
       {/* End Day */}
@@ -190,6 +174,8 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
         </label>
         <input
           id="event-end-day"
+          name="endDay"
+          data-field="endDay"
           type="date"
           value={formState.endDay}
           onChange={(e) => setField('endDay', e.target.value)}
@@ -197,7 +183,7 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
           aria-describedby={fieldErrors.endDay ? 'event-end-day-error' : undefined}
           style={fieldErrors.endDay ? inputErrorStyle : inputStyle}
         />
-        <FieldError id="event-end-day-error" errorKey={fieldErrors.endDay} t={t} />
+        <ValidationError message={fieldErrors.endDay} />
       </div>
 
       {/* Start Time */}
@@ -207,6 +193,8 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
         </label>
         <input
           id="event-start-time"
+          name="startTime"
+          data-field="startTime"
           type="time"
           value={formatMinutesToTime(formState.startTime)}
           onChange={(e) => {
@@ -220,7 +208,7 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
           aria-describedby={fieldErrors.startTime ? 'event-start-time-error' : undefined}
           style={getTimeInputStyle(!!fieldErrors.startTime, isTimeReadOnly)}
         />
-        <FieldError id="event-start-time-error" errorKey={fieldErrors.startTime} t={t} />
+        <ValidationError message={fieldErrors.startTime} />
       </div>
 
       {/* End Time */}
@@ -230,6 +218,8 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
         </label>
         <input
           id="event-end-time"
+          name="endTime"
+          data-field="endTime"
           type="time"
           value={formatMinutesToTime(formState.endTime)}
           onChange={(e) => {
@@ -243,7 +233,7 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
           aria-describedby={fieldErrors.endTime ? 'event-end-time-error' : undefined}
           style={getTimeInputStyle(!!fieldErrors.endTime, isTimeReadOnly)}
         />
-        <FieldError id="event-end-time-error" errorKey={fieldErrors.endTime} t={t} />
+        <ValidationError message={fieldErrors.endTime} />
       </div>
 
       {/* Total Hours (read-only) */}
@@ -268,6 +258,8 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
         </label>
         <textarea
           id="event-notes"
+          name="notes"
+          data-field="notes"
           value={formState.notes}
           onChange={(e) => setField('notes', e.target.value)}
           maxLength={MAX_NOTES_LENGTH}
@@ -280,7 +272,7 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
             resize: 'vertical',
           }}
         />
-        <FieldError id="event-notes-error" errorKey={fieldErrors.notes} t={t} />
+        <ValidationError message={fieldErrors.notes} />
       </div>
 
       {/* Alert Config */}

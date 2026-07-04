@@ -2,6 +2,7 @@ package com.codenized.planixor.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.codenized.planixor.R
 import com.codenized.planixor.data.local.CalendarEventRepository
 import com.codenized.planixor.data.local.PreferencesRepository
 import com.codenized.planixor.data.local.ReminderRepository
@@ -65,6 +66,15 @@ class CalendarViewModel @Inject constructor(
 
     private val _formState = MutableStateFlow(EventFormUiState())
     val formState: StateFlow<EventFormUiState> = _formState.asStateFlow()
+
+    private val _prerequisiteState = MutableStateFlow(
+        PrerequisiteDialogState(
+            showDialog = false,
+            missingShifts = false,
+            missingReminders = false,
+        ),
+    )
+    val prerequisiteState: StateFlow<PrerequisiteDialogState> = _prerequisiteState.asStateFlow()
 
     init {
         loadPersistedView()
@@ -247,6 +257,7 @@ class CalendarViewModel @Inject constructor(
                             derivedIcon = shift.icon,
                             derivedBackgroundColor = shift.backgroundColor,
                             errors = current.errors - setOf("eventType", "eventTypeId", "startTime", "endTime", "endDay"),
+                            fieldErrors = current.fieldErrors - setOf("eventType", "eventTypeId", "startTime", "endTime", "endDay"),
                             formError = null,
                         )
                     }
@@ -256,6 +267,7 @@ class CalendarViewModel @Inject constructor(
                             eventType = eventType,
                             eventTypeId = eventTypeId,
                             errors = current.errors - setOf("eventType", "eventTypeId"),
+                            fieldErrors = current.fieldErrors - setOf("eventType", "eventTypeId"),
                             formError = null,
                         )
                     }
@@ -281,6 +293,7 @@ class CalendarViewModel @Inject constructor(
                         derivedIcon = reminder?.icon ?: "",
                         derivedBackgroundColor = reminder?.backgroundColor ?: "",
                         errors = current.errors - setOf("eventType", "eventTypeId"),
+                        fieldErrors = current.fieldErrors - setOf("eventType", "eventTypeId"),
                         formError = null,
                     )
                     updatedState.copy(totalHours = recalculateTotalHoursForReminder(updatedState))
@@ -303,6 +316,7 @@ class CalendarViewModel @Inject constructor(
                 startDay = day,
                 endDay = correctedEndDay,
                 errors = current.errors - "startDay",
+                fieldErrors = current.fieldErrors - "startDay",
             )
 
             if (current.eventType == "shift" && current.startTimeHours != null && current.endTimeHours != null) {
@@ -330,6 +344,7 @@ class CalendarViewModel @Inject constructor(
             val updatedState = current.copy(
                 endDay = day,
                 errors = current.errors - "endDay",
+                fieldErrors = current.fieldErrors - "endDay",
             )
             if (current.eventType == "reminder") {
                 updatedState.copy(totalHours = recalculateTotalHoursForReminder(updatedState))
@@ -361,6 +376,7 @@ class CalendarViewModel @Inject constructor(
                 endTimeHours = if (adjustedEndTotal != null) adjustedEndTotal / 60 else current.endTimeHours,
                 endTimeMinutes = if (adjustedEndTotal != null) adjustedEndTotal % 60 else current.endTimeMinutes,
                 errors = current.errors - "startTime",
+                fieldErrors = current.fieldErrors - "startTime",
             )
             if (current.eventType == "reminder") {
                 updatedState.copy(totalHours = recalculateTotalHoursForReminder(updatedState))
@@ -380,6 +396,7 @@ class CalendarViewModel @Inject constructor(
                 endTimeHours = hours,
                 endTimeMinutes = minutes,
                 errors = current.errors - "endTime",
+                fieldErrors = current.fieldErrors - "endTime",
             )
             if (current.eventType == "reminder") {
                 updatedState.copy(totalHours = recalculateTotalHoursForReminder(updatedState))
@@ -397,6 +414,7 @@ class CalendarViewModel @Inject constructor(
             current.copy(
                 notes = notes,
                 errors = current.errors - "notes",
+                fieldErrors = current.fieldErrors - "notes",
             )
         }
     }
@@ -416,7 +434,16 @@ class CalendarViewModel @Inject constructor(
      * Returns true on success, false on validation error.
      */
     fun saveEvent(onSuccess: () -> Unit) {
+        _formState.update { it.copy(hasAttemptedSubmit = true) }
         val state = _formState.value
+
+        // Validate mandatory fields
+        val fieldErrors = validateEventFormFields(state)
+        if (fieldErrors.isNotEmpty()) {
+            _formState.update { it.copy(fieldErrors = fieldErrors) }
+            return
+        }
+
         val eventType = state.eventType ?: return
         val eventTypeId = state.eventTypeId ?: return
         val startDay = state.startDay?.toString() ?: return
@@ -428,7 +455,7 @@ class CalendarViewModel @Inject constructor(
             state.endTimeHours * 60 + state.endTimeMinutes
         } else return
 
-        _formState.update { it.copy(isSubmitting = true) }
+        _formState.update { it.copy(isSubmitting = true, fieldErrors = emptyMap()) }
 
         viewModelScope.launch {
             val shiftHoursWorked = if (eventType == "shift") state.totalHours else null
@@ -485,7 +512,16 @@ class CalendarViewModel @Inject constructor(
      * Updates an existing calendar event with the current form state.
      */
     fun updateEvent(eventId: String, onSuccess: () -> Unit) {
+        _formState.update { it.copy(hasAttemptedSubmit = true) }
         val state = _formState.value
+
+        // Validate mandatory fields
+        val fieldErrors = validateEventFormFields(state)
+        if (fieldErrors.isNotEmpty()) {
+            _formState.update { it.copy(fieldErrors = fieldErrors) }
+            return
+        }
+
         val eventType = state.eventType ?: return
         val eventTypeId = state.eventTypeId ?: return
         val startDay = state.startDay?.toString() ?: return
@@ -497,7 +533,7 @@ class CalendarViewModel @Inject constructor(
             state.endTimeHours * 60 + state.endTimeMinutes
         } else return
 
-        _formState.update { it.copy(isSubmitting = true) }
+        _formState.update { it.copy(isSubmitting = true, fieldErrors = emptyMap()) }
 
         viewModelScope.launch {
             val shiftHoursWorked = if (eventType == "shift") state.totalHours else null
@@ -567,6 +603,51 @@ class CalendarViewModel @Inject constructor(
 
     // endregion
 
+    // region Prerequisite Check
+
+    /**
+     * Performs the prerequisite check by querying Room for active shifts and reminders,
+     * then evaluates whether the user can create a calendar event.
+     *
+     * If canCreate=true, invokes [onCanCreate] to proceed with event form navigation.
+     * If canCreate=false, updates prerequisite dialog state to show the modal.
+     *
+     * Validates: Requirements 7.1, 7.2, 7.3, 7.4
+     */
+    fun performPrerequisiteCheck(onCanCreate: () -> Unit) {
+        viewModelScope.launch {
+            val activeShifts = shiftRepository.getAllActive().first()
+            val activeShiftCount = activeShifts.count { !it.isDeleted }
+            val activeReminders = reminderRepository.getAllActive().first()
+            val activeReminderCount = activeReminders.count { !it.isDeleted }
+
+            val result = checkPrerequisites(activeShiftCount, activeReminderCount)
+
+            if (result.canCreate) {
+                onCanCreate()
+            } else {
+                _prerequisiteState.value = PrerequisiteDialogState(
+                    showDialog = true,
+                    missingShifts = result.missingShifts,
+                    missingReminders = result.missingReminders,
+                )
+            }
+        }
+    }
+
+    /**
+     * Dismisses the prerequisite dialog and returns to the Calendar view.
+     */
+    fun dismissPrerequisiteDialog() {
+        _prerequisiteState.value = PrerequisiteDialogState(
+            showDialog = false,
+            missingShifts = false,
+            missingReminders = false,
+        )
+    }
+
+    // endregion
+
     // region Private helpers
 
     /**
@@ -577,6 +658,26 @@ class CalendarViewModel @Inject constructor(
      */
     private fun computePreSelectedDay(): LocalDate {
         return _currentDate.value
+    }
+
+    /**
+     * Validates mandatory event form fields and returns a map of field → R.string resource ID.
+     * Mandatory: eventType + eventTypeId (shift OR reminder selection), startDay, endDay.
+     */
+    private fun validateEventFormFields(state: EventFormUiState): Map<String, Int> {
+        val errors = mutableMapOf<String, Int>()
+
+        if (state.eventType == null || state.eventTypeId == null) {
+            errors["eventType"] = R.string.event_validation_type_required
+        }
+        if (state.startDay == null) {
+            errors["startDay"] = R.string.event_validation_start_day_required
+        }
+        if (state.endDay == null) {
+            errors["endDay"] = R.string.event_validation_end_day_required
+        }
+
+        return errors
     }
 
     /**
@@ -683,14 +784,24 @@ class CalendarViewModel @Inject constructor(
     /**
      * Observes calendar events reactively based on current date and active view.
      * Computes the date range for the view, queries the repository, and resolves display fields.
+     * Also combines with shifts and reminders flows so that when referenced shifts/reminders
+     * are synced after events, display fields re-resolve without requiring app restart.
      * Uses Dispatchers.Default to avoid blocking test dispatchers.
      */
     private fun observeEvents() {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.Default) {
-            combine(_currentDate, _activeView) { date, view ->
+            val eventsFlow = combine(_currentDate, _activeView) { date, view ->
                 getDateRangeForView(date, view)
             }.flatMapLatest { (start, end) ->
                 calendarEventRepository.getByDateRange(start, end)
+            }
+
+            combine(
+                eventsFlow,
+                shiftRepository.getAllActive(),
+                reminderRepository.getAllActive(),
+            ) { entities, _, _ ->
+                entities
             }.map { entities ->
                 entities.map { entity ->
                     resolveDisplayFields(entity)
@@ -780,6 +891,25 @@ class CalendarViewModel @Inject constructor(
 
     companion object {
         private val VALID_VALUES = setOf("day", "week", "month", "year")
+
+        /**
+         * Pure function that evaluates whether the user can create a calendar event
+         * based on the count of active (non-deleted) shifts and reminders.
+         *
+         * At least one of either type must exist for event creation to proceed.
+         *
+         * Validates: Requirements 7.1, 7.2, 7.3, 7.4
+         */
+        fun checkPrerequisites(activeShiftCount: Int, activeReminderCount: Int): PrerequisiteResult {
+            if (activeShiftCount > 0 || activeReminderCount > 0) {
+                return PrerequisiteResult(canCreate = true, missingShifts = false, missingReminders = false)
+            }
+            return PrerequisiteResult(
+                canCreate = false,
+                missingShifts = activeShiftCount == 0,
+                missingReminders = activeReminderCount == 0,
+            )
+        }
 
         private fun String?.toCalendarView(): CalendarView = when {
             this == null -> CalendarView.Day

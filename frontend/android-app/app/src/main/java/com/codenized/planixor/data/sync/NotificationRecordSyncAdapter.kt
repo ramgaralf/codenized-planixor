@@ -257,9 +257,15 @@ class NotificationRecordSyncAdapter @Inject constructor(
 
     /**
      * Parses an ISO 8601 datetime string to UTC timestamp (millis).
+     * Handles both "Z" suffix and no-suffix formats from the backend.
      */
     private fun parseIsoToTimestamp(iso: String): Long {
-        val instant = java.time.Instant.parse(iso)
+        val normalized = if (iso.endsWith("Z") || iso.contains("+") || iso.indexOf('-', 10) >= 0) {
+            iso
+        } else {
+            "${iso}Z"
+        }
+        val instant = java.time.Instant.parse(normalized)
         return instant.toEpochMilli()
     }
 }

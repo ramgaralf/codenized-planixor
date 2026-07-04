@@ -75,6 +75,27 @@ These rules apply when a shift is selected as the event type in the calendar eve
 - A 24-hour shift (08:00→08:00, startDay=June 20, endDay=June 21) shows on June 20 (full day) but NOT on June 21
 - A midnight-crossing shift (22:00→06:00, startDay=June 20, endDay=June 21) shows on both days: June 20 (22:00→23:59) and June 21 (00:00→06:00)
 
+## Prerequisite check before event creation
+
+### Rule 5: At least one shift or reminder must exist to create an event
+
+**Trigger**: The user clicks "New Event" (top bar button on web, "+" button or FAB on Android).
+
+**Behavior**:
+- Query local storage for active (isDeleted=false) shifts and reminders
+- If at least one shift OR at least one reminder exists → proceed to Calendar_Event_Form
+- If NEITHER exists (zero shifts AND zero reminders) → show Prerequisite_Modal/Dialog instead of the form
+
+**Prerequisite_Modal behavior**:
+- Displays a message indicating shifts or reminders must be created first
+- Provides navigation buttons to Shifts page and Reminders page
+- Provides a dismiss action that returns to Calendar view
+- Does NOT open the Calendar_Event_Form
+
+**Platform implementation notes**:
+- **React Web**: `usePrerequisiteCheck` hook + `PrerequisiteModal` component in HeaderBar. Uses `useLiveQuery` for reactive updates.
+- **Android**: `CalendarViewModel.performPrerequisiteCheck()` + `PrerequisiteDialog` composable in AppNavigation. The `observeEvents()` flow also combines with shifts/reminders flows to re-resolve display fields when referenced entities are synced after events.
+
 ## Rules
 
 - All auto-adjustments must be **silent** (no toast, no dialog) — the field simply updates.
@@ -84,3 +105,4 @@ These rules apply when a shift is selected as the event type in the calendar eve
 - Auto-adjustments only apply to editable fields (reminder time fields). For shifts, time fields are read-only and populated from the shift definition.
 - `computeEndDayForShift` uses `<=` (not `<`): when startTime equals endTime, it's a 24-hour shift ending the next day.
 - Events with `endTime = 0` on their `endDay` are not rendered on that day (they occupy zero time there).
+- The prerequisite check requires at least one active shift OR one active reminder (not both). Zero of both types triggers the modal.
