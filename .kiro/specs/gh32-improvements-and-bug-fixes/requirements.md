@@ -99,14 +99,12 @@ This document specifies improvements and bug fixes across all three Planixor sub
 
 #### Acceptance Criteria
 
-1. WHEN the user clicks the "New Event" button and no Shift records with isDeleted=false exist in local storage and no Reminder records with isDeleted=false exist in local storage, THE React_Web SHALL display the Prerequisite_Modal indicating that both shifts and reminders must be created before creating a calendar event.
-2. WHEN the user clicks the "New Event" button and no Shift records with isDeleted=false exist in local storage and at least one Reminder record with isDeleted=false exists, THE React_Web SHALL display the Prerequisite_Modal indicating that shifts must be created before creating a calendar event.
-3. WHEN the user clicks the "New Event" button and at least one Shift record with isDeleted=false exists and no Reminder records with isDeleted=false exist in local storage, THE React_Web SHALL display the Prerequisite_Modal indicating that reminders must be created before creating a calendar event.
-4. WHEN the user clicks the "New Event" button and at least one Shift record with isDeleted=false exists and at least one Reminder record with isDeleted=false exists, THE React_Web SHALL display the Calendar_Event_Form without showing the Prerequisite_Modal.
-5. THE Prerequisite_Modal SHALL provide a navigation action for each missing prerequisite that routes the user to the corresponding page (Shifts page if shifts are missing, Reminders page if reminders are missing).
-6. THE Prerequisite_Modal SHALL provide a dismiss action that closes the modal and returns the user to the Calendar view without navigating away.
-7. WHILE the Prerequisite_Modal is displayed, THE React_Web SHALL NOT display the Calendar_Event_Form.
-8. THE Prerequisite_Modal SHALL include only non-deactivated records (isDeleted=false) in the prerequisite existence check, regardless of any other record status fields.
+1. WHEN the user clicks the "New Event" button and no Shift records with isDeleted=false AND no Reminder records with isDeleted=false exist in local storage (zero of both types), THE React_Web SHALL display the Prerequisite_Modal indicating that at least one shift or one reminder must be created before creating a calendar event.
+2. WHEN the user clicks the "New Event" button and at least one Shift record with isDeleted=false OR at least one Reminder record with isDeleted=false exists in local storage, THE React_Web SHALL display the Calendar_Event_Form without showing the Prerequisite_Modal.
+3. THE Prerequisite_Modal SHALL provide navigation actions that route the user to the Shifts page and the Reminders page.
+4. THE Prerequisite_Modal SHALL provide a dismiss action that closes the modal and returns the user to the Calendar view without navigating away.
+5. WHILE the Prerequisite_Modal is displayed, THE React_Web SHALL NOT display the Calendar_Event_Form.
+6. THE Prerequisite_Modal SHALL include only non-deactivated records (isDeleted=false) in the prerequisite existence check, regardless of any other record status fields.
 
 ---
 
@@ -116,13 +114,11 @@ This document specifies improvements and bug fixes across all three Planixor sub
 
 #### Acceptance Criteria
 
-1. WHEN the user initiates calendar event creation and no Shift records with isDeleted=false exist in local storage and no Reminder records with isDeleted=false exist in local storage, THE Android_App SHALL display the Prerequisite_Modal informing the user that both shifts and reminders must be created first.
-2. WHEN the user initiates calendar event creation and no Shift records with isDeleted=false exist in local storage and at least one Reminder record with isDeleted=false exists, THE Android_App SHALL display the Prerequisite_Modal informing the user that shifts must be created first.
-3. WHEN the user initiates calendar event creation and at least one Shift record with isDeleted=false exists and no Reminder records with isDeleted=false exist in local storage, THE Android_App SHALL display the Prerequisite_Modal informing the user that reminders must be created first.
-4. WHEN the user initiates calendar event creation and at least one Shift record with isDeleted=false exists and at least one Reminder record with isDeleted=false exists, THE Android_App SHALL display the Calendar_Event_Form.
-5. THE Prerequisite_Modal SHALL NOT display the Calendar_Event_Form.
-6. THE Prerequisite_Modal SHALL provide a dismiss button that closes the modal and returns the user to the Calendar screen without navigation.
-7. THE Prerequisite_Modal SHALL provide a navigation action for each missing prerequisite type that navigates the user to the corresponding creation screen (Shifts screen or Reminders screen).
+1. WHEN the user initiates calendar event creation and no Shift records with isDeleted=false AND no Reminder records with isDeleted=false exist in local storage (zero of both types), THE Android_App SHALL display the Prerequisite_Modal informing the user that at least one shift or one reminder must be created first.
+2. WHEN the user initiates calendar event creation and at least one Shift record with isDeleted=false OR at least one Reminder record with isDeleted=false exists in local storage, THE Android_App SHALL display the Calendar_Event_Form.
+3. THE Prerequisite_Modal SHALL NOT display the Calendar_Event_Form.
+4. THE Prerequisite_Modal SHALL provide a dismiss button that closes the modal and returns the user to the Calendar screen without navigation.
+5. THE Prerequisite_Modal SHALL provide navigation actions that navigate the user to the Shifts screen and the Reminders screen.
 
 ---
 
