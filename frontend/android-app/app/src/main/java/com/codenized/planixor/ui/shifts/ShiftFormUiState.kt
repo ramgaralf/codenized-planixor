@@ -22,6 +22,8 @@ data class ShiftFormUiState(
     val endTimeMinutes: Int? = null,
     val hoursWorked: Int? = null,
     val errors: Map<String, String> = emptyMap(),
+    val fieldErrors: Map<String, Int> = emptyMap(),
+    val hasAttemptedSubmit: Boolean = false,
     val isSubmitting: Boolean = false,
     val isLoading: Boolean = false,
     val mode: ShiftFormMode = ShiftFormMode.Create,

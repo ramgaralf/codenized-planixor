@@ -12,8 +12,8 @@ using System.Text.Json;
 /// </summary>
 public static class AlertOffsetsMapper
 {
-    private static readonly HashSet<int> ValidOffsets = [0, 10, 60, 1440];
     private const int MaxElements = 4;
+    private static readonly HashSet<int> ValidOffsets = [0, 10, 60, 1440];
 
     /// <summary>
     /// Serializes a list of alert offset values to a JSON array string for storage.

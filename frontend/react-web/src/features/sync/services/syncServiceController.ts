@@ -504,14 +504,29 @@ export const runPushOnlyCycle = async (): Promise<void> => {
 
 /**
  * Handles visibility change events.
- * On visible: run full sync. On hidden: run push-only.
+ * On visible: run full sync (guarded by isPaused inside runFullSyncCycle).
+ * On hidden: run push-only (guarded by isPaused inside runPushOnlyCycle).
  */
 const handleVisibilityChange = () => {
+  const { isPaused } = useSyncStore.getState();
+  if (isPaused) return;
+
   if (document.visibilityState === 'visible') {
     void runFullSyncCycle();
   } else {
     void runPushOnlyCycle();
   }
+};
+
+/**
+ * Handles connectivity restore events (browser 'online' event).
+ * Triggers a full sync cycle when network comes back — guarded by isPaused.
+ */
+const handleOnline = () => {
+  const { isPaused, config } = useSyncStore.getState();
+  if (isPaused || !config) return;
+
+  void runFullSyncCycle();
 };
 
 /**
@@ -559,7 +574,7 @@ export const stopSyncController = () => {
 };
 
 /**
- * Stops the periodic sync worker and removes visibility listener.
+ * Stops the periodic sync worker and removes visibility/connectivity listeners.
  */
 export const stopSyncWorker = () => {
   if (intervalId !== null) {
@@ -567,6 +582,7 @@ export const stopSyncWorker = () => {
     intervalId = null;
   }
   document.removeEventListener('visibilitychange', handleVisibilityChange);
+  window.removeEventListener('online', handleOnline);
 };
 
 /**
@@ -588,7 +604,8 @@ const restartSyncInterval = () => {
 
 /**
  * Starts the periodic sync worker: runs an immediate full sync,
- * then starts an interval based on the configured sync interval, and listens for visibility changes.
+ * then starts an interval based on the configured sync interval,
+ * listens for visibility changes, and listens for connectivity restore.
  */
 export const resumeSyncWorker = () => {
   // Don't restart if already running
@@ -603,8 +620,11 @@ export const resumeSyncWorker = () => {
     void runFullSyncCycle();
   }, intervalMs);
 
-  // Listen for visibility changes
+  // Listen for visibility changes (app focus/blur)
   document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  // Listen for connectivity restore (network comes back online)
+  window.addEventListener('online', handleOnline);
 };
 
 /**
@@ -614,4 +634,17 @@ export const resumeSyncWorker = () => {
 export const isSyncAllowed = (): boolean => {
   const { config, isPaused } = useSyncStore.getState();
   return config !== null && !isPaused;
+};
+
+/**
+ * Triggers a manual sync cycle.
+ * Returns false if sync is paused or not configured (manual trigger rejected).
+ * Returns true if sync was initiated.
+ */
+export const triggerManualSync = (): boolean => {
+  const { config, isPaused } = useSyncStore.getState();
+  if (!config || isPaused) return false;
+
+  void runFullSyncCycle();
+  return true;
 };

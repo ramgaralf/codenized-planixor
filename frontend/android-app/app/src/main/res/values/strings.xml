@@ -308,6 +308,9 @@
     <string name="sync_error_timeout">La conexión expiró. Revisa la URL e inténtalo de nuevo.</string>
     <string name="sync_validation_url_required">La URL del servidor es obligatoria</string>
     <string name="sync_validation_api_key_required">La clave API es obligatoria</string>
+    <string name="sync_validation_url_missing_scheme">La URL debe comenzar con https:// o http://</string>
+    <string name="sync_validation_url_contains_whitespace">La URL no puede contener espacios en blanco</string>
+    <string name="sync_validation_url_invalid_host">La URL no contiene un host válido</string>
     <string name="sync_api_base_path">Ruta Base de API</string>
     <string name="sync_api_base_path_placeholder">/api</string>
     <string name="sync_api_base_path_error">La ruta solo puede contener letras, números, guiones, guiones bajos, puntos y barras</string>
@@ -361,6 +364,18 @@
     <string name="backup_confirm_message">Se detectaron datos existentes. Continuar fusionará los datos del respaldo con tus datos actuales.</string>
     <string name="backup_confirm_cancel">Cancelar</string>
     <string name="backup_confirm_continue">Continuar</string>
+
+    <!-- Generic Form Validation -->
+    <string name="validation_field_required">Este campo es obligatorio</string>
+    <string name="validation_invalid_url_format">Formato de URL inválido</string>
+
+    <!-- Prerequisite Dialog -->
+    <string name="prerequisite_title">No se puede crear evento</string>
+    <string name="prerequisite_message_both">Necesitas al menos un turno y un recordatorio antes de crear un evento del calendario.</string>
+    <string name="prerequisite_message_shifts">Necesitas al menos un turno antes de crear un evento del calendario.</string>
+    <string name="prerequisite_message_reminders">Necesitas al menos un recordatorio antes de crear un evento del calendario.</string>
+    <string name="prerequisite_go_to_shifts">Ir a Turnos</string>
+    <string name="prerequisite_go_to_reminders">Ir a Recordatorios</string>
 
     <!-- Propagation Dialog -->
     <string name="propagation_dialog_title">¿Actualizar eventos del calendario?</string>

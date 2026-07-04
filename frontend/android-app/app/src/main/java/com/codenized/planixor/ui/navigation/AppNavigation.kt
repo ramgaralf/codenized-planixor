@@ -68,6 +68,8 @@ import com.codenized.planixor.ui.sync.SyncViewModel
 import com.codenized.planixor.ui.theme.PrimaryBlue
 import com.codenized.planixor.ui.theme.TextSecondary
 import com.codenized.planixor.data.notification.NotificationChannel
+import com.codenized.planixor.ui.calendar.PrerequisiteDialogState
+import com.codenized.planixor.ui.components.PrerequisiteDialog
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.LocalDate
 
@@ -214,7 +216,11 @@ fun AppNavigation() {
                     // New event button (only on Calendar screen)
                     if (currentRoute == Screen.Calendar.route) {
                         IconButton(onClick = {
-                            navController.navigate(Screen.EventCreate.createRoute(calendarCurrentDate.toString()))
+                            calendarViewModel?.performPrerequisiteCheck(
+                                onCanCreate = {
+                                    navController.navigate(Screen.EventCreate.createRoute(calendarCurrentDate.toString()))
+                                },
+                            )
                         }) {
                             Box(
                                 modifier = Modifier
@@ -327,11 +333,15 @@ fun AppNavigation() {
             )
         },
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Calendar.route,
-            modifier = Modifier.padding(innerPadding),
-        ) {
+        // Observe prerequisite dialog state
+        val prerequisiteState by (calendarViewModel?.prerequisiteState
+            ?: MutableStateFlow(PrerequisiteDialogState())).collectAsStateWithLifecycle()
+
+        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Calendar.route,
+            ) {
             composable(Screen.Calendar.route) {
                 CalendarScreen(
                     onNavigateToEventDetail = { eventId ->
@@ -443,6 +453,26 @@ fun AppNavigation() {
                     viewModel = syncViewModel,
                     onNavigateToConfig = {
                         navController.navigate(Screen.SyncConfig.route)
+                    },
+                )
+            }
+        }
+
+            // Prerequisite dialog
+            if (prerequisiteState.showDialog) {
+                PrerequisiteDialog(
+                    missingShifts = prerequisiteState.missingShifts,
+                    missingReminders = prerequisiteState.missingReminders,
+                    onNavigateToShifts = {
+                        calendarViewModel?.dismissPrerequisiteDialog()
+                        navController.navigate(Screen.Shifts.route)
+                    },
+                    onNavigateToReminders = {
+                        calendarViewModel?.dismissPrerequisiteDialog()
+                        navController.navigate(Screen.Reminders.route)
+                    },
+                    onDismiss = {
+                        calendarViewModel?.dismissPrerequisiteDialog()
                     },
                 )
             }

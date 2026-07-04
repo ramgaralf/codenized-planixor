@@ -104,11 +104,11 @@ describe('ReminderForm', () => {
       expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     });
 
-    it('should have submit disabled when fields are empty in create mode', () => {
+    it('should have submit enabled even when fields are empty in create mode', () => {
       render(<ReminderForm {...defaultProps} />);
 
       const submitBtn = screen.getByRole('button', { name: 'Save' });
-      expect(submitBtn).toBeDisabled();
+      expect(submitBtn).toBeEnabled();
     });
   });
 
@@ -258,7 +258,7 @@ describe('ReminderForm', () => {
   // --- Submit disabled when fields invalid ---
 
   describe('submit disabled when fields invalid', () => {
-    it('should disable submit when name is empty', () => {
+    it('should not disable submit when name is empty', () => {
       render(
         <ReminderForm
           initialValues={{ name: '', icon: '☀️', backgroundColor: '#EF4444' }}
@@ -267,10 +267,10 @@ describe('ReminderForm', () => {
       );
 
       const submitBtn = screen.getByRole('button', { name: 'Save' });
-      expect(submitBtn).toBeDisabled();
+      expect(submitBtn).toBeEnabled();
     });
 
-    it('should disable submit when icon is empty', () => {
+    it('should not disable submit when icon is empty', () => {
       render(
         <ReminderForm
           initialValues={{ name: 'Test', icon: '', backgroundColor: '#EF4444' }}
@@ -279,10 +279,10 @@ describe('ReminderForm', () => {
       );
 
       const submitBtn = screen.getByRole('button', { name: 'Save' });
-      expect(submitBtn).toBeDisabled();
+      expect(submitBtn).toBeEnabled();
     });
 
-    it('should disable submit when backgroundColor is empty', () => {
+    it('should not disable submit when backgroundColor is empty', () => {
       render(
         <ReminderForm
           initialValues={{ name: 'Test', icon: '☀️', backgroundColor: '' }}
@@ -291,7 +291,7 @@ describe('ReminderForm', () => {
       );
 
       const submitBtn = screen.getByRole('button', { name: 'Save' });
-      expect(submitBtn).toBeDisabled();
+      expect(submitBtn).toBeEnabled();
     });
 
     it('should not disable submit when all fields have valid values', () => {

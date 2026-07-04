@@ -118,6 +118,13 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
     (value: string) => {
       setNameState(value);
       setSaveError(null);
+      // Clear field error immediately on input change (Req 8.5)
+      setErrors((prev) => {
+        if (!prev.name) return prev;
+        const next = { ...prev };
+        delete next.name;
+        return next;
+      });
       const currentValues = { name: value, icon, backgroundColor };
       scheduleValidation('name', currentValues);
     },
@@ -128,6 +135,13 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
     (value: string) => {
       setIconState(value);
       setSaveError(null);
+      // Clear field error immediately on input change (Req 8.5)
+      setErrors((prev) => {
+        if (!prev.icon) return prev;
+        const next = { ...prev };
+        delete next.icon;
+        return next;
+      });
       const currentValues = { name, icon: value, backgroundColor };
       scheduleValidation('icon', currentValues);
     },
@@ -138,6 +152,13 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
     (value: string) => {
       setBackgroundColorState(value);
       setSaveError(null);
+      // Clear field error immediately on input change (Req 8.5)
+      setErrors((prev) => {
+        if (!prev.backgroundColor) return prev;
+        const next = { ...prev };
+        delete next.backgroundColor;
+        return next;
+      });
       const currentValues = { name, icon, backgroundColor: value };
       scheduleValidation('backgroundColor', currentValues);
     },
@@ -150,6 +171,20 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
 
     if (!result.isValid) {
       setErrors(result.errors);
+
+      // Scroll to and focus the first error field (Req 8.6)
+      const errorFields = Object.keys(result.errors) as (keyof ReminderValidationErrors)[];
+      if (errorFields.length > 0) {
+        requestAnimationFrame(() => {
+          const firstField = errorFields[0];
+          const selector = `[name="${String(firstField)}"], [data-field="${String(firstField)}"], #reminder-${String(firstField).replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+          const element = document.querySelector<HTMLElement>(selector);
+          if (element) {
+            element.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+            element.focus();
+          }
+        });
+      }
       return;
     }
 

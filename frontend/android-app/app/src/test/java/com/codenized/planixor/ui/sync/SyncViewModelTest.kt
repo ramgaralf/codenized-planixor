@@ -12,6 +12,7 @@ import com.codenized.planixor.data.sync.ConnectionStatus
 import com.codenized.planixor.data.sync.SyncConfig
 import com.codenized.planixor.data.sync.SyncValidationService
 import com.codenized.planixor.data.sync.ValidationResult
+import io.mockk.Ordering
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -96,8 +97,17 @@ class SyncViewModelTest {
 
             viewModel.validateAndSave("https://server.com", "key-123")
 
-            val validatingState = awaitItem()
+            // First state: hasAttemptedSubmit = true, then isValidating = true
+            val states = mutableListOf<SyncUiState>()
+            states.add(awaitItem())
+            // May need one more emission for isValidating
+            if (!states.last().isValidating) {
+                states.add(awaitItem())
+            }
+
+            val validatingState = states.last()
             assertTrue(validatingState.isValidating)
+            assertTrue(validatingState.hasAttemptedSubmit)
             assertNull(validatingState.validationError)
 
             cancelAndIgnoreRemainingEvents()
@@ -150,8 +160,9 @@ class SyncViewModelTest {
     }
 
     @Test
-    fun `pause should update isPaused to true via PreferencesRepository`() = runTest {
+    fun `pause should persist isPaused true and set ConnectionStatus PAUSED`() = runTest {
         coEvery { mockPreferencesRepository.setSyncPaused(true) } returns Unit
+        coEvery { mockPreferencesRepository.saveConnectionStatus(ConnectionStatus.PAUSED) } returns Unit
 
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -159,12 +170,27 @@ class SyncViewModelTest {
         viewModel.pause()
         advanceUntilIdle()
 
-        coVerify { mockPreferencesRepository.setSyncPaused(true) }
+        coVerify(ordering = Ordering.ORDERED) {
+            mockPreferencesRepository.setSyncPaused(true)
+            mockPreferencesRepository.saveConnectionStatus(ConnectionStatus.PAUSED)
+        }
+        assertEquals(ConnectionStatus.PAUSED, viewModel.uiState.value.connectionStatus)
     }
 
     @Test
-    fun `resume should update isPaused to false via PreferencesRepository`() = runTest {
+    fun `resume should persist isPaused false, set ConnectionStatus ACTIVE, and trigger sync`() = runTest {
         coEvery { mockPreferencesRepository.setSyncPaused(false) } returns Unit
+        coEvery { mockPreferencesRepository.saveConnectionStatus(ConnectionStatus.ACTIVE) } returns Unit
+
+        // Start with a paused config
+        syncConfigFlow.value = SyncConfig(
+            serverUrl = "https://server.com",
+            apiKey = "key-123",
+            username = "user1",
+            isPaused = true,
+            lastSyncedAt = null,
+        )
+        connectionStatusFlow.value = ConnectionStatus.PAUSED
 
         viewModel = createViewModel()
         advanceUntilIdle()
@@ -172,7 +198,11 @@ class SyncViewModelTest {
         viewModel.resume()
         advanceUntilIdle()
 
-        coVerify { mockPreferencesRepository.setSyncPaused(false) }
+        coVerify(ordering = Ordering.ORDERED) {
+            mockPreferencesRepository.setSyncPaused(false)
+            mockPreferencesRepository.saveConnectionStatus(ConnectionStatus.ACTIVE)
+        }
+        assertEquals(ConnectionStatus.ACTIVE, viewModel.uiState.value.connectionStatus)
     }
 
     @Test

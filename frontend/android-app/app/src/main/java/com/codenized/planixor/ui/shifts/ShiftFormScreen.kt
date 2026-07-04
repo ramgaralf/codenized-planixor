@@ -150,7 +150,7 @@ internal fun ShiftFormContent(
         // Background color field
         ColorField(
             value = uiState.backgroundColor,
-            error = uiState.errors["backgroundColor"],
+            error = uiState.errors["color"],
             onValueChange = { onFieldChange("backgroundColor", it) },
         )
 

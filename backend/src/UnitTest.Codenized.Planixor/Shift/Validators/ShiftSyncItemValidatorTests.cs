@@ -2,6 +2,8 @@
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
+#pragma warning disable SA1101 // All SA1101 warnings in this file are on static method calls (CreateValidItem) — this. not applicable
+
 namespace UnitTest.Codenized.Planixor.Shift.Validators;
 
 using global::Codenized.CleanArchitecture.Abstractions.Validations;

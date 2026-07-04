@@ -296,6 +296,9 @@
     <string name="sync_error_timeout">Connection timed out. Please check the URL and try again.</string>
     <string name="sync_validation_url_required">Server URL is required</string>
     <string name="sync_validation_api_key_required">API key is required</string>
+    <string name="sync_validation_url_missing_scheme">URL must start with https:// or http://</string>
+    <string name="sync_validation_url_contains_whitespace">URL must not contain whitespace</string>
+    <string name="sync_validation_url_invalid_host">URL does not contain a valid host</string>
     <string name="sync_api_base_path">API Base Path</string>
     <string name="sync_api_base_path_placeholder">/api</string>
     <string name="sync_api_base_path_error">Path can only contain letters, numbers, hyphens, underscores, dots, and forward slashes</string>
@@ -349,6 +352,18 @@
     <string name="backup_confirm_message">Existing data was detected. Continuing will merge the backup data with your current data.</string>
     <string name="backup_confirm_cancel">Cancel</string>
     <string name="backup_confirm_continue">Continue</string>
+
+    <!-- Generic Form Validation -->
+    <string name="validation_field_required">This field is required</string>
+    <string name="validation_invalid_url_format">Invalid URL format</string>
+
+    <!-- Prerequisite Dialog -->
+    <string name="prerequisite_title">Cannot Create Event</string>
+    <string name="prerequisite_message_both">You need at least one shift and one reminder before creating a calendar event.</string>
+    <string name="prerequisite_message_shifts">You need at least one shift before creating a calendar event.</string>
+    <string name="prerequisite_message_reminders">You need at least one reminder before creating a calendar event.</string>
+    <string name="prerequisite_go_to_shifts">Go to Shifts</string>
+    <string name="prerequisite_go_to_reminders">Go to Reminders</string>
 
     <!-- Propagation Dialog -->
     <string name="propagation_dialog_title">Update Calendar Events?</string>

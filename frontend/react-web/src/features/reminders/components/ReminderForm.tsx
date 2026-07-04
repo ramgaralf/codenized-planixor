@@ -8,6 +8,7 @@ import { ColorPicker } from '@features/reminders/components/ColorPicker';
 import { EmojiPicker } from '@features/reminders/components/EmojiPicker';
 import { useReminderForm } from '@features/reminders/hooks/useReminderForm';
 import { PropagationModal } from '@shared/components/PropagationModal';
+import { ValidationError } from '@shared/components/ValidationError';
 
 interface ReminderFormProps {
   initialValues?: { name: string; icon: string; backgroundColor: string };
@@ -38,12 +39,6 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--color-text-primary)',
 };
 
-const errorStyle: React.CSSProperties = {
-  fontSize: '12px',
-  color: 'var(--color-error)',
-  marginTop: '4px',
-};
-
 const fieldGroupStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -64,7 +59,6 @@ export const ReminderForm = ({
     icon,
     backgroundColor,
     errors,
-    isValid,
     isSaving,
     saveError,
     setName,
@@ -141,6 +135,8 @@ export const ReminderForm = ({
         </label>
         <input
           id="reminder-name"
+          name="name"
+          data-field="name"
           type="text"
           maxLength={50}
           value={name}
@@ -151,9 +147,7 @@ export const ReminderForm = ({
           style={errors.name ? inputErrorStyle : inputStyle}
         />
         {errors.name && (
-          <p id="reminder-name-error" style={errorStyle} role="alert">
-            {t(errors.name)}
-          </p>
+          <ValidationError message={errors.name} />
         )}
       </div>
 
@@ -166,9 +160,7 @@ export const ReminderForm = ({
           theme={resolvedTheme}
         />
         {errors.icon && (
-          <p id="reminder-icon-error" style={errorStyle} role="alert">
-            {t(errors.icon)}
-          </p>
+          <ValidationError message={errors.icon} />
         )}
       </div>
 
@@ -184,9 +176,7 @@ export const ReminderForm = ({
           {t('reminder.form.colorHint')}
         </p>
         {errors.backgroundColor && (
-          <p id="reminder-color-error" style={errorStyle} role="alert">
-            {t(errors.backgroundColor)}
-          </p>
+          <ValidationError message={errors.backgroundColor} />
         )}
       </div>
 
@@ -212,7 +202,7 @@ export const ReminderForm = ({
         </button>
         <button
           type="submit"
-          disabled={!isValid || isSaving}
+          disabled={isSaving}
           style={{
             padding: '10px 20px',
             fontSize: '14px',
@@ -221,8 +211,8 @@ export const ReminderForm = ({
             border: 'none',
             backgroundColor: 'var(--color-primary)',
             color: '#ffffff',
-            cursor: !isValid || isSaving ? 'not-allowed' : 'pointer',
-            opacity: !isValid || isSaving ? 0.5 : 1,
+            cursor: isSaving ? 'not-allowed' : 'pointer',
+            opacity: isSaving ? 0.5 : 1,
           }}
         >
           {t('reminder.form.submit')}

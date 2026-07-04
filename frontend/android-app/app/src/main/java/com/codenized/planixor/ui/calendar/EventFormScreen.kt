@@ -83,6 +83,8 @@ data class EventFormUiState(
     val derivedBackgroundColor: String = "",
     val eventTypeOptions: List<EventTypeOption> = emptyList(),
     val errors: Map<String, String> = emptyMap(),
+    val fieldErrors: Map<String, Int> = emptyMap(),
+    val hasAttemptedSubmit: Boolean = false,
     val formError: String? = null,
     val isSubmitting: Boolean = false,
     val isLoading: Boolean = false,

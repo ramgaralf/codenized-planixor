@@ -8,6 +8,8 @@ import logoIcon from '@/assets/logo-icon.svg';
 import { useCalendarStore } from '@/stores/calendarStore';
 import { useReportsStore } from '@/stores/reportsStore';
 
+import { PrerequisiteModal } from '@features/calendar-events/components/PrerequisiteModal';
+import { usePrerequisiteCheck } from '@features/calendar-events/hooks/usePrerequisiteCheck';
 import { NotificationBadge } from '@features/notifications/components/NotificationBadge';
 import { NotificationView } from '@features/notifications/components/NotificationView';
 import { useNotifications } from '@features/notifications/hooks/useNotifications';
@@ -36,6 +38,7 @@ export const HeaderBar = () => {
   const openConfigModal = useReportsStore((state) => state.openConfigModal);
   const { unreadCount, channel } = useNotifications();
   const { connectionStatus, config } = useSyncStore();
+  const { result: prerequisiteResult } = usePrerequisiteCheck();
   const pageTitle = t(getPageTitleKey(pathname));
   const isCalendar = pathname === '/';
   const isShiftsList = pathname === '/shifts';
@@ -48,7 +51,20 @@ export const HeaderBar = () => {
 
   // Notification dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showPrerequisiteModal, setShowPrerequisiteModal] = useState(false);
   const bellContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleNewEventClick = useCallback(() => {
+    if (prerequisiteResult.canCreate) {
+      openCreateForm();
+    } else {
+      setShowPrerequisiteModal(true);
+    }
+  }, [prerequisiteResult, openCreateForm]);
+
+  const closePrerequisiteModal = useCallback(() => {
+    setShowPrerequisiteModal(false);
+  }, []);
 
   const toggleDropdown = useCallback(() => {
     setIsDropdownOpen((prev) => !prev);
@@ -104,7 +120,7 @@ export const HeaderBar = () => {
           <button
             className={styles.newEventButton}
             type="button"
-            onClick={openCreateForm}
+            onClick={handleNewEventClick}
           >
             <Plus size={16} aria-hidden="true" />
             {t('actions.newEvent')}
@@ -165,6 +181,14 @@ export const HeaderBar = () => {
 
         <SyncButton status={connectionStatus} onClick={handleSyncClick} />
       </div>
+
+      {showPrerequisiteModal && !prerequisiteResult.canCreate && (
+        <PrerequisiteModal
+          missingShifts={prerequisiteResult.missingShifts}
+          missingReminders={prerequisiteResult.missingReminders}
+          onDismiss={closePrerequisiteModal}
+        />
+      )}
     </header>
   );
 };

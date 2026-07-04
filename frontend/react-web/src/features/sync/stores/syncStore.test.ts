@@ -119,26 +119,66 @@ describe('syncStore', () => {
   });
 
   describe('pause', () => {
-    it('should set isPaused to true and connectionStatus to paused', () => {
-      useSyncStore.setState({ connectionStatus: 'active', isPaused: false });
+    it('should persist isPaused true to IndexedDB and set connectionStatus to paused', async () => {
+      const config = createTestConfig();
+      await db.syncConfig.put({ ...config, key: 'default' });
+      useSyncStore.setState({
+        config: { ...config, key: 'default' },
+        connectionStatus: 'active',
+        isPaused: false,
+      });
 
-      useSyncStore.getState().pause();
+      await useSyncStore.getState().pause();
 
       const state = useSyncStore.getState();
       expect(state.isPaused).toBe(true);
       expect(state.connectionStatus).toBe('paused');
+      expect(state.config?.isPaused).toBe(true);
+
+      const persisted = await db.syncConfig.get('default');
+      expect(persisted?.isPaused).toBe(true);
+    });
+
+    it('should not update state when no config exists', async () => {
+      useSyncStore.setState({ config: null, connectionStatus: 'unconfigured', isPaused: false });
+
+      await useSyncStore.getState().pause();
+
+      const state = useSyncStore.getState();
+      expect(state.isPaused).toBe(false);
+      expect(state.connectionStatus).toBe('unconfigured');
     });
   });
 
   describe('resume', () => {
-    it('should set isPaused to false and connectionStatus to active', () => {
-      useSyncStore.setState({ connectionStatus: 'paused', isPaused: true });
+    it('should persist isPaused false to IndexedDB and set connectionStatus to active', async () => {
+      const config = createTestConfig({ isPaused: true });
+      await db.syncConfig.put({ ...config, key: 'default' });
+      useSyncStore.setState({
+        config: { ...config, key: 'default' },
+        connectionStatus: 'paused',
+        isPaused: true,
+      });
 
-      useSyncStore.getState().resume();
+      await useSyncStore.getState().resume();
 
       const state = useSyncStore.getState();
       expect(state.isPaused).toBe(false);
       expect(state.connectionStatus).toBe('active');
+      expect(state.config?.isPaused).toBe(false);
+
+      const persisted = await db.syncConfig.get('default');
+      expect(persisted?.isPaused).toBe(false);
+    });
+
+    it('should not update state when no config exists', async () => {
+      useSyncStore.setState({ config: null, connectionStatus: 'unconfigured', isPaused: false });
+
+      await useSyncStore.getState().resume();
+
+      const state = useSyncStore.getState();
+      expect(state.isPaused).toBe(false);
+      expect(state.connectionStatus).toBe('unconfigured');
     });
   });
 

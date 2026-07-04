@@ -396,6 +396,21 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
 
     if (Object.keys(validationErrors).length > 0) {
       setFieldErrors(validationErrors);
+
+      // Scroll to and focus the first error field (Req 8.6)
+      const errorFields = Object.keys(validationErrors);
+      if (errorFields.length > 0) {
+        requestAnimationFrame(() => {
+          const firstField = errorFields[0] as string | undefined;
+          if (!firstField) return;
+          const selector = `[name="${firstField}"], [data-field="${firstField}"], #event-${firstField.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+          const element = document.querySelector<HTMLElement>(selector);
+          if (element) {
+            element.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+            element.focus();
+          }
+        });
+      }
       return;
     }
 

@@ -1,4 +1,7 @@
 {
+  "validation": {
+    "fieldRequired": "This field is required"
+  },
   "common": {
     "confirm": "Confirm",
     "cancel": "Cancel",
@@ -6,6 +9,9 @@
     "save": "Save",
     "saving": "Saving...",
     "retry": "Retry"
+  },
+  "modal": {
+    "close": "Close"
   },
   "app": {
     "name": "Planixor",
@@ -127,7 +133,9 @@
     "dangerZone": "Danger Zone",
     "resetButton": "Reset Application",
     "resetDescription": "This will delete all data on this device including events, shifts, reminders, notifications, and sync configuration. This action cannot be undone.",
-    "resetConfirmation": "Are you sure you want to reset the application? All local data will be permanently deleted."
+    "resetConfirmation": "Are you sure you want to reset the application? All local data will be permanently deleted.",
+    "resetConfirmTitle": "Reset Application",
+    "resetConfirmMessage": "Are you sure you want to reset the application? All local data will be permanently deleted. This action cannot be undone."
   },
   "actions": {
     "createEvent": "Create new event",
@@ -243,6 +251,14 @@
       "activate": "Activate",
       "delete": "Delete"
     }
+  },
+  "prerequisite": {
+    "title": "Cannot Create Event",
+    "messageBoth": "You need to create at least one shift and one reminder before you can create a calendar event.",
+    "messageShifts": "You need to create at least one shift before you can create a calendar event.",
+    "messageReminders": "You need to create at least one reminder before you can create a calendar event.",
+    "goToShifts": "Go to Shifts",
+    "goToReminders": "Go to Reminders"
   },
   "calendarEvent": {
     "eventTypeSelector": {

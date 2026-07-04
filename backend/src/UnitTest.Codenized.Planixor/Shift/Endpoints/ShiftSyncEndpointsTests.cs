@@ -2,6 +2,8 @@
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
+#pragma warning disable SA1101 // All SA1101 warnings in this file are on static method calls (CreateValidItem) — this. not applicable
+
 namespace UnitTest.Codenized.Planixor.Shift.Endpoints;
 
 using global::Codenized.CleanArchitecture.Abstractions.Validations;
@@ -59,38 +61,6 @@ public sealed class ShiftSyncEndpointsTests
         // Arrange: Send GET request without Authorization header
         // Act: Invoke endpoint
         // Assert: HTTP 401 Unauthorized
-        Assert.Fail("Integration test not yet implemented.");
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Authorization / Subscription (403) — Requires WebApplicationFactory
-    // ──────────────────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Verifies that an authenticated user without an active subscription receives 403 Forbidden on push.
-    /// The push endpoint enforces active subscription check (throws ForbiddenException).
-    /// </summary>
-    [Test]
-    [Ignore("TODO: Requires WebApplicationFactory integration test setup with subscription check middleware to verify 403 response when user has no active subscription.")]
-    public void PushEndpoint_WithoutActiveSubscription_Returns403()
-    {
-        // Arrange: Authenticated user without active subscription
-        // Act: POST /api/v1/shifts/sync/push
-        // Assert: HTTP 403 Forbidden
-        Assert.Fail("Integration test not yet implemented.");
-    }
-
-    /// <summary>
-    /// Verifies that an authenticated user without an active subscription receives 403 Forbidden on pull.
-    /// The pull endpoint enforces active subscription check (throws ForbiddenException).
-    /// </summary>
-    [Test]
-    [Ignore("TODO: Requires WebApplicationFactory integration test setup with subscription check middleware to verify 403 response when user has no active subscription.")]
-    public void PullEndpoint_WithoutActiveSubscription_Returns403()
-    {
-        // Arrange: Authenticated user without active subscription
-        // Act: GET /api/v1/shifts/sync/pull
-        // Assert: HTTP 403 Forbidden
         Assert.Fail("Integration test not yet implemented.");
     }
 

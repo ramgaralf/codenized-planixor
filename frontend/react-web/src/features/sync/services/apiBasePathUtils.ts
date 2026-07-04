@@ -46,7 +46,7 @@ export const normalizeApiBasePath = (input: string): string => {
     result = '/' + result;
   }
 
-  if (result.endsWith('/') && result.length > 1) {
+  while (result.endsWith('/') && result.length > 1) {
     result = result.slice(0, -1);
   }
 

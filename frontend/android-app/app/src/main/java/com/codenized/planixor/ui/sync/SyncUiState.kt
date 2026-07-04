@@ -23,6 +23,8 @@ data class SyncUiState(
     val lastSyncedAt: Long? = null,
     val isValidating: Boolean = false,
     val validationError: String? = null,
+    val fieldErrors: Map<String, Int> = emptyMap(),
+    val hasAttemptedSubmit: Boolean = false,
     val pendingUsernameChange: PendingUsernameChange? = null,
     val isDeletingData: Boolean = false,
 )
