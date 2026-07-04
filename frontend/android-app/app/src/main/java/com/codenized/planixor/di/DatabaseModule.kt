@@ -8,6 +8,7 @@ import com.codenized.planixor.data.local.NotificationRecordDao
 import com.codenized.planixor.data.local.PlanixorDatabase
 import com.codenized.planixor.data.local.ReminderDao
 import com.codenized.planixor.data.local.ShiftDao
+import com.codenized.planixor.data.local.ShiftModeSettingDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,7 +33,7 @@ object DatabaseModule {
             PlanixorDatabase::class.java,
             "planixor_database",
         )
-            .addMigrations(PlanixorDatabase.MIGRATION_3_4, PlanixorDatabase.MIGRATION_4_5, PlanixorDatabase.MIGRATION_5_6, PlanixorDatabase.MIGRATION_6_7)
+            .addMigrations(PlanixorDatabase.MIGRATION_3_4, PlanixorDatabase.MIGRATION_4_5, PlanixorDatabase.MIGRATION_5_6, PlanixorDatabase.MIGRATION_6_7, PlanixorDatabase.MIGRATION_7_8)
             .fallbackToDestructiveMigration()
             .build()
     }
@@ -65,5 +66,11 @@ object DatabaseModule {
     @Singleton
     fun provideNotificationRecordDao(database: PlanixorDatabase): NotificationRecordDao {
         return database.notificationRecordDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideShiftModeSettingDao(database: PlanixorDatabase): ShiftModeSettingDao {
+        return database.shiftModeSettingDao()
     }
 }

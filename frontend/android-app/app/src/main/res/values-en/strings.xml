@@ -372,4 +372,15 @@
     <string name="propagation_dialog_affected_count">%1$d event(s) will be updated</string>
     <string name="propagation_dialog_confirm">Update</string>
     <string name="propagation_dialog_decline">Skip</string>
+
+    <!-- Shift Mode -->
+    <string name="shift_mode_toggle_label">Shift Mode</string>
+    <string name="shift_mode_toggle_description">Day and Week views will be disabled and the New Event button will be hidden.</string>
+    <string name="shift_mode_create_event">Create calendar event</string>
+    <string name="shift_mode_close">Close</string>
+    <string name="shift_mode_shifts_section">Shifts</string>
+    <string name="shift_mode_reminders_section">Reminders</string>
+    <string name="shift_mode_deleted_item">[Deleted]</string>
+    <string name="shift_mode_date_format_es">dd \'de\' MMMM \'de\' yyyy</string>
+    <string name="shift_mode_date_format_en">MMMM dd, yyyy</string>
 </resources>

@@ -5,6 +5,19 @@ import com.codenized.planixor.model.CalendarView
 import java.time.LocalDate
 
 /**
+ * Data class representing the state for the Day Action Modal.
+ * Contains the selected date and the lists of shift-type and reminder-type events
+ * to be displayed in the modal.
+ *
+ * Validates: Requirements 6.1, 8.1, 9.1, 9.5
+ */
+data class DayActionModalData(
+    val date: LocalDate,
+    val shiftEvents: List<CalendarEventDisplay>,
+    val reminderEvents: List<CalendarEventDisplay>,
+)
+
+/**
  * Immutable UI state for the Calendar screen.
  * Manages active view mode, current date, events list, loading/error states,
  * view state (calendar grid vs create form vs event detail), and prerequisite modal state.

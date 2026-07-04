@@ -129,7 +129,7 @@ GET  /api/{entity-kebab}/sync/pull   — Pull records from server
 
 With query parameters for pull: `?lastSyncedAt={ISO8601}&cursor={base64}`
 
-Entities: `calendar-events`, `notification-records`, `annual-hours-config`, `shifts`, `reminders`
+Entities: `calendar-events`, `notification-records`, `annual-hours-config`, `shifts`, `reminders`, `shift-mode-settings`
 
 ### Backend response wrapper
 
@@ -149,6 +149,7 @@ Clients must unwrap `.data` from the response.
 | Annual hours config | `{ "records": [...] }` |
 | Shifts | `{ "shifts": [...] }` |
 | Reminders | `{ "records": [...] }` |
+| Shift mode settings | `{ "records": [...] }` |
 
 ### EF Core 10 + MySQL: Cannot use `.Contains()` on `List<Guid>`
 

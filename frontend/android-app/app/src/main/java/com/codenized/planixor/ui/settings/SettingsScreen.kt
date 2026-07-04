@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +31,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -66,6 +69,7 @@ fun SettingsScreen(
     val themeViewModel = LocalThemeViewModel.current
     val themeMode by themeViewModel.themeMode.collectAsStateWithLifecycle()
     val selectedLocale by settingsViewModel.locale.collectAsStateWithLifecycle()
+    val shiftModeEnabled by settingsViewModel.shiftModeEnabled.collectAsStateWithLifecycle()
     val notificationChannel by settingsViewModel.notificationChannel.collectAsStateWithLifecycle()
     val showPermissionWarning by settingsViewModel.showPermissionWarning.collectAsStateWithLifecycle()
     val pendingChannelSelection by settingsViewModel.pendingChannelSelection.collectAsStateWithLifecycle()
@@ -136,6 +140,44 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(R.string.settings_user_manual_button))
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Shift Mode section
+        Text(
+            text = stringResource(R.string.shift_mode_toggle_label),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(R.string.shift_mode_toggle_description),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.shift_mode_toggle_label),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Switch(
+                checked = shiftModeEnabled,
+                onCheckedChange = { settingsViewModel.toggleShiftMode() },
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                ),
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))

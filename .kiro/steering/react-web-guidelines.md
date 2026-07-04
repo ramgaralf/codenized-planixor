@@ -297,3 +297,37 @@ import { Shift, ShiftStatus } from './models';
 - **When Tailwind classes don't render**: Use inline `style` attributes with explicit pixel/rem values. This is preferred over debugging Tailwind scanner issues.
 - **Page containers** must have padding (use `style={{ padding: '24px 32px' }}`) to separate content from the viewport edges
 
+
+
+## Dexie / IndexedDB rules
+
+### No write operations inside `useLiveQuery`
+
+Dexie's `useLiveQuery` creates a read-only observation context. Performing any write operation (`put`, `add`, `update`, `delete`) inside the callback throws: **"Readwrite transaction in liveQuery context"**.
+
+```typescript
+// ❌ CRASHES — write inside liveQuery
+const setting = useLiveQuery(async () => {
+  const existing = await db.table.toCollection().first();
+  if (!existing) {
+    await db.table.put(defaultRecord); // 💥 Error!
+  }
+  return existing;
+}, []);
+
+// ✅ Separate read (liveQuery) from write (useEffect)
+const queryResult = useLiveQuery(async () => {
+  const existing = await db.table.toCollection().first();
+  return existing ?? null; // null = no record, undefined = loading
+}, []);
+
+useEffect(() => {
+  if (queryResult === undefined) return; // Still loading
+  if (queryResult !== null) return;      // Record exists
+  if (initRef.current) return;           // Already creating
+  initRef.current = true;
+  db.table.put(defaultRecord).finally(() => { initRef.current = false; });
+}, [queryResult]);
+```
+
+**Pattern**: Use `useLiveQuery` for read-only observation. Use `useEffect` (or event handlers like `onClick`) for writes. The live query will automatically re-fire when the write completes and IndexedDB is updated.

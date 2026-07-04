@@ -3,9 +3,11 @@ package com.codenized.planixor.ui.calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.codenized.planixor.R
+import com.codenized.planixor.data.local.CalendarEventEntity
 import com.codenized.planixor.data.local.CalendarEventRepository
 import com.codenized.planixor.data.local.PreferencesRepository
 import com.codenized.planixor.data.local.ReminderRepository
+import com.codenized.planixor.data.local.ShiftModeSettingRepository
 import com.codenized.planixor.data.local.ShiftRepository
 import com.codenized.planixor.data.notification.NotificationService
 import com.codenized.planixor.domain.model.CalendarEvent
@@ -15,12 +17,14 @@ import com.codenized.planixor.model.CalendarView
 import com.codenized.planixor.ui.calendar.components.EventTypeOption
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -53,6 +57,7 @@ class CalendarViewModel @Inject constructor(
     private val reminderRepository: ReminderRepository,
     private val calendarEventRepository: CalendarEventRepository,
     private val notificationService: NotificationService,
+    private val shiftModeSettingRepository: ShiftModeSettingRepository,
 ) : ViewModel() {
 
     private val _activeView = MutableStateFlow(CalendarView.Day)
@@ -60,6 +65,25 @@ class CalendarViewModel @Inject constructor(
 
     private val _currentDate = MutableStateFlow(LocalDate.now())
     val currentDate: StateFlow<LocalDate> = _currentDate.asStateFlow()
+
+    /**
+     * Observes shift mode enabled state reactively from the repository.
+     * Used by AppNavigation to conditionally hide the "New Event" button/FAB.
+     */
+    val shiftModeEnabled: StateFlow<Boolean> = shiftModeSettingRepository.observeEnabled()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    /**
+     * Available calendar views filtered by shift mode state.
+     * When shift mode is active: Month + Year only.
+     * When shift mode is disabled: all four views.
+     */
+    val availableViews: StateFlow<List<CalendarView>> = shiftModeEnabled
+        .map { enabled ->
+            if (enabled) listOf(CalendarView.Month, CalendarView.Year)
+            else CalendarView.entries.toList()
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CalendarView.entries.toList())
 
     private val _events = MutableStateFlow<List<CalendarEventDisplay>>(emptyList())
     val events: StateFlow<List<CalendarEventDisplay>> = _events.asStateFlow()
@@ -76,10 +100,14 @@ class CalendarViewModel @Inject constructor(
     )
     val prerequisiteState: StateFlow<PrerequisiteDialogState> = _prerequisiteState.asStateFlow()
 
+    private val _dayActionModalState = MutableStateFlow<DayActionModalData?>(null)
+    val dayActionModalState: StateFlow<DayActionModalData?> = _dayActionModalState.asStateFlow()
+
     init {
         loadPersistedView()
         observeEvents()
         observeMidnight()
+        observeShiftModeViewTransitions()
     }
 
     // region Navigation
@@ -648,7 +676,86 @@ class CalendarViewModel @Inject constructor(
 
     // endregion
 
+    // region Shift Mode Day-Tap
+
+    /**
+     * Handles day-tap interaction in Shift Mode (Month/Year views).
+     * Queries non-deleted calendar events referencing a shift or reminder for the given date.
+     * - If empty (no shift/reminder events): runs prerequisite check, then opens form or shows prerequisite dialog.
+     * - If has content: populates the DayActionModal state with sorted shift and reminder events.
+     *
+     * Validates: Requirements 5.1, 5.2, 6.1, 7.1, 7.2, 8.1
+     */
+    fun onShiftModeDayTap(date: LocalDate, onOpenForm: (LocalDate) -> Unit) {
+        viewModelScope.launch {
+            val dayStr = date.toString()
+            val eventsForDay = calendarEventRepository.getByDate(dayStr).first()
+
+            // Filter for non-deleted events referencing a shift or reminder,
+            // and exclude events that have zero effective time on this day
+            val shiftReminderEvents = eventsForDay.filter { event ->
+                !event.isDeleted && (event.eventType == "shift" || event.eventType == "reminder")
+            }.filter { event ->
+                val effectiveStart = getEffectiveStartMinutes(event, dayStr)
+                val effectiveEnd = getEffectiveEndMinutes(event, dayStr)
+                effectiveEnd > effectiveStart
+            }
+
+            if (shiftReminderEvents.isEmpty()) {
+                // Empty day: run prerequisite check
+                performPrerequisiteCheck { onOpenForm(date) }
+            } else {
+                // Day with content: show Day_Action_Modal
+                val displayEvents = shiftReminderEvents.map { entity ->
+                    resolveDisplayFields(entity)
+                }
+
+                val shiftEvents = displayEvents
+                    .filter { it.eventType == "shift" }
+                    .sortedBy { it.name.lowercase() }
+
+                val reminderEvents = displayEvents
+                    .filter { it.eventType == "reminder" }
+                    .sortedBy { it.name.lowercase() }
+
+                _dayActionModalState.value = DayActionModalData(
+                    date = date,
+                    shiftEvents = shiftEvents,
+                    reminderEvents = reminderEvents,
+                )
+            }
+        }
+    }
+
+    /**
+     * Dismisses the Day Action Modal.
+     */
+    fun dismissDayActionModal() {
+        _dayActionModalState.value = null
+    }
+
+    // endregion
+
     // region Private helpers
+
+    /**
+     * Returns the effective start time in minutes for an event on the given day.
+     * Mirrors the logic in DayView for consistent filtering.
+     */
+    private fun getEffectiveStartMinutes(event: CalendarEventEntity, currentDayStr: String): Int {
+        if (event.startDay == event.endDay) return event.startTime
+        return if (event.startDay == currentDayStr) event.startTime else 0
+    }
+
+    /**
+     * Returns the effective end time in minutes for an event on the given day.
+     * Mirrors the logic in DayView for consistent filtering.
+     */
+    private fun getEffectiveEndMinutes(event: CalendarEventEntity, currentDayStr: String): Int {
+        if (event.startDay == event.endDay) return event.endTime
+        if (event.endDay == currentDayStr && event.endTime == 0) return 0
+        return if (event.endDay == currentDayStr) event.endTime else 1439
+    }
 
     /**
      * Computes the pre-selected day based on the current navigated date.
@@ -754,7 +861,40 @@ class CalendarViewModel @Inject constructor(
     private fun loadPersistedView() {
         viewModelScope.launch {
             val stored = preferencesRepository.activeViewFlow.first()
-            _activeView.value = stored.toCalendarView()
+            val view = stored.toCalendarView()
+            // If shift mode is already active on launch, ensure we start on Month/Year
+            val isShiftMode = shiftModeEnabled.value
+            if (isShiftMode && (view == CalendarView.Day || view == CalendarView.Week)) {
+                _activeView.value = CalendarView.Month
+            } else {
+                _activeView.value = view
+            }
+        }
+    }
+
+    /**
+     * Observes shift mode state changes and handles view transitions:
+     * - When activated while on Day/Week: navigate to Month view preserving date
+     * - When deactivated: restore default to Day view
+     */
+    private fun observeShiftModeViewTransitions() {
+        viewModelScope.launch {
+            var previousEnabled = shiftModeEnabled.value
+            shiftModeEnabled.collect { enabled ->
+                if (enabled != previousEnabled) {
+                    if (enabled) {
+                        // Shift mode activated: if on Day/Week, switch to Month
+                        val current = _activeView.value
+                        if (current == CalendarView.Day || current == CalendarView.Week) {
+                            _activeView.value = CalendarView.Month
+                        }
+                    } else {
+                        // Shift mode deactivated: restore default to Day view
+                        _activeView.value = CalendarView.Day
+                    }
+                    previousEnabled = enabled
+                }
+            }
         }
     }
 

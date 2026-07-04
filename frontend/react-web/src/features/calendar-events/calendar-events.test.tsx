@@ -84,6 +84,12 @@ vi.mock('./components/ViewSelector', () => ({
   ViewSelector: () => <div data-testid="view-selector">ViewSelector</div>,
 }));
 
+// Mock useShiftMode to avoid Dexie ReadOnlyError from liveQuery write operations
+let mockShiftModeEnabled = false;
+vi.mock('@features/shift-mode/hooks/useShiftMode', () => ({
+  useShiftMode: () => ({ enabled: mockShiftModeEnabled, toggle: vi.fn(), isLoading: false }),
+}));
+
 // --- Test Helpers ---
 
 const TEST_DATE = new Date(2024, 5, 15); // June 15, 2024
@@ -125,6 +131,9 @@ describe('CalendarEvents Container Integration', () => {
       activeView: 'day',
       currentDate: TEST_DATE,
     });
+
+    // Reset shift mode mock
+    mockShiftModeEnabled = false;
 
     // Clear all DB tables
     await db.calendarEvents.clear();
@@ -579,6 +588,83 @@ describe('CalendarEvents Container Integration', () => {
       // Verify the event was NOT deleted
       const preservedEvent = await db.calendarEvents.get('event-cancel-del-1');
       expect(preservedEvent!.isDeleted).toBe(false);
+    });
+  });
+
+  describe('Shift Mode view transitions', () => {
+    it('should navigate to Month view when shift mode is activated while on Day view', () => {
+      useCalendarStore.setState({ activeView: 'day' });
+      mockShiftModeEnabled = true;
+
+      render(<CalendarEvents />);
+
+      // The effect should navigate to month
+      expect(useCalendarStore.getState().activeView).toBe('month');
+      expect(screen.getByTestId('month-view')).toBeInTheDocument();
+    });
+
+    it('should navigate to Month view when shift mode is activated while on Week view', () => {
+      useCalendarStore.setState({ activeView: 'week' });
+      mockShiftModeEnabled = true;
+
+      render(<CalendarEvents />);
+
+      expect(useCalendarStore.getState().activeView).toBe('month');
+      expect(screen.getByTestId('month-view')).toBeInTheDocument();
+    });
+
+    it('should remain on Month view when shift mode is activated while on Month view', () => {
+      useCalendarStore.setState({ activeView: 'month' });
+      mockShiftModeEnabled = true;
+
+      render(<CalendarEvents />);
+
+      expect(useCalendarStore.getState().activeView).toBe('month');
+      expect(screen.getByTestId('month-view')).toBeInTheDocument();
+    });
+
+    it('should remain on Year view when shift mode is activated while on Year view', () => {
+      useCalendarStore.setState({ activeView: 'year' });
+      mockShiftModeEnabled = true;
+
+      render(<CalendarEvents />);
+
+      expect(useCalendarStore.getState().activeView).toBe('year');
+      expect(screen.getByTestId('year-view')).toBeInTheDocument();
+    });
+
+    it('should fallback to Month view when shift mode is active and deep link specifies Day view', () => {
+      // Simulate deep link: store has 'day' persisted but shift mode is enabled
+      useCalendarStore.setState({ activeView: 'day' });
+      mockShiftModeEnabled = true;
+
+      render(<CalendarEvents />);
+
+      // Should fallback to month (same as activation transition)
+      expect(useCalendarStore.getState().activeView).toBe('month');
+    });
+
+    it('should fallback to Month view when shift mode is active and deep link specifies Week view', () => {
+      useCalendarStore.setState({ activeView: 'week' });
+      mockShiftModeEnabled = true;
+
+      render(<CalendarEvents />);
+
+      expect(useCalendarStore.getState().activeView).toBe('month');
+    });
+
+    it('should restore Day view as default when shift mode is deactivated', () => {
+      // Start with shift mode enabled on month view
+      useCalendarStore.setState({ activeView: 'month' });
+      mockShiftModeEnabled = true;
+
+      const { rerender } = render(<CalendarEvents />);
+
+      // Deactivate shift mode
+      mockShiftModeEnabled = false;
+      rerender(<CalendarEvents />);
+
+      expect(useCalendarStore.getState().activeView).toBe('day');
     });
   });
 });

@@ -45,6 +45,11 @@ public sealed class ApplicationReadContext : DbContext, IApplicationContext
     /// </summary>
     public DbSet<NotificationRecord> NotificationRecords => this.Set<NotificationRecord>();
 
+    /// <summary>
+    /// Gets shift mode settings.
+    /// </summary>
+    public DbSet<ShiftModeSetting> ShiftModeSettings => this.Set<ShiftModeSetting>();
+
     /// <summary>On model creating.</summary>
     /// <param name="modelBuilder">Model builder.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)

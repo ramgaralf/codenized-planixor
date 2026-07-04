@@ -185,6 +185,30 @@ const en: HelpData = {
       ],
       screenshots: ['/help/screenshot-settings.png'],
     },
+    {
+      id: 'shift-mode',
+      title: '11. Shift Mode',
+      intro:
+        'Shift Mode is a specialized operating mode designed for users who primarily use Planixor for shift management. When activated, it simplifies the calendar interface by removing Day and Week views, hiding the "New Event" button, and providing a streamlined day-tap interaction in Month and Year views.',
+      steps: [
+        'Activate Shift Mode: Go to Settings and toggle the "Shift Mode" switch. The change takes effect immediately.',
+        'When active, the calendar only shows Month and Year views — Day and Week are hidden.',
+        'The "New Event" button ("+") in the top bar is hidden. Events are created by tapping days directly.',
+        'Tap an empty day: Opens the event creation form with that date preselected (requires at least one shift or reminder to exist).',
+        'Tap a day with events: Opens the Day Action Modal showing all shifts and reminders for that day.',
+        'Day Action Modal: Shows a date header, a "Create calendar event" button, and cards for each shift/reminder on that day.',
+        'Shift cards show: emoji icon, shift name, and time range (HH:mm – HH:mm). Tap to edit.',
+        'Reminder cards show: emoji icon, reminder name, and time range. Tap to edit.',
+        'Cards are sorted alphabetically by name (shifts first, then reminders).',
+        'Close the modal with the ✕ button, by clicking outside, or by pressing Escape.',
+        'From Year view: tapping a day with events also shows the Day Action Modal. After creating or editing, you return to Month view.',
+        'Deactivate Shift Mode: Toggle off in Settings. All four views are restored and the default view returns to Day.',
+        'The setting syncs across devices when synchronization is configured.',
+      ],
+      screenshots: ['/help/screenshot-shift-mode.png'],
+      platformNote:
+        'Shift Mode behaves identically on both web and Android platforms. The setting syncs automatically when sync is configured.',
+    },
   ],
 };
 
@@ -357,6 +381,30 @@ const es: HelpData = {
         'Restablecer Aplicación (zona de peligro): Elimina TODOS los datos locales permanentemente. Usar con precaución.',
       ],
       screenshots: ['/help/screenshot-settings.png'],
+    },
+    {
+      id: 'shift-mode',
+      title: '11. Modo Turno',
+      intro:
+        'El Modo Turno es un modo de operación especializado diseñado para usuarios que utilizan Planixor principalmente para gestionar turnos. Al activarse, simplifica la interfaz del calendario eliminando las vistas de Día y Semana, ocultando el botón "Nuevo Evento", y proporcionando una interacción simplificada al tocar días en las vistas de Mes y Año.',
+      steps: [
+        'Activar Modo Turno: Ve a Ajustes y activa el interruptor "Modo Turno". El cambio se aplica inmediatamente.',
+        'Cuando está activo, el calendario solo muestra las vistas de Mes y Año — Día y Semana se ocultan.',
+        'El botón "Nuevo Evento" ("+") en la barra superior se oculta. Los eventos se crean tocando los días directamente.',
+        'Tocar un día vacío: Abre el formulario de creación de evento con esa fecha preseleccionada (requiere que exista al menos un turno o recordatorio).',
+        'Tocar un día con eventos: Abre el Modal de Acción del Día mostrando todos los turnos y recordatorios de ese día.',
+        'Modal de Acción del Día: Muestra la fecha, un botón "Crear evento", y tarjetas para cada turno/recordatorio del día.',
+        'Tarjetas de turno: muestran icono emoji, nombre del turno y rango horario (HH:mm – HH:mm). Toca para editar.',
+        'Tarjetas de recordatorio: muestran icono emoji, nombre del recordatorio y rango horario. Toca para editar.',
+        'Las tarjetas se ordenan alfabéticamente por nombre (primero turnos, luego recordatorios).',
+        'Cierra el modal con el botón ✕, tocando fuera, o presionando Escape.',
+        'Desde la vista de Año: tocar un día con eventos también muestra el Modal de Acción. Después de crear o editar, vuelves a la vista de Mes.',
+        'Desactivar Modo Turno: Desactiva el interruptor en Ajustes. Se restauran las cuatro vistas y la vista por defecto vuelve a Día.',
+        'La configuración se sincroniza entre dispositivos cuando la sincronización está configurada.',
+      ],
+      screenshots: ['/help/screenshot-shift-mode.png'],
+      platformNote:
+        'El Modo Turno se comporta de forma idéntica en ambas plataformas web y Android. La configuración se sincroniza automáticamente cuando la sincronización está configurada.',
     },
   ],
 };

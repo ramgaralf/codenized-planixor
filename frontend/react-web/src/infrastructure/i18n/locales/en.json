@@ -450,6 +450,20 @@
       "decline": "Skip"
     }
   },
+  "shiftMode": {
+    "toggle": {
+      "label": "Shift Mode",
+      "description": "When enabled, Day and Week views will be disabled and the New Event button will be hidden. Only Month and Year views will be available."
+    },
+    "dayModal": {
+      "createEvent": "Create calendar event",
+      "close": "Close",
+      "shifts": "Shifts",
+      "reminders": "Reminders",
+      "deleted": "[Deleted]",
+      "dateFormat": "MMMM dd, yyyy"
+    }
+  },
   "backup": {
     "sectionTitle": "Backup",
     "create": "Create",
