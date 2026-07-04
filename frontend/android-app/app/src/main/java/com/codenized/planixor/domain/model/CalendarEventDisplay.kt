@@ -23,7 +23,7 @@ data class CalendarEventDisplay(
     val backgroundColor: String,
 ) {
     companion object {
-        const val UNKNOWN_NAME = "Unknown"
+        const val UNKNOWN_NAME = "[Deleted]"
         const val UNKNOWN_ICON = "❓"
         const val UNKNOWN_BACKGROUND_COLOR = "transparent"
 

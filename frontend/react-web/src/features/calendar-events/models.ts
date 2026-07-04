@@ -80,6 +80,9 @@ export interface CalendarEventDisplay extends CalendarEvent {
 
   /** Hex color from the referenced shift/reminder's predefined palette */
   backgroundColor: string;
+
+  /** True when the referenced shift/reminder is deleted or no longer exists */
+  isOrphaned: boolean;
 }
 
 /**

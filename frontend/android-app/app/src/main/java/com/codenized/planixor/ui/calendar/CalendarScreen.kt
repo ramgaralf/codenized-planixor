@@ -29,6 +29,7 @@ import com.codenized.planixor.ui.calendar.components.MonthView
 import com.codenized.planixor.ui.calendar.components.ViewSelector
 import com.codenized.planixor.ui.calendar.components.WeekView
 import com.codenized.planixor.ui.calendar.components.YearView
+import com.codenized.planixor.ui.components.DayActionModal
 import com.codenized.planixor.ui.theme.PlanixorTheme
 import java.time.LocalDate
 
@@ -37,8 +38,14 @@ import java.time.LocalDate
  * Displays ViewSelector, DateNavigator (per-view with segment controls), and the active view.
  * Observes CalendarViewModel state for navigation and event data.
  *
- * @param onNavigateToEventDetail Callback to navigate to event detail page.
+ * In Shift Mode (Month/Year views), day-tap interactions are handled differently:
+ * - Empty day → prerequisite check → Calendar_Event_Form (handled via onNavigateToForm)
+ * - Day with content → DayActionModal with shift/reminder cards
+ *
+ * @param onNavigateToEventDetail Callback to navigate to event detail/edit page.
  * @param onNavigateToDayView Callback to navigate to day view for a specific date.
+ * @param onNavigateToForm Callback to navigate to the Calendar_Event_Form with a preselected date.
+ * @param onEditEvent Callback to navigate to the event edit form for a given event ID.
  * @param viewModel The CalendarViewModel injected via Hilt.
  * @param modifier Optional modifier.
  */
@@ -46,17 +53,23 @@ import java.time.LocalDate
 fun CalendarScreen(
     onNavigateToEventDetail: (String) -> Unit = {},
     onNavigateToDayView: (LocalDate) -> Unit = {},
+    onNavigateToForm: (LocalDate) -> Unit = {},
+    onEditEvent: (String) -> Unit = {},
     viewModel: CalendarViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
     val activeView by viewModel.activeView.collectAsStateWithLifecycle()
     val currentDate by viewModel.currentDate.collectAsStateWithLifecycle()
     val events by viewModel.events.collectAsStateWithLifecycle()
+    val availableViews by viewModel.availableViews.collectAsStateWithLifecycle()
+    val shiftModeEnabled by viewModel.shiftModeEnabled.collectAsStateWithLifecycle()
+    val dayActionModalData by viewModel.dayActionModalState.collectAsStateWithLifecycle()
 
     CalendarScreenContent(
         activeView = activeView,
         currentDate = currentDate,
         events = events,
+        availableViews = availableViews,
         onViewSelected = viewModel::switchView,
         onNavigateDay = viewModel::navigateDay,
         onNavigateWeek = viewModel::navigateWeek,
@@ -65,12 +78,57 @@ fun CalendarScreen(
         onTodayClick = viewModel::goToToday,
         onEventClick = onNavigateToEventDetail,
         onDayClick = { date ->
-            viewModel.switchView(CalendarView.Day)
-            viewModel.navigateToDate(date)
-            onNavigateToDayView(date)
+            if (shiftModeEnabled && (activeView == CalendarView.Month || activeView == CalendarView.Year)) {
+                viewModel.onShiftModeDayTap(date) { tappedDate ->
+                    onNavigateToForm(tappedDate)
+                }
+            } else {
+                viewModel.switchView(CalendarView.Day)
+                viewModel.navigateToDate(date)
+                onNavigateToDayView(date)
+            }
         },
         modifier = modifier,
     )
+
+    // Day Action Modal: shown when dayActionModalState is non-null (shift mode day with content)
+    dayActionModalData?.let { modalData ->
+        DayActionModal(
+            date = modalData.date,
+            shiftEvents = modalData.shiftEvents,
+            reminderEvents = modalData.reminderEvents,
+            onCreateEvent = {
+                viewModel.dismissDayActionModal()
+                // If on Year view, switch to Month view for return navigation (per spec Req 8.4)
+                if (activeView == CalendarView.Year) {
+                    viewModel.switchView(CalendarView.Month)
+                    viewModel.navigateToDate(modalData.date)
+                }
+                onNavigateToForm(modalData.date)
+            },
+            onEditShift = { eventId ->
+                viewModel.dismissDayActionModal()
+                // If on Year view, switch to Month view for return navigation (per spec Req 8.6)
+                if (activeView == CalendarView.Year) {
+                    viewModel.switchView(CalendarView.Month)
+                    viewModel.navigateToDate(modalData.date)
+                }
+                onEditEvent(eventId)
+            },
+            onEditReminder = { eventId ->
+                viewModel.dismissDayActionModal()
+                // If on Year view, switch to Month view for return navigation (per spec Req 8.8)
+                if (activeView == CalendarView.Year) {
+                    viewModel.switchView(CalendarView.Month)
+                    viewModel.navigateToDate(modalData.date)
+                }
+                onEditEvent(eventId)
+            },
+            onDismiss = {
+                viewModel.dismissDayActionModal()
+            },
+        )
+    }
 }
 
 /**
@@ -82,6 +140,7 @@ fun CalendarScreenContent(
     activeView: CalendarView,
     currentDate: LocalDate,
     events: List<CalendarEventDisplay>,
+    availableViews: List<CalendarView> = CalendarView.entries,
     onViewSelected: (CalendarView) -> Unit,
     onNavigateDay: (Int) -> Unit,
     onNavigateWeek: (Int) -> Unit,
@@ -107,6 +166,7 @@ fun CalendarScreenContent(
             ViewSelector(
                 activeView = activeView,
                 onViewSelected = onViewSelected,
+                views = availableViews,
             )
             Spacer(modifier = Modifier.weight(1f))
             androidx.compose.material3.OutlinedButton(

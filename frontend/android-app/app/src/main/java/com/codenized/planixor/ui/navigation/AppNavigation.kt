@@ -97,6 +97,11 @@ fun AppNavigation() {
     val calendarCurrentDate by (calendarViewModel?.currentDate
         ?: fallbackDateFlow).collectAsStateWithLifecycle()
 
+    // Observe shift mode state to hide the "New Event" button when active
+    val fallbackShiftModeFlow = androidx.compose.runtime.remember { MutableStateFlow(false) }
+    val shiftModeEnabled by (calendarViewModel?.shiftModeEnabled
+        ?: fallbackShiftModeFlow).collectAsStateWithLifecycle()
+
     // Observe ReportsViewModel mode when on Reports screen for top bar config button
     val isOnReportsScreen = currentRoute == Screen.Reports.route
 
@@ -213,8 +218,8 @@ fun AppNavigation() {
                     }
                 },
                 actions = {
-                    // New event button (only on Calendar screen)
-                    if (currentRoute == Screen.Calendar.route) {
+                    // New event button (only on Calendar screen, hidden when Shift Mode active)
+                    if (currentRoute == Screen.Calendar.route && !shiftModeEnabled) {
                         IconButton(onClick = {
                             calendarViewModel?.performPrerequisiteCheck(
                                 onCanCreate = {
@@ -345,6 +350,12 @@ fun AppNavigation() {
             composable(Screen.Calendar.route) {
                 CalendarScreen(
                     onNavigateToEventDetail = { eventId ->
+                        navController.navigate(Screen.EventEdit.createRoute(eventId))
+                    },
+                    onNavigateToForm = { date ->
+                        navController.navigate(Screen.EventCreate.createRoute(date.toString()))
+                    },
+                    onEditEvent = { eventId ->
                         navController.navigate(Screen.EventEdit.createRoute(eventId))
                     },
                 )

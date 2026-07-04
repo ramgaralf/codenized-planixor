@@ -48,6 +48,7 @@ class SyncServiceController @Inject constructor(
     private val annualHoursConfigSyncAdapter: AnnualHoursConfigSyncAdapter,
     private val shiftSyncAdapter: ShiftSyncAdapter,
     private val reminderSyncAdapter: ReminderSyncAdapter,
+    private val shiftModeSettingSyncAdapter: ShiftModeSettingSyncAdapter,
     private val dynamicBaseUrlInterceptor: DynamicBaseUrlInterceptor,
     private val notificationPurgeService: NotificationPurgeService,
 ) {
@@ -244,6 +245,12 @@ class SyncServiceController @Inject constructor(
         }
         hasConnectivityError = result5.first
         if (result5.second) hasAnySuccess = true
+
+        val result6 = syncEntity("Shift mode setting", hasConnectivityError) {
+            shiftModeSettingSyncAdapter.sync(lastSyncedAt)
+        }
+        hasConnectivityError = result6.first
+        if (result6.second) hasAnySuccess = true
 
         // Purge past/orphaned notification records after all entity syncs complete.
         // Fire and forget — errors do not affect sync status.

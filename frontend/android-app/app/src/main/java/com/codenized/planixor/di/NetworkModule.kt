@@ -5,6 +5,7 @@ import com.codenized.planixor.data.sync.CalendarEventSyncApiService
 import com.codenized.planixor.data.sync.DynamicBaseUrlInterceptor
 import com.codenized.planixor.data.sync.NotificationRecordSyncApiService
 import com.codenized.planixor.data.sync.ReminderSyncApiService
+import com.codenized.planixor.data.sync.ShiftModeSettingSyncApiService
 import com.codenized.planixor.data.sync.ShiftSyncApiService
 import dagger.Module
 import dagger.Provides
@@ -98,5 +99,11 @@ object NetworkModule {
     @Singleton
     fun provideReminderSyncApiService(retrofit: Retrofit): ReminderSyncApiService {
         return retrofit.create(ReminderSyncApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideShiftModeSettingSyncApiService(retrofit: Retrofit): ShiftModeSettingSyncApiService {
+        return retrofit.create(ShiftModeSettingSyncApiService::class.java)
     }
 }

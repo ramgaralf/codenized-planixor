@@ -5,6 +5,7 @@ import { useTheme } from '@context/useTheme';
 import type { ThemeMode } from '@context/ThemeContextValue';
 import { db } from '@/data/db';
 import { NotificationSettingsSection } from '@features/notifications/components/NotificationSettingsSection';
+import { ShiftModeSection } from '@features/shift-mode/components/ShiftModeSection';
 import { Backup } from '@features/backup/backup';
 import { useModal } from '@shared/components/modal/useModal';
 
@@ -86,6 +87,11 @@ export const SettingsPage = () => {
           {t('settings.userManualButton')}
         </a>
       </section>
+
+      <ShiftModeSection
+        sectionClassName={styles.section}
+        sectionTitleClassName={styles.sectionTitle}
+      />
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>{t('settings.theme')}</h2>

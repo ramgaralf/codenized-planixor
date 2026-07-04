@@ -146,6 +146,7 @@ const calendarEventDisplayArb: fc.Arbitrary<CalendarEventDisplay> = fc
     name: fc.string({ minLength: 1, maxLength: 50 }),
     icon: fc.constantFrom('🏢', '🌙', '☀️', '🔧', '💼', '💊', '🏋️', '📞', '🎂', '📝'),
     backgroundColor: fc.constantFrom('#EF4444', '#10B981', '#2563EB', '#7C3AED', '#F97316'),
+    isOrphaned: fc.constant(false),
   })
   .filter((e) => e.endTime > e.startTime);
 

@@ -17,8 +17,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * - Free (anonymous) users: sync is inactive; all data remains local-only on this device.
  */
 @Database(
-    entities = [CalendarEventEntity::class, ShiftEntity::class, ReminderEntity::class, AnnualHoursConfigEntity::class, NotificationRecordEntity::class],
-    version = 7,
+    entities = [CalendarEventEntity::class, ShiftEntity::class, ReminderEntity::class, AnnualHoursConfigEntity::class, NotificationRecordEntity::class, ShiftModeSettingEntity::class],
+    version = 8,
     exportSchema = false,
 )
 abstract class PlanixorDatabase : RoomDatabase() {
@@ -27,6 +27,7 @@ abstract class PlanixorDatabase : RoomDatabase() {
     abstract fun reminderDao(): ReminderDao
     abstract fun annualHoursConfigDao(): AnnualHoursConfigDao
     abstract fun notificationRecordDao(): NotificationRecordDao
+    abstract fun shiftModeSettingDao(): ShiftModeSettingDao
 
     companion object {
         /**
@@ -205,6 +206,28 @@ abstract class PlanixorDatabase : RoomDatabase() {
 
                 db.execSQL(
                     "ALTER TABLE calendar_events ADD COLUMN alertOffsets TEXT NOT NULL DEFAULT '[]'"
+                )
+            }
+        }
+
+        /**
+         * Migration from version 7 to 8:
+         * Creates the shift_mode_settings table for the Shift Mode feature.
+         * Single-row entity pattern — only one record per device.
+         */
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `shift_mode_settings` (
+                        `id` TEXT NOT NULL,
+                        `enabled` INTEGER NOT NULL,
+                        `modifiedAt` INTEGER NOT NULL,
+                        `syncedAt` INTEGER,
+                        `isDeleted` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent()
                 )
             }
         }

@@ -40,18 +40,18 @@ export type CreateCalendarEventInput = Omit<
 
 /**
  * Orphaned reference fallback values used when a referenced
- * shift or reminder does not exist in the local store.
+ * shift or reminder does not exist or has been deleted in the local store.
  */
 const ORPHANED_FALLBACK = {
-  name: 'Unknown',
+  name: '[Deleted]',
   icon: '❓',
   backgroundColor: 'transparent',
 } as const;
 
 /**
- * Derives display fields (name, icon, backgroundColor) for a calendar event
+ * Derives display fields (name, icon, backgroundColor, isOrphaned) for a calendar event
  * by looking up the referenced shift or reminder in the local store.
- * Falls back to ORPHANED_FALLBACK if the referenced entity is not found.
+ * Falls back to ORPHANED_FALLBACK if the referenced entity is not found or is deleted.
  */
 const deriveDisplayFields = async (
   event: CalendarEvent,
@@ -59,24 +59,27 @@ const deriveDisplayFields = async (
   let name: string = ORPHANED_FALLBACK.name;
   let icon: string = ORPHANED_FALLBACK.icon;
   let backgroundColor: string = ORPHANED_FALLBACK.backgroundColor;
+  let isOrphaned = true;
 
   if (event.eventType === 'shift') {
     const shift = await db.shifts.get(event.eventTypeId);
-    if (shift) {
+    if (shift && !shift.isDeleted) {
       name = shift.name;
       icon = shift.icon;
       backgroundColor = shift.backgroundColor;
+      isOrphaned = false;
     }
   } else {
     const reminder = await db.reminders.get(event.eventTypeId);
-    if (reminder) {
+    if (reminder && !reminder.isDeleted) {
       name = reminder.name;
       icon = reminder.icon;
       backgroundColor = reminder.backgroundColor;
+      isOrphaned = false;
     }
   }
 
-  return { ...event, name, icon, backgroundColor };
+  return { ...event, name, icon, backgroundColor, isOrphaned };
 };
 
 /**

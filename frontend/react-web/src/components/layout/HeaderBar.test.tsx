@@ -39,6 +39,13 @@ vi.mock('@features/sync/stores/syncStore', () => {
   return { useSyncStore: store };
 });
 
+// Mutable mock state for useShiftMode
+let mockShiftModeEnabled = false;
+
+vi.mock('@features/shift-mode/hooks/useShiftMode', () => ({
+  useShiftMode: () => ({ enabled: mockShiftModeEnabled, toggle: vi.fn(), isLoading: false }),
+}));
+
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -51,6 +58,18 @@ vi.mock('react-router-dom', async () => {
 beforeAll(async () => { await i18n.changeLanguage('en'); });
 
 const renderHeaderBar = (initialEntries: string[] = ['/']) => {
+  mockShiftModeEnabled = false;
+  return render(
+    <MemoryRouter initialEntries={initialEntries}>
+      <I18nextProvider i18n={i18n}>
+        <HeaderBar />
+      </I18nextProvider>
+    </MemoryRouter>,
+  );
+};
+
+const renderHeaderBarWithShiftMode = (enabled: boolean, initialEntries: string[] = ['/']) => {
+  mockShiftModeEnabled = enabled;
   return render(
     <MemoryRouter initialEntries={initialEntries}>
       <I18nextProvider i18n={i18n}>
@@ -97,5 +116,21 @@ describe('HeaderBar', () => {
   it('should load sync config on mount', () => {
     renderHeaderBar();
     expect(mockLoadConfig).toHaveBeenCalled();
+  });
+
+  describe('Shift Mode — New Event button visibility', () => {
+    it('should hide "New Event" button when shift mode is enabled on calendar page', () => {
+      renderHeaderBarWithShiftMode(true, ['/']);
+      // Calendar page with shift mode: bell + sync button = 2 buttons (no new event)
+      const buttons = screen.getAllByRole('button');
+      const newEventButton = buttons.find((btn) => btn.textContent?.includes('New'));
+      expect(newEventButton).toBeUndefined();
+    });
+
+    it('should show "New Event" button when shift mode is disabled on calendar page', () => {
+      renderHeaderBarWithShiftMode(false, ['/']);
+      // Calendar page without shift mode: new event + bell + sync button = 3 buttons
+      expect(screen.getAllByRole('button')).toHaveLength(3);
+    });
   });
 });

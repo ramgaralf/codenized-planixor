@@ -38,6 +38,7 @@ class SyncServiceControllerTest {
     private val mockAnnualHoursConfigSyncAdapter = mockk<AnnualHoursConfigSyncAdapter>(relaxed = true)
     private val mockShiftSyncAdapter = mockk<ShiftSyncAdapter>(relaxed = true)
     private val mockReminderSyncAdapter = mockk<ReminderSyncAdapter>(relaxed = true)
+    private val mockShiftModeSettingSyncAdapter = mockk<ShiftModeSettingSyncAdapter>(relaxed = true)
     private val mockDynamicBaseUrlInterceptor = mockk<DynamicBaseUrlInterceptor>(relaxed = true)
     private val mockNotificationPurgeService = mockk<NotificationPurgeService>(relaxed = true)
     private val syncConfigFlow = MutableStateFlow<SyncConfig?>(null)
@@ -56,6 +57,7 @@ class SyncServiceControllerTest {
             mockAnnualHoursConfigSyncAdapter,
             mockShiftSyncAdapter,
             mockReminderSyncAdapter,
+            mockShiftModeSettingSyncAdapter,
             mockDynamicBaseUrlInterceptor,
             mockNotificationPurgeService,
         )
@@ -403,6 +405,7 @@ class SyncServiceControllerTest {
         coEvery { mockAnnualHoursConfigSyncAdapter.sync(any()) } returns SyncResult(success = true)
         coEvery { mockShiftSyncAdapter.sync(any()) } returns SyncResult(success = true)
         coEvery { mockReminderSyncAdapter.sync(any()) } returns SyncResult(success = true)
+        coEvery { mockShiftModeSettingSyncAdapter.sync(any()) } returns SyncResult(success = true)
 
         controller.start(this)
 

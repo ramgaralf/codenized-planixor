@@ -31,6 +31,7 @@ const makeEvent = (overrides: Partial<CalendarEventDisplay>): CalendarEventDispl
   name: 'Test Shift',
   icon: '🏢',
   backgroundColor: '#2563EB',
+  isOrphaned: false,
   ...overrides,
 });
 

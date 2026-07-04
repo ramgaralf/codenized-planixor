@@ -30,6 +30,7 @@ const createEvent = (overrides: Partial<CalendarEventDisplay> = {}): CalendarEve
   name: 'Morning Shift',
   icon: '☀️',
   backgroundColor: '#10B981',
+  isOrphaned: false,
   ...overrides,
 });
 

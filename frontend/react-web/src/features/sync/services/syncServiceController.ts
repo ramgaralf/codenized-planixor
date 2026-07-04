@@ -36,6 +36,14 @@ interface ReminderSyncRecord {
   isDeleted: boolean;
 }
 
+/** Shape of a shift mode setting record for the sync push/pull API. */
+interface ShiftModeSettingSyncRecord {
+  id: string;
+  enabled: boolean;
+  modifiedAt: string;
+  isDeleted: boolean;
+}
+
 /**
  * Default sync interval in minutes when no config is available.
  */
@@ -425,6 +433,144 @@ const pushReminders = async (serverUrl: string, apiKey: string, apiBasePath: str
 };
 
 /**
+ * Normalizes a DateTime ISO string from the backend.
+ * The backend serializes DateTime without timezone indicator (e.g., "2026-06-20T13:07:59.878").
+ * This function appends `Z` if no timezone indicator is present.
+ */
+export const normalizeIso = (iso: string): string => {
+  if (iso.endsWith('Z') || iso.includes('+') || iso.indexOf('-', 10) >= 0) return iso;
+  return `${iso}Z`;
+};
+
+/**
+ * Merges a single remote shift mode setting record into local storage using LWW.
+ */
+const mergeShiftModeSettingRecord = async (
+  remote: ShiftModeSettingSyncRecord,
+  now: Date,
+): Promise<void> => {
+  const remoteModifiedAt = new Date(normalizeIso(remote.modifiedAt));
+  const local = await db.shiftModeSettings.get(remote.id);
+  const remoteSetting = {
+    id: remote.id,
+    enabled: remote.enabled,
+    modifiedAt: remoteModifiedAt,
+    syncedAt: now,
+    isDeleted: remote.isDeleted,
+  };
+
+  if (!local) {
+    await db.shiftModeSettings.add(remoteSetting);
+    return;
+  }
+
+  if (local.syncedAt && local.modifiedAt.getTime() <= local.syncedAt.getTime()) {
+    await db.shiftModeSettings.put(remoteSetting);
+    return;
+  }
+
+  if (remoteModifiedAt.getTime() > local.modifiedAt.getTime()) {
+    await db.shiftModeSettings.put(remoteSetting);
+  }
+};
+
+/**
+ * Fetches a single page of shift mode settings from the pull endpoint.
+ */
+const pullShiftModeSettingsPage = async (
+  serverUrl: string,
+  apiKey: string,
+  apiBasePath: string,
+  lastSyncedAt: string | null,
+  cursor: string | null,
+): Promise<{ records: ShiftModeSettingSyncRecord[]; nextCursor: string | null }> => {
+  const params = new URLSearchParams();
+  if (lastSyncedAt) params.set('lastSyncedAt', lastSyncedAt);
+  if (cursor) params.set('cursor', cursor);
+
+  const queryString = params.toString();
+  const pullUrl = queryString
+    ? `${serverUrl}${apiBasePath}/shift-mode-settings/sync/pull?${queryString}`
+    : `${serverUrl}${apiBasePath}/shift-mode-settings/sync/pull`;
+
+  const response = await fetch(pullUrl, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => '');
+    throw new Error(`Pull shift mode settings failed: ${response.status} - ${errorBody}`);
+  }
+
+  const wrapper = await response.json();
+  const data = wrapper.data ?? { records: [], cursor: null, hasMore: false };
+  const nextCursor = data.hasMore ? (data.cursor ?? null) : null;
+  return { records: data.records ?? [], nextCursor };
+};
+
+/**
+ * Syncs shift mode settings with the backend (push unsynced + pull remote changes).
+ * At most 1 record exists per device.
+ */
+const syncShiftModeSettings = async (serverUrl: string, apiKey: string, apiBasePath: string, lastSyncedAt: string | null): Promise<void> => {
+  await pushShiftModeSettings(serverUrl, apiKey, apiBasePath);
+
+  // Pull
+  let cursor: string | null = null;
+  do {
+    const page = await pullShiftModeSettingsPage(serverUrl, apiKey, apiBasePath, lastSyncedAt, cursor);
+
+    if (page.records.length > 0) {
+      const now = new Date();
+      for (const remote of page.records) {
+        await mergeShiftModeSettingRecord(remote, now);
+      }
+    }
+
+    cursor = page.nextCursor;
+  } while (cursor !== null);
+};
+
+/**
+ * Pushes unsynced shift mode settings to the backend.
+ * At most 1 record will be pushed.
+ */
+const pushShiftModeSettings = async (serverUrl: string, apiKey: string, apiBasePath: string): Promise<void> => {
+  const allSettings = await db.shiftModeSettings.toArray();
+  const pushCandidates = allSettings.filter(
+    s => s.syncedAt === null || s.modifiedAt.getTime() > s.syncedAt.getTime(),
+  );
+
+  if (pushCandidates.length === 0) return;
+
+  const records: ShiftModeSettingSyncRecord[] = pushCandidates.map(s => ({
+    id: s.id,
+    enabled: s.enabled,
+    modifiedAt: s.modifiedAt.toISOString(),
+    isDeleted: s.isDeleted,
+  }));
+
+  const response = await fetch(`${serverUrl}${apiBasePath}/shift-mode-settings/sync/push`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({ records }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => '');
+    throw new Error(`Push shift mode settings failed: ${response.status} - ${errorBody}`);
+  }
+
+  // Mark as synced
+  const now = new Date();
+  const ids = pushCandidates.map(s => s.id);
+  await db.shiftModeSettings.where('id').anyOf(ids).modify({ syncedAt: now });
+};
+
+/**
  * Runs a full sync cycle (push + pull) for all entities.
  * Each entity syncs independently — one failure doesn't block the others.
  * Updates lastSyncedAt only if at least one entity sync succeeds.
@@ -453,6 +599,7 @@ export const runFullSyncCycle = async (): Promise<void> => {
   try { await syncAnnualHoursConfig(annualHoursClient, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
   try { await syncShifts(serverUrl, apiKey, apiBasePath, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
   try { await syncReminders(serverUrl, apiKey, apiBasePath, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
+  try { await syncShiftModeSettings(serverUrl, apiKey, apiBasePath, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
 
   // Post-cycle notification purge — fire and forget, does not affect sync status
   try {
@@ -500,6 +647,7 @@ export const runPushOnlyCycle = async (): Promise<void> => {
   try { await pushAnnualHoursConfig(annualHoursClient); } catch (e) { console.error('Push annual hours config failed:', e); }
   try { await pushShifts(serverUrl, apiKey, apiBasePath); } catch (e) { console.error('Push shifts failed:', e); }
   try { await pushReminders(serverUrl, apiKey, apiBasePath); } catch (e) { console.error('Push reminders failed:', e); }
+  try { await pushShiftModeSettings(serverUrl, apiKey, apiBasePath); } catch (e) { console.error('Push shift mode settings failed:', e); }
 };
 
 /**
