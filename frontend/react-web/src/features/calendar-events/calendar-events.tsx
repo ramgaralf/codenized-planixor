@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useCalendarStore } from '@/stores/calendarStore';
+import { useShiftMode } from '@features/shift-mode/hooks/useShiftMode';
+
+import { DayActionModal } from '@shared/components/day-action-modal/DayActionModal';
 
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { DayDateNavigator } from './components/DayDateNavigator';
@@ -9,6 +12,7 @@ import { EventDetailPage } from './components/EventDetailPage';
 import { EventForm } from './components/EventForm';
 import { MonthDateNavigator } from './components/MonthDateNavigator';
 import { MonthView } from './components/MonthView';
+import { PrerequisiteModal } from './components/PrerequisiteModal';
 import { ViewSelector } from './components/ViewSelector';
 import { WeekDateNavigator } from './components/WeekDateNavigator';
 import { WeekView } from './components/WeekView';
@@ -16,7 +20,9 @@ import { YearDateNavigator } from './components/YearDateNavigator';
 import { YearView } from './components/YearView';
 import { useCalendarEvents } from './hooks/useCalendarEvents';
 import { useEventFiltering } from './hooks/useEventFiltering';
+import { usePrerequisiteCheck } from './hooks/usePrerequisiteCheck';
 import type { CalendarEventDisplay } from './models';
+import { getEffectiveTimes } from './utils';
 
 /**
  * Internal view state for the calendar-events container.
@@ -24,7 +30,7 @@ import type { CalendarEventDisplay } from './models';
  */
 type ViewState =
   | { mode: 'calendar' }
-  | { mode: 'create' }
+  | { mode: 'create'; originView?: 'month' | 'year' }
   | { mode: 'detail'; event: CalendarEventDisplay };
 
 interface CalendarEventsProps {
@@ -52,13 +58,39 @@ interface CalendarEventsProps {
 export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEventsProps) => {
   const [viewState, setViewState] = useState<ViewState>({ mode: 'calendar' });
   const [deleteTarget, setDeleteTarget] = useState<CalendarEventDisplay | null>(null);
+  const [showPrerequisiteModal, setShowPrerequisiteModal] = useState(false);
+  /** Date for Day_Action_Modal */
+  const [dayActionModalDate, setDayActionModalDate] = useState<string | null>(null);
+  /** Events for the Day_Action_Modal — split by type */
+  const [dayActionModalShifts, setDayActionModalShifts] = useState<CalendarEventDisplay[]>([]);
+  const [dayActionModalReminders, setDayActionModalReminders] = useState<CalendarEventDisplay[]>([]);
 
   const activeView = useCalendarStore((state) => state.activeView);
   const currentDate = useCalendarStore((state) => state.currentDate);
   const setView = useCalendarStore((state) => state.setView);
 
-  const { events } = useCalendarEvents();
+  const { events, getEventsByDate } = useCalendarEvents();
   const { filteredEvents } = useEventFiltering(events);
+  const { enabled: shiftModeEnabled } = useShiftMode();
+  const { result: prerequisiteResult } = usePrerequisiteCheck();
+
+  // Track previous shift mode state to detect activation/deactivation transitions
+  const prevShiftModeEnabled = useRef(shiftModeEnabled);
+
+  // When shift mode is activated, navigate away from unsupported views (Day/Week)
+  // preserving date context. Default to Month view when shift mode is active.
+  // When shift mode is deactivated, restore Day view as the default (Req 4.6).
+  useEffect(() => {
+    const wasEnabled = prevShiftModeEnabled.current;
+    prevShiftModeEnabled.current = shiftModeEnabled;
+
+    if (shiftModeEnabled && (activeView === 'day' || activeView === 'week')) {
+      setView('month');
+    } else if (wasEnabled && !shiftModeEnabled) {
+      // Shift mode just deactivated — restore Day view as default
+      setView('day');
+    }
+  }, [shiftModeEnabled, activeView, setView]);
 
   // Detect midnight crossing and advance calendar to new day
   const lastKnownDay = useRef(new Date().toDateString());
@@ -81,17 +113,54 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
   const effectiveMode = showCreateForm && viewState.mode === 'calendar' ? 'create' : viewState.mode;
 
   const backToCalendar = useCallback(() => {
+    // If creating from Year view in shift mode, return to Year view (Req 7.3, 7.4)
+    if (viewState.mode === 'create' && viewState.originView === 'year') {
+      setView('year');
+    }
     setViewState({ mode: 'calendar' });
     onCreateFormClose?.();
-  }, [onCreateFormClose]);
+  }, [onCreateFormClose, viewState, setView]);
 
   const handleEventClick = useCallback((event: CalendarEventDisplay) => {
     setViewState({ mode: 'detail', event });
   }, []);
 
   const handleMonthDayClick = useCallback(
-    (day: string) => {
-      // Navigate to day view for the selected date
+    async (day: string) => {
+      if (shiftModeEnabled) {
+        // Shift mode day-tap logic for Month view (Req 5.1, 5.2, 5.5)
+        const dayEvents = await getEventsByDate(day);
+        const shiftOrReminderEvents = dayEvents.filter((e) => {
+          if (e.isDeleted) return false;
+          if (e.eventType !== 'shift' && e.eventType !== 'reminder') return false;
+          const { effectiveStart, effectiveEnd } = getEffectiveTimes(e, day);
+          return effectiveEnd > effectiveStart;
+        });
+
+        if (shiftOrReminderEvents.length === 0) {
+          // Empty day — prerequisite check
+          if (prerequisiteResult.canCreate) {
+            // Open Calendar_Event_Form with date preselected
+            const parts = day.split('-');
+            const year = Number(parts[0]);
+            const month = Number(parts[1]);
+            const dayNum = Number(parts[2]);
+            useCalendarStore.setState({ currentDate: new Date(year, month - 1, dayNum) });
+            setViewState({ mode: 'create', originView: 'month' });
+          } else {
+            // Show Prerequisite_Modal
+            setShowPrerequisiteModal(true);
+          }
+        } else {
+          // Day with content — show Day_Action_Modal
+          setDayActionModalDate(day);
+          setDayActionModalShifts(shiftOrReminderEvents.filter((e) => e.eventType === 'shift'));
+          setDayActionModalReminders(shiftOrReminderEvents.filter((e) => e.eventType === 'reminder'));
+        }
+        return;
+      }
+
+      // Default behavior: navigate to day view for the selected date
       const parts = day.split('-');
       const year = Number(parts[0]);
       const month = Number(parts[1]);
@@ -100,12 +169,45 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
       useCalendarStore.setState({ currentDate: targetDate });
       setView('day');
     },
-    [setView],
+    [setView, shiftModeEnabled, getEventsByDate, prerequisiteResult],
   );
 
   const handleYearDayClick = useCallback(
-    (day: string) => {
-      // Navigate to day view for the clicked date
+    async (day: string) => {
+      if (shiftModeEnabled) {
+        // Shift mode day-tap logic for Year view (Req 7.1, 7.2)
+        const dayEvents = await getEventsByDate(day);
+        const shiftOrReminderEvents = dayEvents.filter((e) => {
+          if (e.isDeleted) return false;
+          if (e.eventType !== 'shift' && e.eventType !== 'reminder') return false;
+          const { effectiveStart, effectiveEnd } = getEffectiveTimes(e, day);
+          return effectiveEnd > effectiveStart;
+        });
+
+        if (shiftOrReminderEvents.length === 0) {
+          // Empty day — prerequisite check
+          if (prerequisiteResult.canCreate) {
+            // Open Calendar_Event_Form with date preselected, return to Year view on close
+            const parts = day.split('-');
+            const year = Number(parts[0]);
+            const month = Number(parts[1]);
+            const dayNum = Number(parts[2]);
+            useCalendarStore.setState({ currentDate: new Date(year, month - 1, dayNum) });
+            setViewState({ mode: 'create', originView: 'year' });
+          } else {
+            // Show Prerequisite_Modal
+            setShowPrerequisiteModal(true);
+          }
+        } else {
+          // Day with content — show Day_Action_Modal
+          setDayActionModalDate(day);
+          setDayActionModalShifts(shiftOrReminderEvents.filter((e) => e.eventType === 'shift'));
+          setDayActionModalReminders(shiftOrReminderEvents.filter((e) => e.eventType === 'reminder'));
+        }
+        return;
+      }
+
+      // Default behavior: navigate to day view for the clicked date
       const parts = day.split('-');
       const year = Number(parts[0]);
       const month = Number(parts[1]);
@@ -114,7 +216,7 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
       useCalendarStore.setState({ currentDate: targetDate });
       setView('day');
     },
-    [setView],
+    [setView, shiftModeEnabled, getEventsByDate, prerequisiteResult],
   );
 
   const handleDeleteConfirm = useCallback(() => {
@@ -131,6 +233,71 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
       setDeleteTarget(viewState.event);
     }
   }, [viewState]);
+
+  const handlePrerequisiteModalDismiss = useCallback(() => {
+    setShowPrerequisiteModal(false);
+  }, []);
+
+  const handleDayActionModalDismiss = useCallback(() => {
+    setDayActionModalDate(null);
+    setDayActionModalShifts([]);
+    setDayActionModalReminders([]);
+  }, []);
+
+  const handleDayActionModalCreateEvent = useCallback(() => {
+    if (!dayActionModalDate) return;
+    // Close modal and open Calendar_Event_Form with date preselected
+    // Per Req 6.4 (Month) and 8.4 (Year): always return to Month view on form close
+    const parts = dayActionModalDate.split('-');
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    const dayNum = Number(parts[2]);
+    useCalendarStore.setState({ currentDate: new Date(year, month - 1, dayNum) });
+    // Navigate to Month view if currently on Year view (per Req 8.4)
+    if (activeView === 'year') {
+      setView('month');
+    }
+    setDayActionModalDate(null);
+    setDayActionModalShifts([]);
+    setDayActionModalReminders([]);
+    setViewState({ mode: 'create', originView: 'month' });
+  }, [dayActionModalDate, activeView, setView]);
+
+  const handleDayActionModalEditShift = useCallback(
+    (eventId: string) => {
+      // Close modal and open edit form for the shift event
+      // Per Req 8.5/8.6: from Year view Day_Action_Modal, navigate to Month view
+      const event = dayActionModalShifts.find((e) => e.id === eventId);
+      if (activeView === 'year') {
+        setView('month');
+      }
+      setDayActionModalDate(null);
+      setDayActionModalShifts([]);
+      setDayActionModalReminders([]);
+      if (event) {
+        setViewState({ mode: 'detail', event });
+      }
+    },
+    [dayActionModalShifts, activeView, setView],
+  );
+
+  const handleDayActionModalEditReminder = useCallback(
+    (eventId: string) => {
+      // Close modal and open edit form for the reminder event
+      // Per Req 8.7/8.8: from Year view Day_Action_Modal, navigate to Month view
+      const event = dayActionModalReminders.find((e) => e.id === eventId);
+      if (activeView === 'year') {
+        setView('month');
+      }
+      setDayActionModalDate(null);
+      setDayActionModalShifts([]);
+      setDayActionModalReminders([]);
+      if (event) {
+        setViewState({ mode: 'detail', event });
+      }
+    },
+    [dayActionModalReminders, activeView, setView],
+  );
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -239,6 +406,27 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
           eventId={deleteTarget.id}
           onConfirm={handleDeleteConfirm}
           onDismiss={handleDeleteDismiss}
+        />
+      )}
+
+      {showPrerequisiteModal && !prerequisiteResult.canCreate && (
+        <PrerequisiteModal
+          missingShifts={prerequisiteResult.missingShifts}
+          missingReminders={prerequisiteResult.missingReminders}
+          onDismiss={handlePrerequisiteModalDismiss}
+        />
+      )}
+
+      {/* Day_Action_Modal — shown when a day with shifts/reminders is tapped in shift mode */}
+      {dayActionModalDate && (
+        <DayActionModal
+          date={dayActionModalDate}
+          shiftEvents={dayActionModalShifts}
+          reminderEvents={dayActionModalReminders}
+          onCreateEvent={handleDayActionModalCreateEvent}
+          onEditShift={handleDayActionModalEditShift}
+          onEditReminder={handleDayActionModalEditReminder}
+          onDismiss={handleDayActionModalDismiss}
         />
       )}
     </div>

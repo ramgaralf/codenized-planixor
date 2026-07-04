@@ -13,6 +13,7 @@ import { usePrerequisiteCheck } from '@features/calendar-events/hooks/usePrerequ
 import { NotificationBadge } from '@features/notifications/components/NotificationBadge';
 import { NotificationView } from '@features/notifications/components/NotificationView';
 import { useNotifications } from '@features/notifications/hooks/useNotifications';
+import { useShiftMode } from '@features/shift-mode/hooks/useShiftMode';
 import { SyncButton } from '@features/sync/components/SyncButton';
 import { useSyncStore } from '@features/sync/stores/syncStore';
 
@@ -39,12 +40,14 @@ export const HeaderBar = () => {
   const { unreadCount, channel } = useNotifications();
   const { connectionStatus, config } = useSyncStore();
   const { result: prerequisiteResult } = usePrerequisiteCheck();
+  const { enabled: shiftModeEnabled } = useShiftMode();
   const pageTitle = t(getPageTitleKey(pathname));
   const isCalendar = pathname === '/';
   const isShiftsList = pathname === '/shifts';
   const isRemindersList = pathname === '/reminders';
   const isReports = pathname === '/reports';
   const showAnnualConfigButton = isReports && reportMode === 'year';
+  const showNewEventButton = isCalendar && !shiftModeEnabled;
 
   // Bell icon visibility: visible when channel is "app" or "both", hidden when "system"
   const showBellIcon = channel !== 'system';
@@ -116,7 +119,7 @@ export const HeaderBar = () => {
       <span className={styles.pageTitle}>{pageTitle}</span>
 
       <div className={styles.actions}>
-        {isCalendar && (
+        {showNewEventButton && (
           <button
             className={styles.newEventButton}
             type="button"

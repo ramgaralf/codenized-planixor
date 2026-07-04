@@ -384,4 +384,15 @@
     <string name="propagation_dialog_affected_count">%1$d evento(s) serán actualizados</string>
     <string name="propagation_dialog_confirm">Actualizar</string>
     <string name="propagation_dialog_decline">Omitir</string>
+
+    <!-- Shift Mode -->
+    <string name="shift_mode_toggle_label">Modo Turno</string>
+    <string name="shift_mode_toggle_description">Las vistas de Día y Semana serán deshabilitadas y el botón Nuevo Evento será ocultado.</string>
+    <string name="shift_mode_create_event">Crear evento</string>
+    <string name="shift_mode_close">Cerrar</string>
+    <string name="shift_mode_shifts_section">Turnos</string>
+    <string name="shift_mode_reminders_section">Recordatorios</string>
+    <string name="shift_mode_deleted_item">[Eliminado]</string>
+    <string name="shift_mode_date_format_es">dd \'de\' MMMM \'de\' yyyy</string>
+    <string name="shift_mode_date_format_en">MMMM dd, yyyy</string>
 </resources>

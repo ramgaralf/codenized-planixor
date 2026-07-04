@@ -5,6 +5,7 @@ import type { NotificationRecord, NotificationSettingsRecord } from '@features/n
 import type { AnnualHoursConfig } from '@features/reports/models';
 import type { Shift } from '@features/shifts/models';
 import type { Reminder } from '@features/reminders/models';
+import type { ShiftModeSetting } from '@features/shift-mode/models';
 import type { SyncConfig } from '@features/sync/models';
 
 /**
@@ -31,6 +32,7 @@ export class PlanixorDatabase extends Dexie {
   notifications!: Dexie.Table<NotificationRecord, string>;
   notificationSettings!: Dexie.Table<NotificationSettingsRecord, string>;
   syncConfig!: Dexie.Table<SyncConfig, string>;
+  shiftModeSettings!: Dexie.Table<ShiftModeSetting, string>;
 
   constructor() {
     super('planixor');
@@ -99,6 +101,17 @@ export class PlanixorDatabase extends Dexie {
       notifications: 'id, calendarEventId, triggerTime, [isDelivered+isRead+isDeleted], isDeleted, modifiedAt',
       notificationSettings: 'key',
       syncConfig: 'key',
+    });
+
+    this.version(9).stores({
+      calendarEvents: 'id, startDay, endDay, [startDay+eventType+isDeleted], eventType, isDeleted, modifiedAt',
+      shifts: 'id, createdAt, isDeleted, isActive',
+      reminders: 'id, createdAt, isDeleted, isActive',
+      annualHoursConfig: 'id, year, isDeleted, modifiedAt',
+      notifications: 'id, calendarEventId, triggerTime, [isDelivered+isRead+isDeleted], isDeleted, modifiedAt',
+      notificationSettings: 'key',
+      syncConfig: 'key',
+      shiftModeSettings: 'id, modifiedAt',
     });
   }
 }

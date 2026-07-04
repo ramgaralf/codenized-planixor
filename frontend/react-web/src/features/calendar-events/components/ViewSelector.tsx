@@ -1,9 +1,12 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useCalendarStore } from '@/stores/calendarStore';
 import type { CalendarView } from '@/stores/calendarStore';
+import { useShiftMode } from '@features/shift-mode/hooks/useShiftMode';
 
-const VIEW_OPTIONS: CalendarView[] = ['day', 'week', 'month', 'year'];
+const ALL_VIEW_OPTIONS: CalendarView[] = ['day', 'week', 'month', 'year'];
+const SHIFT_MODE_VIEW_OPTIONS: CalendarView[] = ['month', 'year'];
 
 const VIEW_LABEL_KEYS: Record<CalendarView, string> = {
   day: 'views.day',
@@ -16,6 +19,12 @@ export const ViewSelector = () => {
   const { t } = useTranslation();
   const activeView = useCalendarStore((state) => state.activeView);
   const setView = useCalendarStore((state) => state.setView);
+  const { enabled: shiftModeEnabled } = useShiftMode();
+
+  const viewOptions = useMemo(
+    () => (shiftModeEnabled ? SHIFT_MODE_VIEW_OPTIONS : ALL_VIEW_OPTIONS),
+    [shiftModeEnabled],
+  );
 
   return (
     <div
@@ -32,7 +41,7 @@ export const ViewSelector = () => {
         borderRadius: '8px',
       }}
     >
-      {VIEW_OPTIONS.map((view) => (
+      {viewOptions.map((view) => (
         <button
           key={view}
           role="tab"

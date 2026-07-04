@@ -74,7 +74,7 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                         .HasColumnType("varchar(50)")
                         .HasDefaultValue("[]");
 
-                    b.Property<DateOnly>("EndDay")
+                    b.Property<DateTime>("EndDay")
                         .HasColumnType("date");
 
                     b.Property<int>("EndTime")
@@ -98,7 +98,7 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("varchar(250)");
 
-                    b.Property<DateOnly>("StartDay")
+                    b.Property<DateTime>("StartDay")
                         .HasColumnType("date");
 
                     b.Property<int>("StartTime")
@@ -266,6 +266,40 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                         .HasDatabaseName("IX_Shifts_UserId_ModifiedAt");
 
                     b.ToTable("Shifts", (string)null);
+                });
+
+            modelBuilder.Entity("Codenized.Planixor.Core.Entities.ShiftModeSetting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("Enabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("SyncedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_ShiftModeSettings_UserId");
+
+                    b.ToTable("ShiftModeSettings", (string)null);
                 });
 
             modelBuilder.Entity("Codenized.Planixor.Core.Entities.Reminder", b =>

@@ -303,9 +303,10 @@ describe('calendarEventService — Property Tests', () => {
             const results = await getByDate(startDay);
 
             expect(results.length).toBe(1);
-            expect(results[0].name).toBe('Unknown');
+            expect(results[0].name).toBe('[Deleted]');
             expect(results[0].icon).toBe('❓');
             expect(results[0].backgroundColor).toBe('transparent');
+            expect(results[0].isOrphaned).toBe(true);
           },
         ),
         { numRuns: 100 },
@@ -461,9 +462,10 @@ describe('calendarEventService — Property Tests', () => {
 
             const results = await getByDate(startDay);
             expect(results.length).toBe(1);
-            expect(results[0].name).toBe('Unknown');
+            expect(results[0].name).toBe('[Deleted]');
             expect(results[0].icon).toBe('❓');
             expect(results[0].backgroundColor).toBe('transparent');
+            expect(results[0].isOrphaned).toBe(true);
           },
         ),
         { numRuns: 100 },

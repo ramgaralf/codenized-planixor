@@ -306,6 +306,56 @@ LaunchedEffect(uiState.readyToSave) {
 
 ---
 
+## Room migrations
+
+### No DEFAULT clauses unless declared in entity
+
+Room validates the actual SQLite table schema against the `@Entity` annotation. If the migration SQL uses `DEFAULT 0` but the entity doesn't declare `@ColumnInfo(defaultValue = "0")`, Room throws `IllegalStateException: Migration didn't properly handle`.
+
+```kotlin
+// ❌ Migration uses DEFAULT but entity doesn't declare it
+db.execSQL("""
+    CREATE TABLE `settings` (
+        `enabled` INTEGER NOT NULL DEFAULT 0,
+        ...
+    )
+""")
+
+// Entity without defaultValue annotation:
+@Entity data class SettingsEntity(val enabled: Boolean)
+
+// ✅ Either remove DEFAULT from SQL:
+db.execSQL("""
+    CREATE TABLE `settings` (
+        `enabled` INTEGER NOT NULL,
+        ...
+    )
+""")
+
+// ✅ Or declare it in the entity:
+@Entity data class SettingsEntity(
+    @ColumnInfo(defaultValue = "0") val enabled: Boolean,
+)
+```
+
+### No CREATE INDEX unless declared in entity
+
+Similarly, if the migration creates an index but the entity class doesn't have `@Entity(indices = [...])`, Room will throw a schema mismatch.
+
+```kotlin
+// ❌ Migration creates index but entity doesn't declare it
+db.execSQL("CREATE INDEX IF NOT EXISTS `idx_foo` ON `table` (`col`)")
+
+// ✅ Either remove the CREATE INDEX from migration SQL
+// ✅ Or add @Entity(indices = [Index(value = ["col"])]) to the entity
+```
+
+### Rule
+
+**The migration SQL must produce a schema that EXACTLY matches what Room generates from the `@Entity` annotation.** When in doubt, check what Room expects by reading the error message — it shows both "Expected" and "Found" schemas.
+
+---
+
 ## Dependency injection
 
 ### Constructor injection (preferred)

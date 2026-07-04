@@ -11,6 +11,7 @@ using Codenized.Planixor.Api.Endpoints.NotificationRecord;
 using Codenized.Planixor.Api.Endpoints.Reminder;
 using Codenized.Planixor.Api.Endpoints.Security;
 using Codenized.Planixor.Api.Endpoints.Shift;
+using Codenized.Planixor.Api.Endpoints.ShiftModeSetting;
 
 /// <summary>Register endpoints.</summary>
 internal static class RegisterEndpoints
@@ -32,6 +33,7 @@ internal static class RegisterEndpoints
         app.MapAnnualHoursConfigEndpoints(apiBasePath);
         app.MapNotificationRecordEndpoints(apiBasePath);
         app.MapSecurityEndpoints(apiBasePath);
+        app.MapShiftModeSettingEndpoints(apiBasePath);
         return app;
     }
 }

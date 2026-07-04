@@ -17,11 +17,13 @@ import com.codenized.planixor.model.CalendarView
 import com.codenized.planixor.ui.theme.PlanixorTheme
 
 /**
- * Segmented control for switching between Day, Week, Month, and Year calendar views.
+ * Segmented control for switching between calendar views.
+ * Displays only the views provided via the [views] parameter.
  * Uses `icon = {}` to hide the default checkmark on selected segment.
  *
  * @param activeView The currently selected calendar view.
  * @param onViewSelected Callback invoked when the user selects a different view.
+ * @param views The list of available views to display. Defaults to all entries.
  * @param modifier Optional modifier.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,10 +31,9 @@ import com.codenized.planixor.ui.theme.PlanixorTheme
 fun ViewSelector(
     activeView: CalendarView,
     onViewSelected: (CalendarView) -> Unit,
+    views: List<CalendarView> = CalendarView.entries,
     modifier: Modifier = Modifier,
 ) {
-    val views = CalendarView.entries
-
     SingleChoiceSegmentedButtonRow(
         modifier = modifier,
     ) {

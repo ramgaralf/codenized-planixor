@@ -4,13 +4,16 @@ import app.cash.turbine.test
 import com.codenized.planixor.data.local.CalendarEventRepository
 import com.codenized.planixor.data.local.PreferencesRepository
 import com.codenized.planixor.data.local.ReminderRepository
+import com.codenized.planixor.data.local.ShiftModeSettingRepository
 import com.codenized.planixor.data.local.ShiftRepository
 import com.codenized.planixor.data.notification.NotificationService
 import com.codenized.planixor.model.CalendarView
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -33,7 +36,10 @@ class CalendarViewModelTest {
     private lateinit var reminderRepository: ReminderRepository
     private lateinit var calendarEventRepository: CalendarEventRepository
     private lateinit var notificationService: NotificationService
+    private lateinit var shiftModeSettingRepository: ShiftModeSettingRepository
     private lateinit var viewModel: CalendarViewModel
+
+    private val shiftModeFlow = MutableStateFlow(false)
 
     @Before
     fun setUp() {
@@ -44,10 +50,12 @@ class CalendarViewModelTest {
         reminderRepository = mockk(relaxed = true)
         calendarEventRepository = mockk(relaxed = true)
         notificationService = mockk(relaxed = true)
+        shiftModeSettingRepository = mockk(relaxed = true)
 
         coEvery { shiftRepository.getAllActive() } returns flowOf(emptyList())
         coEvery { reminderRepository.getActiveForCalendarSelection() } returns flowOf(emptyList())
         coEvery { calendarEventRepository.getByDateRange(any(), any()) } returns flowOf(emptyList())
+        every { shiftModeSettingRepository.observeEnabled() } returns shiftModeFlow
     }
 
     @After
@@ -56,7 +64,7 @@ class CalendarViewModelTest {
     }
 
     private fun createViewModel(): CalendarViewModel {
-        return CalendarViewModel(preferencesRepository, shiftRepository, reminderRepository, calendarEventRepository, notificationService)
+        return CalendarViewModel(preferencesRepository, shiftRepository, reminderRepository, calendarEventRepository, notificationService, shiftModeSettingRepository)
     }
 
     @Test
@@ -393,5 +401,107 @@ class CalendarViewModelTest {
 
         val formState = viewModel.formState.value
         assertEquals(540, formState.totalHours)
+    }
+
+    // --- Shift Mode: View Restrictions ---
+
+    @Test
+    fun `availableViews should return Month and Year when shift mode enabled`() = runTest {
+        shiftModeFlow.value = true
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.availableViews.test {
+            // May emit initial default first, then the filtered list
+            var latest = awaitItem()
+            if (latest.size == 4) {
+                latest = awaitItem()
+            }
+            assertEquals(listOf(CalendarView.Month, CalendarView.Year), latest)
+        }
+    }
+
+    @Test
+    fun `availableViews should return all 4 views when shift mode disabled`() = runTest {
+        shiftModeFlow.value = false
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.availableViews.test {
+            val views = awaitItem()
+            assertEquals(CalendarView.entries.toList(), views)
+        }
+    }
+
+    @Test
+    fun `activeView should change to Month when shift mode activated while on Day`() = runTest {
+        shiftModeFlow.value = false
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.switchView(CalendarView.Day)
+        advanceUntilIdle()
+        assertEquals(CalendarView.Day, viewModel.activeView.value)
+
+        // Activate shift mode
+        shiftModeFlow.value = true
+        advanceUntilIdle()
+
+        assertEquals(CalendarView.Month, viewModel.activeView.value)
+    }
+
+    @Test
+    fun `activeView should change to Month when shift mode activated while on Week`() = runTest {
+        shiftModeFlow.value = false
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.switchView(CalendarView.Week)
+        advanceUntilIdle()
+        assertEquals(CalendarView.Week, viewModel.activeView.value)
+
+        // Activate shift mode
+        shiftModeFlow.value = true
+        advanceUntilIdle()
+
+        assertEquals(CalendarView.Month, viewModel.activeView.value)
+    }
+
+    @Test
+    fun `activeView should remain Month when shift mode activated while on Month`() = runTest {
+        shiftModeFlow.value = false
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.switchView(CalendarView.Month)
+        advanceUntilIdle()
+        assertEquals(CalendarView.Month, viewModel.activeView.value)
+
+        // Activate shift mode
+        shiftModeFlow.value = true
+        advanceUntilIdle()
+
+        assertEquals(CalendarView.Month, viewModel.activeView.value)
+    }
+
+    @Test
+    fun `activeView should restore Day when shift mode deactivated`() = runTest {
+        shiftModeFlow.value = true
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(CalendarView.Month, viewModel.activeView.value)
+
+        // Deactivate shift mode
+        shiftModeFlow.value = false
+        advanceUntilIdle()
+
+        assertEquals(CalendarView.Day, viewModel.activeView.value)
     }
 }

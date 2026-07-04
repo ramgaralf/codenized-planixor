@@ -34,4 +34,9 @@ public interface IApplicationContext
     /// Gets notification records.
     /// </summary>
     DbSet<NotificationRecord> NotificationRecords { get; }
+
+    /// <summary>
+    /// Gets shift mode settings.
+    /// </summary>
+    DbSet<ShiftModeSetting> ShiftModeSettings { get; }
 }

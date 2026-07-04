@@ -1,0 +1,25 @@
+{
+  "pbtResults": {
+    "1.2 Write unit tests for `ShiftModeSetting` entity": {
+      "status": "passed",
+      "lastRunTimestamp": 1783166463769
+    },
+    "3.6 Write unit tests for `useShiftMode` hook and sync adapter": {
+      "status": "passed",
+      "lastRunTimestamp": 1783167879741
+    },
+    "5.8 Write property tests for day-tap routing logic": {
+      "status": "passed",
+      "lastRunTimestamp": 1783169877000
+    },
+    "5.9 Write property tests for Day_Action_Modal ordering and rendering": {
+      "status": "passed",
+      "lastRunTimestamp": 1783169877969
+    },
+    "9.6 Write property tests for day-tap routing and modal rendering": {
+      "status": "passed",
+      "lastRunTimestamp": 1783169903227
+    }
+  },
+  "executionHistory": {}
+}

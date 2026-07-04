@@ -450,6 +450,20 @@
       "decline": "Omitir"
     }
   },
+  "shiftMode": {
+    "toggle": {
+      "label": "Modo Turno",
+      "description": "Cuando está activado, las vistas de Día y Semana se deshabilitarán y el botón Nuevo Evento se ocultará. Solo estarán disponibles las vistas de Mes y Año."
+    },
+    "dayModal": {
+      "createEvent": "Crear evento",
+      "close": "Cerrar",
+      "shifts": "Turnos",
+      "reminders": "Recordatorios",
+      "deleted": "[Eliminado]",
+      "dateFormat": "dd 'de' MMMM 'de' yyyy"
+    }
+  },
   "backup": {
     "sectionTitle": "Respaldo",
     "create": "Crear",

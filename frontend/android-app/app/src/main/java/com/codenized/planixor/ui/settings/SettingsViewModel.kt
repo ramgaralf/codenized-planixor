@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.codenized.planixor.data.local.PlanixorDatabase
 import com.codenized.planixor.data.local.PreferencesRepository
+import com.codenized.planixor.data.local.ShiftModeSettingRepository
 import com.codenized.planixor.data.notification.NotificationChannel
 import com.codenized.planixor.data.notification.NotificationPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,6 +31,7 @@ class SettingsViewModel @Inject constructor(
     private val preferencesRepository: PreferencesRepository,
     private val notificationPreferences: NotificationPreferences,
     private val database: PlanixorDatabase,
+    private val shiftModeSettingRepository: ShiftModeSettingRepository,
 ) : ViewModel() {
 
     private val _locale = MutableStateFlow("es")
@@ -44,6 +46,9 @@ class SettingsViewModel @Inject constructor(
     private val _pendingChannelSelection = MutableStateFlow<NotificationChannel?>(null)
     val pendingChannelSelection: StateFlow<NotificationChannel?> = _pendingChannelSelection.asStateFlow()
 
+    val shiftModeEnabled: StateFlow<Boolean> = shiftModeSettingRepository.observeEnabled()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
     init {
         loadPersistedLocale()
     }
@@ -53,6 +58,12 @@ class SettingsViewModel @Inject constructor(
         applyLocale(value)
         viewModelScope.launch {
             preferencesRepository.setLocale(value)
+        }
+    }
+
+    fun toggleShiftMode() {
+        viewModelScope.launch {
+            shiftModeSettingRepository.toggle()
         }
     }
 

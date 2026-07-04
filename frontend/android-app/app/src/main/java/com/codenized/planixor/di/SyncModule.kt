@@ -5,6 +5,7 @@ import com.codenized.planixor.data.local.CalendarEventDao
 import com.codenized.planixor.data.local.NotificationRecordDao
 import com.codenized.planixor.data.local.ReminderDao
 import com.codenized.planixor.data.local.ShiftDao
+import com.codenized.planixor.data.local.ShiftModeSettingDao
 import com.codenized.planixor.data.sync.AnnualHoursConfigSyncAdapter
 import com.codenized.planixor.data.sync.AnnualHoursConfigSyncApiService
 import com.codenized.planixor.data.sync.AnnualHoursConfigSyncManager
@@ -17,6 +18,8 @@ import com.codenized.planixor.data.sync.NotificationRecordSyncApiService
 import com.codenized.planixor.data.sync.ReminderSyncAdapter
 import com.codenized.planixor.data.sync.ReminderSyncApiService
 import com.codenized.planixor.data.sync.ReminderSyncManager
+import com.codenized.planixor.data.sync.ShiftModeSettingSyncAdapter
+import com.codenized.planixor.data.sync.ShiftModeSettingSyncApiService
 import com.codenized.planixor.data.sync.ShiftSyncAdapter
 import com.codenized.planixor.data.sync.ShiftSyncApiService
 import com.codenized.planixor.data.sync.ShiftSyncManager
@@ -104,6 +107,15 @@ object SyncModule {
 
     @Provides
     @Singleton
+    fun provideShiftModeSettingSyncAdapter(
+        shiftModeSettingDao: ShiftModeSettingDao,
+        syncApiService: ShiftModeSettingSyncApiService,
+    ): ShiftModeSettingSyncAdapter {
+        return ShiftModeSettingSyncAdapter(shiftModeSettingDao, syncApiService)
+    }
+
+    @Provides
+    @Singleton
     fun provideSyncValidationService(): SyncValidationService {
         return SyncValidationServiceImpl()
     }
@@ -117,6 +129,7 @@ object SyncModule {
         annualHoursConfigSyncAdapter: AnnualHoursConfigSyncAdapter,
         shiftSyncAdapter: ShiftSyncAdapter,
         reminderSyncAdapter: ReminderSyncAdapter,
+        shiftModeSettingSyncAdapter: ShiftModeSettingSyncAdapter,
         dynamicBaseUrlInterceptor: DynamicBaseUrlInterceptor,
         notificationPurgeService: NotificationPurgeService,
     ): SyncServiceController {
@@ -127,6 +140,7 @@ object SyncModule {
             annualHoursConfigSyncAdapter,
             shiftSyncAdapter,
             reminderSyncAdapter,
+            shiftModeSettingSyncAdapter,
             dynamicBaseUrlInterceptor,
             notificationPurgeService,
         )

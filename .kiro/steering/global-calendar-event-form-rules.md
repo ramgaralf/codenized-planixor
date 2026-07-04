@@ -106,3 +106,29 @@ These rules apply when a shift is selected as the event type in the calendar eve
 - `computeEndDayForShift` uses `<=` (not `<`): when startTime equals endTime, it's a 24-hour shift ending the next day.
 - Events with `endTime = 0` on their `endDay` are not rendered on that day (they occupy zero time there).
 - The prerequisite check requires at least one active shift OR one active reminder (not both). Zero of both types triggers the modal.
+
+
+## Day-specific event queries (effective time filtering)
+
+### Rule 6: Events with zero effective time on a day must be excluded from day-specific queries
+
+**Context**: When querying events for a specific day (e.g., for a Day_Action_Modal or determining if a day is "empty"), the query `startDay <= day AND endDay >= day` includes multi-day events. However, some of these events have zero effective time on the queried day (e.g., a 24-hour shift ending at 00:00 on the endDay).
+
+**Behavior**: Any feature that queries events for a specific day and makes decisions based on the result (showing a modal, determining "empty day" status, etc.) MUST apply the effective time filter:
+
+```
+effectiveEnd > effectiveStart
+```
+
+Where effective times are computed as:
+- Single-day event (`startDay === endDay`): `effectiveStart = startTime`, `effectiveEnd = endTime`
+- Multi-day event on start day: `effectiveStart = startTime`, `effectiveEnd = 1439`
+- Multi-day event on end day with `endTime === 0`: `effectiveStart = 0`, `effectiveEnd = 0` (excluded)
+- Multi-day event on end day with `endTime > 0`: `effectiveStart = 0`, `effectiveEnd = endTime`
+- Multi-day event on intermediate day: `effectiveStart = 0`, `effectiveEnd = 1439`
+
+**Platform implementation:**
+- **React Web**: Use `getEffectiveTimes(event, dayStr)` from `features/calendar-events/utils.ts`
+- **Android**: Use `getEffectiveStartMinutes(event, dayStr)` and `getEffectiveEndMinutes(event, dayStr)` in CalendarViewModel
+
+**This applies to**: Day_Action_Modal day-tap logic, DayView event rendering, any future feature that needs to determine if an event is "active" on a specific day.
