@@ -112,6 +112,8 @@ public sealed class ReminderSyncPullServiceTests
             ReminderIcon.Create("☀️"),
             ReminderColor.Create("#EF4444"),
             true,
+            "never",
+            string.Empty,
             createdAt,
             modifiedAt,
             false);
@@ -162,6 +164,8 @@ public sealed class ReminderSyncPullServiceTests
             ReminderIcon.Create("🔔"),
             ReminderColor.Create("#2563EB"),
             true,
+            "never",
+            string.Empty,
             DateTime.UtcNow.AddDays(-5),
             DateTime.UtcNow,
             false);

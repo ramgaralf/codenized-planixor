@@ -214,7 +214,17 @@
       "selectIcon": "Select an icon",
       "changeIcon": "Change icon",
       "searchEmoji": "Search emoji...",
-      "emojiPickerLabel": "Emoji picker"
+      "emojiPickerLabel": "Emoji picker",
+      "frequency": {
+        "label": "Repetition",
+        "never": "Never",
+        "weekly": "Every week",
+        "monthly": "Every month",
+        "yearly": "Every year"
+      },
+      "endDate": {
+        "label": "Repeat until"
+      }
     },
     "validation": {
       "name": {
@@ -226,6 +236,12 @@
       },
       "color": {
         "required": "Select a background color"
+      },
+      "frequency": {
+        "required": "Select a repetition frequency"
+      },
+      "endDate": {
+        "invalid": "End date must be a valid future date"
       }
     },
     "error": {
@@ -250,6 +266,19 @@
       "deactivate": "Deactivate",
       "activate": "Activate",
       "delete": "Delete"
+    },
+    "series": {
+      "weekly": "Every week",
+      "monthly": "Every month",
+      "yearly": "Every year"
+    },
+    "propagation": {
+      "series": {
+        "title": "Frequency Changed",
+        "description": "The repetition frequency has changed from \"{{previousFrequency}}\" to \"{{newFrequency}}\". {{count}} calendar event(s) for this year may be affected.",
+        "confirm": "Update events",
+        "decline": "Keep existing"
+      }
     }
   },
   "prerequisite": {
@@ -338,6 +367,14 @@
     "detail": {
       "delete": "Delete",
       "deleteAriaLabel": "Delete {{name}}"
+    },
+    "series": {
+      "editTitle": "Edit series event",
+      "editDescription": "This event belongs to a series. Do you want to edit only this event or all future events in the series?",
+      "deleteTitle": "Delete series event",
+      "deleteDescription": "This event belongs to a series. Do you want to delete only this event or all future events in the series?",
+      "onlyThisEvent": "Only this event",
+      "allInSeries": "All future events in series"
     }
   },
   "notifications": {

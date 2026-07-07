@@ -6,8 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,22 +19,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,22 +50,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.codenized.planixor.R
 import com.codenized.planixor.ui.components.ColorPickerDialog
+import com.codenized.planixor.ui.components.EmojiPickerDialog
 import com.codenized.planixor.ui.components.PropagationDialog
 import com.codenized.planixor.ui.theme.PlanixorTheme
-
-private val EMOJI_CATEGORIES = mapOf(
-    "😀" to listOf("😀", "😃", "😄", "😁", "😆", "🥹", "😅", "🤣", "😂", "🙂", "😊", "😇", "🥰", "😍", "🤩", "😘", "😋", "😛", "🤪", "😜", "🤑", "🤗", "🤭", "🤫", "🤔", "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥", "😌", "😔", "😪", "🤤", "😴", "😷", "🤒", "🤕", "🤢", "🤮", "🥵", "🥶", "🥴", "😵", "🤯", "😎", "🥳", "😤", "😡", "🤬", "😈", "👿", "💀", "☠️", "💩", "🤡", "👹", "👺", "👻", "👽", "👾", "🤖", "🎃", "😺", "😸", "😹", "😻", "😼", "😽", "🙀", "😿", "😾", "🫠", "🫡", "🫢", "🫣", "🫤"),
-    "👋" to listOf("👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉", "👆", "🖕", "👇", "☝️", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🤝", "🙏", "💪", "🦶", "🦵", "👂", "👃", "🧠", "👀", "👁️", "👅", "👄", "🫦", "🦷", "🦴", "💅", "🤳", "🫰", "🫱", "🫲", "🫳", "🫴", "🫵", "🫶", "👶", "👧", "🧒", "👦", "👩", "🧑", "👨", "👩‍🦱", "👩‍🦰", "👱‍♀️", "👩‍🦳", "👩‍🦲", "🧔", "👵", "🧓", "👴", "👲"),
-    "🌞" to listOf("☀️", "🌙", "🌞", "🌝", "🌛", "🌜", "⭐", "🌟", "✨", "💫", "🌈", "☁️", "⛅", "🌤️", "🌥️", "🌦️", "🌧️", "⛈️", "🌩️", "🌨️", "❄️", "☃️", "⛄", "🌬️", "💨", "🌊", "💧", "💦", "☔", "🔥", "🌺", "🌸", "🌷", "🌹", "🌻", "🌼", "🌿", "🍀", "🍁", "🍂", "🌴", "🌵", "🌳", "🌲", "🪵", "🍄", "🐚", "🪨", "🌍", "🌎", "🌏", "🪐", "💥", "🌀", "🌪️", "🌫️", "☘️", "🪻", "🪷", "🪹", "🪺", "🪸", "🫧", "🌾", "🌱", "🪴", "🎋", "🎍", "🎄", "🎑"),
-    "🐶" to listOf("🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐻‍❄️", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🙈", "🙉", "🙊", "🐒", "🐔", "🐧", "🐦", "🐤", "🦆", "🦅", "🦉", "🦇", "🐺", "🐗", "🐴", "🦄", "🐝", "🪱", "🐛", "🦋", "🐌", "🐞", "🐜", "🦟", "🦗", "🪳", "🕷️", "🦂", "🐢", "🐍", "🦎", "🦖", "🦕", "🐙", "🦑", "🦐", "🦞", "🦀", "🐡", "🐠", "🐟", "🐬", "🐳", "🐋", "🦈", "🐊", "🐅", "🐆", "🦓", "🦍", "🦧", "🐘", "🦛", "🦏"),
-    "🍎" to listOf("🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔", "🍠", "🥐", "🍞", "🥖", "🥨", "🧀", "🍕", "🍔", "🍟", "☕", "🌮", "🌯", "🫔", "🥙", "🧆", "🥚", "🍳", "🥘", "🍲", "🫕", "🥣", "🥗", "🍿", "🧈", "🧂", "🥫", "🍱", "🍘", "🍙", "🍚", "🍛", "🍜", "🍝", "🍣", "🍤", "🍦", "🍧", "🍨", "🍩", "🍪"),
-    "⚽" to listOf("⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱", "🪀", "🏓", "🏸", "🏒", "🥍", "🏏", "🪃", "🥅", "⛳", "🪁", "🏹", "🎣", "🤿", "🥊", "🥋", "🎽", "🛹", "🛼", "🛷", "⛸️", "🥌", "🎿", "⛷️", "🏂", "🪂", "🏋️", "🤸", "🏃", "🧘", "🎯", "🎮", "🕹️", "🎲", "🧩", "♟️", "🎭", "🎨", "🎬", "🎤", "🎧", "🎼", "🎹", "🥁", "🪘", "🎷", "🎺", "🪗", "🎸", "🪕", "🎻", "🎪", "🤹", "🏄", "🚣", "🧗", "🚵", "🏇", "🤺", "🤾", "🏊"),
-    "🚗" to listOf("🚗", "🚕", "🚌", "🏎️", "🚓", "🚑", "🚒", "🚐", "🛻", "🚚", "🚛", "🚜", "🛵", "🏍️", "🚲", "🛴", "✈️", "🚀", "🛸", "🚁", "⛵", "🚢", "🛳️", "🏠", "🏢", "🏭", "🏥", "🏪", "🏫", "🏰", "⛪", "🕌", "🗼", "🌉", "🎡", "🎢", "🎠", "⛲", "🗺️", "🧭", "🏕️", "🌋", "🗻", "🏔️", "🛤️", "🛣️", "🏗️", "🧱", "🪨", "🛖", "🏘️", "🏚️", "🏛️", "⛩️", "🕋", "🛕", "🏖️", "🏝️", "🏜️", "🌅", "🌄", "🌠", "🎇", "🎆", "🌃", "🌌", "🌁", "🛶", "🚤", "⛽"),
-    "💡" to listOf("💡", "🔦", "🕯️", "💰", "💳", "💎", "⚖️", "🔧", "🔨", "⛏️", "🛠️", "🔩", "⚙️", "🔑", "🗝️", "🔒", "📱", "💻", "🖥️", "🖨️", "📷", "📹", "🎥", "📞", "☎️", "📺", "📻", "⏰", "🔔", "📚", "📝", "✏️", "📋", "📌", "📎", "🗂️", "📁", "💼", "🎒", "🛒", "🧲", "🔬", "🔭", "📡", "💊", "💉", "🩺", "🩻", "🩹", "🩼", "🧪", "🧫", "🧬", "🪜", "🧯", "🛡️", "⚔️", "🗡️", "🪓", "🔮", "📿", "🧿", "🪬", "🎗️", "🎟️", "🎫", "🧧", "✉️", "📧", "📨"),
-    "❤️" to listOf("❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❤️‍🔥", "❤️‍🩹", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "✅", "❌", "⚠️", "♻️", "🔴", "🟠", "🟡", "🟢", "🔵", "🟣", "⚫", "⚪", "🟤", "🏆", "🥇", "🥈", "🥉", "🏅", "🎉", "🎊", "🎈", "🎁", "🎀", "🪅", "🪆", "🧨", "🪄", "🔮", "🎐", "🏮", "🪩", "💯", "🔟", "🔢", "🔣", "🔤", "🅰️", "🆎", "🅱️", "🆑", "🆒", "🆓", "ℹ️", "🆔", "Ⓜ️", "🆕", "🆖", "🅾️", "🆗", "🅿️", "🆘"),
-)
-
-private val EMOJI_CATEGORY_LABELS = listOf("😀", "👋", "🌞", "🐶", "🍎", "⚽", "🚗", "💡", "❤️")
 
 /**
  * Shift form screen composable that supports create and edit modes.
@@ -250,7 +230,6 @@ private fun NameField(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun IconField(
     value: String,
@@ -302,95 +281,6 @@ private fun IconField(
             },
             onDismiss = { showPicker = false },
         )
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun EmojiPickerDialog(
-    selectedEmoji: String,
-    onEmojiSelected: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var selectedCategory by remember { mutableStateOf(EMOJI_CATEGORY_LABELS[0]) }
-    var searchQuery by remember { mutableStateOf("") }
-
-    val emojisToShow = if (searchQuery.isNotEmpty()) {
-        EMOJI_CATEGORIES.values.flatten().filter { it.contains(searchQuery) }
-    } else {
-        EMOJI_CATEGORIES[selectedCategory] ?: emptyList()
-    }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(16.dp)
-                .height(420.dp),
-        ) {
-            // Title
-            Text(
-                text = stringResource(R.string.shift_form_select_icon),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Category tabs
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                EMOJI_CATEGORY_LABELS.forEach { category ->
-                    val isSelected = category == selectedCategory
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                                else Color.Transparent,
-                            )
-                            .clickable {
-                                selectedCategory = category
-                                searchQuery = ""
-                            },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(text = category, fontSize = 18.sp)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Emoji grid (scrollable)
-            FlowRow(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                emojisToShow.forEach { emoji ->
-                    val isSelected = emoji == selectedEmoji
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                                else Color.Transparent,
-                            )
-                            .clickable { onEmojiSelected(emoji) },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(text = emoji, fontSize = 22.sp)
-                    }
-                }
-            }
-        }
     }
 }
 

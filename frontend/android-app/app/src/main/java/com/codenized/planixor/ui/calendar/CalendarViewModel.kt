@@ -56,6 +56,7 @@ class CalendarViewModel @Inject constructor(
     private val shiftRepository: ShiftRepository,
     private val reminderRepository: ReminderRepository,
     private val calendarEventRepository: CalendarEventRepository,
+    private val calendarEventDao: com.codenized.planixor.data.local.CalendarEventDao,
     private val notificationService: NotificationService,
     private val shiftModeSettingRepository: ShiftModeSettingRepository,
 ) : ViewModel() {
@@ -501,6 +502,19 @@ class CalendarViewModel @Inject constructor(
 
             when (result) {
                 is com.codenized.planixor.data.local.CalendarEventResult.Success -> {
+                    // Generate series occurrences for reminder events with non-never frequency
+                    if (eventType == "reminder") {
+                        val reminder = reminderRepository.getById(eventTypeId)
+                        val frequency = reminder?.seriesFrequency ?: "never"
+                        if (frequency != "never") {
+                            calendarEventRepository.generateSeriesOccurrences(
+                                sourceEvent = result.event,
+                                frequency = frequency,
+                                seriesEndDate = reminder?.seriesEndDate ?: "",
+                            )
+                        }
+                    }
+
                     // Reconcile notifications after event is persisted
                     if (state.alertOffsets.isNotEmpty()) {
                         notificationService.reconcileNotifications(result.event)
@@ -530,6 +544,8 @@ class CalendarViewModel @Inject constructor(
             if (entity != null) {
                 val display = resolveDisplayFields(entity)
                 initEditForm(display)
+                // Set seriesId from entity (not available on CalendarEventDisplay)
+                _formState.update { it.copy(seriesId = entity.seriesId) }
             } else {
                 _formState.update { it.copy(isLoading = false, formError = "Event not found") }
             }
@@ -615,6 +631,100 @@ class CalendarViewModel @Inject constructor(
                     _formState.update { it.copy(formError = result.message) }
                 }
             }
+        }
+    }
+
+    /**
+     * Soft-deletes all FUTURE non-deleted events with the same seriesId (startDay >= today).
+     * Does NOT delete past events. Falls back to single event delete if no seriesId.
+     */
+    fun deleteSeriesEvents(eventId: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val event = calendarEventRepository.getById(eventId) ?: return@launch
+            val seriesId = event.seriesId
+            if (seriesId.isEmpty()) {
+                // Fallback: just delete single event
+                deleteEvent(eventId, onSuccess)
+                return@launch
+            }
+
+            val today = LocalDate.now().toString()
+            val allEvents = calendarEventDao.getAll()
+            val futureSeriesEvents = allEvents.filter {
+                !it.isDeleted && it.seriesId == seriesId && it.startDay >= today
+            }
+            val now = System.currentTimeMillis()
+
+            for (seriesEvent in futureSeriesEvents) {
+                val deleted = seriesEvent.copy(
+                    isDeleted = true,
+                    modifiedAt = now,
+                    syncedAt = null,
+                )
+                calendarEventDao.update(deleted)
+                notificationService.deleteNotificationsForEvent(seriesEvent.id)
+            }
+            notificationService.runCheckCycle()
+            resetForm()
+            onSuccess()
+        }
+    }
+
+    /**
+     * Checks if an event belongs to a series (has a non-empty seriesId).
+     */
+    suspend fun isSeriesEvent(eventId: String): Boolean {
+        val event = calendarEventRepository.getById(eventId) ?: return false
+        return event.seriesId.isNotEmpty()
+    }
+
+    /**
+     * Updates all FUTURE non-deleted events in the same series with the given changes.
+     * Does NOT modify past events. Falls back to single event update if no seriesId.
+     */
+    fun updateSeriesEvents(
+        eventId: String,
+        eventType: String,
+        eventTypeId: String,
+        startTime: Int,
+        endTime: Int,
+        notes: String?,
+        alertOffsets: List<Int>,
+        onSuccess: () -> Unit,
+    ) {
+        viewModelScope.launch {
+            val event = calendarEventRepository.getById(eventId) ?: return@launch
+            val seriesId = event.seriesId
+            if (seriesId.isEmpty()) {
+                // Fallback: just update single event
+                updateEvent(eventId, onSuccess)
+                return@launch
+            }
+
+            val today = LocalDate.now().toString()
+            val allEvents = calendarEventDao.getAll()
+            val futureSeriesEvents = allEvents.filter {
+                !it.isDeleted && it.seriesId == seriesId && it.startDay >= today
+            }
+            val now = System.currentTimeMillis()
+            val alertOffsetsStr = com.codenized.planixor.data.local.CalendarEventRepository.serializeAlertOffsets(alertOffsets)
+
+            for (seriesEvent in futureSeriesEvents) {
+                val updated = seriesEvent.copy(
+                    startTime = startTime,
+                    endTime = endTime,
+                    notes = notes,
+                    alertOffsets = alertOffsetsStr,
+                    eventTypeId = eventTypeId,
+                    modifiedAt = now,
+                    syncedAt = null,
+                )
+                calendarEventDao.update(updated)
+                notificationService.reconcileNotifications(updated)
+            }
+            notificationService.runCheckCycle()
+            resetForm()
+            onSuccess()
         }
     }
 
@@ -843,6 +953,7 @@ class CalendarViewModel @Inject constructor(
                         icon = reminder.icon,
                         backgroundColor = reminder.backgroundColor,
                         displayLabel = "Recordatorio: ${reminder.name}",
+                        seriesFrequency = reminder.seriesFrequency,
                     ),
                 )
             }

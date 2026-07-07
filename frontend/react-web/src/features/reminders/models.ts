@@ -24,6 +24,12 @@ export interface Reminder {
   /** Whether the reminder is currently active or deactivated */
   isActive: boolean;
 
+  /** Repetition frequency for automatic series generation */
+  seriesFrequency: 'never' | 'weekly' | 'monthly' | 'yearly';
+
+  /** End date for series generation (ISO date string YYYY-MM-DD). null when frequency is 'never' */
+  seriesEndDate: string | null;
+
   /** Original creation timestamp (UTC) */
   createdAt: Date;
 

@@ -71,6 +71,7 @@ public sealed class CalendarEventSyncPushCommands : ICalendarEventSyncPushComman
                     incoming.TotalHours,
                     incoming.Notes,
                     incoming.AlertOffsetsJson,
+                    incoming.SeriesId,
                     incoming.ModifiedAt,
                     incoming.IsDeleted);
             }

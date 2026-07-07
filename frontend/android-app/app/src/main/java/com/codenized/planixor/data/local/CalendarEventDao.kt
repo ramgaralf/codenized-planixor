@@ -17,6 +17,9 @@ interface CalendarEventDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(event: CalendarEventEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(events: List<CalendarEventEntity>)
+
     @Update
     suspend fun update(event: CalendarEventEntity)
 

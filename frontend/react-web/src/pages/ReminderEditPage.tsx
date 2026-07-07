@@ -5,10 +5,13 @@ import { useTranslation } from 'react-i18next';
 import { ReminderForm } from '@features/reminders/components/ReminderForm';
 import * as reminderService from '@features/reminders/services/reminderService';
 
+import type { SeriesFrequency } from '@features/reminders/services/reminderValidation';
+
 interface ReminderInitialValues {
   name: string;
   icon: string;
   backgroundColor: string;
+  seriesFrequency: SeriesFrequency;
 }
 
 export const ReminderEditPage = () => {
@@ -38,6 +41,7 @@ export const ReminderEditPage = () => {
           name: reminder.name,
           icon: reminder.icon,
           backgroundColor: reminder.backgroundColor,
+          seriesFrequency: reminder.seriesFrequency ?? 'never',
         });
       } catch {
         console.error('Failed to load reminder for editing');

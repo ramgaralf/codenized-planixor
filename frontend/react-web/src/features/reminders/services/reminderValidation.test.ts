@@ -8,6 +8,7 @@ const validInput = {
   name: 'Morning Reminder',
   icon: '☀️',
   backgroundColor: PREDEFINED_PALETTE[0],
+  seriesFrequency: 'never',
 };
 
 describe('reminderValidation', () => {
@@ -104,6 +105,7 @@ describe('reminderValidation', () => {
         name: '',
         icon: 'A',
         backgroundColor: '#FFFFFF',
+        seriesFrequency: 'never',
       });
       expect(result.isValid).toBe(false);
       expect(result.errors.name).toBe(REMINDER_I18N_KEYS.VALIDATION_NAME_REQUIRED);

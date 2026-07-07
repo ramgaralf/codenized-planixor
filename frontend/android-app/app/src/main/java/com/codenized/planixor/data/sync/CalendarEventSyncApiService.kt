@@ -21,6 +21,7 @@ data class CalendarEventSyncRecord(
     val totalHours: Int,
     val notes: String?,
     val alertOffsets: List<Int> = emptyList(),
+    val seriesId: String = "",
     val modifiedAt: String,
     val isDeleted: Boolean,
 )

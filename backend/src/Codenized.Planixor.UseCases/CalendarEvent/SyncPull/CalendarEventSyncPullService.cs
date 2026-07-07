@@ -56,6 +56,7 @@ public sealed class CalendarEventSyncPullService : IInteractorService<CalendarEv
             calendarEvent.TotalHours,
             calendarEvent.Notes,
             AlertOffsetsMapper.Deserialize(calendarEvent.AlertOffsetsJson),
+            calendarEvent.SeriesId,
             calendarEvent.ModifiedAt,
             calendarEvent.IsDeleted)).ToList();
 

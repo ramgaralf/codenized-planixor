@@ -70,6 +70,8 @@ public sealed class ReminderSyncPushCommands : IReminderSyncPushCommands, IRepos
                         incoming.Icon,
                         incoming.BackgroundColor,
                         incoming.IsActive,
+                        incoming.SeriesFrequency,
+                        incoming.SeriesEndDate,
                         incoming.ModifiedAt,
                         incoming.IsDeleted);
                 }

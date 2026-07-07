@@ -18,7 +18,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  */
 @Database(
     entities = [CalendarEventEntity::class, ShiftEntity::class, ReminderEntity::class, AnnualHoursConfigEntity::class, NotificationRecordEntity::class, ShiftModeSettingEntity::class],
-    version = 8,
+    version = 11,
     exportSchema = false,
 )
 abstract class PlanixorDatabase : RoomDatabase() {
@@ -229,6 +229,47 @@ abstract class PlanixorDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
+            }
+        }
+
+        /**
+         * Migration from version 8 to 9:
+         * Adds seriesFrequency column to reminders table for the Reminder Series feature.
+         * Stores the repetition frequency: "never", "weekly", "monthly", or "yearly".
+         */
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE reminders ADD COLUMN seriesFrequency TEXT NOT NULL DEFAULT 'never'"
+                )
+            }
+        }
+
+        /**
+         * Migration from version 9 to 10:
+         * Adds seriesEndDate column to reminders table for configurable series end dates.
+         * Adds seriesId column to calendar_events table for series grouping.
+         */
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE reminders ADD COLUMN seriesEndDate TEXT NOT NULL DEFAULT ''"
+                )
+                db.execSQL(
+                    "ALTER TABLE calendar_events ADD COLUMN seriesId TEXT NOT NULL DEFAULT ''"
+                )
+            }
+        }
+
+        /**
+         * Migration from version 10 to 11:
+         * No-op migration. Room identity hash update after adding @ColumnInfo(defaultValue)
+         * annotation to alertOffsets field on CalendarEventEntity.
+         * The actual SQLite schema already has the correct DEFAULT value from migration 6→7.
+         */
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // No-op: schema unchanged, only Room's identity hash needs updating
             }
         }
     }

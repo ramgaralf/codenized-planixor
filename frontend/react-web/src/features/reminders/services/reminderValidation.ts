@@ -15,6 +15,24 @@ const isExactlyOneEmoji = (value: string): boolean => {
   return segments.length === 1 && EMOJI_REGEX.test(value);
 };
 
+export const VALID_SERIES_FREQUENCIES = ['never', 'weekly', 'monthly', 'yearly'] as const;
+export type SeriesFrequency = (typeof VALID_SERIES_FREQUENCIES)[number];
+
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const isValidFutureDate = (value: string): boolean => {
+  if (!ISO_DATE_REGEX.test(value)) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(year!, month! - 1, day!);
+  // Validate that the date components are valid (e.g., not Feb 30)
+  if (date.getFullYear() !== year || date.getMonth() !== month! - 1 || date.getDate() !== day) {
+    return false;
+  }
+  return date >= today;
+};
+
 export const reminderValidationSchema = z.object({
   name: z
     .string()
@@ -40,6 +58,28 @@ export const reminderValidationSchema = z.object({
       },
     ),
   ),
+  seriesFrequency: z.string().check(
+    z.refine(
+      (val): val is SeriesFrequency =>
+        VALID_SERIES_FREQUENCIES.includes(val as SeriesFrequency),
+      {
+        message: REMINDER_I18N_KEYS.VALIDATION_FREQUENCY_REQUIRED,
+      },
+    ),
+  ),
+  seriesEndDate: z.string().nullable().check(
+    z.refine(
+      (val) => {
+        // null is valid when frequency is 'never' (validated at form level)
+        if (val === null) return true;
+        // Must be a valid future ISO date
+        return isValidFutureDate(val);
+      },
+      {
+        message: REMINDER_I18N_KEYS.VALIDATION_END_DATE_INVALID,
+      },
+    ),
+  ),
 });
 
 export type ReminderFormInput = z.input<typeof reminderValidationSchema>;
@@ -49,6 +89,8 @@ export interface ReminderValidationErrors {
   name?: string;
   icon?: string;
   backgroundColor?: string;
+  seriesFrequency?: string;
+  seriesEndDate?: string;
 }
 
 export interface ValidationResult {
@@ -60,8 +102,13 @@ export const validateReminder = (data: {
   name: string;
   icon: string;
   backgroundColor: string;
+  seriesFrequency: string;
+  seriesEndDate?: string | null;
 }): ValidationResult => {
-  const result = reminderValidationSchema.safeParse(data);
+  const result = reminderValidationSchema.safeParse({
+    ...data,
+    seriesEndDate: data.seriesEndDate ?? null,
+  });
 
   if (result.success) {
     return { isValid: true, errors: {} };

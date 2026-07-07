@@ -6,12 +6,16 @@ import { useTheme } from '@context/useTheme';
 
 import { ColorPicker } from '@features/reminders/components/ColorPicker';
 import { EmojiPicker } from '@features/reminders/components/EmojiPicker';
+import { FrequencySelector } from '@features/reminders/components/FrequencySelector';
+import { SeriesPropagationModal } from '@features/reminders/components/SeriesPropagationModal';
 import { useReminderForm } from '@features/reminders/hooks/useReminderForm';
 import { PropagationModal } from '@shared/components/PropagationModal';
 import { ValidationError } from '@shared/components/ValidationError';
 
+import type { SeriesFrequency } from '@features/reminders/services/reminderValidation';
+
 interface ReminderFormProps {
-  initialValues?: { name: string; icon: string; backgroundColor: string };
+  initialValues?: { name: string; icon: string; backgroundColor: string; seriesFrequency?: SeriesFrequency; seriesEndDate?: string | null };
   reminderId?: string;
   onSubmitSuccess: () => void;
 }
@@ -58,16 +62,23 @@ export const ReminderForm = ({
     name,
     icon,
     backgroundColor,
+    seriesFrequency,
+    seriesEndDate,
     errors,
     isSaving,
     saveError,
     setName,
     setIcon,
     setBackgroundColor,
+    setSeriesFrequency,
+    setSeriesEndDate,
     handleSubmit,
     propagationState,
     confirmPropagation,
     declinePropagation,
+    seriesPropagationState,
+    confirmSeriesPropagation,
+    declineSeriesPropagation,
   } = useReminderForm({
     initialValues,
     reminderId,
@@ -91,6 +102,11 @@ export const ReminderForm = ({
     mode === 'create'
       ? t('reminder.form.createTitle')
       : t('reminder.form.editTitle');
+
+  const getFrequencyLabel = useCallback((freq: string): string => {
+    if (freq === 'never') return t('reminder.form.frequency.never');
+    return t(`reminder.series.${freq}`);
+  }, [t]);
 
   return (
     <>
@@ -180,6 +196,47 @@ export const ReminderForm = ({
         )}
       </div>
 
+      {/* Frequency selector */}
+      <div style={fieldGroupStyle}>
+        <label style={labelStyle}>{t('reminder.form.frequency.label')}</label>
+        <FrequencySelector
+          value={seriesFrequency}
+          onChange={setSeriesFrequency}
+          disabled={isSaving}
+        />
+        {errors.seriesFrequency && (
+          <ValidationError message={errors.seriesFrequency} />
+        )}
+      </div>
+
+      {/* Series end date — visible when frequency ≠ 'never' */}
+      {seriesFrequency !== 'never' && (
+        <div style={fieldGroupStyle}>
+          <label htmlFor="reminder-series-end-date" style={labelStyle}>
+            {t('reminder.form.endDate.label')}
+          </label>
+          <input
+            id="reminder-series-end-date"
+            name="seriesEndDate"
+            data-field="seriesEndDate"
+            type="date"
+            value={seriesEndDate ?? ''}
+            onChange={(e) => setSeriesEndDate(e.target.value || null)}
+            disabled={isSaving}
+            aria-invalid={!!errors.seriesEndDate}
+            aria-describedby={errors.seriesEndDate ? 'reminder-end-date-error' : undefined}
+            style={{
+              ...inputStyle,
+              ...(errors.seriesEndDate ? { borderColor: 'var(--color-error)' } : {}),
+              colorScheme: 'var(--color-scheme, light)',
+            }}
+          />
+          {errors.seriesEndDate && (
+            <ValidationError message={errors.seriesEndDate} />
+          )}
+        </div>
+      )}
+
       {/* Form actions */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '8px' }}>
         <button
@@ -226,6 +283,15 @@ export const ReminderForm = ({
       affectedEventCount={propagationState.affectedCount}
       onConfirm={confirmPropagation}
       onDecline={declinePropagation}
+    />
+    <SeriesPropagationModal
+      isOpen={seriesPropagationState.isOpen}
+      reminderName={name}
+      previousFrequency={getFrequencyLabel(seriesPropagationState.previousFrequency)}
+      newFrequency={getFrequencyLabel(seriesPropagationState.newFrequency)}
+      affectedEventCount={seriesPropagationState.affectedCount}
+      onConfirm={confirmSeriesPropagation}
+      onDecline={declineSeriesPropagation}
     />
     </>
   );

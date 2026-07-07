@@ -1,5 +1,6 @@
 package com.codenized.planixor.data.local
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -46,5 +47,8 @@ data class CalendarEventEntity(
     val modifiedAt: Long,
     val syncedAt: Long?,
     val isDeleted: Boolean,
+    @ColumnInfo(defaultValue = "[]")
     val alertOffsets: String = "[]",
+    @ColumnInfo(defaultValue = "")
+    val seriesId: String = "",
 )

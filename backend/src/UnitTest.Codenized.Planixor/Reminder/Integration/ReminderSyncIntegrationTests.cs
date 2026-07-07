@@ -68,9 +68,9 @@ public sealed class ReminderSyncIntegrationTests
 
         var records = new List<ReminderSyncRecord>
         {
-            new(createdId, "New Reminder", "🔔", "#EF4444", true, createdAt, modifiedAtCreated, false),
-            new(updatedId, "Updated Name", "☀️", "#2563EB", true, createdAt, modifiedAtUpdated, false),
-            new(deletedId, "Deleted Reminder", "🗑️", "#6B7280", true, createdAt, modifiedAtDeleted, true),
+            new(createdId, "New Reminder", "🔔", "#EF4444", true, "never", null, createdAt, modifiedAtCreated, false),
+            new(updatedId, "Updated Name", "☀️", "#2563EB", true, "weekly", null, createdAt, modifiedAtUpdated, false),
+            new(deletedId, "Deleted Reminder", "🗑️", "#6B7280", true, "never", null, createdAt, modifiedAtDeleted, true),
         };
 
         var request = new ReminderSyncPushRequest(records) { UserId = userId };
@@ -110,6 +110,8 @@ public sealed class ReminderSyncIntegrationTests
             "☀️",
             "#10B981",
             true,
+            "never",
+            null,
             createdAt,
             modifiedAt,
             false);
@@ -156,6 +158,8 @@ public sealed class ReminderSyncIntegrationTests
             ReminderIcon.Create("🔔"),
             ReminderColor.Create("#EF4444"),
             true,
+            "never",
+            string.Empty,
             new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Utc),
             new DateTime(2024, 6, 12, 14, 0, 0, DateTimeKind.Utc),
             false);
@@ -167,6 +171,8 @@ public sealed class ReminderSyncIntegrationTests
             ReminderIcon.Create("⭐"),
             ReminderColor.Create("#2563EB"),
             false,
+            "never",
+            string.Empty,
             new DateTime(2024, 2, 15, 8, 0, 0, DateTimeKind.Utc),
             new DateTime(2024, 6, 18, 10, 0, 0, DateTimeKind.Utc),
             true);
@@ -216,7 +222,7 @@ public sealed class ReminderSyncIntegrationTests
 
         // Step 1: Push a record
         var pushRecord = new ReminderSyncRecord(
-            reminderId, "Push Me", "🚀", "#7C3AED", true, createdAt, modifiedAt, false);
+            reminderId, "Push Me", "🚀", "#7C3AED", true, "never", null, createdAt, modifiedAt, false);
         var pushRequest = new ReminderSyncPushRequest([pushRecord]) { UserId = userId };
 
         ReminderSyncPushResponse pushResponse = await this.pushService.Run(pushRequest);
@@ -230,6 +236,8 @@ public sealed class ReminderSyncIntegrationTests
             ReminderIcon.Create("🚀"),
             ReminderColor.Create("#7C3AED"),
             true,
+            "never",
+            string.Empty,
             createdAt,
             modifiedAt,
             false);
@@ -263,7 +271,7 @@ public sealed class ReminderSyncIntegrationTests
         // Arrange
         string userId = "testuser";
         var record = new ReminderSyncRecord(
-            Guid.NewGuid(), "Test", "🔔", "#EF4444", true,
+            Guid.NewGuid(), "Test", "🔔", "#EF4444", true, "never", null,
             DateTime.UtcNow.AddDays(-5), DateTime.UtcNow, false);
 
         var request = new ReminderSyncPushRequest([record]) { UserId = userId };
@@ -315,7 +323,7 @@ public sealed class ReminderSyncIntegrationTests
         string userId = "testuser";
         List<ReminderSyncRecord> records = Enumerable.Range(0, 101)
             .Select(_ => new ReminderSyncRecord(
-                Guid.NewGuid(), "Test", "🔔", "#EF4444", true,
+                Guid.NewGuid(), "Test", "🔔", "#EF4444", true, "never", null,
                 DateTime.UtcNow.AddDays(-10), DateTime.UtcNow, false))
             .ToList();
 
@@ -375,6 +383,8 @@ public sealed class ReminderSyncIntegrationTests
                 ReminderIcon.Create("🔔"),
                 ReminderColor.Create("#EF4444"),
                 true,
+                "never",
+                string.Empty,
                 DateTime.UtcNow.AddDays(-30),
                 DateTime.UtcNow.AddMinutes(-i),
                 false))
@@ -412,9 +422,9 @@ public sealed class ReminderSyncIntegrationTests
 
         var records = new List<ReminderSyncRecord>
         {
-            new(Guid.NewGuid(), "Active", "✅", "#10B981", true, now.AddDays(-10), now, false),
-            new(Guid.NewGuid(), "Deactivated", "⏸️", "#6B7280", false, now.AddDays(-10), now, false),
-            new(Guid.NewGuid(), "Deleted", "🗑️", "#EF4444", true, now.AddDays(-10), now, true),
+            new(Guid.NewGuid(), "Active", "✅", "#10B981", true, "never", null, now.AddDays(-10), now, false),
+            new(Guid.NewGuid(), "Deactivated", "⏸️", "#6B7280", false, "monthly", null, now.AddDays(-10), now, false),
+            new(Guid.NewGuid(), "Deleted", "🗑️", "#EF4444", true, "never", null, now.AddDays(-10), now, true),
         };
 
         var request = new ReminderSyncPushRequest(records) { UserId = userId };

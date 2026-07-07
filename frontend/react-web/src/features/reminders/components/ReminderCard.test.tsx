@@ -16,6 +16,9 @@ vi.mock('react-i18next', () => ({
         'reminder.actions.deactivate': 'Deactivate',
         'reminder.actions.activate': 'Activate',
         'reminder.actions.delete': 'Delete',
+        'reminder.series.weekly': 'Every week',
+        'reminder.series.monthly': 'Every month',
+        'reminder.series.yearly': 'Every year',
       };
       return translations[key] ?? key;
     },
@@ -28,6 +31,7 @@ const createReminder = (overrides: Partial<Reminder> = {}): Reminder => ({
   icon: '☀️',
   backgroundColor: '#10B981',
   isActive: true,
+  seriesFrequency: 'never',
   isDeleted: false,
   createdAt: new Date('2024-01-01'),
   modifiedAt: new Date('2024-01-01'),
@@ -183,6 +187,62 @@ describe('ReminderCard', () => {
     expect(
       screen.getByRole('button', { name: 'Activate Daily Standup' }),
     ).toBeInTheDocument();
+  });
+
+  // --- Series frequency label ---
+
+  it('should display frequency label when seriesFrequency is weekly', () => {
+    render(
+      <ReminderCard reminder={createReminder({ seriesFrequency: 'weekly' })} {...defaultProps} />,
+    );
+
+    expect(screen.getByText('Every week')).toBeInTheDocument();
+  });
+
+  it('should display frequency label when seriesFrequency is monthly', () => {
+    render(
+      <ReminderCard reminder={createReminder({ seriesFrequency: 'monthly' })} {...defaultProps} />,
+    );
+
+    expect(screen.getByText('Every month')).toBeInTheDocument();
+  });
+
+  it('should display frequency label when seriesFrequency is yearly', () => {
+    render(
+      <ReminderCard reminder={createReminder({ seriesFrequency: 'yearly' })} {...defaultProps} />,
+    );
+
+    expect(screen.getByText('Every year')).toBeInTheDocument();
+  });
+
+  it('should not display frequency label when seriesFrequency is never', () => {
+    render(
+      <ReminderCard reminder={createReminder({ seriesFrequency: 'never' })} {...defaultProps} />,
+    );
+
+    expect(screen.queryByText('Every week')).not.toBeInTheDocument();
+    expect(screen.queryByText('Every month')).not.toBeInTheDocument();
+    expect(screen.queryByText('Every year')).not.toBeInTheDocument();
+  });
+
+  it('should style frequency label with 12px font size and secondary color', () => {
+    render(
+      <ReminderCard reminder={createReminder({ seriesFrequency: 'weekly' })} {...defaultProps} />,
+    );
+
+    const label = screen.getByText('Every week');
+    expect(label).toHaveStyle({ fontSize: '12px', color: 'var(--color-text-secondary)' });
+  });
+
+  it('should inherit reduced opacity for frequency label when reminder is deactivated', () => {
+    render(
+      <ReminderCard reminder={createReminder({ seriesFrequency: 'monthly', isActive: false })} {...defaultProps} />,
+    );
+
+    // The card has opacity 0.5 which cascades to all children including the label
+    const card = screen.getByRole('article');
+    expect(card).toHaveStyle({ opacity: '0.5' });
+    expect(screen.getByText('Every month')).toBeInTheDocument();
   });
 
   // --- Property-based tests ---

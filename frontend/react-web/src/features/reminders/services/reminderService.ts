@@ -43,6 +43,8 @@ export const create = async (input: CreateReminderInput): Promise<Reminder> => {
     ...input,
     id: crypto.randomUUID(),
     isActive: true,
+    seriesFrequency: input.seriesFrequency ?? 'never',
+    seriesEndDate: input.seriesEndDate ?? null,
     createdAt: now,
     modifiedAt: now,
     syncedAt: null,
@@ -60,7 +62,7 @@ export const create = async (input: CreateReminderInput): Promise<Reminder> => {
  */
 export const update = async (
   id: string,
-  data: Partial<Pick<Reminder, 'name' | 'icon' | 'backgroundColor'>>,
+  data: Partial<Pick<Reminder, 'name' | 'icon' | 'backgroundColor' | 'seriesFrequency' | 'seriesEndDate'>>,
 ): Promise<void> => {
   await db.reminders.update(id, {
     ...data,

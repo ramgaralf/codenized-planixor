@@ -35,6 +35,7 @@ const validReminderInputArb = fc.record({
   name: validNameArb,
   icon: validIconArb,
   backgroundColor: validBackgroundColorArb,
+  seriesFrequency: fc.constantFrom('never', 'weekly', 'monthly', 'yearly'),
 });
 
 describe('Property 2: Form submission requires all fields valid', () => {
@@ -138,7 +139,7 @@ describe('Property 15: Icon validation accepts exactly one emoji', () => {
   it('should accept exactly one emoji character', () => {
     fc.assert(
       fc.property(validIconArb, validNameArb, validBackgroundColorArb, (icon, name, backgroundColor) => {
-        const result = validateReminder({ name, icon, backgroundColor });
+        const result = validateReminder({ name, icon, backgroundColor, seriesFrequency: 'never' });
         expect(result.errors.icon).toBeUndefined();
       }),
       { numRuns: 100 },
