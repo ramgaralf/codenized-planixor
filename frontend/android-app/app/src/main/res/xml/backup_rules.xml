@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Legacy backup rules (API 23-30).
+    Excludes sensitive data from auto-backup.
+-->
+<full-backup-content>
+    <include domain="database" path="planixor_database" />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="file" path="datastore/" />
+</full-backup-content>

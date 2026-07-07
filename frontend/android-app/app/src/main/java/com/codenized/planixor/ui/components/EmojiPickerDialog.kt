@@ -253,7 +253,7 @@ fun EmojiPickerDialog(
                         val isSelected = category == selectedCategory
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(48.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
                                     if (isSelected) MaterialTheme.colorScheme.primaryContainer

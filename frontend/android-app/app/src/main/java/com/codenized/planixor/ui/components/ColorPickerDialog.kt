@@ -121,7 +121,7 @@ fun ColorPickerDialog(
 
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(44.dp)
                             .clip(CircleShape)
                             .alpha(alpha)
                             .background(color)
