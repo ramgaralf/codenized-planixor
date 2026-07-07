@@ -84,6 +84,10 @@ const mapReminder = (raw: Record<string, unknown>): BackupReminder => ({
   icon: String(raw.icon ?? ''),
   backgroundColor: String(raw.backgroundColor ?? ''),
   isActive: Boolean(raw.isActive),
+  seriesFrequency: String(raw.seriesFrequency ?? 'never'),
+  seriesEndDate: raw.seriesEndDate === null || raw.seriesEndDate === undefined
+    ? null
+    : String(raw.seriesEndDate),
   createdAt: String(raw.createdAt ?? ''),
   modifiedAt: String(raw.modifiedAt ?? ''),
   syncedAt: raw.syncedAt === null || raw.syncedAt === undefined
@@ -109,6 +113,9 @@ const mapCalendarEvent = (
   alertOffsets: Array.isArray(raw.alertOffsets)
     ? (raw.alertOffsets as unknown[]).map(Number)
     : [],
+  seriesId: raw.seriesId === null || raw.seriesId === undefined
+    ? null
+    : String(raw.seriesId),
   modifiedAt: String(raw.modifiedAt ?? ''),
   syncedAt: raw.syncedAt === null || raw.syncedAt === undefined
     ? null

@@ -24,6 +24,7 @@ interface EventTypeOption {
   backgroundColor: string;
   startTime?: number;
   endTime?: number;
+  seriesFrequency?: string;
 }
 
 /**
@@ -71,6 +72,7 @@ export const EventTypeSelector = ({ value, onChange, error }: EventTypeSelectorP
         name: reminder.name,
         icon: reminder.icon,
         backgroundColor: reminder.backgroundColor,
+        seriesFrequency: reminder.seriesFrequency,
       }),
     );
 
@@ -180,6 +182,11 @@ export const EventTypeSelector = ({ value, onChange, error }: EventTypeSelectorP
                   {formatTimeFromMinutes(selectedOption.startTime)} – {formatTimeFromMinutes(selectedOption.endTime)}
                 </span>
               )}
+              {selectedOption.eventType === 'reminder' && selectedOption.seriesFrequency && selectedOption.seriesFrequency !== 'never' && (
+                <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                  {t(`reminder.series.${selectedOption.seriesFrequency}`)}
+                </span>
+              )}
             </div>
           </>
         ) : (
@@ -252,6 +259,11 @@ export const EventTypeSelector = ({ value, onChange, error }: EventTypeSelectorP
                 {option.eventType === 'shift' && option.startTime !== undefined && option.endTime !== undefined && (
                   <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
                     {formatTimeFromMinutes(option.startTime)} – {formatTimeFromMinutes(option.endTime)}
+                  </span>
+                )}
+                {option.eventType === 'reminder' && option.seriesFrequency && option.seriesFrequency !== 'never' && (
+                  <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                    {t(`reminder.series.${option.seriesFrequency}`)}
                   </span>
                 )}
               </div>

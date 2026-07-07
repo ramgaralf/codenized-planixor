@@ -69,6 +69,12 @@ public sealed class CalendarEvent
     public string AlertOffsetsJson { get; private set; } = "[]";
 
     /// <summary>
+    /// Gets the series identifier shared by all events in the same series.
+    /// Empty string means the event is not part of a series.
+    /// </summary>
+    public string SeriesId { get; private set; } = string.Empty;
+
+    /// <summary>
     /// Gets the last modification timestamp (UTC).
     /// </summary>
     public DateTime ModifiedAt { get; private set; }
@@ -97,6 +103,7 @@ public sealed class CalendarEvent
     /// <param name="totalHours">The total duration in minutes.</param>
     /// <param name="notes">Optional notes (max 250 characters).</param>
     /// <param name="alertOffsetsJson">The alert offsets as a JSON array string.</param>
+    /// <param name="seriesId">The series identifier (empty if not part of a series).</param>
     /// <param name="modifiedAt">The modification timestamp (UTC).</param>
     /// <param name="isDeleted">Whether the event is soft-deleted.</param>
     /// <returns>A new <see cref="CalendarEvent"/> instance.</returns>
@@ -112,6 +119,7 @@ public sealed class CalendarEvent
         int totalHours,
         string? notes,
         string alertOffsetsJson,
+        string seriesId,
         DateTime modifiedAt,
         bool isDeleted)
     {
@@ -128,6 +136,7 @@ public sealed class CalendarEvent
             TotalHours = totalHours,
             Notes = notes,
             AlertOffsetsJson = alertOffsetsJson,
+            SeriesId = seriesId,
             ModifiedAt = modifiedAt,
             IsDeleted = isDeleted,
             SyncedAt = DateTime.UtcNow,
@@ -146,6 +155,7 @@ public sealed class CalendarEvent
     /// <param name="totalHours">The total duration in minutes.</param>
     /// <param name="notes">Optional notes (max 250 characters).</param>
     /// <param name="alertOffsetsJson">The alert offsets as a JSON array string.</param>
+    /// <param name="seriesId">The series identifier (empty if not part of a series).</param>
     /// <param name="modifiedAt">The modification timestamp (UTC).</param>
     /// <param name="isDeleted">Whether the event is soft-deleted.</param>
     public void ApplySync(
@@ -158,6 +168,7 @@ public sealed class CalendarEvent
         int totalHours,
         string? notes,
         string alertOffsetsJson,
+        string seriesId,
         DateTime modifiedAt,
         bool isDeleted)
     {
@@ -170,6 +181,7 @@ public sealed class CalendarEvent
         this.TotalHours = totalHours;
         this.Notes = notes;
         this.AlertOffsetsJson = alertOffsetsJson;
+        this.SeriesId = seriesId;
         this.ModifiedAt = modifiedAt;
         this.IsDeleted = isDeleted;
         this.SyncedAt = DateTime.UtcNow;

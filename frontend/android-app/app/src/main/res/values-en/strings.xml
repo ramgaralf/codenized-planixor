@@ -153,6 +153,17 @@
     <string name="reminder_card_toggle_active">Toggle reminder active</string>
     <string name="reminder_card_delete">Delete reminder</string>
 
+    <!-- Reminder Series Frequency Labels -->
+    <string name="reminder_series_weekly">Every week</string>
+    <string name="reminder_series_monthly">Every month</string>
+    <string name="reminder_series_yearly">Every year</string>
+
+    <!-- Reminder Series Propagation Dialog -->
+    <string name="reminder_propagation_series_title">Frequency Changed</string>
+    <string name="reminder_propagation_series_description">The frequency of reminder \"%1$s\" changed from %2$s to %3$s. %4$d calendar event(s) in %5$d may be affected.</string>
+    <string name="reminder_propagation_series_confirm">Update events</string>
+    <string name="reminder_propagation_series_decline">Keep existing</string>
+
     <!-- Reminders Screen -->
     <string name="reminders_empty">No reminders available</string>
     <string name="reminders_error_load">Could not load reminders</string>
@@ -177,6 +188,13 @@
     <string name="reminder_form_color_hint">Highlighted colors are recommended for your current theme</string>
     <string name="reminder_form_error_save">Could not save the reminder</string>
 
+    <!-- Reminder Form Frequency -->
+    <string name="reminder_form_frequency_label">Repetition</string>
+    <string name="reminder_form_frequency_never">Never</string>
+    <string name="reminder_form_frequency_weekly">Every week</string>
+    <string name="reminder_form_frequency_monthly">Every month</string>
+    <string name="reminder_form_frequency_yearly">Every year</string>
+
     <!-- Reminder Form Validation -->
     <string name="reminder_validation_name_required">Name is required</string>
     <string name="reminder_validation_name_max_length">Name must be 50 characters or less</string>
@@ -190,6 +208,7 @@
 
     <!-- Emoji Picker Dialog -->
     <string name="emoji_picker_title">Select icon</string>
+    <string name="emoji_picker_search">Search emoji…</string>
     <string name="emoji_picker_dismiss">Close</string>
 
     <!-- Calendar Event Form -->
@@ -383,4 +402,15 @@
     <string name="shift_mode_deleted_item">[Deleted]</string>
     <string name="shift_mode_date_format_es">dd \'de\' MMMM \'de\' yyyy</string>
     <string name="shift_mode_date_format_en">MMMM dd, yyyy</string>
+
+    <!-- Series Action Dialog -->
+    <string name="calendar_series_edit_title">Edit series event</string>
+    <string name="calendar_series_edit_description">This event belongs to a series. Do you want to edit only this event or all future events in the series?</string>
+    <string name="calendar_series_delete_title">Delete series event</string>
+    <string name="calendar_series_delete_description">This event belongs to a series. Do you want to delete only this event or all future events in the series?</string>
+    <string name="calendar_series_only_this">Only this event</string>
+    <string name="calendar_series_all_in_series">All future events in series</string>
+
+    <!-- Reminder Form End Date -->
+    <string name="reminder_form_end_date_label">Repeat until</string>
 </resources>

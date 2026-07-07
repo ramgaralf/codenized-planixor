@@ -96,8 +96,7 @@ The backend API serves exclusively as a sync hub for users who have configured s
 | Retrofit + OkHttp | 2.11 / 4.12 | Networking |
 | Kotlin Coroutines + Flow | 1.10 | Async programming |
 | WorkManager | 2.10 | Background tasks |
-| JUnit 4 + MockK | 4.13 / 1.13 | Testing |
-| Kotest | 5.9 | Property-based testing |
+| JUnit 4 | 4.13 | Unit testing |
 | Gradle | 8.13 | Build system |
 | AGP | 8.12 | Android Gradle Plugin |
 | Min SDK 26 / Target SDK 36 | - | Android 8.0+ compatibility |
@@ -321,19 +320,28 @@ Colors are selected from a picker with 9 families × 5 shades. Includes theme-ba
 
 ### 2. Reminder Management
 
-Full CRUD for creating, editing, activating/deactivating, and deleting reminders. Reminders serve as reusable templates assignable to calendar events.
+Full CRUD for creating, editing, activating/deactivating, and deleting reminders. Reminders serve as reusable templates assignable to calendar events with optional repetition series.
 
 **Main fields:**
 
-- Name
-- Emoji icon
+- Name (1–50 characters)
+- Emoji icon (selected from a picker with 1,100+ emojis and search)
 - Background color (same 45-color palette)
+- Series frequency: Never (default), Every week, Every month, Every year
+- Series end date: configurable (suggested: +1yr for weekly, +5yr for monthly, +50yr for yearly)
+
+**Series (repetition):**
+
+When a reminder has a frequency other than "Never", creating a calendar event from that reminder automatically generates recurring events through the configured end date. Generated occurrences are linked by a shared `seriesId` and can be edited/deleted individually or as a group (future events only).
 
 **Characteristics:**
 
 - Reusable templates for calendar events
-- Bidirectional sync when the backend is configured
+- Frequency label displayed on reminder cards (hidden when "Never")
+- Frequency shown in the event type selector dropdown
+- Bidirectional sync when the backend is configured (seriesFrequency + seriesEndDate synced)
 - Soft-delete with change tracking
+- Propagation modal when changing frequency on a reminder with existing events
 
 ### 3. Calendar Event Management
 
@@ -369,6 +377,14 @@ Create, view, edit, and delete events that reference a shift or reminder. The ca
 **Restrictions:**
 
 - Maximum one shift per day (validated on create/edit)
+
+**Series events:**
+
+- Events created from a reminder with repetition are linked by a `seriesId` (UUID)
+- When editing or deleting a series event, a dialog asks: "Only this event?" or "All future events in series?"
+- "All future events" only modifies events with `startDay >= today` — past events are never changed
+- Series occurrences are standard calendar events (they sync normally without special handling)
+- Safety cap: maximum 366 occurrences per series generation
 
 ### 4. Notification System
 
@@ -427,7 +443,7 @@ Selectable intervals: 5, 10, 15, 20, 25, 30, 45, 60 minutes (default: 5 min).
 
 **Per-entity resilience:**
 
-If one entity type fails, the others continue. Synced entities: calendar events, notifications, annual hours, shifts, reminders.
+If one entity type fails, the others continue. Synced entities: calendar events, notifications, annual hours, shifts, reminders, shift mode settings.
 
 **Conflict resolution:**
 
@@ -477,6 +493,7 @@ Exports ALL local data to a `.bak` file (JSON format with versioned schema).
 - Notifications
 - Annual hours configuration
 - Sync configuration
+- Shift mode settings
 
 **Filename:** `planixor-yyyyMMdd-HHmmss.bak`
 
@@ -521,7 +538,16 @@ If one table fails, that table is rolled back; the others continue.
 - **Backup**: create and restore (integrated section)
 - **Danger zone**: reset application (deletes all local data)
 
-### 9. Design and UX
+### 9. Shift Mode
+
+A toggle in Settings that switches the calendar to "shift mode":
+
+- When enabled: calendar restricts to Month and Year views only, hides the "New Event" button
+- When disabled: full calendar functionality (Day/Week/Month/Year views, event creation)
+- Single-row entity synced bidirectionally with the backend
+- Setting persists across app restarts
+
+### 10. Design and UX
 
 - **Dual theme**: full light mode and dark mode
 - **Typography**: Poppins (single family) in all weights (400, 500, 600, 700)

@@ -51,6 +51,8 @@ public sealed class ReminderSyncPullService : IInteractorService<ReminderSyncPul
             reminder.Icon.Value,
             reminder.BackgroundColor.Value,
             reminder.IsActive,
+            reminder.SeriesFrequency,
+            reminder.SeriesEndDate,
             reminder.CreatedAt,
             reminder.ModifiedAt,
             reminder.IsDeleted)).ToList();

@@ -98,6 +98,12 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("varchar(250)");
 
+                    b.Property<string>("SeriesId")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(36)")
+                        .HasDefaultValue("");
+
                     b.Property<DateTime>("StartDay")
                         .HasColumnType("date");
 
@@ -209,6 +215,18 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
 
                     b.Property<DateTime>("ModifiedAt")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<string>("SeriesEndDate")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(10)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("SeriesFrequency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(10)")
+                        .HasDefaultValue("never");
 
                     b.Property<DateTime?>("SyncedAt")
                         .HasColumnType("datetime(6)");

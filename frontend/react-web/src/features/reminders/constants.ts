@@ -41,6 +41,8 @@ export const REMINDER_I18N_KEYS = {
   VALIDATION_NAME_MAX_LENGTH: 'reminder.validation.name.maxLength',
   VALIDATION_ICON_REQUIRED: 'reminder.validation.icon.required',
   VALIDATION_COLOR_REQUIRED: 'reminder.validation.color.required',
+  VALIDATION_FREQUENCY_REQUIRED: 'reminder.validation.frequency.required',
+  VALIDATION_END_DATE_INVALID: 'reminder.validation.endDate.invalid',
   ERROR_LOAD_FAILED: 'reminder.error.loadFailed',
   ERROR_SAVE_FAILED: 'reminder.error.saveFailed',
   EMPTY: 'reminder.empty',

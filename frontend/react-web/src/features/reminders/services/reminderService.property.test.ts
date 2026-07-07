@@ -5,9 +5,14 @@ import * as fc from 'fast-check';
 import { db } from '@/data/db';
 import { PREDEFINED_PALETTE } from '@features/reminders/constants';
 
-import { create, getAll, update, softDelete, deactivate, activate } from './reminderService';
+import { create, getAll, getById, update, softDelete, deactivate, activate } from './reminderService';
 
 import type { CreateReminderInput } from './reminderService';
+
+/**
+ * Valid series frequency values.
+ */
+const VALID_FREQUENCIES = ['never', 'weekly', 'monthly', 'yearly'] as const;
 
 /**
  * Arbitraries for generating valid reminder inputs.
@@ -22,10 +27,13 @@ const validIconArb = fc.constantFrom(...SINGLE_EMOJIS);
 
 const validBackgroundColorArb = fc.constantFrom(...PREDEFINED_PALETTE);
 
+const validFrequencyArb = fc.constantFrom(...VALID_FREQUENCIES);
+
 const validCreateInputArb: fc.Arbitrary<CreateReminderInput> = fc.record({
   name: validNameArb,
   icon: validIconArb,
   backgroundColor: validBackgroundColorArb,
+  seriesFrequency: validFrequencyArb,
 });
 
 /**
@@ -365,6 +373,94 @@ describe('reminderService — Property Tests', () => {
           expect(deleted!.backgroundColor).toBe(reminder.backgroundColor);
           expect(deleted!.isActive).toBe(reminder.isActive);
         }),
+        { numRuns: 100 },
+      );
+    });
+  });
+
+  /**
+   * Feature: gh38-reminder-series, Property 1: Frequency Persistence Round-Trip
+   *
+   * For any valid reminder with any seriesFrequency value (never, weekly, monthly, yearly),
+   * persisting the reminder to the store and reading it back should return the same
+   * seriesFrequency value. For any reminder with a null or missing seriesFrequency,
+   * reading it back should yield "never".
+   *
+   * **Validates: Requirements 1.3, 1.5**
+   */
+  describe('Property 1: Frequency Persistence Round-Trip', () => {
+    it('should preserve seriesFrequency after persist and read-back for any valid frequency', async () => {
+      await fc.assert(
+        fc.asyncProperty(validCreateInputArb, async (input) => {
+          const created = await create(input);
+          const readBack = await getById(created.id);
+
+          expect(readBack).toBeDefined();
+          expect(readBack!.seriesFrequency).toBe(input.seriesFrequency);
+        }),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should default seriesFrequency to "never" when input has undefined frequency', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({
+            name: validNameArb,
+            icon: validIconArb,
+            backgroundColor: validBackgroundColorArb,
+          }),
+          async (inputWithoutFrequency) => {
+            // Cast to simulate a legacy/missing seriesFrequency field
+            const input = inputWithoutFrequency as unknown as CreateReminderInput;
+            const created = await create(input);
+            const readBack = await getById(created.id);
+
+            expect(readBack).toBeDefined();
+            expect(readBack!.seriesFrequency).toBe('never');
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should return the same frequency value via getById as was persisted via create', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          validCreateInputArb,
+          async (input) => {
+            const created = await create(input);
+
+            // Read directly from the DB store
+            const fromDb = await db.reminders.get(created.id);
+            expect(fromDb).toBeDefined();
+            expect(fromDb!.seriesFrequency).toBe(input.seriesFrequency);
+
+            // Read via service method
+            const fromService = await getById(created.id);
+            expect(fromService).toBeDefined();
+            expect(fromService!.seriesFrequency).toBe(input.seriesFrequency);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should preserve frequency after update with a different valid frequency', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          validCreateInputArb,
+          validFrequencyArb,
+          async (input, newFrequency) => {
+            const created = await create(input);
+
+            await update(created.id, { seriesFrequency: newFrequency });
+            const readBack = await getById(created.id);
+
+            expect(readBack).toBeDefined();
+            expect(readBack!.seriesFrequency).toBe(newFrequency);
+          },
+        ),
         { numRuns: 100 },
       );
     });

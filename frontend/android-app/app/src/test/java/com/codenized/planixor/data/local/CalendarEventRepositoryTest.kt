@@ -29,6 +29,11 @@ class FakeCalendarEventDao : CalendarEventDao {
         emitUpdate()
     }
 
+    override suspend fun insertAll(events: List<CalendarEventEntity>) {
+        events.forEach { store[it.id] = it }
+        emitUpdate()
+    }
+
     override suspend fun update(event: CalendarEventEntity) {
         store[event.id] = event
         emitUpdate()

@@ -132,3 +132,44 @@ Where effective times are computed as:
 - **Android**: Use `getEffectiveStartMinutes(event, dayStr)` and `getEffectiveEndMinutes(event, dayStr)` in CalendarViewModel
 
 **This applies to**: Day_Action_Modal day-tap logic, DayView event rendering, any future feature that needs to determine if an event is "active" on a specific day.
+
+
+## Series event edit/delete rules
+
+### Rule 7: Series events show action dialog before edit or delete
+
+**Trigger**: The user initiates an edit or delete action on a calendar event that has a non-empty/non-null `seriesId`.
+
+**Behavior**: Display a Series Action Dialog with two options:
+- "Only this event" — applies the action (edit or delete) to the single selected event only
+- "All future events in series" — applies the action to all non-deleted events with the same `seriesId` AND `startDay >= today`
+
+**Important constraints**:
+- Past events (`startDay < today`) are NEVER modified by the "all future events" option
+- Events without a `seriesId` (null on web, empty string on Android/backend) skip the dialog entirely and proceed directly with the normal edit/delete flow
+- The dialog applies to both edit (save changes) and delete (soft-delete) operations
+
+**Platform implementation notes**:
+- **React Web**: `SeriesActionDialog` component in `features/calendar-events/components/`. `softDeleteSeries()` and `updateSeries()` in `calendarEventService.ts`. The hook `useEventForm.ts` manages the dialog state for edits.
+- **Android**: `SeriesActionDialog` composable in `ui/components/`. `deleteSeriesEvents()` and `updateSeriesEvents()` in `CalendarViewModel`. Dialog state managed in `AppNavigation.kt` for the event form destination.
+
+### Rule 8: Series generation on reminder-type event creation
+
+**Trigger**: The user creates a calendar event with `eventType = "reminder"` and the referenced reminder has `seriesFrequency ≠ "never"` and a valid `seriesEndDate`.
+
+**Behavior**:
+- Generate a `seriesId` (UUID) shared by the source event and all occurrences
+- Set `seriesId` on the source event before persisting
+- Call the series generator to produce occurrence dates from `startDay` through `seriesEndDate`
+- Build occurrence events (new UUID per event, copy time/type fields, adjust startDay/endDay preserving day span)
+- Persist all occurrences with `syncedAt = null`
+- Safety cap: maximum 366 occurrences per generation
+
+**Default end dates** (suggested when user selects frequency in reminder form):
+- Weekly: current date + 1 year
+- Monthly: current date + 5 years
+- Yearly: current date + 50 years
+
+**Platform implementation notes**:
+- **React Web**: `generateSeriesOccurrences()` in `calendarEventService.ts`, uses `seriesGenerator.ts` and `seriesOccurrenceBuilder.ts`
+- **Android**: `CalendarEventRepository.generateSeriesOccurrences()`, uses `SeriesGenerator.kt`

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { db } from '@/data/db';
 import { useCalendarStore } from '@/stores/calendarStore';
@@ -46,6 +46,14 @@ export interface UseEventFormReturn {
   handleSubmit: () => Promise<void>;
   handleCancel: () => void;
   isEditMode: boolean;
+  /** Whether the series action dialog should be shown (edit mode, event has seriesId) */
+  showSeriesEditDialog: boolean;
+  /** Confirm saving only this event (single update) */
+  handleSeriesEditThisEvent: () => Promise<void>;
+  /** Confirm saving all future events in series */
+  handleSeriesEditAllInSeries: () => Promise<void>;
+  /** Cancel the series edit dialog */
+  handleSeriesEditCancel: () => void;
 }
 
 /**
@@ -140,6 +148,25 @@ const checkShiftConstraint = async (
     return CALENDAR_EVENT_I18N_KEYS.VALIDATION_ONE_SHIFT_PER_DAY;
   }
   return null;
+};
+
+/**
+ * Scrolls to and focuses the first field with a validation error (Req 8.6).
+ */
+const scrollToFirstError = (errors: Record<string, string>): void => {
+  const errorFields = Object.keys(errors);
+  if (errorFields.length === 0) return;
+
+  requestAnimationFrame(() => {
+    const firstField = errorFields[0] as string | undefined;
+    if (!firstField) return;
+    const selector = `[name="${firstField}"], [data-field="${firstField}"], #event-${firstField.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+    const element = document.querySelector<HTMLElement>(selector);
+    if (element) {
+      element.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+      element.focus();
+    }
+  });
 };
 
 /**
@@ -241,6 +268,9 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSeriesEditDialog, setShowSeriesEditDialog] = useState(false);
+  /** Pending changes stored when series dialog is shown */
+  const pendingSeriesChangesRef = useRef<Partial<CalendarEvent> | null>(null);
 
   /**
    * Whether times are read-only (shift selected) or editable (reminder/no selection).
@@ -396,21 +426,7 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
 
     if (Object.keys(validationErrors).length > 0) {
       setFieldErrors(validationErrors);
-
-      // Scroll to and focus the first error field (Req 8.6)
-      const errorFields = Object.keys(validationErrors);
-      if (errorFields.length > 0) {
-        requestAnimationFrame(() => {
-          const firstField = errorFields[0] as string | undefined;
-          if (!firstField) return;
-          const selector = `[name="${firstField}"], [data-field="${firstField}"], #event-${firstField.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-          const element = document.querySelector<HTMLElement>(selector);
-          if (element) {
-            element.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-            element.focus();
-          }
-        });
-      }
+      scrollToFirstError(validationErrors);
       return;
     }
 
@@ -426,17 +442,26 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
     // Proceed with submission
     setIsSubmitting(true);
     try {
+      const changes: Partial<CalendarEvent> = {
+        eventType: formState.eventType!,
+        eventTypeId: formState.eventTypeId!,
+        startDay: formState.startDay,
+        endDay: formState.endDay,
+        startTime: formState.startTime!,
+        endTime: formState.endTime!,
+        notes: formState.notes || null,
+        alertOffsets: isAlertConfigVisible ? formState.alertOffsets : [],
+      };
+
       if (isEditMode) {
-        await calendarEventService.update(existingEvent!.id, {
-          eventType: formState.eventType!,
-          eventTypeId: formState.eventTypeId!,
-          startDay: formState.startDay,
-          endDay: formState.endDay,
-          startTime: formState.startTime!,
-          endTime: formState.endTime!,
-          notes: formState.notes || null,
-          alertOffsets: isAlertConfigVisible ? formState.alertOffsets : [],
-        });
+        // If the event has a seriesId, show series action dialog
+        if (existingEvent?.seriesId) {
+          pendingSeriesChangesRef.current = changes;
+          setShowSeriesEditDialog(true);
+          setIsSubmitting(false);
+          return;
+        }
+        await calendarEventService.update(existingEvent!.id, changes);
       } else {
         await calendarEventService.create({
           eventType: formState.eventType!,
@@ -447,6 +472,7 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
           endTime: formState.endTime!,
           notes: formState.notes || null,
           alertOffsets: isAlertConfigVisible ? formState.alertOffsets : [],
+          seriesId: null,
         });
       }
 
@@ -484,6 +510,92 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
     onCancel?.();
   }, [onCancel]);
 
+  /**
+   * Series edit dialog: user chose "Only this event" — perform a normal single update.
+   */
+  const handleSeriesEditThisEvent = useCallback(async (): Promise<void> => {
+    const changes = pendingSeriesChangesRef.current;
+    if (!changes || !existingEvent) return;
+
+    setShowSeriesEditDialog(false);
+    setIsSubmitting(true);
+    try {
+      await calendarEventService.update(existingEvent.id, changes);
+      pendingSeriesChangesRef.current = null;
+
+      const preSelectedDay = computePreSelectedDay(activeView, currentDate);
+      setFormState({
+        eventType: null,
+        eventTypeId: null,
+        startDay: preSelectedDay,
+        endDay: preSelectedDay,
+        startTime: null,
+        endTime: null,
+        totalHours: 0,
+        notes: '',
+        alertOffsets: [],
+      });
+
+      onSuccess?.();
+    } catch (err) {
+      console.error('Failed to save calendar event:', err);
+      const mapped = mapSubmitError(err);
+      if (mapped.formError) setFormError(mapped.formError);
+      if (Object.keys(mapped.fieldErrors).length > 0) {
+        setFieldErrors((prev) => ({ ...prev, ...mapped.fieldErrors }));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [existingEvent, activeView, currentDate, onSuccess]);
+
+  /**
+   * Series edit dialog: user chose "All future events in series" — update the whole series.
+   */
+  const handleSeriesEditAllInSeries = useCallback(async (): Promise<void> => {
+    const changes = pendingSeriesChangesRef.current;
+    if (!changes || !existingEvent) return;
+
+    setShowSeriesEditDialog(false);
+    setIsSubmitting(true);
+    try {
+      await calendarEventService.updateSeries(existingEvent.id, changes);
+      pendingSeriesChangesRef.current = null;
+
+      const preSelectedDay = computePreSelectedDay(activeView, currentDate);
+      setFormState({
+        eventType: null,
+        eventTypeId: null,
+        startDay: preSelectedDay,
+        endDay: preSelectedDay,
+        startTime: null,
+        endTime: null,
+        totalHours: 0,
+        notes: '',
+        alertOffsets: [],
+      });
+
+      onSuccess?.();
+    } catch (err) {
+      console.error('Failed to update series events:', err);
+      const mapped = mapSubmitError(err);
+      if (mapped.formError) setFormError(mapped.formError);
+      if (Object.keys(mapped.fieldErrors).length > 0) {
+        setFieldErrors((prev) => ({ ...prev, ...mapped.fieldErrors }));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [existingEvent, activeView, currentDate, onSuccess]);
+
+  /**
+   * Series edit dialog: user cancelled.
+   */
+  const handleSeriesEditCancel = useCallback(() => {
+    setShowSeriesEditDialog(false);
+    pendingSeriesChangesRef.current = null;
+  }, []);
+
   return {
     formState,
     fieldErrors,
@@ -496,5 +608,9 @@ export const useEventForm = (options?: UseEventFormOptions): UseEventFormReturn 
     handleSubmit,
     handleCancel,
     isEditMode,
+    showSeriesEditDialog,
+    handleSeriesEditThisEvent,
+    handleSeriesEditAllInSeries,
+    handleSeriesEditCancel,
   };
 };

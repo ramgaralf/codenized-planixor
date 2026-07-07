@@ -47,6 +47,7 @@ data class EventTypeOption(
     val displayLabel: String,
     val startTime: Int? = null,
     val endTime: Int? = null,
+    val seriesFrequency: String = "never",
 )
 
 /**
@@ -193,6 +194,18 @@ private fun EventTypeOptionContent(
             if (option.eventType == "shift" && option.startTime != null && option.endTime != null) {
                 Text(
                     text = "${formatTimeFromMinutes(option.startTime)} – ${formatTimeFromMinutes(option.endTime)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (option.eventType == "reminder" && option.seriesFrequency != "never" && option.seriesFrequency.isNotEmpty()) {
+                Text(
+                    text = when (option.seriesFrequency) {
+                        "weekly" -> stringResource(R.string.reminder_series_weekly)
+                        "monthly" -> stringResource(R.string.reminder_series_monthly)
+                        "yearly" -> stringResource(R.string.reminder_series_yearly)
+                        else -> ""
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

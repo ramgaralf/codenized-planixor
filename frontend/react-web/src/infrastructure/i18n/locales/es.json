@@ -214,7 +214,17 @@
       "selectIcon": "Selecciona un ícono",
       "changeIcon": "Cambiar ícono",
       "searchEmoji": "Buscar emoji...",
-      "emojiPickerLabel": "Selector de emojis"
+      "emojiPickerLabel": "Selector de emojis",
+      "frequency": {
+        "label": "Repetición",
+        "never": "Nunca",
+        "weekly": "Cada semana",
+        "monthly": "Cada mes",
+        "yearly": "Cada año"
+      },
+      "endDate": {
+        "label": "Repetir hasta"
+      }
     },
     "validation": {
       "name": {
@@ -226,6 +236,12 @@
       },
       "color": {
         "required": "Selecciona un color de fondo"
+      },
+      "frequency": {
+        "required": "Selecciona una frecuencia de repetición"
+      },
+      "endDate": {
+        "invalid": "La fecha de fin debe ser una fecha futura válida"
       }
     },
     "error": {
@@ -250,6 +266,19 @@
       "deactivate": "Desactivar",
       "activate": "Activar",
       "delete": "Eliminar"
+    },
+    "series": {
+      "weekly": "Cada semana",
+      "monthly": "Cada mes",
+      "yearly": "Cada año"
+    },
+    "propagation": {
+      "series": {
+        "title": "Frecuencia actualizada",
+        "description": "La frecuencia de repetición ha cambiado de \"{{previousFrequency}}\" a \"{{newFrequency}}\". {{count}} evento(s) del calendario de este año pueden verse afectados.",
+        "confirm": "Actualizar eventos",
+        "decline": "Mantener existentes"
+      }
     }
   },
   "prerequisite": {
@@ -338,6 +367,14 @@
     "detail": {
       "delete": "Eliminar",
       "deleteAriaLabel": "Eliminar {{name}}"
+    },
+    "series": {
+      "editTitle": "Editar evento de serie",
+      "editDescription": "Este evento pertenece a una serie. ¿Deseas editar solo este evento o todos los eventos futuros de la serie?",
+      "deleteTitle": "Eliminar evento de serie",
+      "deleteDescription": "Este evento pertenece a una serie. ¿Deseas eliminar solo este evento o todos los eventos futuros de la serie?",
+      "onlyThisEvent": "Solo este evento",
+      "allInSeries": "Todos los eventos futuros de la serie"
     }
   },
   "notifications": {

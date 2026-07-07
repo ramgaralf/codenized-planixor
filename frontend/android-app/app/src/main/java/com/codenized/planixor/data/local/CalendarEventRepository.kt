@@ -1,7 +1,10 @@
 package com.codenized.planixor.data.local
 
+import com.codenized.planixor.domain.series.SeriesGenerator
 import com.codenized.planixor.domain.validation.CalendarEventValidation
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -249,6 +252,97 @@ class CalendarEventRepository @Inject constructor(
         )
         calendarEventDao.update(deleted)
         return CalendarEventResult.Success(deleted)
+    }
+
+    /**
+     * Generates and persists series occurrence events based on a source event and frequency.
+     * Called after a reminder-type event is created when the referenced reminder has
+     * seriesFrequency != "never".
+     *
+     * Uses the reminder's seriesEndDate if provided, otherwise computes a default
+     * based on frequency (weekly: +1yr, monthly: +5yr, yearly: +50yr from today).
+     *
+     * For each generated date:
+     * - New UUID via UUID.randomUUID()
+     * - Copies: eventType, eventTypeId, startTime, endTime, totalHours, notes, alertOffsets
+     * - Computes: startDay = generated date, endDay = generated date + daySpan
+     * - Sets: modifiedAt = now, syncedAt = null, isDeleted = false, seriesId = shared UUID
+     *
+     * Validates: Requirements 2.1, 2.5, 2.6, 2.7
+     */
+    suspend fun generateSeriesOccurrences(
+        sourceEvent: CalendarEventEntity,
+        frequency: String,
+        seriesEndDate: String = "",
+    ) {
+        if (frequency == "never") return
+
+        val endDate = if (seriesEndDate.isNotEmpty()) {
+            seriesEndDate
+        } else {
+            computeDefaultEndDate(frequency)
+        }
+
+        val generatedDates = SeriesGenerator.generateDates(
+            startDay = sourceEvent.startDay,
+            frequency = frequency,
+            endDate = endDate,
+        )
+
+        if (generatedDates.isEmpty()) return
+
+        // Compute day span from source event
+        val sourceStartDate = LocalDate.parse(sourceEvent.startDay)
+        val sourceEndDate = LocalDate.parse(sourceEvent.endDay)
+        val daySpan = ChronoUnit.DAYS.between(sourceStartDate, sourceEndDate)
+
+        val now = System.currentTimeMillis()
+        val seriesId = UUID.randomUUID().toString()
+
+        val occurrences = generatedDates.map { dateStr ->
+            val occurrenceStart = LocalDate.parse(dateStr)
+            val occurrenceEnd = occurrenceStart.plusDays(daySpan)
+
+            CalendarEventEntity(
+                id = UUID.randomUUID().toString(),
+                eventType = sourceEvent.eventType,
+                eventTypeId = sourceEvent.eventTypeId,
+                startDay = dateStr,
+                endDay = occurrenceEnd.toString(),
+                startTime = sourceEvent.startTime,
+                endTime = sourceEvent.endTime,
+                totalHours = sourceEvent.totalHours,
+                notes = sourceEvent.notes,
+                alertOffsets = sourceEvent.alertOffsets,
+                modifiedAt = now,
+                syncedAt = null,
+                isDeleted = false,
+                seriesId = seriesId,
+            )
+        }
+
+        // Also update the source event with the seriesId
+        val updatedSource = sourceEvent.copy(seriesId = seriesId, modifiedAt = now, syncedAt = null)
+        calendarEventDao.update(updatedSource)
+
+        calendarEventDao.insertAll(occurrences)
+    }
+
+    /**
+     * Computes a default end date based on frequency when seriesEndDate is empty.
+     * - Weekly: today + 1 year
+     * - Monthly: today + 5 years
+     * - Yearly: today + 50 years
+     */
+    private fun computeDefaultEndDate(frequency: String): String {
+        val today = LocalDate.now()
+        val endDate = when (frequency) {
+            "weekly" -> today.plusYears(1)
+            "monthly" -> today.plusYears(5)
+            "yearly" -> today.plusYears(50)
+            else -> today.plusYears(1)
+        }
+        return endDate.toString()
     }
 
     companion object {

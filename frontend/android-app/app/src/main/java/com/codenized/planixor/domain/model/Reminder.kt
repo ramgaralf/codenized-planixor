@@ -10,6 +10,8 @@ data class Reminder(
     val icon: String,
     val backgroundColor: String,
     val isActive: Boolean,
+    val seriesFrequency: String = "never",
+    val seriesEndDate: String = "",
     val createdAt: Long,
     val modifiedAt: Long,
     val syncedAt: Long?,

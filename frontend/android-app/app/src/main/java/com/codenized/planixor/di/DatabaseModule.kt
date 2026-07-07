@@ -33,7 +33,7 @@ object DatabaseModule {
             PlanixorDatabase::class.java,
             "planixor_database",
         )
-            .addMigrations(PlanixorDatabase.MIGRATION_3_4, PlanixorDatabase.MIGRATION_4_5, PlanixorDatabase.MIGRATION_5_6, PlanixorDatabase.MIGRATION_6_7, PlanixorDatabase.MIGRATION_7_8)
+            .addMigrations(PlanixorDatabase.MIGRATION_3_4, PlanixorDatabase.MIGRATION_4_5, PlanixorDatabase.MIGRATION_5_6, PlanixorDatabase.MIGRATION_6_7, PlanixorDatabase.MIGRATION_7_8, PlanixorDatabase.MIGRATION_8_9, PlanixorDatabase.MIGRATION_9_10, PlanixorDatabase.MIGRATION_10_11)
             .fallbackToDestructiveMigration()
             .build()
     }

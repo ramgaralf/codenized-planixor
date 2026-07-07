@@ -34,6 +34,8 @@ class ReminderRepository @Inject constructor(
         name: String,
         icon: String,
         backgroundColor: String,
+        seriesFrequency: String = "never",
+        seriesEndDate: String = "",
     ): Reminder {
         val now = System.currentTimeMillis()
         val entity = ReminderEntity(
@@ -42,6 +44,8 @@ class ReminderRepository @Inject constructor(
             icon = icon,
             backgroundColor = backgroundColor,
             isActive = true,
+            seriesFrequency = seriesFrequency,
+            seriesEndDate = seriesEndDate,
             createdAt = now,
             modifiedAt = now,
             syncedAt = null,
@@ -60,12 +64,16 @@ class ReminderRepository @Inject constructor(
         name: String,
         icon: String,
         backgroundColor: String,
+        seriesFrequency: String = "never",
+        seriesEndDate: String = "",
     ) {
         val existing = reminderDao.getById(id) ?: return
         val updated = existing.copy(
             name = name,
             icon = icon,
             backgroundColor = backgroundColor,
+            seriesFrequency = seriesFrequency,
+            seriesEndDate = seriesEndDate,
             modifiedAt = System.currentTimeMillis(),
         )
         reminderDao.upsert(updated)
@@ -121,6 +129,8 @@ private fun ReminderEntity.toDomain(): Reminder = Reminder(
     icon = icon,
     backgroundColor = backgroundColor,
     isActive = isActive,
+    seriesFrequency = seriesFrequency,
+    seriesEndDate = seriesEndDate,
     createdAt = createdAt,
     modifiedAt = modifiedAt,
     syncedAt = syncedAt,

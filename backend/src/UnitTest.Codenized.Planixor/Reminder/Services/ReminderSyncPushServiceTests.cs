@@ -172,6 +172,8 @@ public sealed class ReminderSyncPushServiceTests
                 "☀️",
                 "#EF4444",
                 true,
+                "never",
+                null,
                 createdAt,
                 modifiedAt,
                 false),
@@ -212,6 +214,8 @@ public sealed class ReminderSyncPushServiceTests
             "🔔",
             "#EF4444",
             true,
+            "never",
+            null,
             DateTime.UtcNow.AddDays(-10),
             DateTime.UtcNow,
             false);

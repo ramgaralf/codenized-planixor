@@ -8,6 +8,7 @@ import { useEventForm } from '../hooks/useEventForm';
 import type { CalendarEvent } from '../models';
 
 import { EventTypeSelector } from './EventTypeSelector';
+import { SeriesActionDialog } from './SeriesActionDialog';
 
 interface EventFormProps {
   /** Existing event for edit mode. Omit for create mode. */
@@ -111,6 +112,10 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
     handleSubmit,
     handleCancel,
     isEditMode,
+    showSeriesEditDialog,
+    handleSeriesEditThisEvent,
+    handleSeriesEditAllInSeries,
+    handleSeriesEditCancel,
   } = useEventForm({ existingEvent, onSuccess, onCancel });
 
   const handleEventTypeChange = (selection: { eventType: 'shift' | 'reminder'; eventTypeId: string }) => {
@@ -349,6 +354,15 @@ export const EventForm = ({ existingEvent, onSuccess, onCancel, onDelete }: Even
           {isSubmitting ? t('common.saving') : t('common.save')}
         </button>
       </div>
+
+      {/* Series Action Dialog for edit flow */}
+      <SeriesActionDialog
+        isOpen={showSeriesEditDialog}
+        action="edit"
+        onThisEvent={handleSeriesEditThisEvent}
+        onAllInSeries={handleSeriesEditAllInSeries}
+        onCancel={handleSeriesEditCancel}
+      />
     </form>
   );
 };

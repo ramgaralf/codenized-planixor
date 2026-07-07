@@ -113,6 +113,17 @@ export class PlanixorDatabase extends Dexie {
       syncConfig: 'key',
       shiftModeSettings: 'id, modifiedAt',
     });
+
+    this.version(10).stores({
+      calendarEvents: 'id, startDay, endDay, [startDay+eventType+isDeleted], eventType, isDeleted, modifiedAt, seriesId',
+      shifts: 'id, createdAt, isDeleted, isActive',
+      reminders: 'id, createdAt, isDeleted, isActive',
+      annualHoursConfig: 'id, year, isDeleted, modifiedAt',
+      notifications: 'id, calendarEventId, triggerTime, [isDelivered+isRead+isDeleted], isDeleted, modifiedAt',
+      notificationSettings: 'key',
+      syncConfig: 'key',
+      shiftModeSettings: 'id, modifiedAt',
+    });
   }
 }
 

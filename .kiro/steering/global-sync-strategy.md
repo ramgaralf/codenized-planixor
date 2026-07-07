@@ -210,3 +210,19 @@ The `ConnectionStatus` enum (UNCONFIGURED, ACTIVE, FAILING, PAUSED) is persisted
 ### Username change detection
 
 When sync configuration is validated and the returned username differs from the stored username (case-sensitive comparison), a confirmation dialog warns the user that all local syncable data will be deleted. On confirm: all 5 entity tables are cleared, lastSyncedAt is reset, and the new config is saved. On cancel: existing config is retained. First-time configuration or same username saves directly without dialog.
+
+
+### Reminder series fields sync as standard properties
+
+The `Reminder` entity includes two series-related fields that sync as standard properties:
+- `seriesFrequency` (string: "never", "weekly", "monthly", "yearly") — defaults to "never" if null/missing on pull
+- `seriesEndDate` (string: ISO YYYY-MM-DD or empty) — defaults to empty string if null/missing on pull
+
+The `CalendarEvent` entity includes:
+- `seriesId` (string: UUID or empty) — links events in the same series; defaults to empty string if null/missing on pull
+
+**No special sync handling needed**: Series occurrences are standard CalendarEvent records with `syncedAt = null`, so they're automatically pushed on the next sync cycle. No auto-generation of occurrences on pull — occurrences are only created by explicit user action on each device.
+
+### Series event edit/delete only affects future events
+
+When a user edits or deletes "all events in series", only events with `startDay >= today` are modified. Past events (startDay < today) are never touched by series operations. This ensures historical data integrity across synced devices.

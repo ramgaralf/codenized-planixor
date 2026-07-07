@@ -1,5 +1,6 @@
 package com.codenized.planixor.data.local
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -15,6 +16,10 @@ data class ReminderEntity(
     val icon: String,
     val backgroundColor: String,
     val isActive: Boolean,
+    @ColumnInfo(defaultValue = "never")
+    val seriesFrequency: String = "never",
+    @ColumnInfo(defaultValue = "")
+    val seriesEndDate: String = "",
     val createdAt: Long,
     val modifiedAt: Long,
     val syncedAt: Long?,

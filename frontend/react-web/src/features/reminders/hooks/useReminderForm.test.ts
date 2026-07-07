@@ -324,7 +324,7 @@ describe('useReminderForm', () => {
         await result.current.handleSubmit();
       });
 
-      expect(mockedCreate).toHaveBeenCalledWith(VALID_VALUES);
+      expect(mockedCreate).toHaveBeenCalledWith({ ...VALID_VALUES, seriesFrequency: 'never', seriesEndDate: null });
       expect(mockOnSuccess).toHaveBeenCalled();
     });
 
@@ -363,6 +363,8 @@ describe('useReminderForm', () => {
         name: 'Updated Name',
         icon: VALID_VALUES.icon,
         backgroundColor: VALID_VALUES.backgroundColor,
+        seriesFrequency: 'never',
+        seriesEndDate: null,
       });
       expect(mockedCheckPropagation).toHaveBeenCalledWith('abc-123');
       expect(mockOnSuccess).toHaveBeenCalled();

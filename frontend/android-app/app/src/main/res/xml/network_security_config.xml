@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+        Planixor connects to user-configured self-hosted backend servers.
+        These may use HTTP on local networks (192.168.x.x, 10.x.x.x, etc.).
+        Cleartext is permitted because the server URL is entirely user-provided.
+    -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

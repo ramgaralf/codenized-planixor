@@ -1,11 +1,13 @@
 package com.codenized.planixor.ui.reminders
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,11 +20,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,6 +52,7 @@ import com.codenized.planixor.R
 import com.codenized.planixor.ui.components.ColorPickerDialog
 import com.codenized.planixor.ui.components.EmojiPickerDialog
 import com.codenized.planixor.ui.components.PropagationDialog
+import com.codenized.planixor.ui.components.SeriesPropagationDialog
 import com.codenized.planixor.ui.shifts.PropagationUiState
 import com.codenized.planixor.ui.theme.PlanixorTheme
 
@@ -59,8 +69,23 @@ fun ReminderFormScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val propagationState by viewModel.propagationState.collectAsStateWithLifecycle()
+    val seriesPropagationState by viewModel.seriesPropagationState.collectAsStateWithLifecycle()
 
-    // Show propagation dialog when state is Showing
+    // Show series propagation dialog when frequency changed (takes priority over display-field dialog)
+    if (seriesPropagationState is SeriesPropagationUiState.Showing) {
+        val showing = seriesPropagationState as SeriesPropagationUiState.Showing
+        SeriesPropagationDialog(
+            isOpen = true,
+            reminderName = showing.name,
+            previousFrequency = showing.previousFrequency,
+            newFrequency = showing.newFrequency,
+            affectedEventCount = showing.count,
+            onConfirm = viewModel::confirmSeriesPropagation,
+            onDecline = viewModel::declineSeriesPropagation,
+        )
+    }
+
+    // Show display-field propagation dialog when state is Showing
     if (propagationState is PropagationUiState.Showing) {
         val showing = propagationState as PropagationUiState.Showing
         PropagationDialog(
@@ -132,6 +157,20 @@ internal fun ReminderFormContent(
             error = uiState.backgroundColorError,
             onValueChange = { onFieldChange("backgroundColor", it) },
         )
+
+        // Series frequency selector
+        ReminderFrequencyField(
+            value = uiState.seriesFrequency,
+            onValueChange = { onFieldChange("seriesFrequency", it) },
+        )
+
+        // Series end date picker (visible only when frequency is not "never")
+        if (uiState.seriesFrequency != "never") {
+            ReminderEndDateField(
+                value = uiState.seriesEndDate,
+                onValueChange = { onFieldChange("seriesEndDate", it) },
+            )
+        }
 
         // Save error banner
         if (uiState.saveError != null) {
@@ -322,6 +361,153 @@ private fun ReminderColorField(
     }
 }
 
+@Composable
+private fun ReminderFrequencyField(
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    val options = listOf(
+        "never" to stringResource(R.string.reminder_form_frequency_never),
+        "weekly" to stringResource(R.string.reminder_form_frequency_weekly),
+        "monthly" to stringResource(R.string.reminder_form_frequency_monthly),
+        "yearly" to stringResource(R.string.reminder_form_frequency_yearly),
+    )
+
+    Column {
+        Text(
+            text = stringResource(R.string.reminder_form_frequency_label),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            options.forEach { (key, label) ->
+                val isSelected = value == key
+                OutlinedButton(
+                    onClick = { onValueChange(key) },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = if (isSelected) {
+                        ButtonDefaults.outlinedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    } else {
+                        ButtonDefaults.outlinedButtonColors()
+                    },
+                    border = if (isSelected) {
+                        null
+                    } else {
+                        BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline,
+                        )
+                    },
+                    contentPadding = PaddingValues(
+                        horizontal = 4.dp,
+                        vertical = 8.dp,
+                    ),
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReminderEndDateField(
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    var showPicker by remember { mutableStateOf(false) }
+
+    val displayText = remember(value) {
+        if (value.isNotEmpty()) {
+            try {
+                val date = java.time.LocalDate.parse(value)
+                val formatter = java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM)
+                date.format(formatter)
+            } catch (_: Exception) {
+                value
+            }
+        } else {
+            ""
+        }
+    }
+
+    Column {
+        Text(
+            text = stringResource(R.string.reminder_form_end_date_label),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedButton(
+            onClick = { showPicker = true },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            Text(
+                text = displayText.ifEmpty { stringResource(R.string.reminder_form_end_date_label) },
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Start,
+            )
+        }
+    }
+
+    if (showPicker) {
+        val initialDate = if (value.isNotEmpty()) {
+            try {
+                java.time.LocalDate.parse(value)
+            } catch (_: Exception) {
+                java.time.LocalDate.now().plusYears(1)
+            }
+        } else {
+            java.time.LocalDate.now().plusYears(1)
+        }
+
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = initialDate.atStartOfDay(java.time.ZoneOffset.UTC)
+                .toInstant().toEpochMilli()
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showPicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val selected = java.time.Instant.ofEpochMilli(millis)
+                            .atZone(java.time.ZoneOffset.UTC)
+                            .toLocalDate()
+                        onValueChange(selected.toString())
+                    }
+                    showPicker = false
+                }) {
+                    Text(stringResource(R.string.reminder_form_save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPicker = false }) {
+                    Text(stringResource(R.string.reminder_form_cancel))
+                }
+            },
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+
 /**
  * Maps reminder validation error keys to localized string resources.
  */
@@ -372,6 +558,7 @@ private fun ReminderFormScreenEditPreview() {
                 name = "Daily Meeting",
                 icon = "📅",
                 backgroundColor = "#10B981",
+                seriesFrequency = "weekly",
                 isValid = true,
                 mode = ReminderFormMode.Edit("123"),
             ),

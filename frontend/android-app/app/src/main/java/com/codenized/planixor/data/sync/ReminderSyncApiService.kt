@@ -16,6 +16,8 @@ data class ReminderSyncRecord(
     val icon: String,
     val backgroundColor: String,
     val isActive: Boolean,
+    val seriesFrequency: String = "never",
+    val seriesEndDate: String = "",
     val createdAt: String,
     val modifiedAt: String,
     val isDeleted: Boolean,
