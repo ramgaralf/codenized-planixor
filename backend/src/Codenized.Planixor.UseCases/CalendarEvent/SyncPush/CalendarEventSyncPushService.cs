@@ -134,6 +134,7 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
                     record.TotalHours,
                     record.Notes,
                     alertOffsetsJson,
+                    record.SeriesId ?? string.Empty,
                     record.ModifiedAt,
                     record.IsDeleted);
 
@@ -158,6 +159,7 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
                     record.TotalHours,
                     record.Notes,
                     alertOffsetsJson,
+                    record.SeriesId ?? string.Empty,
                     record.ModifiedAt,
                     record.IsDeleted);
 

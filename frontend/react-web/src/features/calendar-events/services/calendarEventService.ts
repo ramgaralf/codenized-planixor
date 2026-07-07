@@ -4,6 +4,8 @@ import {
   deleteNotificationsForEvent,
 } from '@features/notifications/services/notificationService';
 import { triggerImmediateCheckCycle } from '@features/notifications/services/notificationWorkerManager';
+import { generateSeriesDates } from '@features/reminders/services/seriesGenerator';
+import { buildOccurrences } from '@features/reminders/services/seriesOccurrenceBuilder';
 
 import type { CalendarEvent, CalendarEventDisplay } from '../models';
 import {
@@ -98,6 +100,60 @@ const resolveShiftHoursWorked = async (
 };
 
 /**
+ * Generates series occurrence events for a reminder-type source event.
+ *
+ * Looks up the referenced reminder's seriesFrequency. If the frequency is
+ * not 'never', generates all future occurrence dates through the end of
+ * the current year, builds CalendarEvent records from the source event,
+ * and persists them to the local store.
+ *
+ * If the frequency is 'never', no occurrences are generated (single event behavior).
+ *
+ * **Validates: Requirements 2.1, 2.6, 2.7**
+ */
+const generateSeriesOccurrences = async (sourceEvent: CalendarEvent): Promise<void> => {
+  const reminder = await db.reminders.get(sourceEvent.eventTypeId);
+
+  // Guard: no reminder found, or frequency is 'never' or missing (legacy reminders)
+  const frequency = reminder?.seriesFrequency;
+  if (!reminder || !frequency || frequency === 'never') {
+    return;
+  }
+
+  // Use the reminder's seriesEndDate; if not set, default to current year + 50
+  const endDate = reminder.seriesEndDate ?? `${new Date().getFullYear() + 50}-12-31`;
+
+  const dates = generateSeriesDates({
+    startDay: sourceEvent.startDay,
+    frequency,
+    endDate,
+  });
+
+  if (dates.length === 0) {
+    return;
+  }
+
+  // Generate a shared seriesId for the source event and all occurrences
+  const seriesId = crypto.randomUUID();
+
+  // Update the source event with the seriesId
+  await db.calendarEvents.update(sourceEvent.id, { seriesId });
+
+  const occurrences = buildOccurrences({
+    sourceEvent,
+    dates,
+    seriesId,
+  });
+
+  await db.calendarEvents.bulkAdd(occurrences);
+
+  // Reconcile notifications for each generated occurrence
+  for (const occurrence of occurrences) {
+    await reconcileNotifications(occurrence);
+  }
+};
+
+/**
  * Creates a new calendar event with system-generated fields.
  * Enforces dual validation: day range, time (reminders), one-shift-per-day,
  * notes length, and required fields. For shifts, auto-sets endDay via
@@ -147,6 +203,7 @@ export const create = async (input: CreateCalendarEventInput): Promise<CalendarE
     modifiedAt: new Date(),
     syncedAt: null,
     isDeleted: false,
+    seriesId: null,
   };
 
   // Validate required fields as a final check
@@ -163,6 +220,12 @@ export const create = async (input: CreateCalendarEventInput): Promise<CalendarE
 
   // Trigger immediate check cycle so due notifications are delivered right away
   await triggerImmediateCheckCycle();
+
+  // Series generation: if this is a reminder-type event with a repeating frequency,
+  // generate occurrence events through the end of the current year.
+  if (eventType === 'reminder') {
+    await generateSeriesOccurrences(event);
+  }
 
   return event;
 };
@@ -269,6 +332,112 @@ export const softDelete = async (id: string): Promise<void> => {
 
   // Trigger immediate check cycle so badge count updates right away
   await triggerImmediateCheckCycle();
+};
+
+/**
+ * Formats a Date to YYYY-MM-DD string (local helper).
+ */
+const formatTodayISO = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Soft-deletes all FUTURE non-deleted events in the same series (startDay >= today).
+ * Does NOT delete past events. Also deletes the specified event itself if it matches.
+ * Falls back to single event delete if the event has no seriesId.
+ */
+export const softDeleteSeries = async (eventId: string): Promise<void> => {
+  const event = await db.calendarEvents.get(eventId);
+  if (!event || !event.seriesId) {
+    await softDelete(eventId);
+    return;
+  }
+
+  const today = new Date();
+  const todayStr = formatTodayISO(today);
+  const now = new Date();
+
+  // Find all non-deleted events in the same series with startDay >= today
+  const seriesEvents = await db.calendarEvents
+    .where('seriesId')
+    .equals(event.seriesId)
+    .filter(e => !e.isDeleted && e.startDay >= todayStr)
+    .toArray();
+
+  // Soft-delete all of them
+  await db.transaction('rw', db.calendarEvents, async () => {
+    for (const ev of seriesEvents) {
+      await db.calendarEvents.update(ev.id, {
+        isDeleted: true,
+        modifiedAt: now,
+        syncedAt: null,
+      });
+    }
+  });
+
+  // Cascade delete notifications for all affected events
+  for (const ev of seriesEvents) {
+    await deleteNotificationsForEvent(ev.id);
+  }
+
+  await triggerImmediateCheckCycle();
+};
+
+/**
+ * Updates all FUTURE non-deleted events in the same series with the given changes.
+ * Does NOT modify past events. Each event gets its own modifiedAt/syncedAt update.
+ * Falls back to single event update if the event has no seriesId.
+ * Returns the updated source event.
+ */
+export const updateSeries = async (
+  eventId: string,
+  changes: Partial<CalendarEvent>,
+): Promise<CalendarEvent> => {
+  const event = await db.calendarEvents.get(eventId);
+  if (!event || !event.seriesId) {
+    return update(eventId, changes);
+  }
+
+  const today = new Date();
+  const todayStr = formatTodayISO(today);
+  const now = new Date();
+
+  // Find all non-deleted FUTURE events in the same series (startDay >= today)
+  const seriesEvents = await db.calendarEvents
+    .where('seriesId')
+    .equals(event.seriesId)
+    .filter(e => !e.isDeleted && e.startDay >= todayStr)
+    .toArray();
+
+  // Fields that are safe to apply across all series events
+  // (id, startDay, endDay, seriesId stay per-event)
+  const fieldsToApply: (keyof CalendarEvent)[] = ['startTime', 'endTime', 'totalHours', 'notes', 'alertOffsets', 'eventTypeId'];
+
+  for (const ev of seriesEvents) {
+    const updateData: Partial<CalendarEvent> = { modifiedAt: now, syncedAt: null };
+    for (const field of fieldsToApply) {
+      if (field in changes) {
+        (updateData as Record<string, unknown>)[field] = changes[field];
+      }
+    }
+    await db.calendarEvents.update(ev.id, updateData);
+  }
+
+  // Reconcile notifications for affected events
+  for (const ev of seriesEvents) {
+    const updatedEv = await db.calendarEvents.get(ev.id);
+    if (updatedEv) {
+      await reconcileNotifications(updatedEv);
+    }
+  }
+
+  await triggerImmediateCheckCycle();
+
+  // Return the updated source event
+  return (await db.calendarEvents.get(eventId))!;
 };
 
 /**

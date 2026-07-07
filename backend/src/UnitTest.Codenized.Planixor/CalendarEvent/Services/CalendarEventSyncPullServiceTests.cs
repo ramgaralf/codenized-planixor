@@ -59,6 +59,7 @@ public sealed class CalendarEventSyncPullServiceTests
             480,
             "Test notes",
             "[]",
+            string.Empty,
             lastSyncedAt,
             false);
 
@@ -157,6 +158,7 @@ public sealed class CalendarEventSyncPullServiceTests
             60,
             null,
             "[]",
+            string.Empty,
             DateTime.UtcNow,
             false);
 
@@ -202,6 +204,7 @@ public sealed class CalendarEventSyncPullServiceTests
             480,
             "Meeting notes",
             "[]",
+            string.Empty,
             modifiedAt,
             false);
 
@@ -260,6 +263,7 @@ public sealed class CalendarEventSyncPullServiceTests
             3000,
             "Multi-day reminder",
             "[]",
+            string.Empty,
             modifiedAt,
             false);
 
@@ -318,6 +322,7 @@ public sealed class CalendarEventSyncPullServiceTests
             480,
             null,
             "[]",
+            string.Empty,
             modifiedAt,
             true);
 

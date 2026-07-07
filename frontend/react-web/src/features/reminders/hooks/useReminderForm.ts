@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as reminderService from '@features/reminders/services/reminderService';
 import {
@@ -6,33 +6,75 @@ import {
   propagateReminderChanges,
 } from '@features/reminders/services/reminderPropagation';
 import {
+  checkSeriesPropagationNeeded,
+  propagateNeverToRepeating,
+  propagateRepeatingToNever,
+  propagateRepeatingToRepeating,
+} from '@features/reminders/services/seriesPropagation';
+import {
   validateReminder,
   type ReminderValidationErrors,
 } from '@features/reminders/services/reminderValidation';
 
+import type { SeriesFrequency } from '@features/reminders/services/reminderValidation';
+
 const DEBOUNCE_MS = 1000;
 
+/**
+ * Computes the default end date for a given frequency.
+ * Weekly → current date + 1 year
+ * Monthly → current date + 5 years
+ * Yearly → current date + 50 years
+ */
+const computeDefaultEndDate = (frequency: SeriesFrequency): string | null => {
+  if (frequency === 'never') return null;
+  const now = new Date();
+  let years = 1;
+  if (frequency === 'monthly') years = 5;
+  if (frequency === 'yearly') years = 50;
+  const target = new Date(now.getFullYear() + years, now.getMonth(), now.getDate());
+  const y = target.getFullYear();
+  const m = String(target.getMonth() + 1).padStart(2, '0');
+  const d = String(target.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 export interface UseReminderFormOptions {
-  initialValues?: { name: string; icon: string; backgroundColor: string };
+  initialValues?: { name: string; icon: string; backgroundColor: string; seriesFrequency?: SeriesFrequency; seriesEndDate?: string | null };
   reminderId?: string;
   onSuccess: () => void;
+}
+
+export interface SeriesPropagationState {
+  isOpen: boolean;
+  previousFrequency: SeriesFrequency;
+  newFrequency: SeriesFrequency;
+  affectedCount: number;
 }
 
 export interface UseReminderFormReturn {
   name: string;
   icon: string;
   backgroundColor: string;
+  seriesFrequency: SeriesFrequency;
+  seriesEndDate: string | null;
   errors: ReminderValidationErrors;
   isValid: boolean;
   isSaving: boolean;
   saveError: string | null;
+  hasFrequencyChanged: boolean;
   setName: (value: string) => void;
   setIcon: (value: string) => void;
   setBackgroundColor: (value: string) => void;
+  setSeriesFrequency: (value: SeriesFrequency) => void;
+  setSeriesEndDate: (value: string | null) => void;
   handleSubmit: () => Promise<void>;
   propagationState: { isOpen: boolean; affectedCount: number };
   confirmPropagation: () => Promise<void>;
   declinePropagation: () => void;
+  seriesPropagationState: SeriesPropagationState;
+  confirmSeriesPropagation: () => Promise<void>;
+  declineSeriesPropagation: () => void;
 }
 
 export const useReminderForm = (options: UseReminderFormOptions): UseReminderFormReturn => {
@@ -43,6 +85,12 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
   const [backgroundColor, setBackgroundColorState] = useState(
     initialValues?.backgroundColor ?? '',
   );
+  const [seriesFrequency, setSeriesFrequencyState] = useState<SeriesFrequency>(
+    initialValues?.seriesFrequency ?? 'never',
+  );
+  const [seriesEndDate, setSeriesEndDateState] = useState<string | null>(
+    initialValues?.seriesEndDate ?? null,
+  );
   const [errors, setErrors] = useState<ReminderValidationErrors>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -50,6 +98,17 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
     isOpen: boolean;
     affectedCount: number;
   }>({ isOpen: false, affectedCount: 0 });
+  const [seriesPropagationState, setSeriesPropagationState] = useState<SeriesPropagationState>({
+    isOpen: false,
+    previousFrequency: 'never',
+    newFrequency: 'never',
+    affectedCount: 0,
+  });
+
+  // Track original frequency for change detection (used by propagation logic)
+  const originalFrequencyRef = useRef<SeriesFrequency>(
+    initialValues?.seriesFrequency ?? 'never',
+  );
 
   const debounceTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
@@ -59,6 +118,9 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
       setNameState(initialValues.name);
       setIconState(initialValues.icon);
       setBackgroundColorState(initialValues.backgroundColor);
+      setSeriesFrequencyState(initialValues.seriesFrequency ?? 'never');
+      setSeriesEndDateState(initialValues.seriesEndDate ?? null);
+      originalFrequencyRef.current = initialValues.seriesFrequency ?? 'never';
     }
   }, [initialValues]);
 
@@ -73,7 +135,7 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
   }, []);
 
   const validateField = useCallback(
-    (field: keyof ReminderValidationErrors, currentValues: { name: string; icon: string; backgroundColor: string }) => {
+    (field: keyof ReminderValidationErrors, currentValues: { name: string; icon: string; backgroundColor: string; seriesFrequency: string }) => {
       const result = validateReminder(currentValues);
 
       if (result.isValid) {
@@ -98,7 +160,7 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
   );
 
   const scheduleValidation = useCallback(
-    (field: keyof ReminderValidationErrors, currentValues: { name: string; icon: string; backgroundColor: string }) => {
+    (field: keyof ReminderValidationErrors, currentValues: { name: string; icon: string; backgroundColor: string; seriesFrequency: string }) => {
       const existing = debounceTimersRef.current.get(field);
       if (existing) {
         clearTimeout(existing);
@@ -125,10 +187,10 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
         delete next.name;
         return next;
       });
-      const currentValues = { name: value, icon, backgroundColor };
+      const currentValues = { name: value, icon, backgroundColor, seriesFrequency };
       scheduleValidation('name', currentValues);
     },
-    [icon, backgroundColor, scheduleValidation],
+    [icon, backgroundColor, seriesFrequency, scheduleValidation],
   );
 
   const setIcon = useCallback(
@@ -142,10 +204,10 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
         delete next.icon;
         return next;
       });
-      const currentValues = { name, icon: value, backgroundColor };
+      const currentValues = { name, icon: value, backgroundColor, seriesFrequency };
       scheduleValidation('icon', currentValues);
     },
-    [name, backgroundColor, scheduleValidation],
+    [name, backgroundColor, seriesFrequency, scheduleValidation],
   );
 
   const setBackgroundColor = useCallback(
@@ -159,14 +221,76 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
         delete next.backgroundColor;
         return next;
       });
-      const currentValues = { name, icon, backgroundColor: value };
+      const currentValues = { name, icon, backgroundColor: value, seriesFrequency };
       scheduleValidation('backgroundColor', currentValues);
     },
-    [name, icon, scheduleValidation],
+    [name, icon, seriesFrequency, scheduleValidation],
   );
 
+  const setSeriesFrequency = useCallback(
+    (value: SeriesFrequency) => {
+      setSeriesFrequencyState(value);
+      setSaveError(null);
+      // Compute default end date when frequency changes
+      const defaultEndDate = computeDefaultEndDate(value);
+      setSeriesEndDateState(defaultEndDate);
+      // Clear field error immediately on input change
+      setErrors((prev) => {
+        if (!prev.seriesFrequency) return prev;
+        const next = { ...prev };
+        delete next.seriesFrequency;
+        return next;
+      });
+      const currentValues = { name, icon, backgroundColor, seriesFrequency: value };
+      scheduleValidation('seriesFrequency', currentValues);
+    },
+    [name, icon, backgroundColor, scheduleValidation],
+  );
+
+  const setSeriesEndDate = useCallback(
+    (value: string | null) => {
+      setSeriesEndDateState(value);
+      setSaveError(null);
+      setErrors((prev) => {
+        if (!prev.seriesEndDate) return prev;
+        const next = { ...prev };
+        delete next.seriesEndDate;
+        return next;
+      });
+    },
+    [],
+  );
+
+  const handlePostSavePropagation = useCallback(async (id: string) => {
+    const frequencyChanged = seriesFrequency !== originalFrequencyRef.current;
+
+    if (frequencyChanged) {
+      // Series frequency change takes priority (Req 3.8, 3.9)
+      const count = await checkSeriesPropagationNeeded(id);
+      if (count > 0) {
+        setSeriesPropagationState({
+          isOpen: true,
+          previousFrequency: originalFrequencyRef.current,
+          newFrequency: seriesFrequency,
+          affectedCount: count,
+        });
+      } else {
+        // No events in current year → save directly (Req 3.7)
+        onSuccess();
+      }
+    } else {
+      // No frequency change → fall back to existing display-field propagation
+      const count = await checkReminderPropagationNeeded(id);
+      if (count > 0) {
+        setPropagationState({ isOpen: true, affectedCount: count });
+      } else {
+        onSuccess();
+      }
+    }
+  }, [seriesFrequency, onSuccess]);
+
   const handleSubmit = useCallback(async () => {
-    const currentValues = { name, icon, backgroundColor };
+    const currentValues = { name, icon, backgroundColor, seriesFrequency, seriesEndDate };
     const result = validateReminder(currentValues);
 
     if (!result.isValid) {
@@ -199,13 +323,7 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
           return;
         }
         await reminderService.update(reminderId, currentValues);
-
-        const count = await checkReminderPropagationNeeded(reminderId);
-        if (count > 0) {
-          setPropagationState({ isOpen: true, affectedCount: count });
-        } else {
-          onSuccess();
-        }
+        await handlePostSavePropagation(reminderId);
       } else {
         await reminderService.create(currentValues);
         onSuccess();
@@ -216,7 +334,7 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
     } finally {
       setIsSaving(false);
     }
-  }, [name, icon, backgroundColor, reminderId, onSuccess]);
+  }, [name, icon, backgroundColor, seriesFrequency, seriesEndDate, reminderId, onSuccess, handlePostSavePropagation]);
 
   const confirmPropagation = useCallback(async () => {
     await propagateReminderChanges(reminderId!);
@@ -229,6 +347,31 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
     onSuccess();
   }, [onSuccess]);
 
+  const confirmSeriesPropagation = useCallback(async () => {
+    const { previousFrequency, newFrequency } = seriesPropagationState;
+
+    if (previousFrequency === 'never' && newFrequency !== 'never') {
+      await propagateNeverToRepeating(reminderId!, newFrequency as 'weekly' | 'monthly' | 'yearly');
+    } else if (previousFrequency !== 'never' && newFrequency === 'never') {
+      await propagateRepeatingToNever(reminderId!);
+    } else if (previousFrequency !== 'never' && newFrequency !== 'never') {
+      await propagateRepeatingToRepeating(reminderId!, newFrequency as 'weekly' | 'monthly' | 'yearly');
+    }
+
+    setSeriesPropagationState({ isOpen: false, previousFrequency: 'never', newFrequency: 'never', affectedCount: 0 });
+    onSuccess();
+  }, [reminderId, seriesPropagationState, onSuccess]);
+
+  const declineSeriesPropagation = useCallback(() => {
+    setSeriesPropagationState({ isOpen: false, previousFrequency: 'never', newFrequency: 'never', affectedCount: 0 });
+    onSuccess();
+  }, [onSuccess]);
+
+  const hasFrequencyChanged = useMemo(
+    () => seriesFrequency !== originalFrequencyRef.current,
+    [seriesFrequency],
+  );
+
   const isValid =
     name.trim().length > 0 &&
     icon.length > 0 &&
@@ -239,16 +382,24 @@ export const useReminderForm = (options: UseReminderFormOptions): UseReminderFor
     name,
     icon,
     backgroundColor,
+    seriesFrequency,
+    seriesEndDate,
     errors,
     isValid,
     isSaving,
     saveError,
+    hasFrequencyChanged,
     setName,
     setIcon,
     setBackgroundColor,
+    setSeriesFrequency,
+    setSeriesEndDate,
     handleSubmit,
     propagationState,
     confirmPropagation,
     declinePropagation,
+    seriesPropagationState,
+    confirmSeriesPropagation,
+    declineSeriesPropagation,
   };
 };

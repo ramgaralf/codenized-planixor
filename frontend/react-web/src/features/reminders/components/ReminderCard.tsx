@@ -69,37 +69,54 @@ export const ReminderCard = ({
           padding: '12px 16px',
         }}
       >
-        {/* First line: icon + name + deactivated badge */}
+        {/* Icon + name/frequency + deactivated badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
           <span aria-hidden="true" style={{ fontSize: '18px', flexShrink: 0 }}>
             {reminder.icon}
           </span>
-          <span
-            style={{
-              fontWeight: 600,
-              color: 'var(--color-text-primary)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {reminder.name}
-          </span>
-          {!reminder.isActive && (
-            <span
-              style={{
-                flexShrink: 0,
-                borderRadius: '9999px',
-                padding: '2px 8px',
-                fontSize: '11px',
-                fontWeight: 500,
-                backgroundColor: 'var(--color-border)',
-                color: 'var(--color-text-secondary)',
-              }}
-            >
-              {t('reminder.badge.deactivated')}
-            </span>
-          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: 'var(--color-text-primary)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {reminder.name}
+              </span>
+              {!reminder.isActive && (
+                <span
+                  style={{
+                    flexShrink: 0,
+                    borderRadius: '9999px',
+                    padding: '2px 8px',
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    backgroundColor: 'var(--color-border)',
+                    color: 'var(--color-text-secondary)',
+                  }}
+                >
+                  {t('reminder.badge.deactivated')}
+                </span>
+              )}
+            </div>
+            {reminder.seriesFrequency && reminder.seriesFrequency !== 'never' && (
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  lineHeight: '1.4',
+                  color: 'var(--color-text-secondary)',
+                  marginTop: '2px',
+                }}
+              >
+                {t(`reminder.series.${reminder.seriesFrequency}`)}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Action controls */}

@@ -105,6 +105,8 @@ export interface BackupReminder {
   icon: string;
   backgroundColor: string;
   isActive: boolean;
+  seriesFrequency: string;
+  seriesEndDate: string | null;
   createdAt: string;
   modifiedAt: string;
   syncedAt: string | null;
@@ -128,6 +130,7 @@ export interface BackupCalendarEvent {
   totalHours: number;
   notes: string | null;
   alertOffsets: number[];
+  seriesId: string | null;
   modifiedAt: string;
   syncedAt: string | null;
   isDeleted: boolean;

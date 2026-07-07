@@ -159,6 +159,8 @@ public sealed class ReminderSyncPropertyTests
             input.Icon,
             input.BackgroundColor,
             input.IsActive,
+            "never",
+            string.Empty,
             input.CreatedAt,
             input.ModifiedAt,
             input.IsDeleted);
@@ -204,6 +206,8 @@ public sealed class ReminderSyncPropertyTests
             ReminderIcon.Create(ValidEmojis[0]),
             ReminderColor.Create(PaletteColors[0]),
             true,
+            "never",
+            string.Empty,
             input.CreatedAt,
             input.CreatedAt,
             false);
@@ -219,6 +223,8 @@ public sealed class ReminderSyncPropertyTests
             input.Icon,
             input.BackgroundColor,
             input.IsActive,
+            "never",
+            string.Empty,
             input.ModifiedAt,
             input.IsDeleted);
 
@@ -260,6 +266,8 @@ public sealed class ReminderSyncPropertyTests
             icon,
             color,
             true,
+            "never",
+            string.Empty,
             DateTime.UtcNow.AddDays(-10),
             localModifiedAt,
             false);
@@ -271,6 +279,8 @@ public sealed class ReminderSyncPropertyTests
             icon,
             color,
             true,
+            "never",
+            string.Empty,
             DateTime.UtcNow.AddDays(-10),
             remoteModifiedAt,
             false);

@@ -88,6 +88,7 @@ data class EventFormUiState(
     val formError: String? = null,
     val isSubmitting: Boolean = false,
     val isLoading: Boolean = false,
+    val seriesId: String = "",
 )
 
 /**

@@ -62,6 +62,9 @@ export interface CalendarEvent {
    * Existing records without this field are treated as [] (no migration needed — Dexie is schema-less for non-indexed fields).
    */
   alertOffsets: number[];
+
+  /** Series identifier — shared by all events in the same series. null for non-series events */
+  seriesId: string | null;
 }
 
 /**

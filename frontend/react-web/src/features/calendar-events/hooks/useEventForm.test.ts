@@ -481,6 +481,7 @@ describe('useEventForm', () => {
         endTime: 960,
         notes: 'Morning shift',
         alertOffsets: [],
+        seriesId: null,
       });
       expect(onSuccess).toHaveBeenCalled();
     });

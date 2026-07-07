@@ -31,6 +31,8 @@ interface ReminderSyncRecord {
   icon: string;
   backgroundColor: string;
   isActive: boolean;
+  seriesFrequency: string;
+  seriesEndDate: string | null;
   createdAt: string;
   modifiedAt: string;
   isDeleted: boolean;
@@ -363,6 +365,8 @@ const syncReminders = async (serverUrl: string, apiKey: string, apiBasePath: str
           icon: remote.icon,
           backgroundColor: remote.backgroundColor,
           isActive: remote.isActive,
+          seriesFrequency: (remote.seriesFrequency || 'never') as 'never' | 'weekly' | 'monthly' | 'yearly',
+          seriesEndDate: remote.seriesEndDate ?? null,
           createdAt: new Date(remote.createdAt),
           modifiedAt: new Date(remote.modifiedAt),
           syncedAt: now,
@@ -406,6 +410,8 @@ const pushReminders = async (serverUrl: string, apiKey: string, apiBasePath: str
       icon: r.icon,
       backgroundColor: r.backgroundColor,
       isActive: r.isActive,
+      seriesFrequency: r.seriesFrequency,
+      seriesEndDate: r.seriesEndDate ?? null,
       createdAt: r.createdAt.toISOString(),
       modifiedAt: r.modifiedAt.toISOString(),
       isDeleted: r.isDeleted,

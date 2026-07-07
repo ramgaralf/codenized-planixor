@@ -13,6 +13,7 @@ import { EventForm } from './components/EventForm';
 import { MonthDateNavigator } from './components/MonthDateNavigator';
 import { MonthView } from './components/MonthView';
 import { PrerequisiteModal } from './components/PrerequisiteModal';
+import { SeriesActionDialog } from './components/SeriesActionDialog';
 import { ViewSelector } from './components/ViewSelector';
 import { WeekDateNavigator } from './components/WeekDateNavigator';
 import { WeekView } from './components/WeekView';
@@ -22,6 +23,7 @@ import { useCalendarEvents } from './hooks/useCalendarEvents';
 import { useEventFiltering } from './hooks/useEventFiltering';
 import { usePrerequisiteCheck } from './hooks/usePrerequisiteCheck';
 import type { CalendarEventDisplay } from './models';
+import * as calendarEventService from './services/calendarEventService';
 import { getEffectiveTimes } from './utils';
 
 /**
@@ -59,6 +61,8 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
   const [viewState, setViewState] = useState<ViewState>({ mode: 'calendar' });
   const [deleteTarget, setDeleteTarget] = useState<CalendarEventDisplay | null>(null);
   const [showPrerequisiteModal, setShowPrerequisiteModal] = useState(false);
+  /** Series action dialog state for delete flow */
+  const [seriesDeleteTarget, setSeriesDeleteTarget] = useState<CalendarEventDisplay | null>(null);
   /** Date for Day_Action_Modal */
   const [dayActionModalDate, setDayActionModalDate] = useState<string | null>(null);
   /** Events for the Day_Action_Modal — split by type */
@@ -230,9 +234,39 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
 
   const handleDeleteFromDetail = useCallback(() => {
     if (viewState.mode === 'detail') {
-      setDeleteTarget(viewState.event);
+      if (viewState.event.seriesId) {
+        // Series event → show SeriesActionDialog first
+        setSeriesDeleteTarget(viewState.event);
+      } else {
+        // Non-series event → go directly to ConfirmationModal
+        setDeleteTarget(viewState.event);
+      }
     }
   }, [viewState]);
+
+  const handleSeriesDeleteThisEvent = useCallback(() => {
+    if (seriesDeleteTarget) {
+      setDeleteTarget(seriesDeleteTarget);
+      setSeriesDeleteTarget(null);
+    }
+  }, [seriesDeleteTarget]);
+
+  const handleSeriesDeleteAllInSeries = useCallback(async () => {
+    if (seriesDeleteTarget) {
+      try {
+        await calendarEventService.softDeleteSeries(seriesDeleteTarget.id);
+        setSeriesDeleteTarget(null);
+        backToCalendar();
+      } catch (err) {
+        console.error('Failed to delete series events:', err);
+        setSeriesDeleteTarget(null);
+      }
+    }
+  }, [seriesDeleteTarget, backToCalendar]);
+
+  const handleSeriesDeleteCancel = useCallback(() => {
+    setSeriesDeleteTarget(null);
+  }, []);
 
   const handlePrerequisiteModalDismiss = useCallback(() => {
     setShowPrerequisiteModal(false);
@@ -406,6 +440,16 @@ export const CalendarEvents = ({ showCreateForm, onCreateFormClose }: CalendarEv
           eventId={deleteTarget.id}
           onConfirm={handleDeleteConfirm}
           onDismiss={handleDeleteDismiss}
+        />
+      )}
+
+      {seriesDeleteTarget && (
+        <SeriesActionDialog
+          isOpen={true}
+          action="delete"
+          onThisEvent={handleSeriesDeleteThisEvent}
+          onAllInSeries={handleSeriesDeleteAllInSeries}
+          onCancel={handleSeriesDeleteCancel}
         />
       )}
 

@@ -78,6 +78,11 @@ public sealed class CalendarEventConfiguration : IEntityTypeConfiguration<Calend
             .HasDefaultValue("[]")
             .IsRequired();
 
+        builder.Property(e => e.SeriesId)
+            .HasColumnType("varchar(36)")
+            .HasDefaultValue(string.Empty)
+            .IsRequired();
+
         builder.Property(e => e.ModifiedAt)
             .HasColumnType("datetime(6)")
             .IsRequired();

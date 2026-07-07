@@ -18,3 +18,24 @@
 -keep class dagger.hilt.** { *; }
 -keep class javax.inject.** { *; }
 -keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
+
+
+# Keep sync DTO classes (deserialized by Gson via reflection)
+-keep class com.codenized.planixor.data.sync.** { *; }
+
+# Keep Room entities (reflective access by Room runtime)
+-keep class com.codenized.planixor.data.local.*Entity { *; }
+
+# Keep domain models used in serialization/backup
+-keep class com.codenized.planixor.domain.model.** { *; }
+-keep class com.codenized.planixor.domain.backup.** { *; }
+
+# Gson TypeToken (needed for generic type preservation)
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
+# OkHttp platform warnings
+-dontwarn okhttp3.internal.platform.**
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**

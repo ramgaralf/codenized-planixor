@@ -60,6 +60,16 @@ public sealed class ReminderConfiguration : IEntityTypeConfiguration<Reminder>
             .HasDefaultValue(true)
             .IsRequired();
 
+        builder.Property(r => r.SeriesFrequency)
+            .HasColumnType("varchar(10)")
+            .HasDefaultValue("never")
+            .IsRequired();
+
+        builder.Property(r => r.SeriesEndDate)
+            .HasColumnType("varchar(10)")
+            .HasDefaultValue(string.Empty)
+            .IsRequired();
+
         builder.Property(r => r.CreatedAt)
             .HasColumnType("datetime(6)")
             .IsRequired();

@@ -36,6 +36,7 @@ export interface CalendarEventSyncRecord {
   totalHours: number;
   notes: string | null;
   alertOffsets: number[];
+  seriesId: string | null;
   modifiedAt: string;
   isDeleted: boolean;
 }
@@ -112,6 +113,7 @@ export const toSyncRecord = (event: CalendarEvent): CalendarEventSyncRecord => (
   totalHours: event.totalHours,
   notes: event.notes,
   alertOffsets: event.alertOffsets ?? [],
+  seriesId: event.seriesId ?? null,
   modifiedAt: event.modifiedAt.toISOString(),
   isDeleted: event.isDeleted,
 });
@@ -134,6 +136,7 @@ export const fromSyncRecord = (
   totalHours: record.totalHours,
   notes: record.notes,
   alertOffsets: record.alertOffsets ?? [],
+  seriesId: record.seriesId ?? null,
   modifiedAt: new Date(record.modifiedAt),
   syncedAt,
   isDeleted: record.isDeleted,

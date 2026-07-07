@@ -164,6 +164,17 @@
     <string name="reminder_card_toggle_active">Activar o desactivar recordatorio</string>
     <string name="reminder_card_delete">Eliminar recordatorio</string>
 
+    <!-- Reminder Series Frequency Labels -->
+    <string name="reminder_series_weekly">Cada semana</string>
+    <string name="reminder_series_monthly">Cada mes</string>
+    <string name="reminder_series_yearly">Cada año</string>
+
+    <!-- Reminder Series Propagation Dialog -->
+    <string name="reminder_propagation_series_title">Frecuencia actualizada</string>
+    <string name="reminder_propagation_series_description">La frecuencia del recordatorio \"%1$s\" cambió de %2$s a %3$s. %4$d evento(s) del calendario en %5$d podrían verse afectados.</string>
+    <string name="reminder_propagation_series_confirm">Actualizar eventos</string>
+    <string name="reminder_propagation_series_decline">Mantener existentes</string>
+
     <!-- Reminders Screen -->
     <string name="reminder_screen_title">Recordatorios</string>
     <string name="reminder_empty">No hay recordatorios disponibles</string>
@@ -189,6 +200,13 @@
     <string name="reminder_form_color_hint">Los colores resaltados son los recomendados para tu tema actual</string>
     <string name="reminder_form_error_save">No se pudo guardar el recordatorio</string>
 
+    <!-- Reminder Form Frequency -->
+    <string name="reminder_form_frequency_label">Repetición</string>
+    <string name="reminder_form_frequency_never">Nunca</string>
+    <string name="reminder_form_frequency_weekly">Cada semana</string>
+    <string name="reminder_form_frequency_monthly">Cada mes</string>
+    <string name="reminder_form_frequency_yearly">Cada año</string>
+
     <!-- Reminder Form Validation -->
     <string name="reminder_validation_name_required">El nombre es obligatorio</string>
     <string name="reminder_validation_name_max_length">El nombre debe tener 50 caracteres o menos</string>
@@ -202,6 +220,7 @@
 
     <!-- Emoji Picker Dialog -->
     <string name="emoji_picker_title">Seleccionar ícono</string>
+    <string name="emoji_picker_search">Buscar emoji…</string>
     <string name="emoji_picker_dismiss">Cerrar</string>
 
     <!-- Calendar Event Form -->
@@ -395,4 +414,15 @@
     <string name="shift_mode_deleted_item">[Eliminado]</string>
     <string name="shift_mode_date_format_es">dd \'de\' MMMM \'de\' yyyy</string>
     <string name="shift_mode_date_format_en">MMMM dd, yyyy</string>
+
+    <!-- Series Action Dialog -->
+    <string name="calendar_series_edit_title">Editar evento de serie</string>
+    <string name="calendar_series_edit_description">Este evento pertenece a una serie. ¿Deseas editar solo este evento o todos los eventos futuros de la serie?</string>
+    <string name="calendar_series_delete_title">Eliminar evento de serie</string>
+    <string name="calendar_series_delete_description">Este evento pertenece a una serie. ¿Deseas eliminar solo este evento o todos los eventos futuros de la serie?</string>
+    <string name="calendar_series_only_this">Solo este evento</string>
+    <string name="calendar_series_all_in_series">Todos los eventos futuros de la serie</string>
+
+    <!-- Reminder Form End Date -->
+    <string name="reminder_form_end_date_label">Repetir hasta</string>
 </resources>

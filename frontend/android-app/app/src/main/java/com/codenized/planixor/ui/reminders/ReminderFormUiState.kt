@@ -16,6 +16,8 @@ data class ReminderFormUiState(
     val name: String = "",
     val icon: String = "",
     val backgroundColor: String = "",
+    val seriesFrequency: String = "never",
+    val seriesEndDate: String = "",
     val nameError: String? = null,
     val iconError: String? = null,
     val backgroundColorError: String? = null,

@@ -14,15 +14,25 @@ android {
         applicationId = "com.codenized.planixor"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.1.0"
+        versionCode = 5
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("PLANIXOR_KEYSTORE_PATH") ?: "keystore/release.keystore")
+            storePassword = System.getenv("PLANIXOR_KEYSTORE_PASSWORD") ?: ""
+            keyAlias = System.getenv("PLANIXOR_KEY_ALIAS") ?: "planixor"
+            keyPassword = System.getenv("PLANIXOR_KEY_PASSWORD") ?: ""
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

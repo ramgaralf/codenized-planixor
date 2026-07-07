@@ -80,14 +80,14 @@ fun EventCard(
 
         // Line 2: startDay + startTime
         Text(
-            text = "${event.startDay} $startTimeLabel",
+            text = "${formatDateLocalized(event.startDay)} $startTimeLabel",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         // Line 3: endDay + endTime
         Text(
-            text = "${event.endDay} $endTimeLabel",
+            text = "${formatDateLocalized(event.endDay)} $endTimeLabel",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -164,6 +164,21 @@ internal fun parseHexColorSafe(hex: String): Color {
         }
     } catch (_: IllegalArgumentException) {
         Color.Gray
+    }
+}
+
+/**
+ * Formats an ISO date string (YYYY-MM-DD) to a localized short date format.
+ * E.g., "2024-06-15" → "15 jun 2024" (Spanish) or "Jun 15, 2024" (English).
+ * Falls back to the raw string if parsing fails.
+ */
+internal fun formatDateLocalized(isoDate: String): String {
+    return try {
+        val date = java.time.LocalDate.parse(isoDate)
+        val formatter = java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM)
+        date.format(formatter)
+    } catch (_: Exception) {
+        isoDate
     }
 }
 

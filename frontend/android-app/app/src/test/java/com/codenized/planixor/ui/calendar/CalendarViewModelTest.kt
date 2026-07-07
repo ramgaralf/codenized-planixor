@@ -35,6 +35,7 @@ class CalendarViewModelTest {
     private lateinit var shiftRepository: ShiftRepository
     private lateinit var reminderRepository: ReminderRepository
     private lateinit var calendarEventRepository: CalendarEventRepository
+    private lateinit var calendarEventDao: com.codenized.planixor.data.local.CalendarEventDao
     private lateinit var notificationService: NotificationService
     private lateinit var shiftModeSettingRepository: ShiftModeSettingRepository
     private lateinit var viewModel: CalendarViewModel
@@ -49,6 +50,7 @@ class CalendarViewModelTest {
         shiftRepository = mockk(relaxed = true)
         reminderRepository = mockk(relaxed = true)
         calendarEventRepository = mockk(relaxed = true)
+        calendarEventDao = mockk(relaxed = true)
         notificationService = mockk(relaxed = true)
         shiftModeSettingRepository = mockk(relaxed = true)
 
@@ -64,7 +66,7 @@ class CalendarViewModelTest {
     }
 
     private fun createViewModel(): CalendarViewModel {
-        return CalendarViewModel(preferencesRepository, shiftRepository, reminderRepository, calendarEventRepository, notificationService, shiftModeSettingRepository)
+        return CalendarViewModel(preferencesRepository, shiftRepository, reminderRepository, calendarEventRepository, calendarEventDao, notificationService, shiftModeSettingRepository)
     }
 
     @Test

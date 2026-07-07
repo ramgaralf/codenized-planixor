@@ -507,6 +507,8 @@ private fun CalendarEventFormDestination(
     val formState by viewModel.formState.collectAsStateWithLifecycle()
     val isEditMode = eventId != null
     val showDeleteDialogState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val showSeriesDeleteDialogState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val showSeriesEditDialogState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
     androidx.compose.runtime.LaunchedEffect(eventId) {
         if (eventId != null) {
@@ -531,20 +533,80 @@ private fun CalendarEventFormDestination(
         onAlertOffsetsChanged = viewModel::onAlertOffsetsChanged,
         onSave = {
             if (isEditMode) {
-                viewModel.updateEvent(eventId!!, onNavigateBack)
+                // Check if event belongs to a series — if so, show series dialog
+                if (formState.seriesId.isNotEmpty()) {
+                    showSeriesEditDialogState.value = true
+                } else {
+                    viewModel.updateEvent(eventId!!, onNavigateBack)
+                }
             } else {
                 viewModel.saveEvent(onNavigateBack)
             }
         },
         onCancel = onNavigateBack,
         onDelete = if (isEditMode) {
-            { showDeleteDialogState.value = true }
+            {
+                // Check if event belongs to a series — if so, show series dialog first
+                if (formState.seriesId.isNotEmpty()) {
+                    showSeriesDeleteDialogState.value = true
+                } else {
+                    showDeleteDialogState.value = true
+                }
+            }
         } else {
             null
         },
     )
 
-    // Delete confirmation dialog
+    // Series action dialog for delete flow
+    if (showSeriesDeleteDialogState.value && eventId != null) {
+        com.codenized.planixor.ui.components.SeriesActionDialog(
+            actionType = com.codenized.planixor.ui.components.SeriesActionType.Delete,
+            onOnlyThis = {
+                showSeriesDeleteDialogState.value = false
+                showDeleteDialogState.value = true
+            },
+            onAllInSeries = {
+                showSeriesDeleteDialogState.value = false
+                viewModel.deleteSeriesEvents(eventId, onNavigateBack)
+            },
+            onDismiss = { showSeriesDeleteDialogState.value = false },
+        )
+    }
+
+    // Series action dialog for edit flow
+    if (showSeriesEditDialogState.value && eventId != null) {
+        com.codenized.planixor.ui.components.SeriesActionDialog(
+            actionType = com.codenized.planixor.ui.components.SeriesActionType.Edit,
+            onOnlyThis = {
+                showSeriesEditDialogState.value = false
+                viewModel.updateEvent(eventId, onNavigateBack)
+            },
+            onAllInSeries = {
+                showSeriesEditDialogState.value = false
+                val state = formState
+                val startTime = if (state.startTimeHours != null && state.startTimeMinutes != null) {
+                    state.startTimeHours * 60 + state.startTimeMinutes
+                } else 0
+                val endTime = if (state.endTimeHours != null && state.endTimeMinutes != null) {
+                    state.endTimeHours * 60 + state.endTimeMinutes
+                } else 0
+                viewModel.updateSeriesEvents(
+                    eventId = eventId,
+                    eventType = state.eventType ?: "",
+                    eventTypeId = state.eventTypeId ?: "",
+                    startTime = startTime,
+                    endTime = endTime,
+                    notes = state.notes.ifBlank { null },
+                    alertOffsets = state.alertOffsets,
+                    onSuccess = onNavigateBack,
+                )
+            },
+            onDismiss = { showSeriesEditDialogState.value = false },
+        )
+    }
+
+    // Delete confirmation dialog (single event)
     if (showDeleteDialogState.value && eventId != null) {
         com.codenized.planixor.ui.calendar.DeleteConfirmationDialog(
             eventName = formState.derivedName.ifBlank { "Event" },

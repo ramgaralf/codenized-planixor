@@ -61,6 +61,18 @@ public sealed class Reminder
     public DateTime? SyncedAt { get; private set; }
 
     /// <summary>
+    /// Gets the series frequency for automatic calendar event generation.
+    /// Valid values: "never", "weekly", "monthly", "yearly".
+    /// </summary>
+    public string SeriesFrequency { get; private set; } = "never";
+
+    /// <summary>
+    /// Gets the series end date for limiting automatic calendar event generation.
+    /// ISO date format "YYYY-MM-DD". Empty string means no end date configured.
+    /// </summary>
+    public string SeriesEndDate { get; private set; } = string.Empty;
+
+    /// <summary>
     /// Gets a value indicating whether the reminder is soft-deleted.
     /// </summary>
     public bool IsDeleted { get; private set; }
@@ -107,6 +119,8 @@ public sealed class Reminder
     /// <param name="icon">The reminder icon.</param>
     /// <param name="backgroundColor">The reminder background color.</param>
     /// <param name="isActive">Whether the reminder is active.</param>
+    /// <param name="seriesFrequency">The series frequency value.</param>
+    /// <param name="seriesEndDate">The series end date (ISO format or empty).</param>
     /// <param name="createdAt">The creation timestamp (UTC).</param>
     /// <param name="modifiedAt">The modification timestamp (UTC).</param>
     /// <param name="isDeleted">Whether the reminder is soft-deleted.</param>
@@ -118,6 +132,8 @@ public sealed class Reminder
         ReminderIcon icon,
         ReminderColor backgroundColor,
         bool isActive,
+        string seriesFrequency,
+        string seriesEndDate,
         DateTime createdAt,
         DateTime modifiedAt,
         bool isDeleted)
@@ -130,6 +146,8 @@ public sealed class Reminder
             Icon = icon,
             BackgroundColor = backgroundColor,
             IsActive = isActive,
+            SeriesFrequency = seriesFrequency,
+            SeriesEndDate = seriesEndDate,
             CreatedAt = createdAt,
             ModifiedAt = modifiedAt,
             IsDeleted = isDeleted,
@@ -189,6 +207,8 @@ public sealed class Reminder
     /// <param name="icon">The reminder icon.</param>
     /// <param name="backgroundColor">The reminder background color.</param>
     /// <param name="isActive">Whether the reminder is active.</param>
+    /// <param name="seriesFrequency">The series frequency value.</param>
+    /// <param name="seriesEndDate">The series end date (ISO format or empty).</param>
     /// <param name="modifiedAt">The modification timestamp (UTC).</param>
     /// <param name="isDeleted">Whether the reminder is soft-deleted.</param>
     public void ApplySync(
@@ -196,6 +216,8 @@ public sealed class Reminder
         ReminderIcon icon,
         ReminderColor backgroundColor,
         bool isActive,
+        string seriesFrequency,
+        string seriesEndDate,
         DateTime modifiedAt,
         bool isDeleted)
     {
@@ -203,6 +225,8 @@ public sealed class Reminder
         this.Icon = icon;
         this.BackgroundColor = backgroundColor;
         this.IsActive = isActive;
+        this.SeriesFrequency = seriesFrequency;
+        this.SeriesEndDate = seriesEndDate;
         this.ModifiedAt = modifiedAt;
         this.IsDeleted = isDeleted;
         this.SyncedAt = DateTime.UtcNow;

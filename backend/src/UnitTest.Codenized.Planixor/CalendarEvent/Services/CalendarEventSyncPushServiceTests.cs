@@ -59,6 +59,7 @@ public sealed class CalendarEventSyncPushServiceTests
             0,
             null,
             [],
+            null,
             DateTime.UtcNow,
             false);
 
@@ -128,6 +129,7 @@ public sealed class CalendarEventSyncPushServiceTests
             480,
             "Updated notes",
             [],
+            null,
             newerTimestamp,
             false);
 
@@ -143,6 +145,7 @@ public sealed class CalendarEventSyncPushServiceTests
             480,
             "Old notes",
             "[]",
+            string.Empty,
             olderTimestamp,
             false);
 
@@ -186,6 +189,7 @@ public sealed class CalendarEventSyncPushServiceTests
             480,
             "Old notes",
             [],
+            null,
             olderTimestamp,
             false);
 
@@ -201,6 +205,7 @@ public sealed class CalendarEventSyncPushServiceTests
             480,
             "Current notes",
             "[]",
+            string.Empty,
             newerTimestamp,
             false);
 
@@ -270,6 +275,7 @@ public sealed class CalendarEventSyncPushServiceTests
             480,
             null,
             [],
+            null,
             DateTime.UtcNow,
             false);
 
@@ -306,6 +312,7 @@ public sealed class CalendarEventSyncPushServiceTests
             480,
             null,
             [],
+            null,
             DateTime.UtcNow,
             false);
 
@@ -345,6 +352,7 @@ public sealed class CalendarEventSyncPushServiceTests
             0,
             null,
             [],
+            null,
             DateTime.UtcNow,
             false);
 
@@ -381,6 +389,7 @@ public sealed class CalendarEventSyncPushServiceTests
             0,
             null,
             [],
+            null,
             DateTime.UtcNow,
             false);
 
@@ -417,6 +426,7 @@ public sealed class CalendarEventSyncPushServiceTests
             1440,
             null,
             [],
+            null,
             DateTime.UtcNow,
             false);
 
@@ -456,6 +466,7 @@ public sealed class CalendarEventSyncPushServiceTests
             -1,
             null,
             [],
+            null,
             DateTime.UtcNow,
             false);
 
@@ -551,6 +562,7 @@ public sealed class CalendarEventSyncPushServiceTests
             0,
             null,
             [],
+            null,
             DateTime.UtcNow,
             false);
 
@@ -584,6 +596,7 @@ public sealed class CalendarEventSyncPushServiceTests
             480,
             "Test notes",
             [],
+            null,
             DateTime.UtcNow,
             false);
     }

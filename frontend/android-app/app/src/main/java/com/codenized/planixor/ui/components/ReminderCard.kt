@@ -79,7 +79,7 @@ fun ReminderCard(
                     .alpha(contentAlpha),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Reminder info: icon + name + deactivated badge
+                // Reminder info: icon + name + frequency label + deactivated badge
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
@@ -89,20 +89,36 @@ fun ReminderCard(
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = reminder.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    if (!reminder.isActive) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.reminder_card_deactivated),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.error,
-                            fontWeight = FontWeight.Medium,
-                        )
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = reminder.name,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            if (!reminder.isActive) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.reminder_card_deactivated),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
+                        }
+                        if (reminder.seriesFrequency != "never" && reminder.seriesFrequency.isNotEmpty()) {
+                            Text(
+                                text = when (reminder.seriesFrequency) {
+                                    "weekly" -> stringResource(R.string.reminder_series_weekly)
+                                    "monthly" -> stringResource(R.string.reminder_series_monthly)
+                                    "yearly" -> stringResource(R.string.reminder_series_yearly)
+                                    else -> ""
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
 
@@ -196,6 +212,31 @@ private fun ReminderCardDeactivatedPreview() {
                 icon = "🌱",
                 backgroundColor = "#2563EB",
                 isActive = false,
+                seriesFrequency = "weekly",
+                createdAt = System.currentTimeMillis(),
+                modifiedAt = System.currentTimeMillis(),
+                syncedAt = null,
+                isDeleted = false,
+            ),
+            onEditClick = {},
+            onToggleActiveClick = {},
+            onDeleteClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ReminderCardWithFrequencyPreview() {
+    PlanixorTheme {
+        ReminderCard(
+            reminder = Reminder(
+                id = "3",
+                name = "Team Meeting",
+                icon = "📅",
+                backgroundColor = "#7C3AED",
+                isActive = true,
+                seriesFrequency = "monthly",
                 createdAt = System.currentTimeMillis(),
                 modifiedAt = System.currentTimeMillis(),
                 syncedAt = null,

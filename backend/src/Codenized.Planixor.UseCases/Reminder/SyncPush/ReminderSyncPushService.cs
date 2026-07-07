@@ -36,6 +36,14 @@ public sealed class ReminderSyncPushService : IInteractorService<ReminderSyncPus
         this.logger = logger;
     }
 
+    private static readonly HashSet<string> ValidFrequencies = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "never",
+        "weekly",
+        "monthly",
+        "yearly",
+    };
+
     /// <summary>
     /// Processes the reminder sync push request by mapping DTOs to entities and upserting them.
     /// </summary>
@@ -51,6 +59,8 @@ public sealed class ReminderSyncPushService : IInteractorService<ReminderSyncPus
                 "Batch size exceeds maximum of 100.");
         }
 
+        this.ValidateSeriesFrequencies(request.Records);
+
         this.logger.LogInformation(
             "Processing reminder sync push for user {UserId} with {Count} reminders.",
             request.UserId,
@@ -64,6 +74,8 @@ public sealed class ReminderSyncPushService : IInteractorService<ReminderSyncPus
                 ReminderIcon.Create(item.Icon),
                 ReminderColor.Create(item.BackgroundColor),
                 item.IsActive,
+                string.IsNullOrWhiteSpace(item.SeriesFrequency) ? "never" : item.SeriesFrequency,
+                item.SeriesEndDate ?? string.Empty,
                 item.CreatedAt,
                 item.ModifiedAt,
                 item.IsDeleted))
@@ -77,5 +89,20 @@ public sealed class ReminderSyncPushService : IInteractorService<ReminderSyncPus
             reminders.Count);
 
         return new ReminderSyncPushResponse(reminders.Count);
+    }
+
+    private void ValidateSeriesFrequencies(List<ReminderSyncRecord> records)
+    {
+        foreach (ReminderSyncRecord record in records)
+        {
+            if (!string.IsNullOrWhiteSpace(record.SeriesFrequency)
+                && !ValidFrequencies.Contains(record.SeriesFrequency))
+            {
+                throw new BadRequestException(
+                    "INVALID_SERIES_FREQUENCY",
+                    "Invalid Series Frequency",
+                    $"The seriesFrequency value '{record.SeriesFrequency}' is not valid. Accepted values are: never, weekly, monthly, yearly.");
+            }
+        }
     }
 }

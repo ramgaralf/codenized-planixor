@@ -1,0 +1,29 @@
+{
+  "pbtResults": {
+    "2.3 Write property tests for series generator (React Web)": {
+      "status": "passed",
+      "lastRunTimestamp": 1783347865719
+    },
+    "2.4 Write property tests for occurrence builder (React Web)": {
+      "status": "passed",
+      "lastRunTimestamp": 1783347871541
+    },
+    "1.3 Write property tests for backend SeriesFrequency validation and sync": {
+      "status": "passed",
+      "lastRunTimestamp": 1783347885203
+    },
+    "10.4 Write property tests for Android SeriesGenerator": {
+      "status": "passed",
+      "lastRunTimestamp": 1783348350807
+    },
+    "3.4 Write property test for frequency persistence round-trip": {
+      "status": "passed",
+      "lastRunTimestamp": 1783348532924
+    },
+    "6.4 Write property tests for series propagation logic": {
+      "status": "passed",
+      "lastRunTimestamp": 1783349990404
+    }
+  },
+  "executionHistory": {}
+}
