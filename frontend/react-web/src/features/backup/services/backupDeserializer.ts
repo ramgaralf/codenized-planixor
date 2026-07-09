@@ -11,7 +11,88 @@ import type {
 } from '../models';
 
 /**
+ * Detects whether the parsed JSON uses the legacy minified key format.
+ * Legacy format uses single-letter keys: root has "a" (metadata) and "b" (data).
+ */
+const isLegacyFormat = (parsed: Record<string, unknown>): boolean => {
+  return 'a' in parsed && 'b' in parsed && !('metadata' in parsed);
+};
+
+/**
+ * Converts a legacy minified backup to the current format structure.
+ *
+ * Legacy key mapping:
+ * - Root: a=metadata, b=data
+ * - Metadata: a=createdAt
+ * - Data: a=calendarEvents, b=notificationRecords, c=annualHoursConfig, d=shifts, e=reminders, f=syncConfig
+ * - CalendarEvent: a=id, b=eventType, c=eventTypeId, d=startDay, e=endDay, f=startTime, g=endTime, h=totalHours, i=notes, j=alertOffsets, k=modifiedAt, l=syncedAt, m=isDeleted
+ * - NotificationRecord: a=id, b=calendarEventId, c=alertOffset, d=triggerTime, e=isDelivered, f=isRead, g=modifiedAt, h=syncedAt, i=isDeleted
+ * - AnnualHoursConfig: a=id, b=year, c=configuredHours, d=modifiedAt, e=syncedAt, f=isDeleted
+ * - Shift: a=id, b=name, c=icon, d=backgroundColor, e=startTime, f=endTime, g=hoursWorked, h=isActive, i=createdAt, j=modifiedAt, k=syncedAt, l=isDeleted
+ * - Reminder: a=id, b=name, c=icon, d=backgroundColor, e=isActive, f=createdAt, g=modifiedAt, h=syncedAt, i=isDeleted
+ */
+const convertLegacyFormat = (parsed: Record<string, unknown>): Record<string, unknown> => {
+  const legacyMeta = (parsed.a ?? {}) as Record<string, unknown>;
+  const legacyData = (parsed.b ?? {}) as Record<string, unknown>;
+
+  const calendarEvents = Array.isArray(legacyData.a)
+    ? (legacyData.a as Record<string, unknown>[]).map((e) => ({
+        id: e.a, eventType: e.b, eventTypeId: e.c, startDay: e.d, endDay: e.e,
+        startTime: e.f, endTime: e.g, totalHours: e.h, notes: e.i,
+        alertOffsets: e.j, seriesId: null, modifiedAt: e.k, syncedAt: e.l, isDeleted: e.m,
+      }))
+    : [];
+
+  const notificationRecords = Array.isArray(legacyData.b)
+    ? (legacyData.b as Record<string, unknown>[]).map((e) => ({
+        id: e.a, calendarEventId: e.b, alertOffset: e.c, triggerTime: e.d,
+        isDelivered: e.e, isRead: e.f, modifiedAt: e.g, syncedAt: e.h, isDeleted: e.i,
+      }))
+    : [];
+
+  const annualHoursConfig = Array.isArray(legacyData.c)
+    ? (legacyData.c as Record<string, unknown>[]).map((e) => ({
+        id: e.a, year: e.b, configuredHours: e.c, modifiedAt: e.d, syncedAt: e.e, isDeleted: e.f,
+      }))
+    : [];
+
+  const shifts = Array.isArray(legacyData.d)
+    ? (legacyData.d as Record<string, unknown>[]).map((e) => ({
+        id: e.a, name: e.b, icon: e.c, backgroundColor: e.d, startTime: e.e,
+        endTime: e.f, hoursWorked: e.g, isActive: e.h, createdAt: e.i,
+        modifiedAt: e.j, syncedAt: e.k, isDeleted: e.l,
+      }))
+    : [];
+
+  const reminders = Array.isArray(legacyData.e)
+    ? (legacyData.e as Record<string, unknown>[]).map((e) => ({
+        id: e.a, name: e.b, icon: e.c, backgroundColor: e.d, isActive: e.e,
+        seriesFrequency: 'never', seriesEndDate: null,
+        createdAt: e.f, modifiedAt: e.g, syncedAt: e.h, isDeleted: e.i,
+      }))
+    : [];
+
+  const syncConfig = Array.isArray(legacyData.f)
+    ? (legacyData.f as Record<string, unknown>[])
+    : [];
+
+  return {
+    metadata: {
+      createdAt: legacyMeta.a ?? '',
+      appVersion: '1.0.0',
+      platform: 'web',
+      schemaVersion: 1,
+    },
+    data: { calendarEvents, notificationRecords, annualHoursConfig, shifts, reminders, syncConfig },
+  };
+};
+
+/**
  * Deserializes a JSON string into a BackupFile structure.
+ *
+ * Supports both the current format (named keys: metadata, data, id, eventType, etc.)
+ * and the legacy minified format (single-letter keys: a, b, c, etc.) produced by
+ * earlier versions of the app.
  *
  * - Parses the JSON and extracts only known fields (unknown fields are ignored
  *   at any nesting level — forward compatibility per Requirement 9.6, 10.4).
@@ -20,7 +101,12 @@ import type {
  * - Preserves UUIDs as-is and handles null fields correctly.
  */
 export const deserializeBackup = (json: string): BackupFile => {
-  const parsed = JSON.parse(json) as Record<string, unknown>;
+  let parsed = JSON.parse(json) as Record<string, unknown>;
+
+  // Detect and convert legacy minified format
+  if (isLegacyFormat(parsed)) {
+    parsed = convertLegacyFormat(parsed);
+  }
 
   const rawMetadata = (parsed.metadata ?? {}) as Record<string, unknown>;
   const rawData = (parsed.data ?? {}) as Record<string, unknown>;

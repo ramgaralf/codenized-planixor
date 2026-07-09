@@ -440,3 +440,107 @@ try { ... } catch (e: Exception) {
 - Documenting a known Android/Compose workaround
 - Referencing a ticket: `// TODO(PLAN-123): implement offline caching`
 
+
+
+---
+
+## Data migration safety (MANDATORY)
+
+These rules prevent app crashes when users update to a new version with existing data. Violating these rules causes `IllegalStateException` at app startup, forcing users to uninstall and lose all their data.
+
+### Rule: NEVER modify `@ColumnInfo` annotations on existing fields without a version bump
+
+Adding, changing, or removing `@ColumnInfo(defaultValue = ...)` on an existing entity field changes Room's internal identity hash. If the DB version stays the same, Room throws:
+
+```
+IllegalStateException: Room cannot verify the data integrity.
+Expected identity hash: xxx, found: yyy
+```
+
+```kotlin
+// ❌ BREAKS existing installations (hash changes, version stays same)
+// Before: val alertOffsets: String = "[]"
+// After:
+@ColumnInfo(defaultValue = "[]")
+val alertOffsets: String = "[]"  // ← hash changed, no version bump = CRASH
+
+// ✅ SAFE: Bump version + add no-op migration
+// 1. Add the annotation
+// 2. Increment @Database version
+// 3. Add empty migration:
+val MIGRATION_N_N1 = object : Migration(N, N+1) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // No-op: schema unchanged, only Room identity hash updated
+    }
+}
+```
+
+### Rule: ALWAYS increment DB version when modifying ANY entity annotation
+
+Any change to `@Entity`, `@ColumnInfo`, `@Index`, `@PrimaryKey` annotations requires:
+1. Increment `@Database(version = N+1)`
+2. Add a migration (even if no-op for annotation-only changes)
+3. Register the migration in `DatabaseModule.kt`
+
+### Rule: ALWAYS test updates with existing data before release
+
+Before publishing any update that modifies entity classes or DB schema:
+1. Install the CURRENT published version on a device/emulator
+2. Create test data (shifts, reminders, events, backups)
+3. Install the NEW version over the existing one (without uninstalling)
+4. Verify the app starts without crash
+5. Verify existing data is preserved and accessible
+6. Verify backup restore works with a backup from the previous version
+
+### Rule: `fallbackToDestructiveMigration()` is a LAST RESORT, not a safety net
+
+`fallbackToDestructiveMigration()` only triggers when Room detects a version downgrade or a missing migration path. It does NOT help with identity hash mismatches at the same version. Never rely on it — always provide explicit migrations.
+
+### Rule: New fields on existing entities MUST have defaults
+
+When adding a column to an existing entity via `ALTER TABLE`:
+- The migration SQL MUST include `DEFAULT` with the same value as `@ColumnInfo(defaultValue = ...)`
+- The Kotlin property MUST have a default value matching the migration
+- All three must agree: Kotlin default, `@ColumnInfo(defaultValue)`, and migration SQL `DEFAULT`
+
+```kotlin
+// ✅ All three agree
+@ColumnInfo(defaultValue = "")
+val seriesId: String = "",
+
+// Migration:
+db.execSQL("ALTER TABLE calendar_events ADD COLUMN seriesId TEXT NOT NULL DEFAULT ''")
+```
+
+### Rule: Entity field order doesn't matter, but position in constructor does for tests
+
+Room maps by column name, not position. But when creating test instances of data classes, constructor argument order matters. When adding new fields, add them at the END of the constructor to minimize test breakage.
+
+---
+
+## Backup compatibility (MANDATORY)
+
+### Rule: Backup format MUST be backward-compatible
+
+The backup restore function MUST be able to restore backups created by ANY previous version of the app. When the serialization format changes:
+1. The deserializer MUST detect the old format and convert it transparently
+2. New fields get sensible defaults when missing from old backups
+3. The user is NEVER shown an error for a valid old backup
+
+### Rule: Backup serialization keys MUST be stable
+
+Once a backup format is released to users, the JSON key names in that format are permanent. If you need to change the structure:
+- Keep support for the old format in the deserializer
+- New versions can use a new format, but old formats must still parse
+- Use `schemaVersion` in metadata to distinguish versions
+
+### Rule: New entity fields in backup MUST have fallback defaults
+
+When adding a new field to an entity that participates in backup:
+- The serializer includes the new field
+- The deserializer defaults to a safe value if the field is missing (null, empty string, "never", false, 0, etc.)
+- This ensures backups from before the field was added still restore correctly
+
+### Rule: Test restore with a backup from the PREVIOUS release
+
+Before publishing, verify that a `.bak` file created with the last published version restores correctly on the new version without errors.

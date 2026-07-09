@@ -14,8 +14,8 @@ android {
         applicationId = "com.codenized.planixor"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.2.0"
+        versionCode = 6
+        versionName = "1.2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -95,6 +95,9 @@ dependencies {
 
     // DataStore
     implementation(libs.datastore.preferences)
+
+    // Emoji Picker
+    implementation(libs.emoji2.emojipicker)
 
     // Charting
     implementation(libs.vico.compose.m3)

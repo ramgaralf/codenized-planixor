@@ -45,7 +45,25 @@ class BackupValidator @Inject constructor() {
             )
         }
 
-        // 3. Metadata validation
+        // 3. Detect legacy minified format and use the deserializer directly
+        // Legacy format has "a" and "b" keys instead of "metadata" and "data"
+        val isLegacyFormat = jsonObject.has("a") && jsonObject.has("b") && !jsonObject.has("metadata")
+
+        if (isLegacyFormat) {
+            // For legacy format, skip structural validation (keys are different)
+            // and let the BackupDeserializer handle the conversion
+            return try {
+                val deserializer = BackupDeserializer()
+                val backupFile = deserializer.deserialize(content)
+                Result.success(backupFile)
+            } catch (e: Exception) {
+                Result.failure(
+                    ValidationException(ValidationError.InvalidJson(details = e.message ?: "Legacy format parse error")),
+                )
+            }
+        }
+
+        // 4. Metadata validation (current format)
         val metadataElement = jsonObject.get("metadata")
         if (metadataElement == null || !metadataElement.isJsonObject) {
             return Result.failure(
@@ -75,7 +93,7 @@ class BackupValidator @Inject constructor() {
             )
         }
 
-        // 4. Data arrays validation
+        // 5. Data arrays validation
         val dataElement = jsonObject.get("data")
         if (dataElement == null || !dataElement.isJsonObject) {
             return Result.failure(
@@ -107,7 +125,7 @@ class BackupValidator @Inject constructor() {
             )
         }
 
-        // 5. Version check
+        // 6. Version check
         val schemaVersion = metadata.get("schemaVersion").asInt
         if (schemaVersion > CURRENT_SCHEMA_VERSION) {
             return Result.failure(
@@ -120,11 +138,12 @@ class BackupValidator @Inject constructor() {
             )
         }
 
-        // All checks passed — parse full BackupFile
+        // All checks passed — parse full BackupFile using deserializer
         return try {
-            val backupFile = gson.fromJson(content, BackupFile::class.java)
+            val deserializer = BackupDeserializer()
+            val backupFile = deserializer.deserialize(content)
             Result.success(backupFile)
-        } catch (e: JsonSyntaxException) {
+        } catch (e: Exception) {
             Result.failure(
                 ValidationException(ValidationError.InvalidJson(details = e.message ?: "Parse error")),
             )
