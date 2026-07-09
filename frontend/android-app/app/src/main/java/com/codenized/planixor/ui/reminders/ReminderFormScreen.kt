@@ -380,45 +380,78 @@ private fun ReminderFrequencyField(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
+        // Row 1: Never + Weekly
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            options.forEach { (key, label) ->
-                val isSelected = value == key
-                OutlinedButton(
+            options.take(2).forEach { (key, label) ->
+                FrequencyButton(
+                    key = key,
+                    label = label,
+                    isSelected = value == key,
                     onClick = { onValueChange(key) },
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = if (isSelected) {
-                        ButtonDefaults.outlinedButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                        )
-                    } else {
-                        ButtonDefaults.outlinedButtonColors()
-                    },
-                    border = if (isSelected) {
-                        null
-                    } else {
-                        BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline,
-                        )
-                    },
-                    contentPadding = PaddingValues(
-                        horizontal = 4.dp,
-                        vertical = 8.dp,
-                    ),
-                ) {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
-                    )
-                }
+                )
             }
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Row 2: Monthly + Yearly
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            options.drop(2).forEach { (key, label) ->
+                FrequencyButton(
+                    key = key,
+                    label = label,
+                    isSelected = value == key,
+                    onClick = { onValueChange(key) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FrequencyButton(
+    key: String,
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        colors = if (isSelected) {
+            ButtonDefaults.outlinedButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            )
+        } else {
+            ButtonDefaults.outlinedButtonColors()
+        },
+        border = if (isSelected) {
+            null
+        } else {
+            BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outline,
+            )
+        },
+        contentPadding = PaddingValues(
+            horizontal = 12.dp,
+            vertical = 10.dp,
+        ),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            maxLines = 1,
+        )
     }
 }
 

@@ -226,3 +226,23 @@ The `CalendarEvent` entity includes:
 ### Series event edit/delete only affects future events
 
 When a user edits or deletes "all events in series", only events with `startDay >= today` are modified. Past events (startDay < today) are never touched by series operations. This ensures historical data integrity across synced devices.
+
+
+### Backup backward compatibility (cross-platform)
+
+Backup files created by ANY previous version of the app MUST be restorable on the current version. Both platforms (React Web and Android) implement legacy format detection in their deserializers:
+
+- **Detection**: If the JSON root has single-letter keys (`"a"`, `"b"`) instead of named keys (`"metadata"`, `"data"`), it's the legacy minified format.
+- **Conversion**: The deserializer transparently converts legacy keys to current-format keys before processing.
+- **Defaults**: Missing fields (e.g., `seriesFrequency`, `seriesEndDate`, `seriesId`) get safe defaults (`"never"`, `null`/`""`, `null`/`""`).
+- **Forward compatibility**: Unknown fields in backup JSON are silently ignored (not treated as errors).
+
+**Legacy key mapping (for reference):**
+- Root: `a`=metadata, `b`=data
+- Metadata: `a`=createdAt
+- Data: `a`=calendarEvents, `b`=notificationRecords, `c`=annualHoursConfig, `d`=shifts, `e`=reminders, `f`=syncConfig
+- CalendarEvent: `a`=id, `b`=eventType, `c`=eventTypeId, `d`=startDay, `e`=endDay, `f`=startTime, `g`=endTime, `h`=totalHours, `i`=notes, `j`=alertOffsets, `k`=modifiedAt, `l`=syncedAt, `m`=isDeleted
+- Shift: `a`=id, `b`=name, `c`=icon, `d`=backgroundColor, `e`=startTime, `f`=endTime, `g`=hoursWorked, `h`=isActive, `i`=createdAt, `j`=modifiedAt, `k`=syncedAt, `l`=isDeleted
+- Reminder: `a`=id, `b`=name, `c`=icon, `d`=backgroundColor, `e`=isActive, `f`=createdAt, `g`=modifiedAt, `h`=syncedAt, `i`=isDeleted
+- NotificationRecord: `a`=id, `b`=calendarEventId, `c`=alertOffset, `d`=triggerTime, `e`=isDelivered, `f`=isRead, `g`=modifiedAt, `h`=syncedAt, `i`=isDeleted
+- AnnualHoursConfig: `a`=id, `b`=year, `c`=configuredHours, `d`=modifiedAt, `e`=syncedAt, `f`=isDeleted

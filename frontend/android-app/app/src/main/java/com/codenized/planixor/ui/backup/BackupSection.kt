@@ -137,5 +137,25 @@ fun BackupSection(
                 },
             )
         }
+
+        // Error message
+        if (uiState.error != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = stringResource(uiState.error!!),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+
+        // Success message
+        if (uiState.successMessage != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = stringResource(uiState.successMessage!!),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
     }
 }
