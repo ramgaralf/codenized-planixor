@@ -31,7 +31,7 @@ const en: HelpData = {
         'Both platforms share the same navigation order: Calendar, Reports, Shifts, Reminders, Settings.',
         'Synchronization across devices is optional and requires deploying your own backend server.',
       ],
-      screenshots: ['/help/screenshot-planixor.png'],
+      screenshots: ['/help/screenshot-planixor-en.png'],
     },
     {
       id: 'calendar',
@@ -48,10 +48,10 @@ const en: HelpData = {
         'Switch views using the view selector buttons (Day / Week / Month / Year).',
       ],
       screenshots: [
-        '/help/screenshot-calendar-day.png',
-        '/help/screenshot-calendar-week.png',
-        '/help/screenshot-calendar-month.png',
-        '/help/screenshot-calendar-year.png',
+        '/help/screenshot-calendar-day-en.png',
+        '/help/screenshot-calendar-week-en.png',
+        '/help/screenshot-calendar-month-en.png',
+        '/help/screenshot-calendar-year-en.png',
       ],
     },
     {
@@ -70,7 +70,7 @@ const en: HelpData = {
         'Delete a shift using the trash icon. This cannot be undone.',
         'The color picker shows a palette of 45 colors (9 families × 5 shades). Theme-aware recommendations highlight which shades have best contrast.',
       ],
-      screenshots: ['/help/screenshot-shift-list.png', '/help/screenshot-shift-form.png'],
+      screenshots: ['/help/screenshot-shift-list-en.png', '/help/screenshot-shift-form-en.png'],
     },
     {
       id: 'reminders',
@@ -89,7 +89,7 @@ const en: HelpData = {
         'Delete a reminder using the trash icon.',
         'The reminder card shows the repetition frequency below the name (e.g., "Every week").',
       ],
-      screenshots: ['/help/screenshot-reminder-list.png', '/help/screenshot-reminder-form.png'],
+      screenshots: ['/help/screenshot-reminder-list-en.png', '/help/screenshot-reminder-form-en.png'],
     },
     {
       id: 'calendar-events',
@@ -111,7 +111,7 @@ const en: HelpData = {
         'Deleting a series event: Same dialog — you can delete just the one event or all future events in the series.',
         'The event type selector shows the repetition frequency below the reminder name (e.g., "Every week") to help you identify repeating reminders.',
       ],
-      screenshots: ['/help/screenshot-event-form.png'],
+      screenshots: ['/help/screenshot-event-form-en.png'],
     },
     {
       id: 'notifications',
@@ -125,7 +125,7 @@ const en: HelpData = {
         'Use "Mark all as read" to clear unread indicators.',
         'Past notifications are automatically cleaned up during sync cycles.',
       ],
-      screenshots: ['/help/screenshot-notifications.png'],
+      screenshots: ['/help/screenshot-notifications-en.png'],
     },
     {
       id: 'reports',
@@ -139,7 +139,7 @@ const en: HelpData = {
         'Configure your annual hours target in "Annual Hours Configuration" to track progress.',
         'Reports update automatically as you add or modify calendar events.',
       ],
-      screenshots: ['/help/screenshot-reports.png'],
+      screenshots: ['/help/screenshot-reports-en.png'],
     },
     {
       id: 'synchronization',
@@ -157,7 +157,7 @@ const en: HelpData = {
         'Conflict resolution: Last-Writer-Wins (LWW) based on modification timestamp.',
         'If the server returns a different username, a confirmation dialog appears warning that local data will be wiped.',
       ],
-      screenshots: ['/help/screenshot-sync-config.png'],
+      screenshots: ['/help/screenshot-sync-config-en.png'],
       platformNote:
         'The sync interface is identical on both web and Android platforms.',
     },
@@ -177,7 +177,7 @@ const en: HelpData = {
         'Android: Uses Storage Access Framework for file selection.',
         'The backup file is cross-platform — you can create on web and restore on Android, or vice versa.',
       ],
-      screenshots: ['/help/screenshot-backup-section.png'],
+      screenshots: ['/help/screenshot-backup-section-en.png'],
     },
     {
       id: 'settings',
@@ -192,7 +192,7 @@ const en: HelpData = {
         'Backups: Create or restore data backups.',
         'Reset Application (danger zone): Deletes ALL local data permanently. Use with caution.',
       ],
-      screenshots: ['/help/screenshot-settings.png'],
+      screenshots: ['/help/screenshot-settings-en.png'],
     },
     {
       id: 'shift-mode',
@@ -214,7 +214,7 @@ const en: HelpData = {
         'Deactivate Shift Mode: Toggle off in Settings. All four views are restored and the default view returns to Day.',
         'The setting syncs across devices when synchronization is configured.',
       ],
-      screenshots: ['/help/screenshot-shift-mode.png'],
+      screenshots: ['/help/screenshot-shift-mode-en.png'],
       platformNote:
         'Shift Mode behaves identically on both web and Android platforms. The setting syncs automatically when sync is configured.',
     },
@@ -237,7 +237,7 @@ const es: HelpData = {
         'Ambas plataformas comparten el mismo orden de navegación: Calendario, Informes, Turnos, Recordatorios, Ajustes.',
         'La sincronización entre dispositivos es opcional y requiere desplegar tu propio servidor backend.',
       ],
-      screenshots: ['/help/screenshot-planixor.png'],
+      screenshots: ['/help/screenshot-planixor-es.png'],
     },
     {
       id: 'calendar',
@@ -254,10 +254,10 @@ const es: HelpData = {
         'Cambia de vista usando los botones del selector de vista (Día / Semana / Mes / Año).',
       ],
       screenshots: [
-        '/help/screenshot-calendar-day.png',
-        '/help/screenshot-calendar-week.png',
-        '/help/screenshot-calendar-month.png',
-        '/help/screenshot-calendar-year.png',
+        '/help/screenshot-calendar-day-es.png',
+        '/help/screenshot-calendar-week-es.png',
+        '/help/screenshot-calendar-month-es.png',
+        '/help/screenshot-calendar-year-es.png',
       ],
     },
     {
@@ -276,7 +276,7 @@ const es: HelpData = {
         'Elimina un turno usando el icono de papelera. Esto no se puede deshacer.',
         'El selector de color muestra una paleta de 45 colores (9 familias × 5 tonos). Las recomendaciones adaptadas al tema resaltan qué tonos tienen mejor contraste.',
       ],
-      screenshots: ['/help/screenshot-shift-list.png', '/help/screenshot-shift-form.png'],
+      screenshots: ['/help/screenshot-shift-list-es.png', '/help/screenshot-shift-form-es.png'],
     },
     {
       id: 'reminders',
@@ -295,7 +295,7 @@ const es: HelpData = {
         'Elimina un recordatorio usando el icono de papelera.',
         'La tarjeta del recordatorio muestra la frecuencia de repetición debajo del nombre (ej: "Cada semana").',
       ],
-      screenshots: ['/help/screenshot-reminder-list.png', '/help/screenshot-reminder-form.png'],
+      screenshots: ['/help/screenshot-reminder-list-es.png', '/help/screenshot-reminder-form-es.png'],
     },
     {
       id: 'calendar-events',
@@ -317,7 +317,7 @@ const es: HelpData = {
         'Eliminar un evento de serie: El mismo diálogo — puedes eliminar solo ese evento o todos los eventos futuros de la serie.',
         'El selector de tipo de evento muestra la frecuencia de repetición debajo del nombre del recordatorio (ej: "Cada semana") para identificar los recordatorios con repetición.',
       ],
-      screenshots: ['/help/screenshot-event-form.png'],
+      screenshots: ['/help/screenshot-event-form-es.png'],
     },
     {
       id: 'notifications',
@@ -331,7 +331,7 @@ const es: HelpData = {
         'Usa "Marcar todas como leídas" para limpiar los indicadores de no leídas.',
         'Las notificaciones pasadas se limpian automáticamente durante los ciclos de sincronización.',
       ],
-      screenshots: ['/help/screenshot-notifications.png'],
+      screenshots: ['/help/screenshot-notifications-es.png'],
     },
     {
       id: 'reports',
@@ -345,7 +345,7 @@ const es: HelpData = {
         'Configura tu objetivo de horas anuales en "Configuración de Horas Anuales" para seguir el progreso.',
         'Los informes se actualizan automáticamente al añadir o modificar eventos del calendario.',
       ],
-      screenshots: ['/help/screenshot-reports.png'],
+      screenshots: ['/help/screenshot-reports-es.png'],
     },
     {
       id: 'synchronization',
@@ -363,7 +363,7 @@ const es: HelpData = {
         'Resolución de conflictos: Último-Escritor-Gana (LWW) basado en marca de tiempo de modificación.',
         'Si el servidor devuelve un nombre de usuario diferente, aparece un diálogo de confirmación advirtiendo que los datos locales se borrarán.',
       ],
-      screenshots: ['/help/screenshot-sync-config.png'],
+      screenshots: ['/help/screenshot-sync-config-es.png'],
       platformNote:
         'La interfaz de sincronización es idéntica en ambas plataformas web y Android.',
     },
@@ -383,7 +383,7 @@ const es: HelpData = {
         'Android: Usa el Storage Access Framework para la selección de archivos.',
         'El archivo de respaldo es multiplataforma — puedes crear en web y restaurar en Android, o viceversa.',
       ],
-      screenshots: ['/help/screenshot-backup-section.png'],
+      screenshots: ['/help/screenshot-backup-section-es.png'],
     },
     {
       id: 'settings',
@@ -398,7 +398,7 @@ const es: HelpData = {
         'Respaldos: Crea o restaura copias de seguridad de datos.',
         'Restablecer Aplicación (zona de peligro): Elimina TODOS los datos locales permanentemente. Usar con precaución.',
       ],
-      screenshots: ['/help/screenshot-settings.png'],
+      screenshots: ['/help/screenshot-settings-es.png'],
     },
     {
       id: 'shift-mode',
@@ -420,7 +420,7 @@ const es: HelpData = {
         'Desactivar Modo Turno: Desactiva el interruptor en Ajustes. Se restauran las cuatro vistas y la vista por defecto vuelve a Día.',
         'La configuración se sincroniza entre dispositivos cuando la sincronización está configurada.',
       ],
-      screenshots: ['/help/screenshot-shift-mode.png'],
+      screenshots: ['/help/screenshot-shift-mode-es.png'],
       platformNote:
         'El Modo Turno se comporta de forma idéntica en ambas plataformas web y Android. La configuración se sincroniza automáticamente cuando la sincronización está configurada.',
     },
