@@ -1,0 +1,14 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test": {
+      "status": "passed",
+      "failingExample": "Test 1: java.lang.AssertionError: EmojiPickerDialog must import ContextThemeWrapper. BUG CONFIRMED: The factory passes raw Activity context to EmojiPickerView without wrapping it in ContextThemeWrapper. In dark mode, the EmojiPickerView receives Theme.AppCompat.Light.NoActionBar context instead of a dark-themed context. (at EmojiPickerDialogThemeTest.kt:52)\n\nTest 2: java.lang.AssertionError: values-night/themes.xml must exist to provide a dark theme variant. BUG CONFIRMED: No night-qualified theme resource exists. Theme.Planixor only resolves to Theme.AppCompat.Light.NoActionBar, causing EmojiPickerView to render dark icons in dark mode. (at EmojiPickerDialogThemeTest.kt:83)\n\nCounterexample: EmojiPickerView(context) receives Theme.AppCompat.Light.NoActionBar context in dark mode — category icons and text render dark-on-dark, invisible.",
+      "lastRunTimestamp": 1783627956073
+    },
+    "2. Write preservation property tests (BEFORE implementing fix)": {
+      "status": "passed",
+      "lastRunTimestamp": 1783628160031
+    }
+  },
+  "executionHistory": {}
+}
