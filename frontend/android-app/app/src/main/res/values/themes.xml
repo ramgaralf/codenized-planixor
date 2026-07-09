@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Main app theme — AppCompat parent required for AppCompatActivity -->
+    <!-- Main app theme — AppCompat parent required for AppCompatActivity.
+         DO NOT change this parent - it breaks the Activity lifecycle. -->
     <style name="Theme.Planixor" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@color/splash_background</item>
     </style>
