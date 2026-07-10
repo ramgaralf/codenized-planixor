@@ -9,6 +9,7 @@ When a spec has tasks ready for execution, Kiro MUST ensure a dedicated Git bran
 ## When this applies
 
 - **Always** before executing the first task of a spec (task wave 0 or the first `ready` task)
+- This includes **bugfix specs** — the branch MUST be created before any code changes are made
 - Does NOT apply to spec creation itself (requirements.md, design.md, tasks.md can be written on any branch — they are planning artifacts, not implementation code)
 
 ---
@@ -27,6 +28,8 @@ When a spec has tasks ready for execution, Kiro MUST ensure a dedicated Git bran
 - Spec folder `gh2-landing-page` → branch `feature/GH-2-landing-page`
 - Spec folder `gh7-shift-management` → branch `feature/GH-7-shift-management`
 - Spec folder `user-onboarding` (no issue) → branch `feature/user-onboarding`
+- Spec folder `fix-android-db-crash` (bugfix, no issue) → branch `hotfix/fix-android-db-crash`
+- Spec folder `gh42-fix-login-crash` (bugfix with issue) → branch `hotfix/GH-42-fix-login-crash`
 
 ### Step 2 — Check current branch
 
@@ -65,8 +68,10 @@ Then continue with normal task execution.
 - **Never** execute implementation tasks (code changes) directly on `main` or `develop`
 - Spec planning files (`.kiro/specs/**`) are exempt — they can be committed on any branch
 - If the branch already exists (locally or remotely), check it out instead of creating a new one
-- If there are uncommitted changes on the current branch, **STOP** and ask the user how to proceed (stash, commit, or discard)
+- If there are uncommitted changes on the current branch, **stash** them before switching branches, then pop the stash after creating/switching to the target branch — only stage files relevant to the spec
 - This rule works in conjunction with `global-git-workflow.md` — branch naming follows the same conventions
+- **Bugfix specs** (specType = "bugfix" in `.config.kiro` or folder name starts with `fix-`) use `hotfix/` prefix and branch from `main`
+- The branch name for bugfixes is derived directly from the spec folder name: folder `fix-android-db-crash` → branch `hotfix/fix-android-db-crash`
 
 ---
 

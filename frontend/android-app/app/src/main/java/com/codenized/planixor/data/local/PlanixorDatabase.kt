@@ -18,7 +18,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  */
 @Database(
     entities = [CalendarEventEntity::class, ShiftEntity::class, ReminderEntity::class, AnnualHoursConfigEntity::class, NotificationRecordEntity::class, ShiftModeSettingEntity::class],
-    version = 11,
+    version = 12,
     exportSchema = false,
 )
 abstract class PlanixorDatabase : RoomDatabase() {
@@ -270,6 +270,73 @@ abstract class PlanixorDatabase : RoomDatabase() {
         val MIGRATION_10_11 = object : Migration(10, 11) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // No-op: schema unchanged, only Room's identity hash needs updating
+            }
+        }
+
+        /**
+         * Migration from version 11 to 12:
+         * Recreates calendar_events table to fix Room schema validation mismatch.
+         * The @ColumnInfo(defaultValue = "[]") annotation on alertOffsets changed
+         * Room's identity hash. Users who updated during gh38-reminder-series have
+         * a table schema that doesn't match Room's compile-time expectations.
+         * This migration preserves all existing data via temp-table copy pattern.
+         */
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 1. Create temp table with exact schema Room expects
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `calendar_events_temp` (
+                        `id` TEXT NOT NULL,
+                        `eventType` TEXT NOT NULL,
+                        `eventTypeId` TEXT NOT NULL,
+                        `startDay` TEXT NOT NULL,
+                        `endDay` TEXT NOT NULL,
+                        `startTime` INTEGER NOT NULL,
+                        `endTime` INTEGER NOT NULL,
+                        `totalHours` INTEGER NOT NULL,
+                        `notes` TEXT,
+                        `modifiedAt` INTEGER NOT NULL,
+                        `syncedAt` INTEGER,
+                        `isDeleted` INTEGER NOT NULL,
+                        `alertOffsets` TEXT NOT NULL DEFAULT '[]',
+                        `seriesId` TEXT NOT NULL DEFAULT '',
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent()
+                )
+
+                // 2. Copy all existing data
+                db.execSQL(
+                    """
+                    INSERT INTO `calendar_events_temp` (`id`, `eventType`, `eventTypeId`, `startDay`, `endDay`, `startTime`, `endTime`, `totalHours`, `notes`, `modifiedAt`, `syncedAt`, `isDeleted`, `alertOffsets`, `seriesId`)
+                    SELECT `id`, `eventType`, `eventTypeId`, `startDay`, `endDay`, `startTime`, `endTime`, `totalHours`, `notes`, `modifiedAt`, `syncedAt`, `isDeleted`, `alertOffsets`, `seriesId`
+                    FROM `calendar_events`
+                    """.trimIndent()
+                )
+
+                // 3. Drop the old table
+                db.execSQL("DROP TABLE `calendar_events`")
+
+                // 4. Rename temp to final
+                db.execSQL("ALTER TABLE `calendar_events_temp` RENAME TO `calendar_events`")
+
+                // 5. Recreate all indices (must match @Entity indices declaration)
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_calendar_events_startDay_eventType_isDeleted` ON `calendar_events` (`startDay`, `eventType`, `isDeleted`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_calendar_events_startDay` ON `calendar_events` (`startDay`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_calendar_events_endDay` ON `calendar_events` (`endDay`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_calendar_events_isDeleted` ON `calendar_events` (`isDeleted`)"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_calendar_events_eventType` ON `calendar_events` (`eventType`)"
+                )
             }
         }
     }
