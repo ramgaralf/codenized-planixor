@@ -1,6 +1,7 @@
 package com.codenized.planixor.di
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Room
 import com.codenized.planixor.data.local.AnnualHoursConfigDao
 import com.codenized.planixor.data.local.CalendarEventDao
@@ -23,18 +24,45 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
+    private const val TAG = "DatabaseModule"
+
     @Provides
     @Singleton
     fun providePlanixorDatabase(
         @ApplicationContext context: Context,
     ): PlanixorDatabase {
+        val db = buildDatabase(context)
+        return try {
+            // Force-open to trigger migration/validation immediately.
+            // Room's .build() is lazy — the actual DB open happens on first DAO access.
+            db.openHelper.writableDatabase
+            db
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "Database schema validation failed, recreating database", e)
+            db.close()
+            context.deleteDatabase("planixor_database")
+            buildDatabase(context)
+        }
+    }
+
+    private fun buildDatabase(context: Context): PlanixorDatabase {
         return Room.databaseBuilder(
             context,
             PlanixorDatabase::class.java,
             "planixor_database",
         )
-            .addMigrations(PlanixorDatabase.MIGRATION_3_4, PlanixorDatabase.MIGRATION_4_5, PlanixorDatabase.MIGRATION_5_6, PlanixorDatabase.MIGRATION_6_7, PlanixorDatabase.MIGRATION_7_8, PlanixorDatabase.MIGRATION_8_9, PlanixorDatabase.MIGRATION_9_10, PlanixorDatabase.MIGRATION_10_11)
-            .fallbackToDestructiveMigration()
+            .addMigrations(
+                PlanixorDatabase.MIGRATION_3_4,
+                PlanixorDatabase.MIGRATION_4_5,
+                PlanixorDatabase.MIGRATION_5_6,
+                PlanixorDatabase.MIGRATION_6_7,
+                PlanixorDatabase.MIGRATION_7_8,
+                PlanixorDatabase.MIGRATION_8_9,
+                PlanixorDatabase.MIGRATION_9_10,
+                PlanixorDatabase.MIGRATION_10_11,
+                PlanixorDatabase.MIGRATION_11_12,
+            )
+            .fallbackToDestructiveMigrationFrom(8, 9, 10, 11)
             .build()
     }
 

@@ -1,0 +1,169 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Add MIGRATION_11_12 to PlanixorDatabase companion object": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674607045
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674619891
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674682557
+      }
+    ],
+    "1.2 Update @Database version from 11 to 12": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674607173
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674688241
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674710742
+      }
+    ],
+    "1.3 Register MIGRATION_11_12 in DatabaseModule.kt addMigrations chain": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674607231
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674715793
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674744413
+      }
+    ],
+    "2.1 Replace deprecated fallbackToDestructiveMigration() with fallbackToDestructiveMigrationFrom(8, 9, 10, 11)": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674607298
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674750155
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674846022
+      }
+    ],
+    "2.2 Add try/catch wrapper that catches IllegalStateException, deletes DB file, and recreates": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674607358
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674851015
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674935336
+      }
+    ],
+    "3.1 Update versionCode from 8 to 9 and versionName from \"1.2.3\" to \"1.2.4\"": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674607391
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674940792
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783675009049
+      }
+    ],
+    "4.1 Run assembleDebug and verify compilation succeeds": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674607424
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783675013650
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783675131118
+      }
+    ],
+    "4.2 Run testDebug and verify all unit tests pass": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674607457
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783675136117
+      },
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783675211008
+      }
+    ],
+    "1. Create MIGRATION_11_12 that recreates calendar_events table preserving data": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674744474
+      }
+    ],
+    "2. Add safety net for catastrophic DB failures": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783674935368
+      }
+    ],
+    "3. Bump app version for release": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783675009087
+      }
+    ],
+    "4. Build verification": [
+      {
+        "executionId": "c0038cb0-df75-42c7-8905-243affdff256",
+        "chatSessionId": "sess_7234c274-104d-4f31-aaa7-1e08b8f0377a",
+        "timestamp": 1783675211053
+      }
+    ]
+  }
+}
