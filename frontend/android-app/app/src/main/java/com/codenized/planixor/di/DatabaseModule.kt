@@ -62,7 +62,7 @@ object DatabaseModule {
                 PlanixorDatabase.MIGRATION_10_11,
                 PlanixorDatabase.MIGRATION_11_12,
             )
-            .fallbackToDestructiveMigrationFrom(8, 9, 10, 11)
+            .fallbackToDestructiveMigration()
             .build()
     }
 
