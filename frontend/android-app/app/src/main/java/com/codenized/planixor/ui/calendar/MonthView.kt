@@ -43,8 +43,8 @@ import java.util.Locale
 @Composable
 fun MonthView(
     currentDate: LocalDate,
-    locale: Locale = Locale.getDefault(),
     modifier: Modifier = Modifier,
+    locale: Locale = Locale.getDefault(),
 ) {
     val yearMonth = YearMonth.from(currentDate)
     val firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
@@ -149,7 +149,7 @@ private fun MonthDayCell(
 private fun buildDaysOfWeekList(firstDayOfWeek: DayOfWeek): List<DayOfWeek> {
     val days = DayOfWeek.entries.toMutableList()
     while (days.first() != firstDayOfWeek) {
-        days.add(days.removeFirst())
+        days.add(days.removeAt(0))
     }
     return days
 }

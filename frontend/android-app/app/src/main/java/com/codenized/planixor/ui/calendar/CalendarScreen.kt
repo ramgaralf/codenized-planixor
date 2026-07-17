@@ -51,12 +51,12 @@ import java.time.LocalDate
  */
 @Composable
 fun CalendarScreen(
+    modifier: Modifier = Modifier,
     onNavigateToEventDetail: (String) -> Unit = {},
     onNavigateToDayView: (LocalDate) -> Unit = {},
     onNavigateToForm: (LocalDate) -> Unit = {},
     onEditEvent: (String) -> Unit = {},
     viewModel: CalendarViewModel = hiltViewModel(),
-    modifier: Modifier = Modifier,
 ) {
     val activeView by viewModel.activeView.collectAsStateWithLifecycle()
     val currentDate by viewModel.currentDate.collectAsStateWithLifecycle()
@@ -140,7 +140,6 @@ fun CalendarScreenContent(
     activeView: CalendarView,
     currentDate: LocalDate,
     events: List<CalendarEventDisplay>,
-    availableViews: List<CalendarView> = CalendarView.entries,
     onViewSelected: (CalendarView) -> Unit,
     onNavigateDay: (Int) -> Unit,
     onNavigateWeek: (Int) -> Unit,
@@ -150,6 +149,7 @@ fun CalendarScreenContent(
     onEventClick: (String) -> Unit,
     onDayClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
+    availableViews: List<CalendarView> = CalendarView.entries,
 ) {
     Column(
         modifier = modifier

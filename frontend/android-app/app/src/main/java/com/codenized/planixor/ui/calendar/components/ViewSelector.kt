@@ -31,8 +31,8 @@ import com.codenized.planixor.ui.theme.PlanixorTheme
 fun ViewSelector(
     activeView: CalendarView,
     onViewSelected: (CalendarView) -> Unit,
-    views: List<CalendarView> = CalendarView.entries,
     modifier: Modifier = Modifier,
+    views: List<CalendarView> = CalendarView.entries,
 ) {
     SingleChoiceSegmentedButtonRow(
         modifier = modifier,

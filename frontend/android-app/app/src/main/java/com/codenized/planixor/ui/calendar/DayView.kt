@@ -40,8 +40,8 @@ import java.util.Locale
 @Composable
 fun DayView(
     currentDate: LocalDate,
-    locale: Locale = Locale.getDefault(),
     modifier: Modifier = Modifier,
+    locale: Locale = Locale.getDefault(),
 ) {
     val hours = (0..23).toList()
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", locale)

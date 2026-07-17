@@ -3,7 +3,6 @@ package com.codenized.planixor.ui.settings
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -51,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.codenized.planixor.BuildConfig
@@ -134,7 +134,7 @@ fun SettingsScreen(
 
         Button(
             onClick = {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://planixor.codenized.com/help"))
+                val intent = Intent(Intent.ACTION_VIEW, "https://planixor.codenized.com/help".toUri())
                 context.startActivity(intent)
             },
             modifier = Modifier.fillMaxWidth(),

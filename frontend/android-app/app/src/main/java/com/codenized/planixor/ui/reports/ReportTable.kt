@@ -39,8 +39,8 @@ import com.codenized.planixor.ui.theme.PlanixorTheme
 fun ReportTable(
     data: List<TypeAggregate>,
     totalMinutes: Int,
-    annualConfig: AnnualHoursConfig? = null,
     modifier: Modifier = Modifier,
+    annualConfig: AnnualHoursConfig? = null,
 ) {
     if (data.isEmpty()) return
 
@@ -154,9 +154,9 @@ private fun ReportTableRow(
 private fun ReportTableSummaryRow(
     label: String,
     duration: String,
+    modifier: Modifier = Modifier,
     countText: String = "",
     durationColor: Color = MaterialTheme.colorScheme.onSurface,
-    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),

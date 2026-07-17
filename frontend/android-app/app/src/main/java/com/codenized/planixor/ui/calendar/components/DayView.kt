@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -34,7 +35,6 @@ import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 private val HOUR_HEIGHT = 60.dp
 private val TIME_LABEL_WIDTH = 56.dp
@@ -57,7 +57,7 @@ fun DayView(
     onEventClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", LocalLocale.current.platformLocale)
     val isToday = currentDate == LocalDate.now()
     val scrollState = rememberScrollState()
 

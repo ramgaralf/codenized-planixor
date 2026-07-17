@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -33,7 +34,6 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
-import java.util.Locale
 
 /**
  * Month view composable displaying a day grid with emoji indicators.
@@ -55,7 +55,7 @@ fun MonthView(
     modifier: Modifier = Modifier,
 ) {
     val yearMonth = YearMonth.from(currentDate)
-    val locale = Locale.getDefault()
+    val locale = LocalLocale.current.platformLocale
     val firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
     val today = LocalDate.now()
 
@@ -230,7 +230,7 @@ private fun MonthDayCell(
 private fun buildDaysOfWeekList(firstDayOfWeek: DayOfWeek): List<DayOfWeek> {
     val days = DayOfWeek.entries.toMutableList()
     while (days.first() != firstDayOfWeek) {
-        days.add(days.removeFirst())
+        days.add(days.removeAt(0))
     }
     return days
 }

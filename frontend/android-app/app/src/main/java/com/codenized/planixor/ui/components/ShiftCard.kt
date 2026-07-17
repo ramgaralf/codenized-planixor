@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import com.codenized.planixor.R
 import com.codenized.planixor.domain.model.Shift
 import com.codenized.planixor.ui.theme.PlanixorTheme
@@ -192,7 +193,7 @@ fun ShiftCard(
 
 private fun parseHexColor(hex: String): Color {
     return try {
-        Color(android.graphics.Color.parseColor(hex))
+        Color(hex.toColorInt())
     } catch (e: IllegalArgumentException) {
         Color.Gray
     }

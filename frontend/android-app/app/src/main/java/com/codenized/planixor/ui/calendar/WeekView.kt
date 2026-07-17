@@ -43,8 +43,8 @@ import java.util.Locale
 @Composable
 fun WeekView(
     currentDate: LocalDate,
-    locale: Locale = Locale.getDefault(),
     modifier: Modifier = Modifier,
+    locale: Locale = Locale.getDefault(),
 ) {
     val firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
     val weekStart = currentDate.with(firstDayOfWeek)

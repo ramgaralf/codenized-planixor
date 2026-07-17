@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,7 +53,7 @@ fun WeekView(
     val weekStart = currentDate.with(DayOfWeek.MONDAY)
     val weekDays = (0L..6L).map { weekStart.plusDays(it) }
     val today = LocalDate.now()
-    val locale = Locale.getDefault()
+    val locale = LocalLocale.current.platformLocale
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
