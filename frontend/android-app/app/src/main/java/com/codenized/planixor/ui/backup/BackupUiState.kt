@@ -8,4 +8,6 @@ data class BackupUiState(
     val error: Int? = null,
     val successMessage: Int? = null,
     val restoredCount: Int = 0,
+    val succeededEntities: String = "",
+    val failedEntities: String = "",
 )

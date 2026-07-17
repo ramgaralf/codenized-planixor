@@ -12,6 +12,7 @@ interface ReminderInitialValues {
   icon: string;
   backgroundColor: string;
   seriesFrequency: SeriesFrequency;
+  seriesEndDate: string | null;
 }
 
 export const ReminderEditPage = () => {
@@ -42,6 +43,7 @@ export const ReminderEditPage = () => {
           icon: reminder.icon,
           backgroundColor: reminder.backgroundColor,
           seriesFrequency: reminder.seriesFrequency ?? 'never',
+          seriesEndDate: reminder.seriesEndDate ?? null,
         });
       } catch {
         console.error('Failed to load reminder for editing');

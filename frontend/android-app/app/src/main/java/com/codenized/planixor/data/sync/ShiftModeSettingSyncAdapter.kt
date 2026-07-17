@@ -48,48 +48,52 @@ class ShiftModeSettingSyncAdapter @Inject constructor(
 
     /**
      * Pushes locally modified shift mode setting records to the API.
-     * At most 1 record exists, so batching is effectively unnecessary but included for consistency.
+     * Single-row entity safety: if multiple records exist locally (corrupt state),
+     * keeps only the most recently modified one and deletes the rest before pushing.
+     * At most 1 record will ever be pushed.
      */
     suspend fun push(): SyncResult {
         return try {
+            val allRecords = shiftModeSettingDao.getAll()
+
+            // Deduplication safety: if multiple records exist, keep only the most recent
+            if (allRecords.size > 1) {
+                val sorted = allRecords.sortedByDescending { it.modifiedAt }
+                val keep = sorted.first()
+                shiftModeSettingDao.deleteAllExcept(keep.id)
+            }
+
             val candidates = shiftModeSettingDao.getUnsyncedRecords()
 
             if (candidates.isEmpty()) {
                 return SyncResult(pushed = 0)
             }
 
-            val batches = candidates.chunked(MAX_BATCH_SIZE)
-            var totalPushed = 0
+            // Only push the single most recent record (guaranteed by dedup above)
+            val recordToPush = candidates.maxByOrNull { it.modifiedAt } ?: return SyncResult(pushed = 0)
+            val records = listOf(recordToPush.toSyncRecord())
+            val request = ShiftModeSettingSyncPushRequest(records = records)
+            val response = syncApiService.push(request)
 
-            for (batch in batches) {
-                val records = batch.map { it.toSyncRecord() }
-                val request = ShiftModeSettingSyncPushRequest(records = records)
-                val response = syncApiService.push(request)
-
-                if (!response.isSuccessful) {
-                    return SyncResult(
-                        pushed = totalPushed,
-                        success = false,
-                        error = "Push failed with HTTP ${response.code()}",
-                    )
-                }
-
-                val body = response.body()?.data ?: return SyncResult(
-                    pushed = totalPushed,
+            if (!response.isSuccessful) {
+                return SyncResult(
+                    pushed = 0,
                     success = false,
-                    error = "Push response body is null",
+                    error = "Push failed with HTTP ${response.code()}",
                 )
-
-                // Mark all batch records as synced
-                val now = System.currentTimeMillis()
-                val syncedEntities = batch.map { it.copy(syncedAt = now) }
-                for (entity in syncedEntities) {
-                    shiftModeSettingDao.upsert(entity)
-                }
-                totalPushed += body.syncedCount
             }
 
-            SyncResult(pushed = totalPushed)
+            val body = response.body()?.data ?: return SyncResult(
+                pushed = 0,
+                success = false,
+                error = "Push response body is null",
+            )
+
+            // Mark the pushed record as synced
+            val now = System.currentTimeMillis()
+            shiftModeSettingDao.upsert(recordToPush.copy(syncedAt = now))
+
+            SyncResult(pushed = body.syncedCount)
         } catch (e: Exception) {
             SyncResult(success = false, error = e.message ?: "Push failed unexpectedly")
         }
@@ -143,36 +147,51 @@ class ShiftModeSettingSyncAdapter @Inject constructor(
     /**
      * Merges a page of remote records into the local store.
      *
+     * Single-row entity constraint: at most 1 ShiftModeSetting record should exist locally.
+     * If the remote record has a different ID than the existing local record, we apply LWW
+     * between them and keep only the winner — preventing duplication across devices.
+     *
      * LWW merge logic:
      * - If remote modifiedAt > local modifiedAt → overwrite local
      * - Otherwise → skip (keep local)
      * - If no local record exists → insert
+     * - If local exists with different ID → LWW across IDs, keep winner only
      */
     private suspend fun mergeRemoteRecords(remoteRecords: List<ShiftModeSettingSyncRecord>): ShiftModeSettingMergeStats {
         val now = System.currentTimeMillis()
         var inserted = 0
         var updated = 0
 
-        // Load all local records (at most 1) for lookup
+        // Load all local records (should be at most 1) for lookup
         val localRecords = shiftModeSettingDao.getAll()
         val localMap = localRecords.associateBy { it.id }
 
         for (record in remoteRecords) {
             val remoteModifiedAt = parseIsoToTimestamp(record.modifiedAt)
             val remoteEntity = record.toEntity(syncedAt = now, modifiedAtMillis = remoteModifiedAt)
-            val local = localMap[record.id]
+            val localById = localMap[record.id]
 
-            if (local == null) {
-                // New remote record → insert
-                shiftModeSettingDao.upsert(remoteEntity)
-                inserted++
-            } else {
-                // LWW: remote modifiedAt > local modifiedAt → overwrite
-                if (remoteModifiedAt > local.modifiedAt) {
+            if (localById != null) {
+                // Same ID — standard LWW merge
+                if (remoteModifiedAt > localById.modifiedAt) {
                     shiftModeSettingDao.upsert(remoteEntity)
                     updated++
                 }
                 // Otherwise → skip (keep local)
+            } else if (localRecords.isEmpty()) {
+                // No local records at all — insert the remote
+                shiftModeSettingDao.upsert(remoteEntity)
+                inserted++
+            } else {
+                // A local record exists with a DIFFERENT ID — apply LWW across IDs
+                val existingLocal = localRecords.first()
+                if (remoteModifiedAt > existingLocal.modifiedAt) {
+                    // Remote wins — delete the old local record and insert the remote
+                    shiftModeSettingDao.deleteById(existingLocal.id)
+                    shiftModeSettingDao.upsert(remoteEntity)
+                    updated++
+                }
+                // Otherwise local wins — skip the remote (don't insert a duplicate)
             }
         }
 

@@ -57,8 +57,13 @@ vi.mock('@/data/db', () => ({
       get: vi.fn().mockResolvedValue(undefined),
       add: vi.fn().mockResolvedValue(undefined),
       put: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+      bulkDelete: vi.fn().mockResolvedValue(undefined),
       where: vi.fn().mockReturnValue({
         anyOf: vi.fn().mockReturnValue({
+          modify: vi.fn().mockResolvedValue(0),
+        }),
+        equals: vi.fn().mockReturnValue({
           modify: vi.fn().mockResolvedValue(0),
         }),
       }),
@@ -635,6 +640,147 @@ describe('Shift Mode Settings Sync', () => {
         ),
         { numRuns: 100 },
       );
+    });
+  });
+
+  describe('Pull — Cross-ID deduplication (single-row entity)', () => {
+    it('should replace local record when remote has different ID and newer modifiedAt', async () => {
+      const localRecord = {
+        id: 'local-uuid-aaa',
+        enabled: false,
+        modifiedAt: new Date('2025-06-20T10:00:00Z'),
+        syncedAt: new Date('2025-06-20T10:00:00Z'),
+        isDeleted: false,
+      };
+
+      // get(remote.id) returns undefined (different ID)
+      mockedShiftModeSettings.get.mockResolvedValue(undefined);
+      // toArray returns the existing local record (already synced, so push skips it)
+      mockedShiftModeSettings.toArray.mockResolvedValue([localRecord]);
+
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+        const urlStr = url as string;
+        if (urlStr.includes('shift-mode-settings/sync/pull')) {
+          return new Response(JSON.stringify({
+            data: {
+              records: [{
+                id: 'remote-uuid-bbb',
+                enabled: true,
+                modifiedAt: '2025-06-20T14:00:00Z',
+                isDeleted: false,
+              }],
+              cursor: null,
+              hasMore: false,
+            },
+          }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        return new Response(JSON.stringify({
+          data: { records: [], cursor: null, hasMore: false, acknowledgedIds: [], rejectedIds: [], processedCount: 0, shifts: [] },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      });
+
+      await runFullSyncCycle();
+
+      // Should delete the old local record and insert the remote one
+      expect(mockedShiftModeSettings.delete).toHaveBeenCalledWith('local-uuid-aaa');
+      expect(mockedShiftModeSettings.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'remote-uuid-bbb',
+          enabled: true,
+        }),
+      );
+    });
+
+    it('should keep local record when remote has different ID but older modifiedAt', async () => {
+      const localRecord = {
+        id: 'local-uuid-aaa',
+        enabled: true,
+        modifiedAt: new Date('2025-06-20T14:00:00Z'),
+        syncedAt: new Date('2025-06-20T14:00:00Z'),
+        isDeleted: false,
+      };
+
+      mockedShiftModeSettings.get.mockResolvedValue(undefined);
+      mockedShiftModeSettings.toArray.mockResolvedValue([localRecord]);
+
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+        const urlStr = url as string;
+        if (urlStr.includes('shift-mode-settings/sync/pull')) {
+          return new Response(JSON.stringify({
+            data: {
+              records: [{
+                id: 'remote-uuid-bbb',
+                enabled: false,
+                modifiedAt: '2025-06-20T10:00:00Z',
+                isDeleted: false,
+              }],
+              cursor: null,
+              hasMore: false,
+            },
+          }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        return new Response(JSON.stringify({
+          data: { records: [], cursor: null, hasMore: false, acknowledgedIds: [], rejectedIds: [], processedCount: 0, shifts: [] },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      });
+
+      await runFullSyncCycle();
+
+      // Should NOT delete local or insert remote — local wins
+      expect(mockedShiftModeSettings.delete).not.toHaveBeenCalled();
+      expect(mockedShiftModeSettings.add).not.toHaveBeenCalled();
+      expect(mockedShiftModeSettings.put).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Push — Deduplication safety', () => {
+    it('should only push 1 record and delete extras when multiple records exist', async () => {
+      const newerRecord = {
+        id: 'setting-newer',
+        enabled: true,
+        modifiedAt: new Date('2025-06-20T14:00:00Z'),
+        syncedAt: null,
+        isDeleted: false,
+      };
+      const olderRecord1 = {
+        id: 'setting-older-1',
+        enabled: false,
+        modifiedAt: new Date('2025-06-20T10:00:00Z'),
+        syncedAt: null,
+        isDeleted: false,
+      };
+      const olderRecord2 = {
+        id: 'setting-older-2',
+        enabled: false,
+        modifiedAt: new Date('2025-06-20T08:00:00Z'),
+        syncedAt: null,
+        isDeleted: false,
+      };
+
+      mockedShiftModeSettings.toArray.mockResolvedValue([olderRecord1, newerRecord, olderRecord2]);
+
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response(JSON.stringify({
+          data: { records: [], cursor: null, hasMore: false, acknowledgedIds: [], rejectedIds: [], processedCount: 0, shifts: [] },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+      );
+
+      await runFullSyncCycle();
+
+      // Should have deleted the 2 older records
+      expect(mockedShiftModeSettings.bulkDelete).toHaveBeenCalledWith(
+        expect.arrayContaining(['setting-older-1', 'setting-older-2']),
+      );
+
+      // Should push only 1 record (the newest)
+      const pushCalls = fetchSpy.mock.calls.filter(
+        call => (call[0] as string).includes('shift-mode-settings/sync/push'),
+      );
+      expect(pushCalls.length).toBe(1);
+
+      const body = JSON.parse((pushCalls[0][1] as RequestInit).body as string);
+      expect(body.records).toHaveLength(1);
+      expect(body.records[0].id).toBe('setting-newer');
     });
   });
 });

@@ -26,4 +26,10 @@ interface ShiftModeSettingDao {
 
     @Query("SELECT * FROM shift_mode_settings")
     suspend fun getAll(): List<ShiftModeSettingEntity>
+
+    @Query("DELETE FROM shift_mode_settings WHERE id = :id")
+    suspend fun deleteById(id: String)
+
+    @Query("DELETE FROM shift_mode_settings WHERE id != :keepId")
+    suspend fun deleteAllExcept(keepId: String)
 }
