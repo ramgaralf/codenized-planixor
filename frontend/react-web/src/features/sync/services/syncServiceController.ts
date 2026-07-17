@@ -450,13 +450,16 @@ export const normalizeIso = (iso: string): string => {
 
 /**
  * Merges a single remote shift mode setting record into local storage using LWW.
+ *
+ * Single-row entity constraint: at most 1 ShiftModeSetting record should exist locally.
+ * If the remote record has a different ID than the existing local record, we apply LWW
+ * between them and keep only the winner — preventing duplication across devices.
  */
 const mergeShiftModeSettingRecord = async (
   remote: ShiftModeSettingSyncRecord,
   now: Date,
 ): Promise<void> => {
   const remoteModifiedAt = new Date(normalizeIso(remote.modifiedAt));
-  const local = await db.shiftModeSettings.get(remote.id);
   const remoteSetting = {
     id: remote.id,
     enabled: remote.enabled,
@@ -465,19 +468,41 @@ const mergeShiftModeSettingRecord = async (
     isDeleted: remote.isDeleted,
   };
 
-  if (!local) {
+  // Look up by the remote's ID first
+  const localById = await db.shiftModeSettings.get(remote.id);
+
+  if (localById) {
+    // Same ID — standard LWW merge
+    if (localById.syncedAt && localById.modifiedAt.getTime() <= localById.syncedAt.getTime()) {
+      await db.shiftModeSettings.put(remoteSetting);
+      return;
+    }
+
+    if (remoteModifiedAt.getTime() > localById.modifiedAt.getTime()) {
+      await db.shiftModeSettings.put(remoteSetting);
+    }
+    return;
+  }
+
+  // No local record with the same ID — check if ANY record exists (different ID)
+  const allLocal = await db.shiftModeSettings.toArray();
+
+  if (allLocal.length === 0) {
+    // No local records at all — insert the remote
     await db.shiftModeSettings.add(remoteSetting);
     return;
   }
 
-  if (local.syncedAt && local.modifiedAt.getTime() <= local.syncedAt.getTime()) {
-    await db.shiftModeSettings.put(remoteSetting);
-    return;
-  }
+  // A local record with a DIFFERENT ID exists — apply LWW across IDs
+  const existingLocal = allLocal[0];
+  if (!existingLocal) return;
 
-  if (remoteModifiedAt.getTime() > local.modifiedAt.getTime()) {
-    await db.shiftModeSettings.put(remoteSetting);
+  if (remoteModifiedAt.getTime() > existingLocal.modifiedAt.getTime()) {
+    // Remote wins — delete the old local record and insert the remote
+    await db.shiftModeSettings.delete(existingLocal.id);
+    await db.shiftModeSettings.add(remoteSetting);
   }
+  // Otherwise local wins — skip the remote record (don't insert a duplicate)
 };
 
 /**
@@ -539,22 +564,36 @@ const syncShiftModeSettings = async (serverUrl: string, apiKey: string, apiBaseP
 
 /**
  * Pushes unsynced shift mode settings to the backend.
- * At most 1 record will be pushed.
+ * Single-row entity safety: if multiple records exist locally (corrupt state),
+ * keeps only the most recently modified one and deletes the rest before pushing.
+ * At most 1 record will ever be pushed.
  */
 const pushShiftModeSettings = async (serverUrl: string, apiKey: string, apiBasePath: string): Promise<void> => {
-  const allSettings = await db.shiftModeSettings.toArray();
-  const pushCandidates = allSettings.filter(
+  let settings = await db.shiftModeSettings.toArray();
+
+  // Deduplication safety: if multiple records exist, keep only the most recent
+  if (settings.length > 1) {
+    const sorted = [...settings].sort((a, b) => b.modifiedAt.getTime() - a.modifiedAt.getTime());
+    const keep = sorted[0]!;
+    const toDelete = sorted.slice(1).map(s => s.id);
+    await db.shiftModeSettings.bulkDelete(toDelete);
+    settings = [keep];
+  }
+
+  const pushCandidates = settings.filter(
     s => s.syncedAt === null || s.modifiedAt.getTime() > s.syncedAt.getTime(),
   );
 
   if (pushCandidates.length === 0) return;
 
-  const records: ShiftModeSettingSyncRecord[] = pushCandidates.map(s => ({
-    id: s.id,
-    enabled: s.enabled,
-    modifiedAt: s.modifiedAt.toISOString(),
-    isDeleted: s.isDeleted,
-  }));
+  // Only push the single record (guaranteed by dedup above)
+  const record = pushCandidates[0]!;
+  const records: ShiftModeSettingSyncRecord[] = [{
+    id: record.id,
+    enabled: record.enabled,
+    modifiedAt: record.modifiedAt.toISOString(),
+    isDeleted: record.isDeleted,
+  }];
 
   const response = await fetch(`${serverUrl}${apiBasePath}/shift-mode-settings/sync/push`, {
     method: 'POST',
@@ -572,8 +611,7 @@ const pushShiftModeSettings = async (serverUrl: string, apiKey: string, apiBaseP
 
   // Mark as synced
   const now = new Date();
-  const ids = pushCandidates.map(s => s.id);
-  await db.shiftModeSettings.where('id').anyOf(ids).modify({ syncedAt: now });
+  await db.shiftModeSettings.where('id').equals(record.id).modify({ syncedAt: now });
 };
 
 /**
