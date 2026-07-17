@@ -262,6 +262,8 @@ class BackupViewModel @Inject constructor(
                             isRestoring = false,
                             successMessage = R.string.backup_restore_partial,
                             restoredCount = result.restoredCount,
+                            succeededEntities = result.succeededEntities.joinToString(", "),
+                            failedEntities = result.failedEntities.joinToString(", "),
                         )
                     }
                 } else {

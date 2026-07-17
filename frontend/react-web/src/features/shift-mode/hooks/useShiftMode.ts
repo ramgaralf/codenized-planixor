@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/data/db';
 
 import type { ShiftModeSetting } from '../models';
+import { deduplicateShiftModeSettings } from '../services/shiftModeCleanup';
 
 export interface UseShiftModeReturn {
   enabled: boolean;
@@ -22,9 +23,22 @@ export interface UseShiftModeReturn {
  *
  * Write operations are performed outside the liveQuery context to avoid
  * Dexie's "readwrite transaction in liveQuery" error.
+ *
+ * On mount, deduplicates any corrupt state (multiple records) left by
+ * a previous sync bug before proceeding with normal initialization.
  */
 export const useShiftMode = (): UseShiftModeReturn => {
   const initRef = useRef(false);
+  const cleanupDoneRef = useRef(false);
+
+  // Run deduplication once on mount (before initialization creates a new record)
+  useEffect(() => {
+    if (cleanupDoneRef.current) return;
+    cleanupDoneRef.current = true;
+    deduplicateShiftModeSettings().catch((err) => {
+      console.error('ShiftModeSetting deduplication failed:', err);
+    });
+  }, []);
 
   // Read-only live query — returns null when no record exists, undefined while loading
   const queryResult = useLiveQuery(async () => {
