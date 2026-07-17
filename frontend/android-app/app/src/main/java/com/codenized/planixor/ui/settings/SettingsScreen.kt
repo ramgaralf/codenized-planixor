@@ -506,10 +506,10 @@ private fun BackupSection(
     uiState.successMessage?.let { msgRes ->
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = if (msgRes == R.string.backup_restore_success) {
-                stringResource(msgRes, uiState.restoredCount)
-            } else {
-                stringResource(msgRes)
+            text = when (msgRes) {
+                R.string.backup_restore_success -> stringResource(msgRes, uiState.restoredCount)
+                R.string.backup_restore_partial -> stringResource(msgRes, uiState.succeededEntities, uiState.failedEntities)
+                else -> stringResource(msgRes)
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.primary,
