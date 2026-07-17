@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,7 +31,6 @@ import com.codenized.planixor.ui.theme.PrimaryBlue
 import java.time.Month
 import java.time.Year
 import java.time.format.TextStyle
-import java.util.Locale
 
 /**
  * Navigation bar for the Reports screen with left/right arrows, a center label, and a Today button.
@@ -78,7 +78,7 @@ fun DateNavigator(
 
     val label = when (mode) {
         ReportMode.MONTH -> {
-            val locale = Locale.getDefault()
+            val locale = LocalLocale.current.platformLocale
             val monthName = Month.of(selectedMonth + 1)
                 .getDisplayName(TextStyle.FULL, locale)
                 .replaceFirstChar { it.titlecase(locale) }

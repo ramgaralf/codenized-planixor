@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,7 +60,7 @@ fun YearView(
 ) {
     val year = currentDate.year
     val today = LocalDate.now()
-    val locale = Locale.getDefault()
+    val locale = LocalLocale.current.platformLocale
     val firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
     val scrollState = rememberScrollState()
 

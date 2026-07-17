@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- App -->
     <string name="app_name">Planixor</string>
     <string name="app_description">Organize your time. Power your day.</string>
@@ -160,7 +160,7 @@
 
     <!-- Reminder Series Propagation Dialog -->
     <string name="reminder_propagation_series_title">Frequency Changed</string>
-    <string name="reminder_propagation_series_description">The frequency of reminder \"%1$s\" changed from %2$s to %3$s. %4$d calendar event(s) in %5$d may be affected.</string>
+    <string name="reminder_propagation_series_description" tools:ignore="PluralsCandidate">The frequency of reminder \"%1$s\" changed from %2$s to %3$s. %4$d calendar event(s) in %5$d may be affected.</string>
     <string name="reminder_propagation_series_confirm">Update events</string>
     <string name="reminder_propagation_series_decline">Keep existing</string>
 
@@ -174,6 +174,18 @@
     <string name="reminders_delete_confirm_text">This action is permanent and cannot be undone. Delete \"%1$s\"?</string>
     <string name="reminders_confirm">Confirm</string>
     <string name="reminders_cancel">Cancel</string>
+
+    <!-- Reminders Screen (alternate keys) -->
+    <string name="reminder_screen_title">Reminders</string>
+    <string name="reminder_empty">No reminders available</string>
+    <string name="reminder_error_load">Could not load reminders</string>
+    <string name="reminder_new_reminder">New Reminder</string>
+    <string name="reminder_deactivate_confirm_title">Deactivate this reminder?</string>
+    <string name="reminder_deactivate_confirm_text">Are you sure you want to deactivate \"%1$s\"?</string>
+    <string name="reminder_delete_confirm_title">Delete this reminder?</string>
+    <string name="reminder_delete_confirm_text">This action is permanent. Delete \"%1$s\"?</string>
+    <string name="reminder_confirm">Confirm</string>
+    <string name="reminder_cancel">Cancel</string>
 
     <!-- Reminder Form -->
     <string name="reminder_form_title_create">New Reminder</string>

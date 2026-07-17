@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <!--
+      Monochrome version of the Planixor "P" logo for themed adaptive icons.
+      Uses the same path geometry and scaling as the foreground.
+      Single solid color (system applies tinting).
+    -->
+    <group
+        android:scaleX="0.55"
+        android:scaleY="0.55"
+        android:pivotX="255"
+        android:pivotY="262"
+        android:translateX="1"
+        android:translateY="-6">
+        <path
+            android:fillColor="#000000"
+            android:pathData="M66.76,92.69C65.37,65.93 82.5,38.15 112.5,38.15L315,40C392,40 450,99 450,176C450,254 392,312 315,312L245,312C204,312 170,346 170,387L170,432C170,462 145,487 115,487C85,487 60,462 60,432L60,377C60,276 134.67,196.24 236.67,196.24L315,196.7C332,196.7 340.83,187.41 340.83,170.41C340.83,153.41 325.06,146.43 308.06,146.43L115.75,144.11C85.75,144.11 68.15,119.44 66.76,92.69Z"/>
+    </group>
+</vector>

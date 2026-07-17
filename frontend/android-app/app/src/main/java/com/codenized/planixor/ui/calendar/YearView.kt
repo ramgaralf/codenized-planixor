@@ -45,8 +45,8 @@ import java.util.Locale
 @Composable
 fun YearView(
     currentDate: LocalDate,
-    locale: Locale = Locale.getDefault(),
     modifier: Modifier = Modifier,
+    locale: Locale = Locale.getDefault(),
 ) {
     val year = currentDate.year
     val today = LocalDate.now()

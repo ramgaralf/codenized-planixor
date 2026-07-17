@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,7 +31,6 @@ import com.codenized.planixor.ui.theme.PlanixorTheme
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
-import java.util.Locale
 
 /**
  * Per-view date navigator composable.
@@ -58,8 +58,8 @@ fun DateNavigator(
     onNavigateMonth: (Int) -> Unit,
     onNavigateYear: (Int) -> Unit,
     onTodayClick: () -> Unit,
-    showTodayButton: Boolean = true,
     modifier: Modifier = Modifier,
+    showTodayButton: Boolean = true,
 ) {
     when (activeView) {
         CalendarView.Day -> DayDateNavigator(
@@ -107,10 +107,10 @@ private fun DayDateNavigator(
     onNavigateMonth: (Int) -> Unit,
     onNavigateYear: (Int) -> Unit,
     onTodayClick: () -> Unit,
-    showTodayButton: Boolean = true,
     modifier: Modifier = Modifier,
+    showTodayButton: Boolean = true,
 ) {
-    val locale = Locale.getDefault()
+    val locale = LocalLocale.current.platformLocale
     val dayName = currentDate.dayOfWeek.getDisplayName(TextStyle.SHORT, locale)
         .replaceFirstChar { it.titlecase(locale) }
     val dayNumber = currentDate.dayOfMonth.toString()
@@ -169,10 +169,10 @@ private fun WeekDateNavigator(
     onNavigateWeek: (Int) -> Unit,
     onNavigateYear: (Int) -> Unit,
     onTodayClick: () -> Unit,
-    showTodayButton: Boolean = true,
     modifier: Modifier = Modifier,
+    showTodayButton: Boolean = true,
 ) {
-    val locale = Locale.getDefault()
+    val locale = LocalLocale.current.platformLocale
     val weekFields = WeekFields.of(locale)
     val weekNumber = currentDate.get(weekFields.weekOfWeekBasedYear()).toString()
     val year = currentDate.year.toString()
@@ -217,10 +217,10 @@ private fun MonthDateNavigator(
     onNavigateMonth: (Int) -> Unit,
     onNavigateYear: (Int) -> Unit,
     onTodayClick: () -> Unit,
-    showTodayButton: Boolean = true,
     modifier: Modifier = Modifier,
+    showTodayButton: Boolean = true,
 ) {
-    val locale = Locale.getDefault()
+    val locale = LocalLocale.current.platformLocale
     val monthName = currentDate.month.getDisplayName(TextStyle.FULL, locale)
         .replaceFirstChar { it.titlecase(locale) }
     val year = currentDate.year.toString()
@@ -261,8 +261,8 @@ private fun YearDateNavigator(
     currentDate: LocalDate,
     onNavigateYear: (Int) -> Unit,
     onTodayClick: () -> Unit,
-    showTodayButton: Boolean = true,
     modifier: Modifier = Modifier,
+    showTodayButton: Boolean = true,
 ) {
     val year = currentDate.year.toString()
 

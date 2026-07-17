@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,7 +61,6 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 /**
  * UI state for the event form.
@@ -111,18 +111,18 @@ data class EventFormUiState(
 @Composable
 fun EventFormScreen(
     uiState: EventFormUiState,
-    isEditMode: Boolean = false,
     onEventTypeSelected: (eventType: String, eventTypeId: String) -> Unit,
     onStartDaySelected: (LocalDate) -> Unit,
     onEndDaySelected: (LocalDate) -> Unit,
     onStartTimeSelected: (hours: Int, minutes: Int) -> Unit,
     onEndTimeSelected: (hours: Int, minutes: Int) -> Unit,
     onNotesChanged: (String) -> Unit,
-    onAlertOffsetsChanged: (List<Int>) -> Unit = {},
     onSave: () -> Unit,
     onCancel: () -> Unit,
-    onDelete: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    isEditMode: Boolean = false,
+    onAlertOffsetsChanged: (List<Int>) -> Unit = {},
+    onDelete: (() -> Unit)? = null,
 ) {
     if (uiState.isLoading) {
         Column(
@@ -322,7 +322,7 @@ private fun DayPickerField(
 ) {
     var showPicker by remember { mutableStateOf(false) }
     val displayText = selectedDay?.format(
-        DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault()),
+        DateTimeFormatter.ofPattern("d MMMM yyyy", LocalLocale.current.platformLocale),
     ) ?: ""
 
     Column(modifier = modifier) {
@@ -413,9 +413,9 @@ private fun TimePickerField(
     hours: Int?,
     minutes: Int?,
     error: String?,
-    enabled: Boolean = true,
     onTimeSelected: (Int, Int) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     var showPicker by remember { mutableStateOf(false) }
 
@@ -454,7 +454,7 @@ private fun TimePickerField(
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = if (hours != null && minutes != null) {
-                    String.format(Locale.getDefault(), "%02d:%02d", hours, minutes)
+                    String.format(LocalLocale.current.platformLocale, "%02d:%02d", hours, minutes)
                 } else {
                     stringResource(R.string.event_form_not_set)
                 },

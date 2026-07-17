@@ -11,8 +11,9 @@ fileMatchPattern: "frontend/android-app/**"
 - **Min SDK:** 26 (Android 8.0)
 - **Target SDK:** 36 (Android 15)
 - **Compile SDK:** 36
-- **JVM Target:** 11
-- **Build system:** Gradle 8.13 with Kotlin DSL
+- **JVM Target:** 17
+- **Build system:** Gradle 9.6.1 with Kotlin DSL
+- **AGP:** 9.0.1 (R8 full mode enabled by default, resource shrinking on)
 - **UI:** Jetpack Compose (Material Design 3) — no XML layouts
 - **Architecture:** MVVM + Clean Architecture (single module, layer separation by package)
 - **Networking:** Retrofit + OkHttp + Gson
@@ -27,21 +28,21 @@ fileMatchPattern: "frontend/android-app/**"
 
 | Package | Version |
 |---|---|
-| Android Gradle Plugin (`agp`) | `8.12.*` |
-| Kotlin | `2.0.*` |
-| Compose BOM | `2024.09.00` |
-| `androidx.core:core-ktx` | `1.17.*` |
+| Android Gradle Plugin (`agp`) | `9.0.*` |
+| Kotlin | `2.2.*` (via AGP built-in) |
+| KSP | `2.3.*` |
+| Compose BOM | `2026.06.00` |
+| Hilt | `2.60.*` |
+| `androidx.core:core-ktx` | `1.18.*` |
 | `androidx.lifecycle:lifecycle-runtime-ktx` | `2.10.*` |
 | `androidx.lifecycle:lifecycle-viewmodel-ktx` | `2.10.*` |
-| `androidx.activity:activity-compose` | `1.12.*` |
+| `androidx.activity:activity-compose` | `1.13.*` |
 | `androidx.compose.material3:material3` | via BOM |
-| Retrofit | `2.11.*` |
+| Retrofit | `2.12.*` |
 | OkHttp logging interceptor | `4.12.*` |
-| Gson | `2.11.*` |
-| Kotlinx Coroutines | `1.10.*` |
-| Coil Compose | `2.7.*` |
+| Kotlinx Coroutines | `1.11.*` |
 | JUnit | `4.13.*` |
-| Espresso | `3.7.*` |
+| Espresso | `3.6.*` |
 
 > All versions managed centrally in `gradle/libs.versions.toml`. Never hardcode versions in `build.gradle.kts`.
 > Do not introduce new libraries without explicit permission.
@@ -72,17 +73,21 @@ fileMatchPattern: "frontend/android-app/**"
 // Root build.gradle.kts
 plugins {
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.hilt.android) apply false
+    alias(libs.plugins.ksp) apply false
 }
 
 // App build.gradle.kts
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.ksp)
 }
 ```
+
+> **AGP 9.0 change:** The `kotlin.android` plugin is no longer needed — AGP 9.0 handles Kotlin compilation natively via built-in Kotlin support. Only `kotlin.compose` remains for the Compose compiler plugin.
 
 ## Common commands
 
@@ -123,16 +128,38 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "11"
+
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
+
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 ```
+
+> **AGP 9.0 changes:**
+> - `kotlinOptions { }` is removed — use `kotlin { compilerOptions { } }` instead
+> - R8 full mode is enabled by default (no opt-in property needed)
+> - `isShrinkResources = true` removes unused resources from release builds
+> - JVM target raised to 17 (Gradle 9.x requires JDK 17+)
 

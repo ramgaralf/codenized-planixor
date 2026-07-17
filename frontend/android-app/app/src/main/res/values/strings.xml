@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- App -->
     <string name="app_name">Planixor</string>
     <string name="app_description">Organiza tu tiempo. Potencia tu día.</string>
@@ -171,7 +171,7 @@
 
     <!-- Reminder Series Propagation Dialog -->
     <string name="reminder_propagation_series_title">Frecuencia actualizada</string>
-    <string name="reminder_propagation_series_description">La frecuencia del recordatorio \"%1$s\" cambió de %2$s a %3$s. %4$d evento(s) del calendario en %5$d podrían verse afectados.</string>
+    <string name="reminder_propagation_series_description" tools:ignore="PluralsCandidate">La frecuencia del recordatorio \"%1$s\" cambió de %2$s a %3$s. %4$d evento(s) del calendario en %5$d podrían verse afectados.</string>
     <string name="reminder_propagation_series_confirm">Actualizar eventos</string>
     <string name="reminder_propagation_series_decline">Mantener existentes</string>
 

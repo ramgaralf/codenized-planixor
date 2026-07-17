@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.core.graphics.toColorInt
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.codenized.planixor.domain.model.CalendarEventDisplay
@@ -42,8 +43,8 @@ import com.codenized.planixor.ui.theme.PlanixorTheme
 fun EventCard(
     event: CalendarEventDisplay,
     onClick: () -> Unit,
-    showNotes: Boolean = true,
     modifier: Modifier = Modifier,
+    showNotes: Boolean = true,
 ) {
     val bgColor = parseHexColorSafe(event.backgroundColor)
     val startTimeLabel = formatMinutesToTime(event.startTime)
@@ -160,7 +161,7 @@ internal fun parseHexColorSafe(hex: String): Color {
         if (hex.isBlank() || hex == "transparent") {
             Color.Gray
         } else {
-            Color(android.graphics.Color.parseColor(hex))
+            Color(hex.toColorInt())
         }
     } catch (_: IllegalArgumentException) {
         Color.Gray

@@ -40,12 +40,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.codenized.planixor.R
@@ -389,7 +391,7 @@ private fun TimeField(
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = if (hours != null && minutes != null) {
-                    String.format(java.util.Locale.getDefault(), "%02d:%02d", hours, minutes)
+                    String.format(LocalLocale.current.platformLocale, "%02d:%02d", hours, minutes)
                 } else {
                     stringResource(R.string.shift_form_not_set)
                 },
@@ -428,7 +430,7 @@ private fun HoursWorkedField(
     val displayText = if (hoursWorked != null) {
         val h = hoursWorked / 60
         val m = hoursWorked % 60
-        String.format(java.util.Locale.getDefault(), "%dh %dm", h, m)
+        String.format(LocalLocale.current.platformLocale, "%dh %dm", h, m)
     } else {
         stringResource(R.string.shift_form_not_set)
     }
@@ -561,7 +563,7 @@ private fun ValidationErrorText(errorKey: String) {
 
 private fun parseHexColor(hex: String): Color {
     return try {
-        Color(android.graphics.Color.parseColor(hex))
+        Color(hex.toColorInt())
     } catch (e: IllegalArgumentException) {
         Color.Gray
     }
