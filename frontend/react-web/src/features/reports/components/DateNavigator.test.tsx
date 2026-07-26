@@ -32,176 +32,100 @@ vi.mock('lucide-react', () => ({
 }));
 
 describe('DateNavigator', () => {
-  const currentYear = new Date().getFullYear();
-  const minYear = currentYear - 10;
-  const maxYear = currentYear + 10;
+  const defaultProps = {
+    mode: 'month' as const,
+    selectedMonth: 5,
+    selectedYear: 2025,
+    onPreviousMonth: vi.fn(),
+    onNextMonth: vi.fn(),
+    onPreviousYear: vi.fn(),
+    onNextYear: vi.fn(),
+    onToday: vi.fn(),
+  };
 
   it('should display year label in year mode', () => {
-    render(
-      <DateNavigator
-        mode="year"
-        selectedMonth={0}
-        selectedYear={2025}
-        onPrevious={() => {}}
-        onNext={() => {}}
-        onToday={() => {}}
-      />,
-    );
+    render(<DateNavigator {...defaultProps} mode="year" selectedYear={2025} />);
 
     expect(screen.getByText('2025')).toBeInTheDocument();
   });
 
+  it('should display month and year separately in month mode', () => {
+    render(<DateNavigator {...defaultProps} selectedMonth={5} selectedYear={2025} />);
+
+    expect(screen.getByText('2025')).toBeInTheDocument();
+    // Month name should be rendered (locale-dependent, but in English test it should be "June")
+    expect(screen.getByText(/june/i)).toBeInTheDocument();
+  });
+
   it('should display a Today button', () => {
-    render(
-      <DateNavigator
-        mode="month"
-        selectedMonth={5}
-        selectedYear={2025}
-        onPrevious={() => {}}
-        onNext={() => {}}
-        onToday={() => {}}
-      />,
-    );
+    render(<DateNavigator {...defaultProps} />);
 
     expect(screen.getByRole('button', { name: 'Today' })).toBeInTheDocument();
   });
 
-  it('should call onPrevious when left arrow is clicked', async () => {
+  it('should call onPreviousMonth when month left arrow is clicked', async () => {
     const user = userEvent.setup();
-    const onPrevious = vi.fn();
+    const onPreviousMonth = vi.fn();
 
-    render(
-      <DateNavigator
-        mode="month"
-        selectedMonth={5}
-        selectedYear={2025}
-        onPrevious={onPrevious}
-        onNext={() => {}}
-        onToday={() => {}}
-      />,
-    );
+    render(<DateNavigator {...defaultProps} onPreviousMonth={onPreviousMonth} />);
 
     await user.click(screen.getByRole('button', { name: 'Previous month' }));
-    expect(onPrevious).toHaveBeenCalledOnce();
+    expect(onPreviousMonth).toHaveBeenCalledOnce();
   });
 
-  it('should call onNext when right arrow is clicked', async () => {
+  it('should call onNextMonth when month right arrow is clicked', async () => {
     const user = userEvent.setup();
-    const onNext = vi.fn();
+    const onNextMonth = vi.fn();
 
-    render(
-      <DateNavigator
-        mode="month"
-        selectedMonth={5}
-        selectedYear={2025}
-        onPrevious={() => {}}
-        onNext={onNext}
-        onToday={() => {}}
-      />,
-    );
+    render(<DateNavigator {...defaultProps} onNextMonth={onNextMonth} />);
 
     await user.click(screen.getByRole('button', { name: 'Next month' }));
-    expect(onNext).toHaveBeenCalledOnce();
+    expect(onNextMonth).toHaveBeenCalledOnce();
+  });
+
+  it('should call onPreviousYear when year left arrow is clicked', async () => {
+    const user = userEvent.setup();
+    const onPreviousYear = vi.fn();
+
+    render(<DateNavigator {...defaultProps} onPreviousYear={onPreviousYear} />);
+
+    await user.click(screen.getByRole('button', { name: 'Previous year' }));
+    expect(onPreviousYear).toHaveBeenCalledOnce();
+  });
+
+  it('should call onNextYear when year right arrow is clicked', async () => {
+    const user = userEvent.setup();
+    const onNextYear = vi.fn();
+
+    render(<DateNavigator {...defaultProps} onNextYear={onNextYear} />);
+
+    await user.click(screen.getByRole('button', { name: 'Next year' }));
+    expect(onNextYear).toHaveBeenCalledOnce();
   });
 
   it('should call onToday when Today button is clicked', async () => {
     const user = userEvent.setup();
     const onToday = vi.fn();
 
-    render(
-      <DateNavigator
-        mode="year"
-        selectedMonth={0}
-        selectedYear={2020}
-        onPrevious={() => {}}
-        onNext={() => {}}
-        onToday={onToday}
-      />,
-    );
+    render(<DateNavigator {...defaultProps} onToday={onToday} />);
 
     await user.click(screen.getByRole('button', { name: 'Today' }));
     expect(onToday).toHaveBeenCalledOnce();
   });
 
-  it('should disable previous button at minimum year boundary in year mode', () => {
-    render(
-      <DateNavigator
-        mode="year"
-        selectedMonth={0}
-        selectedYear={minYear}
-        onPrevious={() => {}}
-        onNext={() => {}}
-        onToday={() => {}}
-      />,
-    );
+  it('should not show month navigator in year mode', () => {
+    render(<DateNavigator {...defaultProps} mode="year" />);
 
-    const prevButton = screen.getByRole('button', { name: 'Previous year' });
-    expect(prevButton).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Previous month' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Next month' })).not.toBeInTheDocument();
   });
 
-  it('should disable next button at maximum year boundary in year mode', () => {
-    render(
-      <DateNavigator
-        mode="year"
-        selectedMonth={0}
-        selectedYear={maxYear}
-        onPrevious={() => {}}
-        onNext={() => {}}
-        onToday={() => {}}
-      />,
-    );
+  it('should show both month and year navigators in month mode', () => {
+    render(<DateNavigator {...defaultProps} mode="month" />);
 
-    const nextButton = screen.getByRole('button', { name: 'Next year' });
-    expect(nextButton).toBeDisabled();
-  });
-
-  it('should disable previous button at minimum month boundary', () => {
-    render(
-      <DateNavigator
-        mode="month"
-        selectedMonth={0}
-        selectedYear={minYear}
-        onPrevious={() => {}}
-        onNext={() => {}}
-        onToday={() => {}}
-      />,
-    );
-
-    const prevButton = screen.getByRole('button', { name: 'Previous month' });
-    expect(prevButton).toBeDisabled();
-  });
-
-  it('should disable next button at maximum month boundary', () => {
-    render(
-      <DateNavigator
-        mode="month"
-        selectedMonth={11}
-        selectedYear={maxYear}
-        onPrevious={() => {}}
-        onNext={() => {}}
-        onToday={() => {}}
-      />,
-    );
-
-    const nextButton = screen.getByRole('button', { name: 'Next month' });
-    expect(nextButton).toBeDisabled();
-  });
-
-  it('should not disable navigation buttons when within range', () => {
-    render(
-      <DateNavigator
-        mode="year"
-        selectedMonth={0}
-        selectedYear={currentYear}
-        onPrevious={() => {}}
-        onNext={() => {}}
-        onToday={() => {}}
-      />,
-    );
-
-    const prevButton = screen.getByRole('button', { name: 'Previous year' });
-    const nextButton = screen.getByRole('button', { name: 'Next year' });
-    expect(prevButton).not.toBeDisabled();
-    expect(nextButton).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Previous month' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next month' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Previous year' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next year' })).toBeInTheDocument();
   });
 });

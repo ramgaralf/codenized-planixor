@@ -50,8 +50,10 @@ fun ReportsScreen(
     ReportsContent(
         uiState = uiState,
         onModeChange = viewModel::switchMode,
-        onPrevious = viewModel::navigatePrevious,
-        onNext = viewModel::navigateNext,
+        onPreviousMonth = viewModel::navigatePreviousMonth,
+        onNextMonth = viewModel::navigateNextMonth,
+        onPreviousYear = viewModel::navigatePreviousYear,
+        onNextYear = viewModel::navigateNextYear,
         onToday = viewModel::navigateToday,
     )
 
@@ -70,8 +72,10 @@ fun ReportsScreen(
 private fun ReportsContent(
     uiState: ReportsUiState,
     onModeChange: (ReportMode) -> Unit,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    onPreviousYear: () -> Unit,
+    onNextYear: () -> Unit,
     onToday: () -> Unit,
 ) {
     Column(
@@ -91,8 +95,10 @@ private fun ReportsContent(
             mode = uiState.mode,
             selectedMonth = uiState.selectedMonth,
             selectedYear = uiState.selectedYear,
-            onPrevious = onPrevious,
-            onNext = onNext,
+            onPreviousMonth = onPreviousMonth,
+            onNextMonth = onNextMonth,
+            onPreviousYear = onPreviousYear,
+            onNextYear = onNextYear,
             onToday = onToday,
         )
 
@@ -332,8 +338,10 @@ private fun ReportsContentEmptyPreview() {
                 ),
             ),
             onModeChange = {},
-            onPrevious = {},
-            onNext = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onPreviousYear = {},
+            onNextYear = {},
             onToday = {},
         )
     }
@@ -346,8 +354,10 @@ private fun ReportsContentLoadingPreview() {
         ReportsContent(
             uiState = ReportsUiState(isLoading = true),
             onModeChange = {},
-            onPrevious = {},
-            onNext = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onPreviousYear = {},
+            onNextYear = {},
             onToday = {},
         )
     }
@@ -371,8 +381,10 @@ private fun ReportsContentWithShiftsOnlyPreview() {
                 ),
             ),
             onModeChange = {},
-            onPrevious = {},
-            onNext = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onPreviousYear = {},
+            onNextYear = {},
             onToday = {},
         )
     }
@@ -398,8 +410,10 @@ private fun ReportsContentFullPreview() {
                 ),
             ),
             onModeChange = {},
-            onPrevious = {},
-            onNext = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onPreviousYear = {},
+            onNextYear = {},
             onToday = {},
         )
     }

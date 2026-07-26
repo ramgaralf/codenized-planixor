@@ -236,6 +236,7 @@ private fun MonthDateNavigator(
             onNext = { onNavigateMonth(1) },
             prevDescription = stringResource(R.string.content_description_previous_month),
             nextDescription = stringResource(R.string.content_description_next_month),
+            labelWidth = 90.dp,
         )
 
         NavSegment(

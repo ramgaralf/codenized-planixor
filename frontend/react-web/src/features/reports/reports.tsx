@@ -34,8 +34,10 @@ export const Reports = () => {
     reportData,
     isLoading,
     setMode,
-    goToPrevious,
-    goToNext,
+    goToPreviousMonth,
+    goToNextMonth,
+    goToPreviousYear,
+    goToNextYear,
     goToToday,
   } = useReportData();
 
@@ -81,8 +83,10 @@ export const Reports = () => {
           mode={mode}
           selectedMonth={selectedMonth}
           selectedYear={selectedYear}
-          onPrevious={goToPrevious}
-          onNext={goToNext}
+          onPreviousMonth={goToPreviousMonth}
+          onNextMonth={goToNextMonth}
+          onPreviousYear={goToPreviousYear}
+          onNextYear={goToNextYear}
           onToday={goToToday}
         />
       </div>

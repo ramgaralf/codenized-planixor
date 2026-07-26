@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -24,27 +25,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.codenized.planixor.R
 import com.codenized.planixor.ui.reports.ReportMode
 import com.codenized.planixor.ui.theme.PlanixorTheme
 import com.codenized.planixor.ui.theme.PrimaryBlue
 import java.time.Month
-import java.time.Year
 import java.time.format.TextStyle
 
 /**
- * Navigation bar for the Reports screen with left/right arrows, a center label, and a Today button.
+ * Navigation bar for the Reports screen with separate month and year navigators.
  *
- * - Month mode: displays localized month-year (e.g., "Junio 2025")
- * - Year mode: displays year label (e.g., "2025")
+ * - Month mode: < MonthName > < Year > [Hoy] (month and year navigated independently)
+ * - Year mode: < Year > [Hoy]
  * - Navigation range: currentYear-10 to currentYear+10
  * - Today button: right-aligned, small outlined text button with primary-blue text
  *
  * @param mode The current report mode (MONTH or YEAR).
  * @param selectedMonth The currently selected month (0-indexed, 0=January).
  * @param selectedYear The currently selected year.
- * @param onPrevious Callback when the user navigates to the previous period.
- * @param onNext Callback when the user navigates to the next period.
+ * @param onPreviousMonth Callback when the user navigates to the previous month.
+ * @param onNextMonth Callback when the user navigates to the next month.
+ * @param onPreviousYear Callback when the user navigates to the previous year.
+ * @param onNextYear Callback when the user navigates to the next year.
  * @param onToday Callback when the user clicks the Today button.
  * @param modifier Optional modifier.
  */
@@ -53,85 +56,76 @@ fun DateNavigator(
     mode: ReportMode,
     selectedMonth: Int,
     selectedYear: Int,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    onPreviousYear: () -> Unit,
+    onNextYear: () -> Unit,
     onToday: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val currentYear = Year.now().value
-    val minYear = currentYear - 10
-    val maxYear = currentYear + 10
-
-    val canNavigatePrevious = when (mode) {
-        ReportMode.MONTH -> {
-            selectedYear > minYear || (selectedYear == minYear && selectedMonth > 0)
-        }
-        ReportMode.YEAR -> selectedYear > minYear
+    when (mode) {
+        ReportMode.MONTH -> MonthReportsNavigator(
+            selectedMonth = selectedMonth,
+            selectedYear = selectedYear,
+            onPreviousMonth = onPreviousMonth,
+            onNextMonth = onNextMonth,
+            onPreviousYear = onPreviousYear,
+            onNextYear = onNextYear,
+            onToday = onToday,
+            modifier = modifier,
+        )
+        ReportMode.YEAR -> YearReportsNavigator(
+            selectedYear = selectedYear,
+            onPreviousYear = onPreviousYear,
+            onNextYear = onNextYear,
+            onToday = onToday,
+            modifier = modifier,
+        )
     }
+}
 
-    val canNavigateNext = when (mode) {
-        ReportMode.MONTH -> {
-            selectedYear < maxYear || (selectedYear == maxYear && selectedMonth < 11)
-        }
-        ReportMode.YEAR -> selectedYear < maxYear
-    }
-
-    val label = when (mode) {
-        ReportMode.MONTH -> {
-            val locale = LocalLocale.current.platformLocale
-            val monthName = Month.of(selectedMonth + 1)
-                .getDisplayName(TextStyle.FULL, locale)
-                .replaceFirstChar { it.titlecase(locale) }
-            "$monthName $selectedYear"
-        }
-        ReportMode.YEAR -> selectedYear.toString()
-    }
+/**
+ * Reports month mode: < MonthName > < Year > [Hoy]
+ * Month and year are navigated independently via separate nav segments.
+ */
+@Composable
+private fun MonthReportsNavigator(
+    selectedMonth: Int,
+    selectedYear: Int,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    onPreviousYear: () -> Unit,
+    onNextYear: () -> Unit,
+    onToday: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val locale = LocalLocale.current.platformLocale
+    val monthName = Month.of(selectedMonth + 1)
+        .getDisplayName(TextStyle.FULL, locale)
+        .replaceFirstChar { it.titlecase(locale) }
+    val year = selectedYear.toString()
 
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start,
     ) {
-        IconButton(
-            onClick = onPrevious,
-            enabled = canNavigatePrevious,
-            modifier = Modifier.size(40.dp),
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = stringResource(R.string.reports_navigate_previous),
-                tint = if (canNavigatePrevious) {
-                    MaterialTheme.colorScheme.onSurface
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                },
-            )
-        }
-
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-            ),
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
+        ReportsNavSegment(
+            label = monthName,
+            onPrevious = onPreviousMonth,
+            onNext = onNextMonth,
+            prevDescription = stringResource(R.string.reports_navigate_previous),
+            nextDescription = stringResource(R.string.reports_navigate_next),
+            labelWidth = 90.dp,
         )
 
-        IconButton(
-            onClick = onNext,
-            enabled = canNavigateNext,
-            modifier = Modifier.size(40.dp),
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.reports_navigate_next),
-                tint = if (canNavigateNext) {
-                    MaterialTheme.colorScheme.onSurface
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                },
-            )
-        }
+        ReportsNavSegment(
+            label = year,
+            onPrevious = onPreviousYear,
+            onNext = onNextYear,
+            prevDescription = stringResource(R.string.content_description_previous_year),
+            nextDescription = stringResource(R.string.content_description_next_year),
+        )
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -152,6 +146,103 @@ fun DateNavigator(
     }
 }
 
+/**
+ * Reports year mode: < Year > [Hoy]
+ */
+@Composable
+private fun YearReportsNavigator(
+    selectedYear: Int,
+    onPreviousYear: () -> Unit,
+    onNextYear: () -> Unit,
+    onToday: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val year = selectedYear.toString()
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start,
+    ) {
+        ReportsNavSegment(
+            label = year,
+            onPrevious = onPreviousYear,
+            onNext = onNextYear,
+            prevDescription = stringResource(R.string.content_description_previous_year),
+            nextDescription = stringResource(R.string.content_description_next_year),
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        OutlinedButton(
+            onClick = onToday,
+            modifier = Modifier.height(32.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = PrimaryBlue,
+            ),
+        ) {
+            Text(
+                text = stringResource(R.string.calendar_today),
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                ),
+            )
+        }
+    }
+}
+
+/**
+ * A nav segment with prev/next chevron buttons and a centered label.
+ */
+@Composable
+private fun ReportsNavSegment(
+    label: String,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    prevDescription: String,
+    nextDescription: String,
+    labelWidth: androidx.compose.ui.unit.Dp = 44.dp,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(
+            onClick = onPrevious,
+            modifier = Modifier.size(28.dp),
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                contentDescription = prevDescription,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleSmall.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.width(labelWidth),
+        )
+
+        IconButton(
+            onClick = onNext,
+            modifier = Modifier.size(28.dp),
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = nextDescription,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun DateNavigatorMonthPreview() {
@@ -160,8 +251,10 @@ private fun DateNavigatorMonthPreview() {
             mode = ReportMode.MONTH,
             selectedMonth = 5,
             selectedYear = 2025,
-            onPrevious = {},
-            onNext = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onPreviousYear = {},
+            onNextYear = {},
             onToday = {},
         )
     }
@@ -175,8 +268,10 @@ private fun DateNavigatorYearPreview() {
             mode = ReportMode.YEAR,
             selectedMonth = 0,
             selectedYear = 2025,
-            onPrevious = {},
-            onNext = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onPreviousYear = {},
+            onNextYear = {},
             onToday = {},
         )
     }

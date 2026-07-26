@@ -179,42 +179,46 @@ class ReportsViewModel @Inject constructor(
     }
 
     /**
-     * Navigates to the previous month or year depending on current mode.
+     * Navigates to the previous month (wraps to December of previous year if January).
      */
-    fun navigatePrevious() {
+    fun navigatePreviousMonth() {
         _controlState.update { current ->
-            when (current.mode) {
-                ReportMode.MONTH -> {
-                    if (current.selectedMonth > 0) {
-                        current.copy(selectedMonth = current.selectedMonth - 1)
-                    } else {
-                        current.copy(selectedMonth = 11, selectedYear = current.selectedYear - 1)
-                    }
-                }
-                ReportMode.YEAR -> {
-                    current.copy(selectedYear = current.selectedYear - 1)
-                }
+            if (current.selectedMonth > 0) {
+                current.copy(selectedMonth = current.selectedMonth - 1)
+            } else {
+                current.copy(selectedMonth = 11, selectedYear = current.selectedYear - 1)
             }
         }
     }
 
     /**
-     * Navigates to the next month or year depending on current mode.
+     * Navigates to the next month (wraps to January of next year if December).
      */
-    fun navigateNext() {
+    fun navigateNextMonth() {
         _controlState.update { current ->
-            when (current.mode) {
-                ReportMode.MONTH -> {
-                    if (current.selectedMonth < 11) {
-                        current.copy(selectedMonth = current.selectedMonth + 1)
-                    } else {
-                        current.copy(selectedMonth = 0, selectedYear = current.selectedYear + 1)
-                    }
-                }
-                ReportMode.YEAR -> {
-                    current.copy(selectedYear = current.selectedYear + 1)
-                }
+            if (current.selectedMonth < 11) {
+                current.copy(selectedMonth = current.selectedMonth + 1)
+            } else {
+                current.copy(selectedMonth = 0, selectedYear = current.selectedYear + 1)
             }
+        }
+    }
+
+    /**
+     * Navigates to the previous year.
+     */
+    fun navigatePreviousYear() {
+        _controlState.update { current ->
+            current.copy(selectedYear = current.selectedYear - 1)
+        }
+    }
+
+    /**
+     * Navigates to the next year.
+     */
+    fun navigateNextYear() {
+        _controlState.update { current ->
+            current.copy(selectedYear = current.selectedYear + 1)
         }
     }
 
