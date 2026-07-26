@@ -41,6 +41,10 @@ export interface UseReportDataReturn {
   setMode: (mode: ReportMode) => void;
   goToPrevious: () => void;
   goToNext: () => void;
+  goToPreviousMonth: () => void;
+  goToNextMonth: () => void;
+  goToPreviousYear: () => void;
+  goToNextYear: () => void;
   goToToday: () => void;
   openConfigModal: () => void;
   closeConfigModal: () => void;
@@ -302,6 +306,44 @@ export const useReportData = (): UseReportDataReturn => {
     });
   }, [currentYear]);
 
+  const goToPreviousMonth = useCallback(() => {
+    setState((prev) => {
+      if (prev.selectedMonth === 0) {
+        const minYear = currentYear - 10;
+        if (prev.selectedYear <= minYear) return prev;
+        return { ...prev, selectedMonth: 11, selectedYear: prev.selectedYear - 1 };
+      }
+      return { ...prev, selectedMonth: prev.selectedMonth - 1 };
+    });
+  }, [currentYear]);
+
+  const goToNextMonth = useCallback(() => {
+    setState((prev) => {
+      if (prev.selectedMonth === 11) {
+        const maxYear = currentYear + 10;
+        if (prev.selectedYear >= maxYear) return prev;
+        return { ...prev, selectedMonth: 0, selectedYear: prev.selectedYear + 1 };
+      }
+      return { ...prev, selectedMonth: prev.selectedMonth + 1 };
+    });
+  }, [currentYear]);
+
+  const goToPreviousYear = useCallback(() => {
+    setState((prev) => {
+      const minYear = currentYear - 10;
+      if (prev.selectedYear <= minYear) return prev;
+      return { ...prev, selectedYear: prev.selectedYear - 1 };
+    });
+  }, [currentYear]);
+
+  const goToNextYear = useCallback(() => {
+    setState((prev) => {
+      const maxYear = currentYear + 10;
+      if (prev.selectedYear >= maxYear) return prev;
+      return { ...prev, selectedYear: prev.selectedYear + 1 };
+    });
+  }, [currentYear]);
+
   const goToToday = useCallback(() => {
     const today = new Date();
     setState((prev) => {
@@ -334,6 +376,10 @@ export const useReportData = (): UseReportDataReturn => {
     setMode,
     goToPrevious,
     goToNext,
+    goToPreviousMonth,
+    goToNextMonth,
+    goToPreviousYear,
+    goToNextYear,
     goToToday,
     openConfigModal,
     closeConfigModal,

@@ -180,7 +180,7 @@ class ReportsViewModelTest {
             awaitItem() // loaded data
 
             // Navigate forward one month
-            viewModel.navigateNext()
+            viewModel.navigateNextMonth()
             advanceUntilIdle()
             awaitItem() // state after navigation
 
@@ -242,7 +242,7 @@ class ReportsViewModelTest {
             awaitItem()
 
             // Navigate year forward
-            viewModel.navigateNext()
+            viewModel.navigateNextYear()
             advanceUntilIdle()
             awaitItem()
 
@@ -263,7 +263,7 @@ class ReportsViewModelTest {
     // region DateNavigator boundary navigation
 
     @Test
-    fun `navigatePrevious in Year mode decrements year`() = runTest {
+    fun `navigatePreviousYear in Year mode decrements year`() = runTest {
         setupEmptyEventFlow()
         val viewModel = createViewModel()
 
@@ -277,7 +277,7 @@ class ReportsViewModelTest {
             advanceUntilIdle()
             awaitItem()
 
-            viewModel.navigatePrevious()
+            viewModel.navigatePreviousYear()
             advanceUntilIdle()
             val state = awaitItem()
 
@@ -287,7 +287,7 @@ class ReportsViewModelTest {
     }
 
     @Test
-    fun `navigateNext in Year mode increments year`() = runTest {
+    fun `navigateNextYear in Year mode increments year`() = runTest {
         setupEmptyEventFlow()
         val viewModel = createViewModel()
 
@@ -301,7 +301,7 @@ class ReportsViewModelTest {
             advanceUntilIdle()
             awaitItem()
 
-            viewModel.navigateNext()
+            viewModel.navigateNextYear()
             advanceUntilIdle()
             val state = awaitItem()
 
@@ -311,7 +311,7 @@ class ReportsViewModelTest {
     }
 
     @Test
-    fun `navigatePrevious in Month mode wraps from January to December of previous year`() = runTest {
+    fun `navigatePreviousMonth in Month mode wraps from January to December of previous year`() = runTest {
         setupEmptyEventFlow()
         val viewModel = createViewModel()
 
@@ -324,13 +324,13 @@ class ReportsViewModelTest {
             // Navigate back to January (month index 0)
             val navigationsToJanuary = now.monthValue - 1
             repeat(navigationsToJanuary) {
-                viewModel.navigatePrevious()
+                viewModel.navigatePreviousMonth()
                 advanceUntilIdle()
                 awaitItem()
             }
 
             // Now at January; navigate back one more time → December previous year
-            viewModel.navigatePrevious()
+            viewModel.navigatePreviousMonth()
             advanceUntilIdle()
             val state = awaitItem()
 
@@ -341,7 +341,7 @@ class ReportsViewModelTest {
     }
 
     @Test
-    fun `navigateNext in Month mode wraps from December to January of next year`() = runTest {
+    fun `navigateNextMonth in Month mode wraps from December to January of next year`() = runTest {
         setupEmptyEventFlow()
         val viewModel = createViewModel()
 
@@ -354,13 +354,13 @@ class ReportsViewModelTest {
             // Navigate forward to December (month index 11)
             val navigationsToDecember = 11 - (now.monthValue - 1)
             repeat(navigationsToDecember) {
-                viewModel.navigateNext()
+                viewModel.navigateNextMonth()
                 advanceUntilIdle()
                 awaitItem()
             }
 
             // Now at December; navigate forward → January next year
-            viewModel.navigateNext()
+            viewModel.navigateNextMonth()
             advanceUntilIdle()
             val state = awaitItem()
 
@@ -382,10 +382,10 @@ class ReportsViewModelTest {
             awaitItem()
 
             // Navigate away
-            viewModel.navigateNext()
+            viewModel.navigateNextMonth()
             advanceUntilIdle()
             awaitItem()
-            viewModel.navigateNext()
+            viewModel.navigateNextMonth()
             advanceUntilIdle()
             awaitItem()
 
@@ -416,10 +416,10 @@ class ReportsViewModelTest {
             awaitItem()
 
             // Navigate away
-            viewModel.navigatePrevious()
+            viewModel.navigatePreviousYear()
             advanceUntilIdle()
             awaitItem()
-            viewModel.navigatePrevious()
+            viewModel.navigatePreviousYear()
             advanceUntilIdle()
             awaitItem()
 

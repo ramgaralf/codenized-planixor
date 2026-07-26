@@ -159,11 +159,11 @@ class ReportsScreenIntegrationTest {
             awaitItem() // initial loaded state
 
             // Step 1: Navigate forward 2 months
-            viewModel.navigateNext()
+            viewModel.navigateNextMonth()
             advanceUntilIdle()
             awaitItem()
 
-            viewModel.navigateNext()
+            viewModel.navigateNextMonth()
             advanceUntilIdle()
             val afterNav = awaitItem()
 
@@ -184,7 +184,7 @@ class ReportsScreenIntegrationTest {
             assertEquals(expectedYear, yearState.previousYear)
 
             // Step 3: Navigate year forward
-            viewModel.navigateNext()
+            viewModel.navigateNextYear()
             advanceUntilIdle()
             val yearNavState = awaitItem()
             assertEquals(expectedYear + 1, yearNavState.selectedYear)
@@ -219,13 +219,13 @@ class ReportsScreenIntegrationTest {
             awaitItem()
 
             // Navigate 3 years back
-            viewModel.navigatePrevious()
+            viewModel.navigatePreviousYear()
             advanceUntilIdle()
             awaitItem()
-            viewModel.navigatePrevious()
+            viewModel.navigatePreviousYear()
             advanceUntilIdle()
             awaitItem()
-            viewModel.navigatePrevious()
+            viewModel.navigatePreviousYear()
             advanceUntilIdle()
             val navigatedState = awaitItem()
 
@@ -268,7 +268,7 @@ class ReportsScreenIntegrationTest {
             assertEquals(initialYear, firstRestore.selectedYear)
 
             // Navigate month forward
-            viewModel.navigateNext()
+            viewModel.navigateNextMonth()
             advanceUntilIdle()
             awaitItem()
 
@@ -305,13 +305,13 @@ class ReportsScreenIntegrationTest {
             // Navigate backward to cross a year boundary
             val monthsToJanuary = now.monthValue - 1
             repeat(monthsToJanuary) {
-                viewModel.navigatePrevious()
+                viewModel.navigatePreviousMonth()
                 advanceUntilIdle()
                 awaitItem()
             }
 
             // Now at January of current year; one more back → December previous year
-            viewModel.navigatePrevious()
+            viewModel.navigatePreviousMonth()
             advanceUntilIdle()
             val december = awaitItem()
 
@@ -319,7 +319,7 @@ class ReportsScreenIntegrationTest {
             assertEquals(now.year - 1, december.selectedYear)
 
             // Navigate forward back across boundary
-            viewModel.navigateNext()
+            viewModel.navigateNextMonth()
             advanceUntilIdle()
             val januaryAgain = awaitItem()
 
@@ -560,7 +560,7 @@ class ReportsScreenIntegrationTest {
             assertEquals(480, populatedState.reportData!!.totalShiftMinutes)
 
             // Navigate to next month: event startDay is NOT within next month → filtered out
-            viewModel.navigateNext()
+            viewModel.navigateNextMonth()
             advanceUntilIdle()
             // May get intermediate emission with old reportData; consume until we get the updated one
             var emptyState = awaitItem()
@@ -572,7 +572,7 @@ class ReportsScreenIntegrationTest {
             assertEquals(0, emptyState.reportData!!.totalShiftMinutes)
 
             // Navigate back to current month: event is within range again
-            viewModel.navigatePrevious()
+            viewModel.navigatePreviousMonth()
             advanceUntilIdle()
             var backState = awaitItem()
             while (backState.reportData != null && backState.reportData!!.shifts.isEmpty()) {
@@ -662,7 +662,7 @@ class ReportsScreenIntegrationTest {
             assertEquals(300, yearState.reportData!!.totalShiftMinutes)
 
             // Navigate year backward so the event is no longer in range
-            viewModel.navigatePrevious()
+            viewModel.navigatePreviousYear()
             advanceUntilIdle()
             var pastYearState = awaitItem()
             while (pastYearState.reportData != null && pastYearState.reportData!!.shifts.isNotEmpty()) {

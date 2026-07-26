@@ -8,8 +8,10 @@ interface DateNavigatorProps {
   mode: ReportMode;
   selectedMonth: number;
   selectedYear: number;
-  onPrevious: () => void;
-  onNext: () => void;
+  onPreviousMonth: () => void;
+  onNextMonth: () => void;
+  onPreviousYear: () => void;
+  onNextYear: () => void;
   onToday: () => void;
 }
 
@@ -27,14 +29,24 @@ const NAV_BUTTON_STYLE: React.CSSProperties = {
   padding: 0,
 };
 
-const LABEL_STYLE: React.CSSProperties = {
+const MONTH_LABEL_STYLE: React.CSSProperties = {
   fontSize: '14px',
   fontWeight: 600,
   color: 'var(--color-text-primary)',
   textTransform: 'capitalize',
   userSelect: 'none',
   textAlign: 'center',
-  minWidth: '24px',
+  minWidth: '100px',
+  display: 'inline-block',
+};
+
+const YEAR_LABEL_STYLE: React.CSSProperties = {
+  fontSize: '14px',
+  fontWeight: 600,
+  color: 'var(--color-text-primary)',
+  userSelect: 'none',
+  textAlign: 'center',
+  minWidth: '48px',
   display: 'inline-block',
 };
 
@@ -42,86 +54,46 @@ export const DateNavigator = ({
   mode,
   selectedMonth,
   selectedYear,
-  onPrevious,
-  onNext,
+  onPreviousMonth,
+  onNextMonth,
+  onPreviousYear,
+  onNextYear,
   onToday,
 }: DateNavigatorProps) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
 
-  const label = useMemo(() => {
-    if (mode === 'year') {
-      return String(selectedYear);
-    }
+  const monthLabel = useMemo(() => {
     const date = new Date(selectedYear, selectedMonth);
-    const monthName = new Intl.DateTimeFormat(locale, { month: 'long' }).format(date);
-    return `${monthName} ${selectedYear}`;
-  }, [mode, selectedMonth, selectedYear, locale]);
+    return new Intl.DateTimeFormat(locale, { month: 'long' }).format(date);
+  }, [selectedMonth, selectedYear, locale]);
 
-  const currentYear = new Date().getFullYear();
-  const minYear = currentYear - 10;
-  const maxYear = currentYear + 10;
-
-  const isPreviousDisabled = useMemo(() => {
-    if (mode === 'year') {
-      return selectedYear <= minYear;
-    }
-    return selectedYear === minYear && selectedMonth === 0;
-  }, [mode, selectedYear, selectedMonth, minYear]);
-
-  const isNextDisabled = useMemo(() => {
-    if (mode === 'year') {
-      return selectedYear >= maxYear;
-    }
-    return selectedYear === maxYear && selectedMonth === 11;
-  }, [mode, selectedYear, selectedMonth, maxYear]);
-
-  const previousLabel =
-    mode === 'month'
-      ? t('accessibility.previousMonth', { defaultValue: 'Previous month' })
-      : t('accessibility.previousYear', { defaultValue: 'Previous year' });
-
-  const nextLabel =
-    mode === 'month'
-      ? t('accessibility.nextMonth', { defaultValue: 'Next month' })
-      : t('accessibility.nextYear', { defaultValue: 'Next year' });
+  const yearLabel = String(selectedYear);
 
   return (
     <nav
       className="flex items-center gap-1 w-full"
       aria-label={t('reports.dateNavigation', { defaultValue: 'Report date navigation' })}
     >
-      <button
-        type="button"
-        onClick={onPrevious}
-        disabled={isPreviousDisabled}
-        aria-label={previousLabel}
-        style={{
-          ...NAV_BUTTON_STYLE,
-          opacity: isPreviousDisabled ? 0.4 : 1,
-          cursor: isPreviousDisabled ? 'default' : 'pointer',
-        }}
-      >
-        <ChevronLeft size={16} aria-hidden="true" />
-      </button>
+      {mode === 'month' && (
+        <NavSegment
+          label={monthLabel}
+          labelStyle={MONTH_LABEL_STYLE}
+          onPrevious={onPreviousMonth}
+          onNext={onNextMonth}
+          previousLabel={t('accessibility.previousMonth', { defaultValue: 'Previous month' })}
+          nextLabel={t('accessibility.nextMonth', { defaultValue: 'Next month' })}
+        />
+      )}
 
-      <span style={{ ...LABEL_STYLE, minWidth: mode === 'month' ? '140px' : '48px' }}>
-        {label}
-      </span>
-
-      <button
-        type="button"
-        onClick={onNext}
-        disabled={isNextDisabled}
-        aria-label={nextLabel}
-        style={{
-          ...NAV_BUTTON_STYLE,
-          opacity: isNextDisabled ? 0.4 : 1,
-          cursor: isNextDisabled ? 'default' : 'pointer',
-        }}
-      >
-        <ChevronRight size={16} aria-hidden="true" />
-      </button>
+      <NavSegment
+        label={yearLabel}
+        labelStyle={YEAR_LABEL_STYLE}
+        onPrevious={onPreviousYear}
+        onNext={onNextYear}
+        previousLabel={t('accessibility.previousYear', { defaultValue: 'Previous year' })}
+        nextLabel={t('accessibility.nextYear', { defaultValue: 'Next year' })}
+      />
 
       <button
         type="button"
@@ -141,5 +113,47 @@ export const DateNavigator = ({
         {t('calendar.today', { defaultValue: 'Today' })}
       </button>
     </nav>
+  );
+};
+
+interface NavSegmentProps {
+  label: string;
+  labelStyle: React.CSSProperties;
+  onPrevious: () => void;
+  onNext: () => void;
+  previousLabel: string;
+  nextLabel: string;
+}
+
+const NavSegment = ({
+  label,
+  labelStyle,
+  onPrevious,
+  onNext,
+  previousLabel,
+  nextLabel,
+}: NavSegmentProps) => {
+  return (
+    <div className="flex items-center">
+      <button
+        type="button"
+        onClick={onPrevious}
+        aria-label={previousLabel}
+        style={NAV_BUTTON_STYLE}
+      >
+        <ChevronLeft size={16} aria-hidden="true" />
+      </button>
+
+      <span style={labelStyle}>{label}</span>
+
+      <button
+        type="button"
+        onClick={onNext}
+        aria-label={nextLabel}
+        style={NAV_BUTTON_STYLE}
+      >
+        <ChevronRight size={16} aria-hidden="true" />
+      </button>
+    </div>
   );
 };

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- SDK 35+ theme override: use non-deprecated cutout mode.
+         On API 35+, edge-to-edge is enforced by default. We use 'always'
+         instead of 'shortEdges' to avoid deprecated LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES. -->
+    <style name="Theme.Planixor" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">always</item>
+    </style>
+</resources>
