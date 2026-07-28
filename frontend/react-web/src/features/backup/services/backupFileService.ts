@@ -28,6 +28,7 @@ interface SaveFilePickerOptions {
 interface OpenFilePickerOptions {
   types?: FilePickerAcceptType[];
   multiple?: boolean;
+  excludeAcceptAllOption?: boolean;
 }
 
 interface FilePickerAcceptType {
@@ -45,6 +46,25 @@ const BAK_FILE_TYPES: FilePickerAcceptType[] = [
     accept: { 'application/octet-stream': ['.bak'] },
   },
 ];
+
+// ---------------------------------------------------------------------------
+// isMobileDevice
+// ---------------------------------------------------------------------------
+
+/**
+ * Detects whether the current browser is running on a mobile/tablet device.
+ * Used to adjust file picker behavior — mobile OS file selectors cannot
+ * filter by custom extensions like .bak (no registered MIME type).
+ *
+ * Covers: Android, iPhone, iPod, and iPadOS 13+ (which reports a Mac UA).
+ */
+export const isMobileDevice = (): boolean => {
+  const ua = navigator.userAgent;
+  if (/Android|iPhone|iPod/i.test(ua)) return true;
+  // iPadOS 13+ reports as "Macintosh" — detect via multi-touch support
+  if (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return true;
+  return false;
+};
 
 // ---------------------------------------------------------------------------
 // generateBackupFilename
@@ -164,6 +184,7 @@ const openWithFileSystemAccess = async (): Promise<{
     const handles = await window.showOpenFilePicker!({
       types: BAK_FILE_TYPES,
       multiple: false,
+      excludeAcceptAllOption: false,
     });
 
     const handle = handles[0];
@@ -188,7 +209,7 @@ const openWithInputFallback = (): Promise<{
   return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.bak';
+    input.accept = isMobileDevice() ? '*/*' : '.bak';
     input.style.display = 'none';
 
     const cleanup = () => {

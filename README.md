@@ -108,8 +108,9 @@ Planixor is available through multiple channels:
 | Platform | URL | Notes |
 |---|---|---|
 | **Web (PWA)** | [planixor.codenized.com](https://planixor.codenized.com) | Auto-deployed via Vercel on push to `main` |
+| **Android (Google Play)** | [Google Play Store](https://play.google.com/store/apps/details?id=com.codenized.planixor) | Official distribution channel |
 | **Backend (Docker)** | `ghcr.io/ramgaralf/planixor-api` | Self-hosted by users who want sync |
-| **Android (APK)** | [GitHub Releases](https://github.com/ramgaralf/codenized-planixor/releases) | Download from the latest release |
+| **Android (APK)** | [GitHub Releases](https://github.com/ramgaralf/codenized-planixor/releases) | Alternative: download from the latest release |
 
 ### Web (PWA)
 
@@ -154,7 +155,7 @@ The Docker image ships with a pre-configured API key for quick testing:
 
 ### Android (APK)
 
-The Android APK is available for download from [GitHub Releases](https://github.com/ramgaralf/codenized-planixor/releases). Each release includes the signed APK ready to install.
+The Android app is available on [Google Play Store](https://play.google.com/store/apps/details?id=com.codenized.planixor). Alternatively, the signed APK can be downloaded from [GitHub Releases](https://github.com/ramgaralf/codenized-planixor/releases).
 
 ## Installation and Setup
 
