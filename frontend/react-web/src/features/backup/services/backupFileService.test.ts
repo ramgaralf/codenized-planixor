@@ -154,7 +154,7 @@ describe('openBackupFile input fallback', () => {
     vi.restoreAllMocks();
   });
 
-  it('should set accept to "*/*" on mobile device', () => {
+  it('should not set accept attribute on mobile device', () => {
     Object.defineProperty(navigator, 'userAgent', {
       value:
         'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
@@ -169,7 +169,7 @@ describe('openBackupFile input fallback', () => {
     openBackupFile();
 
     expect(createdInput).not.toBeNull();
-    expect(createdInput!.accept).toBe('*/*');
+    expect(createdInput!.accept).toBe('');
   });
 
   it('should set accept to ".bak" on desktop device', () => {
@@ -189,7 +189,7 @@ describe('openBackupFile input fallback', () => {
     expect(createdInput!.accept).toBe('.bak');
   });
 
-  it('should set accept to "*/*" on iPadOS (Macintosh UA with touch)', () => {
+  it('should not set accept attribute on iPadOS (Macintosh UA with touch)', () => {
     Object.defineProperty(navigator, 'userAgent', {
       value:
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
@@ -203,7 +203,7 @@ describe('openBackupFile input fallback', () => {
     openBackupFile();
 
     expect(createdInput).not.toBeNull();
-    expect(createdInput!.accept).toBe('*/*');
+    expect(createdInput!.accept).toBe('');
   });
 });
 

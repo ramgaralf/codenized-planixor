@@ -209,7 +209,11 @@ const openWithInputFallback = (): Promise<{
   return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = isMobileDevice() ? '*/*' : '.bak';
+    // Do NOT set accept on mobile — any value (even */*) causes Android file
+    // managers to grey out files with unrecognized MIME types like .bak
+    if (!isMobileDevice()) {
+      input.accept = '.bak';
+    }
     input.style.display = 'none';
 
     const cleanup = () => {
