@@ -169,7 +169,9 @@ export const openBackupFile = async (): Promise<{
   content: string;
   size: number;
 } | null> => {
-  if (window.showOpenFilePicker) {
+  // On mobile, always use the input fallback — the File System Access API
+  // file picker greys out files with unrecognized MIME types like .bak
+  if (window.showOpenFilePicker && !isMobileDevice()) {
     return openWithFileSystemAccess();
   }
 
