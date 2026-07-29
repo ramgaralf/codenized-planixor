@@ -171,6 +171,12 @@ const buildEventsByDay = (
   return map;
 };
 
+const getCellTextColor = (hasShift: boolean, isCurrentMonth: boolean): string => {
+  if (hasShift) return '#ffffff';
+  if (isCurrentMonth) return 'var(--color-text-primary)';
+  return 'var(--color-text-secondary)';
+};
+
 interface MonthViewProps {
   events: CalendarEventDisplay[];
   currentDate: Date;
@@ -251,6 +257,8 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
           const eventsInfo = getDayEventsInfo(dayEvents);
           const hasShift = eventsInfo.shiftColor !== null;
 
+          const cellTextColor = getCellTextColor(hasShift, day.isCurrentMonth);
+
           return (
             <button
               key={index}
@@ -268,17 +276,12 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                padding: hasShift ? '2px 4px 2px 8px' : '2px 4px',
+                padding: '2px 4px',
                 opacity: day.isCurrentMonth ? 1 : 0.35,
-                color: day.isCurrentMonth
-                  ? 'var(--color-text-primary)'
-                  : 'var(--color-text-secondary)',
+                color: cellTextColor,
                 cursor: 'pointer',
-                background: 'transparent',
+                background: hasShift ? eventsInfo.shiftColor! : 'transparent',
                 border: '1px solid var(--color-border)',
-                borderLeft: hasShift
-                  ? `3.5px solid ${eventsInfo.shiftColor}`
-                  : '1px solid var(--color-border)',
                 borderRadius: '6px',
                 overflow: 'hidden',
                 minHeight: 0,
@@ -335,7 +338,7 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
                             style={{
                               fontSize: '10px',
                               fontWeight: 700,
-                              color: 'var(--color-text-secondary)',
+                              color: hasShift ? '#ffffff' : 'var(--color-text-secondary)',
                               lineHeight: 1,
                             }}
                           >

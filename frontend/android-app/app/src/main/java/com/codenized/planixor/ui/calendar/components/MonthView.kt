@@ -8,13 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -166,6 +164,7 @@ private fun MonthDayCell(
             .fillMaxSize()
             .alpha(cellAlpha)
             .clip(cellShape)
+            .background(if (hasShift) shiftColor else Color.Transparent)
             .border(
                 width = 1.dp,
                 color = borderColor,
@@ -173,28 +172,12 @@ private fun MonthDayCell(
             )
             .clickable(onClick = onClick),
     ) {
-        // Left color strip for shift
-        if (hasShift) {
-            Box(
-                modifier = Modifier
-                    .width(3.5.dp)
-                    .fillMaxHeight()
-                    .background(shiftColor)
-                    .align(Alignment.CenterStart),
-            )
-        }
-
         // Cell content
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    start = if (hasShift) 6.dp else 2.dp,
-                    end = 2.dp,
-                    top = 2.dp,
-                    bottom = 2.dp,
-                ),
+                .padding(2.dp),
         ) {
             // Day number
             if (isToday) {
@@ -222,7 +205,7 @@ private fun MonthDayCell(
                         text = date.dayOfMonth.toString(),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = if (hasShift) Color.White else MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -248,7 +231,7 @@ private fun MonthDayCell(
                             text = "+$hiddenCount",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (hasShift) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
