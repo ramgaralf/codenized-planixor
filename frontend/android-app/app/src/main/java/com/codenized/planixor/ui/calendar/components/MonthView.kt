@@ -1,28 +1,30 @@
 package com.codenized.planixor.ui.calendar.components
 
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,16 +37,23 @@ import java.time.YearMonth
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 
+private const val MAX_VISIBLE_EMOJIS = 3
+private const val MAX_WITH_OVERFLOW = 2
+
 /**
- * Month view composable displaying a day grid with emoji indicators.
- * Shift events fill the entire day cell with their background color.
- * Day number header: transparent for normal days, primary circle for today.
- * Emojis are ~24sp (doubled from previous ~12sp). Padding between header and content.
- * Tapping a day navigates to Day view.
+ * Month view composable displaying a day grid as mini-cards with left color strip.
+ *
+ * Design:
+ * - Each day cell is a mini-card with a subtle border and rounded corners (6dp).
+ * - If the day has a shift event, a colored left strip (3.5dp) replaces the left border.
+ * - Emojis are stacked vertically (one per line), max 3 visible. If >3 events, shows 2 emojis + "+N".
+ * - Today is highlighted with a primary-colored circle on the day number.
+ * - Days outside the current month have reduced opacity (0.35).
+ * - Rows fill remaining height equally (no scroll).
  *
  * @param currentDate Anchor date within the month being displayed.
  * @param events Events for this month (already filtered).
- * @param onDayClick Callback when a day block is tapped (navigates to Day view).
+ * @param onDayClick Callback when a day block is tapped.
  * @param modifier Optional modifier.
  */
 @Composable
@@ -65,12 +74,14 @@ fun MonthView(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
         // Day-of-week headers
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             daysOfWeek.forEach { dayOfWeek ->
                 Text(
@@ -83,13 +94,16 @@ fun MonthView(
             }
         }
 
-        // Day grid — rows fill remaining height equally
-        calendarDays.chunked(7).forEach { week ->
+        // Day grid — rows fill remaining height equally, with gap between cells
+        calendarDays.chunked(7).forEachIndexed { rowIndex, week ->
+            if (rowIndex > 0) {
+                Spacer(modifier = Modifier.height(3.dp))
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 week.forEach { day ->
                     val dayStr = day.toString()
@@ -116,7 +130,6 @@ fun MonthView(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MonthDayCell(
     date: LocalDate,
@@ -126,99 +139,99 @@ private fun MonthDayCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Shift background fills the entire cell
-    val shiftEvent = events.find { it.eventType == "shift" }
-    val cellBg = if (shiftEvent != null && shiftEvent.backgroundColor.isNotBlank() && shiftEvent.backgroundColor != "transparent") {
-        parseHexColorSafe(shiftEvent.backgroundColor)
-    } else {
-        Color.Transparent
-    }
+    val borderColor = MaterialTheme.colorScheme.outlineVariant
 
-    // Emojis: shifts first, then reminders
-    // Rule: max 4 icons shown. If >4 events, show 3 icons + "+N"
+    // Determine shift color for left strip
+    val shiftEvent = events.find { it.eventType == "shift" }
+    val hasShift = shiftEvent != null &&
+        shiftEvent.backgroundColor.isNotBlank() &&
+        shiftEvent.backgroundColor != "transparent"
+    val shiftColor = if (hasShift) parseHexColorSafe(shiftEvent!!.backgroundColor) else Color.Transparent
+
+    // Sort events: shifts first, then reminders by start time
     val sortedEvents = events.sortedWith(compareBy({ it.eventType != "shift" }, { it.startTime }))
     val totalCount = sortedEvents.size
-    val showOverflow = totalCount > 4
-    val visibleCount = if (showOverflow) 3 else totalCount
+    val showOverflow = totalCount > MAX_VISIBLE_EMOJIS
+    val visibleCount = if (showOverflow) MAX_WITH_OVERFLOW else totalCount
     val emojisToShow = sortedEvents.take(visibleCount).map { it.icon }
     val hiddenCount = totalCount - visibleCount
 
-    // Text color: white on colored background, normal otherwise
-    val hasShiftBg = shiftEvent != null && shiftEvent.backgroundColor.isNotBlank() && shiftEvent.backgroundColor != "transparent"
-    val textColor = if (hasShiftBg) Color.White else {
-        if (isCurrentMonth) MaterialTheme.colorScheme.onSurface
-        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-    }
+    val cellShape = RoundedCornerShape(6.dp)
+    val cellAlpha = if (isCurrentMonth) 1f else 0.35f
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(cellBg)
+            .alpha(cellAlpha)
+            .clip(cellShape)
+            .background(if (hasShift) shiftColor else Color.Transparent)
+            .border(
+                width = 1.dp,
+                color = borderColor,
+                shape = cellShape,
+            )
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.TopCenter,
     ) {
+        // Cell content
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(2.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(2.dp),
         ) {
-            // Day number header
+            // Day number
             if (isToday) {
                 Box(
                     modifier = Modifier
-                        .size(22.dp)
+                        .size(20.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = date.dayOfMonth.toString(),
-                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color.White,
-                        fontSize = 10.sp,
+                        textAlign = TextAlign.Center,
                     )
                 }
             } else {
-                // Transparent background for normal days
                 Box(
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(20.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = date.dayOfMonth.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = textColor,
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = if (hasShift) Color.White else MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
 
-            // Padding between header and emoji content
-            Spacer(modifier = Modifier.height(2.dp))
-
-            // Emoji indicators — wrap to multiple lines
+            // Emoji indicators — one per line, vertical stack
             if (emojisToShow.isNotEmpty()) {
-                @Suppress("DEPRECATION")
-                androidx.compose.foundation.layout.FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(3.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(1.dp),
                     modifier = Modifier.fillMaxWidth(),
-                    maxLines = 3,
-                    overflow = androidx.compose.foundation.layout.FlowRowOverflow.Clip,
                 ) {
                     emojisToShow.forEach { emoji ->
                         Text(
                             text = emoji,
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                         )
                     }
                     if (showOverflow) {
                         Text(
                             text = "+$hiddenCount",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (hasShiftBg) Color.White.copy(alpha = 0.9f)
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (hasShift) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -226,6 +239,8 @@ private fun MonthDayCell(
         }
     }
 }
+
+// parseHexColorSafe is reused from EventCard.kt (internal visibility, same package)
 
 private fun buildDaysOfWeekList(firstDayOfWeek: DayOfWeek): List<DayOfWeek> {
     val days = DayOfWeek.entries.toMutableList()
