@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 
 import type { CalendarEventDisplay } from '../models';
 
-const MAX_VISIBLE_EMOJIS = 4;
-const MAX_WITH_OVERFLOW = 3;
+const MAX_VISIBLE_EMOJIS = 3;
+const MAX_WITH_OVERFLOW = 2;
 
 interface MonthDay {
   date: Date;
@@ -82,7 +82,7 @@ const getWeekdayHeaders = (locale: string): string[] => {
 };
 
 interface DayEventsInfo {
-  shiftBackgroundColor: string | null;
+  shiftColor: string | null;
   emojis: string[];
   totalCount: number;
 }
@@ -95,16 +95,16 @@ const getDayEventsInfo = (events: CalendarEventDisplay[]): DayEventsInfo => {
   const reminders = activeEvents.filter((e) => e.eventType === 'reminder');
   const ordered = [...shifts, ...reminders];
 
-  // Determine container background from shift
-  let shiftBackgroundColor: string | null = null;
+  // Determine shift color for the left strip
+  let shiftColor: string | null = null;
   if (shifts.length > 0 && shifts[0]?.backgroundColor) {
-    shiftBackgroundColor = shifts[0].backgroundColor;
+    shiftColor = shifts[0].backgroundColor;
   }
 
   const emojis = ordered.map((e) => e.icon);
   const totalCount = emojis.length;
 
-  return { shiftBackgroundColor, emojis, totalCount };
+  return { shiftColor, emojis, totalCount };
 };
 
 /**
@@ -171,6 +171,12 @@ const buildEventsByDay = (
   return map;
 };
 
+const getCellTextColor = (hasShift: boolean, isCurrentMonth: boolean): string => {
+  if (hasShift) return '#ffffff';
+  if (isCurrentMonth) return 'var(--color-text-primary)';
+  return 'var(--color-text-secondary)';
+};
+
 interface MonthViewProps {
   events: CalendarEventDisplay[];
   currentDate: Date;
@@ -201,16 +207,18 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
     [events, monthRange],
   );
 
+  const rowCount = Math.ceil(monthDays.length / 7);
+
   return (
-    <div className="flex flex-col w-full h-full" style={{ padding: 'var(--spacing-md, 16px)', minHeight: 0 }}>
+    <div className="flex flex-col w-full h-full" style={{ padding: '12px', minHeight: 0 }}>
       {/* Weekday headers */}
       <div
         className="grid grid-cols-7"
         role="row"
         style={{
-          borderBottom: '1px solid var(--color-border)',
           paddingBottom: '8px',
-          marginBottom: '8px',
+          marginBottom: '4px',
+          gap: '3px',
         }}
       >
         {weekdayHeaders.map((day, index) => (
@@ -232,22 +240,29 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
         ))}
       </div>
 
-      {/* Day grid — equal row heights, overflow hidden */}
+      {/* Day grid — equal row heights, mini-cards with gap */}
       <div
         className="grid grid-cols-7 flex-1"
         role="grid"
         aria-label="month-grid"
-        style={{ gridTemplateRows: `repeat(${Math.ceil(monthDays.length / 7)}, 1fr)`, overflow: 'hidden' }}
+        style={{
+          gridTemplateRows: `repeat(${rowCount}, 1fr)`,
+          gap: '3px',
+          overflow: 'hidden',
+          minHeight: 0,
+        }}
       >
         {monthDays.map((day, index) => {
           const dayEvents = eventsByDay.get(day.isoDate) ?? [];
           const eventsInfo = getDayEventsInfo(dayEvents);
+          const hasShift = eventsInfo.shiftColor !== null;
+
+          const cellTextColor = getCellTextColor(hasShift, day.isCurrentMonth);
 
           return (
             <button
               key={index}
               type="button"
-              className="flex flex-col items-center p-1"
               role="gridcell"
               aria-label={day.date.toLocaleDateString(locale, {
                 weekday: 'long',
@@ -257,16 +272,17 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
               })}
               onClick={() => onDayClick(day.isoDate)}
               style={{
-                opacity: day.isCurrentMonth ? 1 : 0.4,
-                color: day.isCurrentMonth
-                  ? 'var(--color-text-primary)'
-                  : 'var(--color-text-secondary)',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '2px 4px',
+                opacity: day.isCurrentMonth ? 1 : 0.35,
+                color: cellTextColor,
                 cursor: 'pointer',
-                background: eventsInfo.shiftBackgroundColor ?? 'transparent',
-                border: 'none',
-                borderBottomStyle: 'solid',
-                borderBottomWidth: '1px',
-                borderBottomColor: 'var(--color-border)',
+                background: hasShift ? eventsInfo.shiftColor! : 'transparent',
+                border: '1px solid var(--color-border)',
+                borderRadius: '6px',
                 overflow: 'hidden',
                 minHeight: 0,
               }}
@@ -275,28 +291,31 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
               <span
                 className="flex items-center justify-center"
                 style={{
-                  width: '100%',
-                  padding: '4px 0',
-                  fontSize: '13px',
+                  width: day.isToday ? '20px' : '100%',
+                  height: day.isToday ? '20px' : 'auto',
+                  padding: day.isToday ? '0' : '2px 0',
+                  fontSize: '11px',
                   fontWeight: day.isToday ? 600 : 400,
                   lineHeight: 1,
                   backgroundColor: day.isToday ? 'var(--color-primary)' : 'transparent',
                   color: day.isToday ? '#ffffff' : undefined,
+                  borderRadius: day.isToday ? '50%' : '0',
                 }}
                 aria-current={day.isToday ? 'date' : undefined}
               >
                 {day.dayNumber}
               </span>
 
-              {/* Event container */}
+              {/* Event emojis — one per line, vertical stack */}
               {eventsInfo.totalCount > 0 && (
                 <div
-                  className="flex flex-wrap items-center justify-center gap-1 rounded"
+                  className="flex flex-col items-center"
                   style={{
-                    padding: '2px',
                     width: '100%',
                     flex: 1,
                     overflow: 'hidden',
+                    gap: '1px',
+                    marginTop: '2px',
                   }}
                 >
                   {(() => {
@@ -309,7 +328,7 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
                           <span
                             key={emojiIndex}
                             aria-hidden="true"
-                            style={{ fontSize: '16px', lineHeight: 1 }}
+                            style={{ fontSize: '13px', lineHeight: 1.2 }}
                           >
                             {emoji}
                           </span>
@@ -317,11 +336,10 @@ export const MonthView = ({ events, currentDate, onDayClick }: MonthViewProps) =
                         {showOverflow && (
                           <span
                             style={{
-                              fontSize: '12px',
+                              fontSize: '10px',
                               fontWeight: 700,
-                              color: eventsInfo.shiftBackgroundColor
-                                ? '#ffffff'
-                                : 'var(--color-text-secondary)',
+                              color: hasShift ? '#ffffff' : 'var(--color-text-secondary)',
+                              lineHeight: 1,
                             }}
                           >
                             +{hiddenCount}
