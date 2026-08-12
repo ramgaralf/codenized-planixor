@@ -33,29 +33,27 @@ public sealed class CalendarEventSyncPushCommands : ICalendarEventSyncPushComman
     /// The service layer has already applied LWW conflict resolution and called MarkSynced/ApplySync.
     /// </summary>
     /// <param name="calendarEvents">The batch of calendar event entities to upsert.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpsertBatchAsync(IReadOnlyList<CalendarEventEntity> calendarEvents)
+    public async Task UpsertBatchAsync(IReadOnlyList<CalendarEventEntity> calendarEvents, CancellationToken cancellationToken)
     {
         if (calendarEvents == null || calendarEvents.Count == 0)
         {
             return;
         }
 
-        Guid[] incomingIds = calendarEvents.Select(e => e.Id).ToArray();
+        List<Guid> incomingIds = calendarEvents.Select(e => e.Id).ToList();
 
-        // Workaround for EF Core 10 + MySQL provider: load tracked entities individually
-        var existingEvents = new Dictionary<Guid, CalendarEventEntity>();
-
-        foreach (Guid id in incomingIds)
-        {
-            CalendarEventEntity? existing = await this.context.CalendarEvents
-                .FirstOrDefaultAsync(e => e.Id == id);
-
-            if (existing != null)
-            {
-                existingEvents[id] = existing;
-            }
-        }
+        // Deliberately not scoped by user: ownership has already been established by the service through
+        // GetExistingIdsAsync, and loading regardless of owner is what lets an event belonging to somebody else be
+        // recognised rather than inserted into a duplicate key violation.
+        //
+        // Tracked on purpose: ApplySync mutates the loaded entities and relies on change tracking. One query instead
+        // of a FirstOrDefaultAsync per record, which was a round trip per element of the batch with the connection
+        // held for all of them. See EntityIdFilter for why the predicate is built rather than written as Contains.
+        Dictionary<Guid, CalendarEventEntity> existingEvents = await this.context.CalendarEvents
+            .Where(EntityIdFilter.IdIn<CalendarEventEntity>(incomingIds))
+            .ToDictionaryAsync(e => e.Id, cancellationToken);
 
         foreach (CalendarEventEntity incoming in calendarEvents)
         {
@@ -82,6 +80,6 @@ public sealed class CalendarEventSyncPushCommands : ICalendarEventSyncPushComman
             }
         }
 
-        await this.context.SaveChangesAsync();
+        await this.context.SaveChangesAsync(cancellationToken);
     }
 }

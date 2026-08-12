@@ -37,20 +37,47 @@ public sealed class ShiftModeSettingSyncPushCommands : IShiftModeSettingSyncPush
     /// </summary>
     /// <param name="userId">The user identifier who owns the setting.</param>
     /// <param name="records">The shift mode setting records to upsert.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpsertAsync(string userId, IReadOnlyList<ShiftModeSettingEntity> records)
+    public async Task<int> UpsertAsync(string userId, IReadOnlyList<ShiftModeSettingEntity> records, CancellationToken cancellationToken)
     {
         if (records == null || records.Count == 0)
         {
-            return;
+            return 0;
         }
+
+        List<Guid> incomingIds = records.Select(x => x.Id).ToList();
+
+        // Tracked on purpose: ApplySync mutates the loaded entities and relies on change tracking. One query instead
+        // of a FirstOrDefaultAsync per record, which was a round trip per element of the batch with the connection
+        // held for all of them. See EntityIdFilter for why the predicate is built rather than written as Contains.
+        Dictionary<Guid, ShiftModeSettingEntity> existingRecords = await this.context.ShiftModeSettings
+            .Where(x => x.UserId == userId)
+            .Where(EntityIdFilter.IdIn<ShiftModeSettingEntity>(incomingIds))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        // Identifiers that already exist under some other account. Id is the primary key and is not scoped by user,
+        // so an incoming record carrying somebody else's identifier used to fall through to Add and blow up on a
+        // duplicate key — aborting the whole SaveChanges, silently discarding the rest of a legitimate batch, and
+        // turning the endpoint into an enumeration oracle where 200 meant "free" and 500 meant "taken".
+        //
+        // Such a record is skipped. It is not this user's to write, and the rest of the batch goes through.
+        HashSet<Guid> foreignIds = (await this.context.ShiftModeSettings
+            .AsNoTracking()
+            .Where(EntityIdFilter.IdIn<ShiftModeSettingEntity>(incomingIds))
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken))
+            .Where(id => !existingRecords.ContainsKey(id))
+            .ToHashSet();
 
         foreach (ShiftModeSettingEntity incoming in records)
         {
-            ShiftModeSettingEntity? existing = await this.context.ShiftModeSettings
-                .FirstOrDefaultAsync(s => s.UserId == userId && s.Id == incoming.Id);
+            if (foreignIds.Contains(incoming.Id))
+            {
+                continue;
+            }
 
-            if (existing != null)
+            if (existingRecords.TryGetValue(incoming.Id, out ShiftModeSettingEntity? existing))
             {
                 if (incoming.ModifiedAt >= existing.ModifiedAt)
                 {
@@ -67,6 +94,8 @@ public sealed class ShiftModeSettingSyncPushCommands : IShiftModeSettingSyncPush
             }
         }
 
-        await this.context.SaveChangesAsync();
+        await this.context.SaveChangesAsync(cancellationToken);
+
+        return records.Count - foreignIds.Count;
     }
 }

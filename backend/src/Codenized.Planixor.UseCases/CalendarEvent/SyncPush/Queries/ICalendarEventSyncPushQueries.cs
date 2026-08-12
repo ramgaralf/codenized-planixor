@@ -17,14 +17,16 @@ public interface ICalendarEventSyncPushQueries
     /// </summary>
     /// <param name="ids">The list of calendar event identifiers to look up.</param>
     /// <param name="userId">The user identifier to scope the query.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A read-only list of calendar events matching the provided IDs and owned by the user.</returns>
-    Task<IReadOnlyList<CalendarEventEntity>> GetByIdsAsync(IReadOnlyList<Guid> ids, string userId);
+    Task<IReadOnlyList<CalendarEventEntity>> GetByIdsAsync(IReadOnlyList<Guid> ids, string userId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Checks which of the provided calendar event identifiers exist in the store
     /// regardless of ownership. Used to detect ownership conflicts.
     /// </summary>
     /// <param name="ids">The list of calendar event identifiers to check.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A set of identifiers that exist in the store.</returns>
-    Task<IReadOnlySet<Guid>> GetExistingIdsAsync(IReadOnlyList<Guid> ids);
+    Task<IReadOnlySet<Guid>> GetExistingIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken);
 }

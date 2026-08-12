@@ -39,6 +39,10 @@ Read the spec task content. Extract:
   - Max length (if string)
   - Auto-generated (e.g. `Id`, `CreatedAt`)
   - Description (used for XML `<summary>`)
+  - **Validation rule, if any** — a max length, a format, a range, a set of allowed values. Every property that has
+    one becomes a Value Object rather than a primitive.
+- **Behaviour** — the state changes the task describes, and what must hold before each one is allowed. These become
+  the entity's methods; a task that describes none is a task that describes a table, not an entity.
 - **Relationships** — any foreign key references to other entities
 
 If the spec task does not contain enough information to generate the entity → **STOP** and ask the user to complete the task definition before proceeding.
@@ -116,9 +120,66 @@ Property summary format:
 
 ---
 
+## Create the Value Objects
+
+Any property carrying a validation rule becomes a Value Object before the entity is written — TIER 0 #12. A `string`
+with a max length, a format, or a set of allowed values is a Value Object, not a `string`. A number with a range is a
+Value Object, not an `int`.
+
+File, one per type: `src/{Organization}.{Product}.Core/ValueObjects/{ValueObject}.cs`
+
+```csharp
+// <copyright file="{ValueObject}.cs" company="{Organization}">
+// Copyright (c) {Organization}. All rights reserved.
+// </copyright>
+
+namespace {Organization}.{Product}.Core.ValueObjects;
+
+using {Organization}.{Product}.Core.Exceptions;
+
+/// <summary>
+/// {What the value means, and the rule that makes it valid}.
+/// </summary>
+public sealed record {ValueObject}
+{
+    private {ValueObject}(string value) => this.Value = value;
+
+    /// <summary>Gets the validated value.</summary>
+    public string Value { get; }
+
+    /// <summary>
+    /// Creates a validated {value-lowercase}.
+    /// </summary>
+    /// <param name="value">The raw value.</param>
+    /// <returns>The validated value object.</returns>
+    /// <exception cref="DomainException">Thrown when the value breaks the rule.</exception>
+    public static {ValueObject} Create(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new DomainException("{RULE_CODE}", "{Short title}", "{What the caller has to change}.");
+        }
+
+        return new {ValueObject}(value.Trim());
+    }
+}
+```
+
+A Value Object is a `record` so equality is by value, with a **private constructor** and a **static `Create`** so an
+invalid one cannot exist. Every failure throws `DomainException(code, title, detail)` — never a one-argument
+constructor, and never `ArgumentException`.
+
+Build `{Organization}.{Product}.Core` — verify no errors before continuing.
+
+---
+
 ## Create the entity
 
 File: `src/{Organization}.{Product}.Core/Entities/{Entity}.cs`
+
+Rich model, per TIER 0 #11: private constructor, static factory, no public setters, and a method for every state
+change the spec task describes. An entity with public setters and no behaviour is what `#backend-guidelines` marks as
+**❌ anaemic**, and it is not what this workflow generates.
 
 ```csharp
 // <copyright file="{Entity}.cs" company="{Organization}">
@@ -127,19 +188,62 @@ File: `src/{Organization}.{Product}.Core/Entities/{Entity}.cs`
 
 namespace {Organization}.{Product}.Core.Entities;
 
+using {Organization}.{Product}.Core.Exceptions;
+using {Organization}.{Product}.Core.ValueObjects;
+
 /// <summary>
 /// {Description from spec task}.
 /// </summary>
 public sealed class {Entity}
 {
-    /// <summary>
-    /// Gets or sets the identifier.
-    /// </summary>
-    public int Id { get; set; }
+    private {Entity}(Guid id, {ValueObject} {property-lowercase}, DateTime createdAt)
+    {
+        this.Id = id;
+        this.{Property} = {property-lowercase};
+        this.CreatedAt = createdAt;
+        this.ModifiedAt = createdAt;
+    }
 
-    // Remaining properties from spec task with XML docs
+    /// <summary>Gets the identifier.</summary>
+    public Guid Id { get; private set; }
+
+    /// <summary>Gets the {property-lowercase}.</summary>
+    public {ValueObject} {Property} { get; private set; } = null!;
+
+    /// <summary>Gets the moment the {entity-lowercase} was created, in UTC.</summary>
+    public DateTime CreatedAt { get; private set; }
+
+    /// <summary>Gets the moment the {entity-lowercase} last changed, in UTC.</summary>
+    public DateTime ModifiedAt { get; private set; }
+
+    /// <summary>
+    /// Creates a new {entity-lowercase}.
+    /// </summary>
+    /// <param name="{property-lowercase}">The {property-lowercase}.</param>
+    /// <returns>The new {entity-lowercase}.</returns>
+    public static {Entity} Create({ValueObject} {property-lowercase}) =>
+        new (Guid.NewGuid(), {property-lowercase}, DateTime.UtcNow);
+
+    /// <summary>
+    /// {What this state change means, in the language of the spec task}.
+    /// </summary>
+    /// <param name="{property-lowercase}">The new {property-lowercase}.</param>
+    /// <exception cref="DomainException">Thrown when the change is not allowed in the current state.</exception>
+    public void {BehaviourMethod}({ValueObject} {property-lowercase})
+    {
+        // Preconditions first, then mutate. A method that only assigns is a setter with extra steps.
+        this.{Property} = {property-lowercase};
+        this.ModifiedAt = DateTime.UtcNow;
+    }
 }
 ```
+
+> **The private setters are for EF Core, not for callers.** EF materialises entities by writing the backing fields,
+> so the properties cannot be get-only; `private set` keeps them closed to everyone else. The parameterless
+> constructor EF needs is generated for it — do not add a public one.
+
+> **Name behaviour methods after what happens in the domain**, not after the field they touch: `Cancel(reason)`,
+> `Confirm(userId)`, `Rename(name)` — never `SetStatus(...)`.
 
 Build `{Organization}.{Product}.Core` — verify no errors before continuing.
 
@@ -154,7 +258,7 @@ File: `src/{Organization}.{Product}.Persistence.MySql.Efc.DataContext/Entities/{
 // Copyright (c) {Organization}. All rights reserved.
 // </copyright>
 
-namespace {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.Configurations;
+namespace {Organization}.{Product}.Persistence.MySql.Efc.DataContext.Entities;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -173,17 +277,45 @@ public sealed class {Entity}Configuration : IEntityTypeConfiguration<{Entity}>
     {
         builder.ToTable("{entity-lowercase}");
         builder.HasKey(p => p.Id).HasName("PRIMARY");
+
+        // A Value Object wrapping a single value is mapped with a converter, so the column stays the primitive it
+        // always was and no migration is needed to introduce one.
+        builder.Property(p => p.{Property})
+            .HasConversion(
+                value => value.Value,
+                stored => {ValueObject}.Create(stored))
+            .HasColumnType("varchar({length})")
+            .IsRequired();
+
+        // A Value Object with several values is an owned type, so its parts become columns of this table.
+        builder.OwnsOne(p => p.{ComposedProperty});
+
         // Property configurations derived from spec task
         // No inline comments repeating what the fluent API already says
     }
 }
 ```
 
+> The converter calls `Create()` on the way back, so a row that breaks the rule fails loudly when it is read rather
+> than producing an entity that could never have been constructed. If legacy rows may break it, fix the data — do
+> not weaken the Value Object.
+
 ---
 
 ## Add DbSet to all contexts
 
-Add to `IApplicationContext`, `ApplicationReadContext`, `ApplicationWriteContext`, and `MigrationContext`:
+Add the member to `IApplicationContext` and to the three contexts. They are not the same declaration:
+
+**In `IApplicationContext`** — it is an interface, so the member is declared, not implemented. A `public` member with an expression body calling `this.Set<T>()` does not compile there:
+
+```csharp
+/// <summary>
+/// Gets {entity-lowercase}s.
+/// </summary>
+DbSet<{Entity}> {EntityPlural} { get; }
+```
+
+**In `ApplicationReadContext`, `ApplicationWriteContext` and `MigrationContext`** — the implementation:
 
 ```csharp
 /// <summary>
@@ -191,6 +323,8 @@ Add to `IApplicationContext`, `ApplicationReadContext`, `ApplicationWriteContext
 /// </summary>
 public DbSet<{Entity}> {EntityPlural} => this.Set<{Entity}>();
 ```
+
+> The interface member is what the read layer rests on: `ContextHandler.GetReadContext()` hands back `TOutContext`, which is `IApplicationContext`, and every Queries sample writes `this.context.GetReadContext().{EntityPlural}`. Miss it and nothing in the read path resolves.
 
 Build `{Organization}.{Product}.Persistence.MySql.Efc.DataContext` — verify no errors.
 
@@ -235,7 +369,11 @@ dotnet_diagnostic.SA1400.severity = none
 Pre-check: verify no `*_Add{Entity}.cs` already exists in `Migrations/`.
 
 ```bash
-add-migration Add{Entity} -p {Organization}.{Product}.Persistence.MySql.Efc.DataContext -s {Organization}.{Product}.Persistence.MySql.Efc.DataContext -c MigrationContext -o Migrations
+dotnet ef migrations add Add{Entity} \
+    --project {Organization}.{Product}.Persistence.MySql.Efc.DataContext \
+    --startup-project {Organization}.{Product}.Persistence.MySql.Efc.DataContext \
+    --context MigrationContext \
+    --output-dir Migrations
 ```
 Add //<auto-generated> to the files generated by the migration to avoid warnings during build.
 
@@ -246,6 +384,40 @@ Post-check — verify all of:
 - Designer file contains `[DbContext(typeof(MigrationContext))]`
 
 Build `{Organization}.{Product}.Persistence.MySql.Efc.DataContext`.
+
+---
+
+## Create domain tests — written first
+
+TDD is mandatory for domain logic. These tests are written **before** the entity and the Value Objects, and they are
+what proves the rules exist rather than the properties.
+
+**`UnitTest/{Entity}/ValueObjects/{ValueObject}Tests.cs`** — one per Value Object:
+
+- `Create` with a valid value returns it normalised
+- `Create` with each way of breaking the rule throws `DomainException`
+- Two instances built from the same value are equal (that is why it is a `record`)
+
+**`UnitTest/{Entity}/Domain/{Entity}Tests.cs`** — one per entity:
+
+- `Create` produces an entity whose invariants hold
+- Each behaviour method changes what it says it changes, and moves `ModifiedAt`
+- Each behaviour method **refuses** the states the spec task says are not allowed, with `DomainException`
+
+```csharp
+/// <summary>Verifies that a cancelled shift cannot be cancelled again.</summary>
+[Test]
+public void Cancel_WhenAlreadyCancelled_ThrowsDomainException()
+{
+    Shift shift = Shift.Create(ShiftName.Create("Morning"));
+    shift.Cancel("Duplicate booking");
+
+    Assert.Throws<DomainException>(() => shift.Cancel("Again"));
+}
+```
+
+> If an entity has no test that refuses something, it has no invariants — and if it genuinely has none, it is a
+> table, and the spec task should say so before this workflow generates a domain type for it.
 
 ---
 
@@ -317,13 +489,15 @@ git push origin feature/<entity-name>-entity
 
 ## Execution checklist
 
-1. Entity definition extracted from spec task ✅/❌
+1. Entity definition extracted from spec task, including validation rules and behaviour ✅/❌
 2. Branch created from develop ✅/❌
-3. Entity class created and builds ✅/❌
-4. Entity configuration created ✅/❌
-5. DbSets added to all contexts ✅/❌
-6. Deferred relationships handled ✅/❌
-7. StyleCop migration suppressions configured ✅/❌
-8. EF Core migration created and verified ✅/❌
-9. Configuration tests created and passing ✅/❌
-10. Committed and pushed ✅/❌
+3. Value Objects created for every property with a rule, each with `Create()` and tests ✅/❌
+4. Entity class created with private constructor, factory and behaviour methods — no public setters ✅/❌
+5. Entity and Value Object tests written first and passing (TDD) ✅/❌
+6. Entity configuration created, with Value Objects mapped as owned types or converted ✅/❌
+7. DbSets added: `{ get; }` on the interface, `=> this.Set<T>()` on the three contexts ✅/❌
+8. Deferred relationships handled ✅/❌
+9. StyleCop migration suppressions configured ✅/❌
+10. EF Core migration created and verified ✅/❌
+11. Configuration tests created and passing ✅/❌
+12. Committed and pushed ✅/❌

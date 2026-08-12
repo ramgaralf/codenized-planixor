@@ -4,7 +4,6 @@
 
 namespace UnitTest.Codenized.Planixor.ShiftModeSetting.Validators;
 
-using global::Codenized.CleanArchitecture.Abstractions.Validations;
 using global::Codenized.Planixor.Dtos.ShiftModeSetting.Sync;
 using NUnit.Framework;
 
@@ -22,8 +21,7 @@ public sealed class ShiftModeSettingSyncPushRequestValidatorTests
     [SetUp]
     public void SetUp()
     {
-        var service = new ValidationService<ShiftModeSettingSyncPushRequest>();
-        this.validator = new ShiftModeSettingSyncPushRequestValidator(service);
+        this.validator = new ShiftModeSettingSyncPushRequestValidator();
     }
 
     /// <summary>Verifies validation passes with a valid request containing one record.</summary>

@@ -4,8 +4,8 @@
 
 namespace Codenized.Planixor.Services.Authentication;
 
-using Codenized.CleanArchitecture.Exception.Abstractions.Forbidden;
-using Codenized.CleanArchitecture.Exception.Abstractions.Unauthorized;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.Forbidden;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.Unauthorized;
 using Codenized.Planixor.Core.Services.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
@@ -64,10 +64,10 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<Authenti
 
         if (!this.securityService.ValidateAPIKey(apiKey))
         {
-            throw new ForbiddenException(
-                "AUTH_INVALID_KEY",
-                "API key not authorized",
-                "The provided API key is not authorized. Verify your API key is correctly configured.");
+            // Fail, not throw. A caller presenting a wrong credential is unauthenticated — 401 — not forbidden.
+            // Throwing here produced a 403 and, worse, bypassed the challenge path entirely, so the response never
+            // carried WWW-Authenticate and a client implementing "on 401, re-authenticate" was never triggered.
+            return Task.FromResult(AuthenticateResult.Fail("The provided API key is not authorized."));
         }
 
         string username = this.securityService.GetAuthenticatedUsername()!;
@@ -86,6 +86,10 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<Authenti
     /// <returns>A completed task.</returns>
     protected override Task HandleChallengeAsync(AuthenticationProperties properties)
     {
+        // RFC 7235 requires a 401 to say how to authenticate. Set before throwing, because the global handler writes
+        // the body from here on and would otherwise emit a 401 with no challenge at all.
+        this.Response.Headers.WWWAuthenticate = $"{this.Scheme.Name} realm=\"api\"";
+
         throw new UnauthorizedException(
             "AUTH_REQUIRED",
             "Authentication required",

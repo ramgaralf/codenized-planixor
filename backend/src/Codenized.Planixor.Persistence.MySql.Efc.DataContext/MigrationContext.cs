@@ -5,19 +5,27 @@
 namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 
 using System.Reflection;
+using Codenized.CleanArchitecture.Persistence.Abstractions.Extensions;
 using Codenized.Planixor.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>Migration context.</summary>
 public sealed class MigrationContext : DbContext, IApplicationContext
 {
+    private readonly IServiceProvider? serviceProvider;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MigrationContext"/> class.
     /// </summary>
     /// <param name="options">Database context options.</param>
-    public MigrationContext(DbContextOptions<MigrationContext> options)
+    /// <param name="serviceProvider">
+    /// The container used to build entity configurations that need services. Optional, and normally absent here:
+    /// <see cref="MigrationContextFactory"/> builds this context at design time, where there is none.
+    /// </param>
+    public MigrationContext(DbContextOptions<MigrationContext> options, IServiceProvider? serviceProvider = null)
         : base(options)
     {
+        this.serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -52,8 +60,15 @@ public sealed class MigrationContext : DbContext, IApplicationContext
 
     /// <summary>On model creating.</summary>
     /// <param name="modelBuilder">Model builder.</param>
+    /// <remarks>
+    /// Uses the framework's <c>ApplyAllConfigurationsFrom</c> rather than EF's own
+    /// <c>ApplyConfigurationsFromAssembly</c>, so an entity configuration may take its dependencies through the
+    /// constructor — a cryptology service backing a value converter, for instance. When no container is available,
+    /// as at design time, every configuration is built through its parameterless constructor; one that needs
+    /// services fails there with a message saying so, rather than producing a model that differs from the running one.
+    /// </remarks>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.ApplyAllConfigurationsFrom(Assembly.GetExecutingAssembly(), this.serviceProvider);
     }
 }

@@ -138,9 +138,7 @@ public sealed class {Entity}{Action}RequestValidator : ValidatorBase<{Entity}{Ac
     /// <summary>
     /// Initializes a new instance of the <see cref="{Entity}{Action}RequestValidator"/> class.
     /// </summary>
-    /// <param name="service">Validation service.</param>
-    public {Entity}{Action}RequestValidator(IValidationService<{Entity}{Action}Request> service)
-        : base(service)
+    public {Entity}{Action}RequestValidator()
     {
         // Validation rules from spec task
         // this.AddRuleFor(p => p.Property)
@@ -148,6 +146,42 @@ public sealed class {Entity}{Action}RequestValidator : ValidatorBase<{Entity}{Ac
     }
 }
 ```
+
+Requirements must be **total**: guard against null inside the predicate. A requirement that throws is treated as a
+defect in the validator and surfaces as an exception, not as a silent pass.
+
+```csharp
+// ❌ throws when Name is null
+.AddRequirement(p => p.Name.Trim().Length > 0, "Name is required.")
+
+// ✅
+.AddRequirement(p => !string.IsNullOrWhiteSpace(p.Name), "Name is required.")
+```
+
+### Validating a collection property
+
+When the request carries a collection, inject the item validator and attach it to the collection's rule. The selector
+is evaluated at validation time, so it sees the real items.
+
+```csharp
+public sealed class {Entity}{Action}RequestValidator : ValidatorBase<{Entity}{Action}Request>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="{Entity}{Action}RequestValidator"/> class.
+    /// </summary>
+    /// <param name="itemValidator">Validator applied to each item of the collection.</param>
+    public {Entity}{Action}RequestValidator(IValidator<{Entity}{Action}Item> itemValidator)
+    {
+        this.AddRuleFor(p => p.Items)
+            .AddRequirement(p => p.Items is { Count: > 0 }, "At least one item is required.")
+            .AddItemsValidator(p => p.Items, itemValidator);
+    }
+}
+```
+
+Item failures are reported with a navigable path — `Items[2].Name` — and nesting composes, so an item validator that
+itself validates a collection yields `Items[2].Tags[0].Value`. Both validators are auto-registered as
+`IValidator<T>`, so the constructor injection needs no extra wiring.
 
 ### `{Entity}{Action}Response.cs` — same folder
 
@@ -165,7 +199,8 @@ public sealed class {Entity}{Action}Response
 {
     // Add:     Id only
     // Get:     full entity properties from spec task
-    // GetList: inherits FilterModelResponse<{Entity}GetListResponseItem>
+    // GetList: inherits FilterModelResponse<{Entity}GetListResponseItem>, with a constructor
+    //          taking the page and passing it to base(page)
     // Update:  Id only
     // Delete:  Id only
 }
@@ -237,8 +272,9 @@ public sealed class On{Entity}{Action}edEventHandler : IAsyncDomainEventHandler<
 
     /// <summary>Handle event asynchronously.</summary>
     /// <param name="data">On {entity-lowercase} {action-lowercase}ed event data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task HandleAsync(On{Entity}{Action}edEvent data)
+    public async Task HandleAsync(On{Entity}{Action}edEvent data, CancellationToken cancellationToken)
     {
         this.logger.LogInformation("{Entity} {action-lowercase}ed: {Id}", data.Id);
         await Task.CompletedTask;
@@ -286,8 +322,9 @@ public sealed class {Entity}{Action}Service : IInteractorService<{Entity}{Action
 
     /// <summary>Run.</summary>
     /// <param name="request">{Entity} {action-lowercase} request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>{Entity} {action-lowercase} response.</returns>
-    public async Task<{Entity}{Action}Response> Run({Entity}{Action}Request request)
+    public async Task<{Entity}{Action}Response> Run({Entity}{Action}Request request, CancellationToken cancellationToken)
     {
         // request is pre-validated — implement business rules from spec task here
         // DO NOT call RunValidator()
@@ -302,9 +339,9 @@ public sealed class {Entity}{Action}Service : IInteractorService<{Entity}{Action
 ```csharp
 public interface I{Entity}{Action}Commands : IUnitOfWork
 {
-    // Add:    Task Add({Entity} entity);
-    // Update: Task Update({Entity} entity);
-    // Delete: Task<{Entity}> Delete(Specification<{Entity}> specification);
+    // Add:    Task Add({Entity} entity, CancellationToken cancellationToken);
+    // Update: Task Update({Entity} entity, CancellationToken cancellationToken);
+    // Delete: Task<{Entity}> Delete(Specification<{Entity}> specification, CancellationToken cancellationToken);
 }
 ```
 
@@ -313,17 +350,26 @@ public interface I{Entity}{Action}Commands : IUnitOfWork
 ```csharp
 public interface I{Entity}{Action}Queries
 {
-    // Get:     Task<{Entity}> Get(Specification<{Entity}> specification);
-    // GetList: Task<FilterModelResponse<{Entity}>> GetList(Specification<{Entity}> specification, List<SortFilter> sorts, int pageNumber, int pageSize);
+    // Get:     Task<{Entity}> Get(Specification<{Entity}> specification, CancellationToken cancellationToken);
+    // GetList: Task<FilterModelResponse<{Entity}GetListResponseItem>> GetList(Specification<{Entity}GetListResponseItem> specification, List<SortFilter> sorts, int pageNumber, int pageSize, CancellationToken cancellationToken);
 }
 ```
+
+**GetList is typed over the response item, not the entity** — both the specification and the returned page. See the
+TIER 0 rule in `#backend-sample-getlist`: filters and sorts carry property names from the query string, so they must
+only ever be applied to the projection, never to the entity.
 
 ### Repository implementation — `Repositories/{Entity}/{Action}/`
 
 Implements the Commands or Queries interface + `IRepository`.
 Uses `ContextHandler<ApplicationReadContext, ApplicationWriteContext, IApplicationContext>`.
 Write operations use `GetWriteContext()`, read operations use `GetReadContext()`.
-All write operations call `DataContextGuards.SaveChanges(context)`.
+All write operations call `DataContextGuards.SaveChanges(context, cancellationToken)`.
+
+For GetList the repository **projects to the response item first**, then applies `.Filter(...)`, `.OrderBy(...)` and
+`.Pagination(...)`, and materialises with `await CountAsync(ct)` / `await ToListAsync(ct)` before returning
+`FilterModelResponse<{Entity}GetListResponseItem>.Create(...)`. The framework only shapes the `IQueryable`; the
+repository owns execution, because it is the layer that can cancel it.
 
 ### Extensions (if needed) — `UseCases/{Entity}/{Action}/Extensions/`
 
@@ -332,10 +378,13 @@ internal static class {Entity}{Action}Extensions
 {
     // Add:     internal static {Entity} To{Entity}(this {Entity}AddRequest request)
     // Get:     internal static {Entity}GetResponse To{Entity}GetResponse(this {Entity} entity)
-    // GetList: internal static {Entity}GetListResponseItem To{Entity}GetListResponseItem(this {Entity} entity)
     // Update:  internal static {Entity} To{Entity}(this {Entity}UpdateRequest request)  // includes Id
 }
 ```
+
+**GetList has no Extensions file.** The repository already projects to `{Entity}GetListResponseItem` inside the
+query, so there is nothing left to map afterwards; the service wraps the returned page with
+`new {Entity}GetListResponse(page)`.
 
 Build `{Organization}.{Product}.UseCases`.
 
@@ -389,9 +438,9 @@ Register the use case endpoint inside `Use{Entity}Endpoints` using the pattern m
 // Add:
 group.MapEndpoint<GenericResponse<{Entity}AddResponse>>(
     HttpMethods.Post, "/",
-    async ({Entity}AddRequest request, IController<{Entity}AddRequest, {Entity}AddResponse> controller) =>
+    async ({Entity}AddRequest request, IController<{Entity}AddRequest, {Entity}AddResponse> controller, CancellationToken cancellationToken) =>
     {
-        var result = await controller.Handle(request);
+        var result = await controller.Handle(request, cancellationToken);
         return Results.Ok(result);
     },
     "Add{Entity}", "Add {entity-lowercase} endpoint", "This endpoint is for add a {entity-lowercase}.");
@@ -399,9 +448,9 @@ group.MapEndpoint<GenericResponse<{Entity}AddResponse>>(
 // Get:
 group.MapEndpoint<GenericResponse<{Entity}GetResponse>>(
     HttpMethods.Get, "/{id}",
-    async (int id, IController<{Entity}GetRequest, {Entity}GetResponse> controller) =>
+    async (int id, IController<{Entity}GetRequest, {Entity}GetResponse> controller, CancellationToken cancellationToken) =>
     {
-        var result = await controller.Handle(new {Entity}GetRequest { Id = id });
+        var result = await controller.Handle(new {Entity}GetRequest { Id = id }, cancellationToken);
         return Results.Ok(result);
     },
     "Get{Entity}", "Get {entity-lowercase} endpoint", "This endpoint is for get a {entity-lowercase}.");
@@ -410,9 +459,9 @@ group.MapEndpoint<GenericResponse<{Entity}GetResponse>>(
 group.MapEndpoint<GenericResponse<{Entity}GetListResponse>>(
     HttpMethods.Get, "/",
     async (string? filter, string? sort, int? page, int? size,
-           IController<{Entity}GetListRequest, {Entity}GetListResponse> controller) =>
+           IController<{Entity}GetListRequest, {Entity}GetListResponse> controller, CancellationToken cancellationToken) =>
     {
-        var result = await controller.Handle(new {Entity}GetListRequest(filter, sort, page ?? 0, size ?? 0));
+        var result = await controller.Handle(new {Entity}GetListRequest(filter, sort, page ?? 0, size ?? 0), cancellationToken);
         return Results.Ok(result);
     },
     "GetList{Entity}", "Get {entity-lowercase} list endpoint", "This endpoint is for get a list of {entity-lowercase-plural}.");
@@ -420,10 +469,10 @@ group.MapEndpoint<GenericResponse<{Entity}GetListResponse>>(
 // Update:
 group.MapEndpoint<GenericResponse<{Entity}UpdateResponse>>(
     HttpMethods.Put, "/{id}",
-    async (int id, {Entity}UpdateRequest request, IController<{Entity}UpdateRequest, {Entity}UpdateResponse> controller) =>
+    async (int id, {Entity}UpdateRequest request, IController<{Entity}UpdateRequest, {Entity}UpdateResponse> controller, CancellationToken cancellationToken) =>
     {
         request.Id = id;
-        var result = await controller.Handle(request);
+        var result = await controller.Handle(request, cancellationToken);
         return Results.Ok(result);
     },
     "Update{Entity}", "Update {entity-lowercase} endpoint", "This endpoint is for update a {entity-lowercase}.");
@@ -431,9 +480,9 @@ group.MapEndpoint<GenericResponse<{Entity}UpdateResponse>>(
 // Delete:
 group.MapEndpoint<GenericResponse<{Entity}DeleteResponse>>(
     HttpMethods.Delete, "/{id}",
-    async (int id, IController<{Entity}DeleteRequest, {Entity}DeleteResponse> controller) =>
+    async (int id, IController<{Entity}DeleteRequest, {Entity}DeleteResponse> controller, CancellationToken cancellationToken) =>
     {
-        var result = await controller.Handle(new {Entity}DeleteRequest { Id = id });
+        var result = await controller.Handle(new {Entity}DeleteRequest { Id = id }, cancellationToken);
         return Results.Ok(result);
     },
     "Delete{Entity}", "Delete {entity-lowercase} endpoint", "This endpoint is for delete a {entity-lowercase}.");
@@ -471,11 +520,15 @@ File: `{Entity}{Action}ServiceTests.cs`
 
 - Cover: successful execution, business rules from spec task, error handling (not found, conflict), repository interactions, event emission (if applicable)
 
-### Controller tests — same folder
+### Endpoint tests — `UnitTest/{Entity}/Endpoints/`
 
-File: `{Entity}{Action}ControllerTests.cs`
+File: `{Entity}{Action}EndpointsTests.cs`
 
-- Cover: successful handling, input/output port coordination
+- Cover: the route is mapped, the authenticated username reaches the request, the response shape
+
+> **Not Controller tests.** There is no `{Entity}{Action}Controller` to test — TIER 0 #2 forbids one. The pipeline
+> uses the generic `Controller<TReq,TRes>` from the NuGet, which the framework's own suite covers. A test named after
+> a per-use-case controller either exercises somebody else's code or documents a class that must not exist.
 
 ### Event handler tests (conditional — only if HAS_EVENT is true) — `UnitTest/Events/On{Entity}{Action}ed/`
 

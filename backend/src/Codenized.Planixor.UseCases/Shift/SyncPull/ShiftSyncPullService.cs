@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.Shift.SyncPull;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.Planixor.Dtos;
 using Codenized.Planixor.Dtos.Shift.Sync;
 using Codenized.Planixor.UseCases.Shift.SyncPull.Queries;
 using Microsoft.Extensions.Logging;
@@ -35,15 +36,19 @@ public sealed class ShiftSyncPullService : IInteractorService<ShiftSyncPullReque
     /// Executes the shift sync pull use case.
     /// </summary>
     /// <param name="request">The shift sync pull request containing user ID, last synced timestamp, and cursor.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A <see cref="ShiftSyncPullResponse"/> with the shifts, cursor, and pagination flag.</returns>
-    public async Task<ShiftSyncPullResponse> Run(ShiftSyncPullRequest request)
+    public async Task<ShiftSyncPullResponse> Run(ShiftSyncPullRequest request, CancellationToken cancellationToken)
     {
-        DateTime lastSyncedAt = request.LastSyncedAt ?? DateTime.MinValue;
+        // Normalised, not taken as-is: the value is bound from the query string and compared against a UTC
+        // column, so its DateTimeKind decides whether records are skipped or repeated. See SyncWatermark.
+        DateTime lastSyncedAt = SyncWatermark.Normalise(request.LastSyncedAt);
 
         ShiftSyncPullResult result = await this.queries.GetModifiedAfterAsync(
             request.UserId,
             lastSyncedAt,
-            request.Cursor);
+            request.Cursor,
+            cancellationToken);
 
         List<ShiftSyncItem> shifts = result.Shifts.Select(shift => new ShiftSyncItem(
             shift.Id,

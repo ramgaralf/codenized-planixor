@@ -6,7 +6,7 @@ namespace Codenized.Planixor.Api.Endpoints.Reminder;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
-using Codenized.CleanArchitecture.Exception.Abstractions.Unauthorized;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.Unauthorized;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
 using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.Reminder.Sync;
@@ -22,11 +22,11 @@ internal static class ReminderSyncPushEndpoints
         group.MapEndpoint<GenericResponse<ReminderSyncPushResponse>>(
             HttpMethods.Post,
             "/push",
-            async (ReminderSyncPushRequest request, IController<ReminderSyncPushRequest, ReminderSyncPushResponse> controller, ISecurityService securityService) =>
+            async (ReminderSyncPushRequest request, IController<ReminderSyncPushRequest, ReminderSyncPushResponse> controller, ISecurityService securityService, CancellationToken cancellationToken) =>
             {
                 request.UserId = securityService.GetAuthenticatedUsername()
                     ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
-                GenericResponse<ReminderSyncPushResponse> result = await controller.Handle(request);
+                GenericResponse<ReminderSyncPushResponse> result = await controller.Handle(request, cancellationToken);
                 return Results.Ok(result);
             },
             "PushReminders",

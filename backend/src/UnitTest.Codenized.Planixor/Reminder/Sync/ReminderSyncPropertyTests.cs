@@ -1,4 +1,4 @@
-// <copyright file="ReminderSyncPropertyTests.cs" company="Codenized">
+﻿// <copyright file="ReminderSyncPropertyTests.cs" company="Codenized">
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
@@ -19,7 +19,7 @@ using NUnit.Framework;
 [Category("Feature: gh5-reminder-management")]
 public sealed class ReminderSyncPropertyTests
 {
-    private static readonly string[] PaletteColors =
+    internal static readonly string[] PaletteColors =
     [
         "#FCA5A5", "#F87171", "#EF4444", "#DC2626", "#991B1B",
         "#FDBA74", "#FB923C", "#F97316", "#EA580C", "#9A3412",
@@ -32,7 +32,7 @@ public sealed class ReminderSyncPropertyTests
         "#D1D5DB", "#9CA3AF", "#6B7280", "#4B5563", "#1F2937",
     ];
 
-    private static readonly string[] ValidEmojis =
+    internal static readonly string[] ValidEmojis =
     [
         "\U0001F4BC", "\u2600", "\U0001F680", "\U0001F3E0", "\U0001F4A1",
         "\U0001F30D", "\U0001F525", "\u2764", "\U0001F4DA", "\U0001F3AF",
@@ -305,141 +305,4 @@ public sealed class ReminderSyncPropertyTests
     {
         return syncedAt == null || modifiedAt > syncedAt;
     }
-
-    /// <summary>
-    /// Provides FsCheck arbitrary generators for reminder sync-related test inputs.
-    /// </summary>
-    public sealed class ReminderSyncArbitraries
-    {
-        /// <summary>Generates arbitrary sync state inputs for push filter tests.</summary>
-        /// <returns>An arbitrary for arrays of <see cref="ReminderSyncStateInput"/>.</returns>
-        public static Arbitrary<ReminderSyncStateInput[]> GenerateReminderSyncStateInputArray()
-        {
-            Gen<ReminderSyncStateInput> singleGen =
-                from syncState in Gen.Choose(0, 2)
-                from dayOffset in Gen.Choose(1, 365)
-                from hourOffset in Gen.Choose(0, 23)
-                select CreateSyncStateInput(syncState, dayOffset, hourOffset);
-
-            Gen<ReminderSyncStateInput[]> gen =
-                from count in Gen.Choose(1, 20)
-                from items in singleGen.ArrayOf(count)
-                select items;
-
-            return gen.ToArbitrary();
-        }
-
-        /// <summary>Generates arbitrary conflict resolution inputs.</summary>
-        /// <returns>An arbitrary for <see cref="ReminderConflictResolutionInput"/>.</returns>
-        public static Arbitrary<ReminderConflictResolutionInput> GenerateConflictResolutionInput()
-        {
-            DateTime baseDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-            Gen<ReminderConflictResolutionInput> gen =
-                from scenario in Gen.Choose(0, 2)
-                from localDayOffset in Gen.Choose(0, 365)
-                from localHourOffset in Gen.Choose(0, 23)
-                from remoteDayOffset in Gen.Choose(0, 365)
-                from remoteHourOffset in Gen.Choose(0, 23)
-                select scenario switch
-                {
-                    0 => new ReminderConflictResolutionInput(
-                        baseDate.AddDays(localDayOffset).AddHours(localHourOffset),
-                        baseDate.AddDays(remoteDayOffset).AddHours(remoteHourOffset + 24)),
-                    1 => new ReminderConflictResolutionInput(
-                        baseDate.AddDays(localDayOffset).AddHours(localHourOffset + 24),
-                        baseDate.AddDays(remoteDayOffset).AddHours(remoteHourOffset)),
-                    _ => new ReminderConflictResolutionInput(
-                        baseDate.AddDays(localDayOffset).AddHours(localHourOffset),
-                        baseDate.AddDays(localDayOffset).AddHours(localHourOffset)),
-                };
-
-            return gen.ToArbitrary();
-        }
-
-        /// <summary>Generates arbitrary valid reminder inputs for pull merge tests.</summary>
-        /// <returns>An arbitrary for <see cref="ReminderSyncCreateInput"/>.</returns>
-        public static Arbitrary<ReminderSyncCreateInput> GenerateReminderSyncCreateInput()
-        {
-            Gen<char> alphanumChar = Gen.Elements(
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9');
-
-            Gen<char> anyNameChar = Gen.Elements(
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9', ' ', '-');
-
-            Gen<ReminderSyncCreateInput> gen =
-                from firstChar in alphanumChar
-                from remainingLength in Gen.Choose(0, 49)
-                from remainingChars in anyNameChar.ArrayOf(remainingLength)
-                from emojiIndex in Gen.Choose(0, ValidEmojis.Length - 1)
-                from colorIndex in Gen.Choose(0, PaletteColors.Length - 1)
-                from isActive in Gen.Elements(true, false)
-                from isDeleted in Gen.Elements(true, false)
-                from dayOffset in Gen.Choose(1, 365)
-                from modifiedDayOffset in Gen.Choose(1, 365)
-                select new ReminderSyncCreateInput(
-                    Guid.NewGuid(),
-                    Guid.NewGuid().ToString(),
-                    ReminderName.Create(firstChar + new string(remainingChars)),
-                    ReminderIcon.Create(ValidEmojis[emojiIndex]),
-                    ReminderColor.Create(PaletteColors[colorIndex]),
-                    isActive,
-                    new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddDays(dayOffset),
-                    new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddDays(dayOffset + modifiedDayOffset),
-                    isDeleted);
-
-            return gen.ToArbitrary();
-        }
-
-        private static ReminderSyncStateInput CreateSyncStateInput(int syncState, int dayOffset, int hourOffset)
-        {
-            DateTime baseDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            DateTime modifiedAt = baseDate.AddDays(dayOffset).AddHours(hourOffset);
-
-            return syncState switch
-            {
-                0 => new ReminderSyncStateInput(modifiedAt, null),
-                1 => new ReminderSyncStateInput(modifiedAt, modifiedAt.AddHours(-1)),
-                _ => new ReminderSyncStateInput(modifiedAt, modifiedAt.AddHours(1)),
-            };
-        }
-    }
-
-    /// <summary>
-    /// Input record representing a reminder's sync state for push filter testing.
-    /// </summary>
-#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
-    public record ReminderSyncStateInput(DateTime ModifiedAt, DateTime? SyncedAt);
-
-    /// <summary>
-    /// Input record for conflict resolution property tests.
-    /// </summary>
-    public record ReminderConflictResolutionInput(DateTime LocalModifiedAt, DateTime RemoteModifiedAt);
-
-    /// <summary>
-    /// Input record for pull merge property tests with all reminder fields.
-    /// </summary>
-    public record ReminderSyncCreateInput(
-        Guid Id,
-        string UserId,
-        ReminderName Name,
-        ReminderIcon Icon,
-        ReminderColor BackgroundColor,
-        bool IsActive,
-        DateTime CreatedAt,
-        DateTime ModifiedAt,
-        bool IsDeleted);
-#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
 }

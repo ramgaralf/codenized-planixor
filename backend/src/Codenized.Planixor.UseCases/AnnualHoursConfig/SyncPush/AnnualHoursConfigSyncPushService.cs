@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.AnnualHoursConfig.SyncPush;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
 using Codenized.Planixor.Dtos.AnnualHoursConfig.Sync;
 using Codenized.Planixor.UseCases.AnnualHoursConfig.SyncPush.Commands;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,9 @@ using AnnualHoursConfigEntity = Codenized.Planixor.Core.Entities.AnnualHoursConf
 /// </summary>
 public sealed class AnnualHoursConfigSyncPushService : IInteractorService<AnnualHoursConfigSyncPushRequest, AnnualHoursConfigSyncPushResponse>
 {
+    /// <summary>The largest batch the use case will process.</summary>
+    private const int MaxBatchSize = 100;
+
     private readonly IAnnualHoursConfigSyncPushCommands commands;
     private readonly ILogger<AnnualHoursConfigSyncPushService> logger;
 
@@ -36,9 +40,21 @@ public sealed class AnnualHoursConfigSyncPushService : IInteractorService<Annual
     /// Processes the annual hours config sync push request by mapping DTOs to entities and upserting them.
     /// </summary>
     /// <param name="request">The annual hours config sync push request containing the batch of records.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A response indicating the number of records processed.</returns>
-    public async Task<AnnualHoursConfigSyncPushResponse> Run(AnnualHoursConfigSyncPushRequest request)
+    public async Task<AnnualHoursConfigSyncPushResponse> Run(AnnualHoursConfigSyncPushRequest request, CancellationToken cancellationToken)
     {
+        // The request validator enforces this too, and it is what produces the 400 with the offending
+        // field. Repeated here as an invariant: a regression in the validator must not leave the route
+        // unbounded, which is exactly the state this entity was in.
+        if (request.Records.Count > MaxBatchSize)
+        {
+            throw new BadRequestException(
+                "BATCH_SIZE_EXCEEDED",
+                "Batch Size Exceeded",
+                $"Batch size exceeds maximum of {MaxBatchSize}.");
+        }
+
         this.logger.LogInformation(
             "Processing annual hours config sync push for user {UserId} with {Count} records.",
             request.UserId,
@@ -54,13 +70,15 @@ public sealed class AnnualHoursConfigSyncPushService : IInteractorService<Annual
                 record.IsDeleted))
             .ToList();
 
-        await this.commands.UpsertAsync(request.UserId, configs);
+        // The count comes back from the repository rather than from the batch size: a record whose identifier
+        // already belongs to another account is skipped, so the two are not always the same number.
+        int persisted = await this.commands.UpsertAsync(request.UserId, configs, cancellationToken);
 
         this.logger.LogInformation(
             "Annual hours config sync push completed for user {UserId}. {Count} records processed.",
             request.UserId,
             configs.Count);
 
-        return new AnnualHoursConfigSyncPushResponse(configs.Count);
+        return new AnnualHoursConfigSyncPushResponse(persisted);
     }
 }

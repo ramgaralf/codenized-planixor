@@ -17,14 +17,16 @@ public interface INotificationRecordSyncPushQueries
     /// </summary>
     /// <param name="ids">The list of notification record identifiers to look up.</param>
     /// <param name="userId">The user identifier to scope the query.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A read-only list of notification records matching the provided IDs and owned by the user.</returns>
-    Task<IReadOnlyList<NotificationRecordEntity>> GetByIdsAsync(IReadOnlyList<Guid> ids, string userId);
+    Task<IReadOnlyList<NotificationRecordEntity>> GetByIdsAsync(IReadOnlyList<Guid> ids, string userId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Checks which of the provided notification record identifiers exist in the store
     /// regardless of ownership. Used to detect ownership conflicts.
     /// </summary>
     /// <param name="ids">The list of notification record identifiers to check.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A set of identifiers that exist in the store.</returns>
-    Task<IReadOnlySet<Guid>> GetExistingIdsAsync(IReadOnlyList<Guid> ids);
+    Task<IReadOnlySet<Guid>> GetExistingIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken);
 }

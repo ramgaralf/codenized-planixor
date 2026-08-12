@@ -24,4 +24,13 @@
   <ItemGroup>
     <AdditionalFiles Include="..\..\stylecop.json" Link="stylecop.json" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      SyncCursor and EntityIdFilter stay internal: they are implementation details of how this layer talks to MySQL,
+      not part of any contract. The test project needs to reach them because the cursor is caller-controlled input
+      whose rejection paths are worth testing directly, rather than only through six near-identical repositories.
+    -->
+    <InternalsVisibleTo Include="UnitTest.Codenized.Planixor" />
+  </ItemGroup>
 </Project>

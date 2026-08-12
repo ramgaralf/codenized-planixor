@@ -1,4 +1,4 @@
-// <copyright file="ReminderColorPropertyTests.cs" company="Codenized">
+﻿// <copyright file="ReminderColorPropertyTests.cs" company="Codenized">
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
@@ -22,7 +22,7 @@ using NUnit.Framework;
 [Category("Feature: gh5-reminder-management, Property 16: Color validation accepts only Predefined_Palette members")]
 public sealed class ReminderColorPropertyTests
 {
-    private static readonly string[] AllPaletteColors =
+    internal static readonly string[] AllPaletteColors =
     [
         "#FCA5A5", "#F87171", "#EF4444", "#DC2626", "#991B1B",
 
@@ -92,78 +92,5 @@ public sealed class ReminderColorPropertyTests
     public void Create_WithNonPaletteColor_ThrowsDomainException(NonPaletteColorInput input)
     {
         Assert.Throws<DomainException>(() => ReminderColor.Create(input.Value));
-    }
-
-    // ==================== Wrapper types for FsCheck generation ====================
-
-    /// <summary>Wrapper for valid palette color inputs.</summary>
-    /// <param name="Value">A color from the Predefined_Palette.</param>
-    public record ValidPaletteColorInput(string Value);
-
-    /// <summary>Wrapper for lowercase palette color inputs.</summary>
-    /// <param name="Value">A lowercase color from the Predefined_Palette.</param>
-    public record LowercasePaletteColorInput(string Value);
-
-    /// <summary>Wrapper for non-palette color inputs.</summary>
-    /// <param name="Value">A hex color string not in the Predefined_Palette.</param>
-    public record NonPaletteColorInput(string Value);
-
-    // ==================== Arbitrary classes ====================
-
-    /// <summary>Provides arbitrary for valid palette colors.</summary>
-    public sealed class ValidPaletteColorArbitrary
-    {
-        /// <summary>Generates valid colors from the Predefined_Palette.</summary>
-        /// <returns>An arbitrary for <see cref="ValidPaletteColorInput"/>.</returns>
-        public static Arbitrary<ValidPaletteColorInput> Generate()
-        {
-            Gen<ValidPaletteColorInput> gen = Gen.Elements(AllPaletteColors)
-                .Select(c => new ValidPaletteColorInput(c));
-
-            return gen.ToArbitrary();
-        }
-    }
-
-    /// <summary>Provides arbitrary for lowercase palette colors.</summary>
-    public sealed class LowercasePaletteColorArbitrary
-    {
-        /// <summary>Generates lowercase versions of palette colors.</summary>
-        /// <returns>An arbitrary for <see cref="LowercasePaletteColorInput"/>.</returns>
-        public static Arbitrary<LowercasePaletteColorInput> Generate()
-        {
-            Gen<LowercasePaletteColorInput> gen = Gen.Elements(AllPaletteColors)
-                .Select(c => new LowercasePaletteColorInput(c.ToLowerInvariant()));
-
-            return gen.ToArbitrary();
-        }
-    }
-
-    /// <summary>Provides arbitrary for non-palette hex color strings.</summary>
-    public sealed class NonPaletteColorArbitrary
-    {
-        /// <summary>Generates hex color strings that are NOT in the Predefined_Palette.</summary>
-        /// <returns>An arbitrary for <see cref="NonPaletteColorInput"/>.</returns>
-        public static Arbitrary<NonPaletteColorInput> Generate()
-        {
-            Gen<char> hexChar = Gen.Elements(
-                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                'A', 'B', 'C', 'D', 'E', 'F');
-
-            Gen<NonPaletteColorInput> gen = Gen.OneOf(
-                Gen.Constant(new NonPaletteColorInput("#000000")),
-                Gen.Constant(new NonPaletteColorInput("#FFFFFF")),
-                Gen.Constant(new NonPaletteColorInput("#123456")),
-                Gen.Constant(new NonPaletteColorInput("#ABCDEF")),
-                Gen.Constant(new NonPaletteColorInput("#FF0000")),
-                Gen.Constant(new NonPaletteColorInput("#00FF00")),
-                Gen.Constant(new NonPaletteColorInput("#0000FF")),
-                Gen.Constant(new NonPaletteColorInput("#AABBCC")),
-                hexChar.ArrayOf(6)
-                    .Select(chars => "#" + new string(chars))
-                    .Where(c => !ReminderColor.Palette.Contains(c))
-                    .Select(c => new NonPaletteColorInput(c)));
-
-            return gen.ToArbitrary();
-        }
     }
 }

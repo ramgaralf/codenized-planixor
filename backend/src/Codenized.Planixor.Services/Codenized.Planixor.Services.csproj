@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Codenized.CleanArchitecture.Abstractions" Version="10.*" />
     <PackageReference Include="Codenized.CleanArchitecture.Exceptions.Abstractions" Version="10.*" />
+    <PackageReference Include="Codenized.Security.RateLimit" Version="10.*" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

@@ -4,7 +4,7 @@
 
 namespace UnitTest.Codenized.Planixor.Reminder.Integration;
 
-using global::Codenized.CleanArchitecture.Exception.Abstractions.BadRequest;
+using global::Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
 using global::Codenized.Planixor.Core.Entities;
 using global::Codenized.Planixor.Core.ValueObjects;
 using global::Codenized.Planixor.Dtos.Reminder.Sync;
@@ -46,6 +46,11 @@ public sealed class ReminderSyncIntegrationTests
         this.pullService = new ReminderSyncPullService(
             Substitute.For<ILogger<ReminderSyncPullService>>(),
             this.pullQueries);
+
+        // By default every submitted record is persisted. UpsertAsync returns the count actually written, because a
+        // record whose identifier belongs to another account is skipped; a test about that case overrides this.
+        this.pushCommands.UpsertAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<Reminder>>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.Arg<IReadOnlyList<Reminder>>().Count);
     }
 
     /// <summary>
@@ -76,7 +81,7 @@ public sealed class ReminderSyncIntegrationTests
         var request = new ReminderSyncPushRequest(records) { UserId = userId };
 
         // Act
-        ReminderSyncPushResponse response = await this.pushService.Run(request);
+        ReminderSyncPushResponse response = await this.pushService.Run(request, CancellationToken.None);
 
         // Assert — all 3 records processed
         Assert.That(response.SyncedCount, Is.EqualTo(3));
@@ -88,7 +93,8 @@ public sealed class ReminderSyncIntegrationTests
                 reminders.Count == 3 &&
                 reminders.Any(r => r.Id == createdId && r.IsDeleted == false && r.Name.Value == "New Reminder") &&
                 reminders.Any(r => r.Id == updatedId && r.Name.Value == "Updated Name") &&
-                reminders.Any(r => r.Id == deletedId && r.IsDeleted == true)));
+                reminders.Any(r => r.Id == deletedId && r.IsDeleted == true)),
+            CancellationToken.None);
     }
 
     /// <summary>
@@ -121,10 +127,11 @@ public sealed class ReminderSyncIntegrationTests
         IReadOnlyList<Reminder> capturedReminders = null!;
         await this.pushCommands.UpsertAsync(
             userId,
-            Arg.Do<IReadOnlyList<Reminder>>(r => capturedReminders = r));
+            Arg.Do<IReadOnlyList<Reminder>>(r => capturedReminders = r),
+            CancellationToken.None);
 
         // Act
-        await this.pushService.Run(request);
+        await this.pushService.Run(request, CancellationToken.None);
 
         // Assert — verify domain entity was constructed correctly
         Assert.That(capturedReminders, Has.Count.EqualTo(1));
@@ -177,7 +184,7 @@ public sealed class ReminderSyncIntegrationTests
             new DateTime(2024, 6, 18, 10, 0, 0, DateTimeKind.Utc),
             true);
 
-        this.pullQueries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.pullQueries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new ReminderSyncPullResult
             {
                 Reminders = [r1, r2],
@@ -188,7 +195,7 @@ public sealed class ReminderSyncIntegrationTests
         var request = new ReminderSyncPullRequest(userId, lastSyncedAt, null);
 
         // Act
-        ReminderSyncPullResponse response = await this.pullService.Run(request);
+        ReminderSyncPullResponse response = await this.pullService.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Records, Has.Count.EqualTo(2));
@@ -225,7 +232,7 @@ public sealed class ReminderSyncIntegrationTests
             reminderId, "Push Me", "🚀", "#7C3AED", true, "never", null, createdAt, modifiedAt, false);
         var pushRequest = new ReminderSyncPushRequest([pushRecord]) { UserId = userId };
 
-        ReminderSyncPushResponse pushResponse = await this.pushService.Run(pushRequest);
+        ReminderSyncPushResponse pushResponse = await this.pushService.Run(pushRequest, CancellationToken.None);
         Assert.That(pushResponse.SyncedCount, Is.EqualTo(1));
 
         // Step 2: Pull should return the same record (simulated via mock)
@@ -243,7 +250,7 @@ public sealed class ReminderSyncIntegrationTests
             false);
 
         DateTime pullSince = new DateTime(2024, 6, 19, 0, 0, 0, DateTimeKind.Utc);
-        this.pullQueries.GetModifiedAfterAsync(userId, pullSince, null)
+        this.pullQueries.GetModifiedAfterAsync(userId, pullSince, null, CancellationToken.None)
             .Returns(new ReminderSyncPullResult
             {
                 Reminders = [entity],
@@ -252,7 +259,7 @@ public sealed class ReminderSyncIntegrationTests
             });
 
         var pullRequest = new ReminderSyncPullRequest(userId, pullSince, null);
-        ReminderSyncPullResponse pullResponse = await this.pullService.Run(pullRequest);
+        ReminderSyncPullResponse pullResponse = await this.pullService.Run(pullRequest, CancellationToken.None);
 
         // Assert
         Assert.That(pullResponse.Records, Has.Count.EqualTo(1));
@@ -277,12 +284,13 @@ public sealed class ReminderSyncIntegrationTests
         var request = new ReminderSyncPushRequest([record]) { UserId = userId };
 
         // Act
-        await this.pushService.Run(request);
+        await this.pushService.Run(request, CancellationToken.None);
 
         // Assert — userId is passed through to the repository
         await this.pushCommands.Received(1).UpsertAsync(
             userId,
-            Arg.Any<IReadOnlyList<Reminder>>());
+            Arg.Any<IReadOnlyList<Reminder>>(),
+            CancellationToken.None);
     }
 
     /// <summary>
@@ -296,7 +304,7 @@ public sealed class ReminderSyncIntegrationTests
         string userId = "testuser";
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
 
-        this.pullQueries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.pullQueries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new ReminderSyncPullResult
             {
                 Reminders = [],
@@ -307,10 +315,10 @@ public sealed class ReminderSyncIntegrationTests
         var request = new ReminderSyncPullRequest(userId, lastSyncedAt, null);
 
         // Act
-        await this.pullService.Run(request);
+        await this.pullService.Run(request, CancellationToken.None);
 
         // Assert — query is scoped to the specific userId
-        await this.pullQueries.Received(1).GetModifiedAfterAsync(userId, lastSyncedAt, null);
+        await this.pullQueries.Received(1).GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None);
     }
 
     /// <summary>
@@ -331,7 +339,7 @@ public sealed class ReminderSyncIntegrationTests
 
         // Act & Assert
         Assert.ThrowsAsync<BadRequestException>(
-            async () => await this.pushService.Run(request));
+            async () => await this.pushService.Run(request, CancellationToken.None));
     }
 
     /// <summary>
@@ -346,7 +354,7 @@ public sealed class ReminderSyncIntegrationTests
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-2);
         string cursor = "page-2-cursor";
 
-        this.pullQueries.GetModifiedAfterAsync(userId, lastSyncedAt, cursor)
+        this.pullQueries.GetModifiedAfterAsync(userId, lastSyncedAt, cursor, CancellationToken.None)
             .Returns(new ReminderSyncPullResult
             {
                 Reminders = [],
@@ -357,10 +365,10 @@ public sealed class ReminderSyncIntegrationTests
         var request = new ReminderSyncPullRequest(userId, lastSyncedAt, cursor);
 
         // Act
-        await this.pullService.Run(request);
+        await this.pullService.Run(request, CancellationToken.None);
 
         // Assert
-        await this.pullQueries.Received(1).GetModifiedAfterAsync(userId, lastSyncedAt, cursor);
+        await this.pullQueries.Received(1).GetModifiedAfterAsync(userId, lastSyncedAt, cursor, CancellationToken.None);
     }
 
     /// <summary>
@@ -390,7 +398,7 @@ public sealed class ReminderSyncIntegrationTests
                 false))
             .ToList();
 
-        this.pullQueries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.pullQueries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new ReminderSyncPullResult
             {
                 Reminders = reminders,
@@ -401,7 +409,7 @@ public sealed class ReminderSyncIntegrationTests
         var request = new ReminderSyncPullRequest(userId, lastSyncedAt, null);
 
         // Act
-        ReminderSyncPullResponse response = await this.pullService.Run(request);
+        ReminderSyncPullResponse response = await this.pullService.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Records, Has.Count.EqualTo(100));
@@ -432,10 +440,11 @@ public sealed class ReminderSyncIntegrationTests
         IReadOnlyList<Reminder> capturedReminders = null!;
         await this.pushCommands.UpsertAsync(
             userId,
-            Arg.Do<IReadOnlyList<Reminder>>(r => capturedReminders = r));
+            Arg.Do<IReadOnlyList<Reminder>>(r => capturedReminders = r),
+            CancellationToken.None);
 
         // Act
-        await this.pushService.Run(request);
+        await this.pushService.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(capturedReminders, Has.Count.EqualTo(3));

@@ -1,4 +1,4 @@
-// <copyright file="ReminderPropertyTests.cs" company="Codenized">
+﻿// <copyright file="ReminderPropertyTests.cs" company="Codenized">
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
@@ -19,7 +19,7 @@ using NUnit.Framework;
 [Category("Feature: gh5-reminder-management")]
 public sealed class ReminderPropertyTests
 {
-    private static readonly string[] PaletteColors =
+    internal static readonly string[] PaletteColors =
     [
         "#FCA5A5", "#F87171", "#EF4444", "#DC2626", "#991B1B",
         "#FDBA74", "#FB923C", "#F97316", "#EA580C", "#9A3412",
@@ -32,7 +32,7 @@ public sealed class ReminderPropertyTests
         "#D1D5DB", "#9CA3AF", "#6B7280", "#4B5563", "#1F2937",
     ];
 
-    private static readonly string[] ValidEmojis =
+    internal static readonly string[] ValidEmojis =
     [
         "\U0001F4BC", "\u2600", "\U0001F680", "\U0001F3E0", "\U0001F4A1",
         "\U0001F30D", "\U0001F525", "\u2764", "\U0001F4DA", "\U0001F3AF",
@@ -240,106 +240,4 @@ public sealed class ReminderPropertyTests
             Assert.That(reminder.IsActive, Is.EqualTo(isActiveBeforeDelete), "IsActive unchanged");
         });
     }
-
-    /// <summary>
-    /// Provides FsCheck arbitrary generators for valid Reminder inputs.
-    /// </summary>
-    public sealed class ReminderArbitraries
-    {
-        /// <summary>Generates arbitrary valid reminder creation inputs.</summary>
-        /// <returns>An arbitrary for <see cref="ReminderCreateInput"/>.</returns>
-        public static Arbitrary<ReminderCreateInput> Generate()
-        {
-            Gen<char> alphanumChar = Gen.Elements(
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9');
-
-            Gen<char> anyNameChar = Gen.Elements(
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9', ' ', '-');
-
-            Gen<ReminderCreateInput> gen =
-                from firstChar in alphanumChar
-                from remainingLength in Gen.Choose(0, 49)
-                from remainingChars in anyNameChar.ArrayOf(remainingLength)
-                from emojiIndex in Gen.Choose(0, ValidEmojis.Length - 1)
-                from colorIndex in Gen.Choose(0, PaletteColors.Length - 1)
-                select new ReminderCreateInput(
-                    Guid.NewGuid(),
-                    Guid.NewGuid().ToString(),
-                    ReminderName.Create(firstChar + new string(remainingChars)),
-                    ReminderIcon.Create(ValidEmojis[emojiIndex]),
-                    ReminderColor.Create(PaletteColors[colorIndex]),
-                    DateTime.UtcNow);
-
-            return gen.ToArbitrary();
-        }
-
-        /// <summary>Generates arbitrary valid reminder update inputs.</summary>
-        /// <returns>An arbitrary for <see cref="ReminderUpdateInput"/>.</returns>
-        public static Arbitrary<ReminderUpdateInput> Generate2()
-        {
-            Gen<char> alphanumChar = Gen.Elements(
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9');
-
-            Gen<char> anyNameChar = Gen.Elements(
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9', ' ', '-');
-
-            Gen<ReminderUpdateInput> gen =
-                from firstChar in alphanumChar
-                from remainingLength in Gen.Choose(0, 49)
-                from remainingChars in anyNameChar.ArrayOf(remainingLength)
-                from emojiIndex in Gen.Choose(0, ValidEmojis.Length - 1)
-                from colorIndex in Gen.Choose(0, PaletteColors.Length - 1)
-                select new ReminderUpdateInput(
-                    ReminderName.Create(firstChar + new string(remainingChars)),
-                    ReminderIcon.Create(ValidEmojis[emojiIndex]),
-                    ReminderColor.Create(PaletteColors[colorIndex]));
-
-            return gen.ToArbitrary();
-        }
-    }
-
-    /// <summary>
-    /// Input record for reminder creation property tests.
-    /// </summary>
-#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
-    public record ReminderCreateInput(
-        Guid Id,
-        string UserId,
-        ReminderName Name,
-        ReminderIcon Icon,
-        ReminderColor BackgroundColor,
-        DateTime CreatedAt);
-
-    /// <summary>
-    /// Input record for reminder update property tests.
-    /// </summary>
-    public record ReminderUpdateInput(
-        ReminderName Name,
-        ReminderIcon Icon,
-        ReminderColor BackgroundColor);
-#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
 }

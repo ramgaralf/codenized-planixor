@@ -17,6 +17,7 @@ public interface ICalendarEventSyncPushCommands
     /// Sets SyncedAt to UTC now on successfully persisted records.
     /// </summary>
     /// <param name="calendarEvents">The batch of calendar event entities to upsert.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpsertBatchAsync(IReadOnlyList<CalendarEventEntity> calendarEvents);
+    Task UpsertBatchAsync(IReadOnlyList<CalendarEventEntity> calendarEvents, CancellationToken cancellationToken);
 }

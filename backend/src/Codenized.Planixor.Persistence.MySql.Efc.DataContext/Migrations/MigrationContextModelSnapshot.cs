@@ -51,8 +51,8 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_AnnualHoursConfigs_UserId");
 
-                    b.HasIndex("UserId", "ModifiedAt")
-                        .HasDatabaseName("IX_AnnualHoursConfigs_UserId_ModifiedAt");
+                    b.HasIndex("UserId", "SyncedAt")
+                        .HasDatabaseName("IX_AnnualHoursConfigs_UserId_SyncedAt");
 
                     b.HasIndex("UserId", "Year")
                         .IsUnique()
@@ -131,8 +131,8 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_CalendarEvents_UserId");
 
-                    b.HasIndex("UserId", "ModifiedAt")
-                        .HasDatabaseName("IX_CalendarEvents_UserId_ModifiedAt");
+                    b.HasIndex("UserId", "SyncedAt")
+                        .HasDatabaseName("IX_CalendarEvents_UserId_SyncedAt");
 
                     b.ToTable("CalendarEvents", null, t =>
                         {
@@ -185,8 +185,8 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.HasIndex("UserId", "IsDeleted")
                         .HasDatabaseName("IX_NotificationRecords_UserId_IsDeleted");
 
-                    b.HasIndex("UserId", "ModifiedAt")
-                        .HasDatabaseName("IX_NotificationRecords_UserId_ModifiedAt");
+                    b.HasIndex("UserId", "SyncedAt")
+                        .HasDatabaseName("IX_NotificationRecords_UserId_SyncedAt");
 
                     b.HasIndex("CalendarEventId", "AlertOffset", "IsDeleted")
                         .HasDatabaseName("IX_NotificationRecords_CalendarEventId_AlertOffset_IsDeleted");
@@ -240,8 +240,8 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_Reminders_UserId");
 
-                    b.HasIndex("UserId", "ModifiedAt")
-                        .HasDatabaseName("IX_Reminders_UserId_ModifiedAt");
+                    b.HasIndex("UserId", "SyncedAt")
+                        .HasDatabaseName("IX_Reminders_UserId_SyncedAt");
 
                     b.ToTable("Reminders", (string)null);
                 });
@@ -280,8 +280,8 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_Shifts_UserId");
 
-                    b.HasIndex("UserId", "ModifiedAt")
-                        .HasDatabaseName("IX_Shifts_UserId_ModifiedAt");
+                    b.HasIndex("UserId", "SyncedAt")
+                        .HasDatabaseName("IX_Shifts_UserId_SyncedAt");
 
                     b.ToTable("Shifts", (string)null);
                 });
@@ -316,6 +316,9 @@ namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext.Migrations
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_ShiftModeSettings_UserId");
+
+                    b.HasIndex("UserId", "SyncedAt")
+                        .HasDatabaseName("IX_ShiftModeSettings_UserId_SyncedAt");
 
                     b.ToTable("ShiftModeSettings", (string)null);
                 });

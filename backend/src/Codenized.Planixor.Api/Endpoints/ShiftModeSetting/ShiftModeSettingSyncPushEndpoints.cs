@@ -6,7 +6,7 @@ namespace Codenized.Planixor.Api.Endpoints.ShiftModeSetting;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
-using Codenized.CleanArchitecture.Exception.Abstractions.Unauthorized;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.Unauthorized;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
 using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.ShiftModeSetting.Sync;
@@ -22,11 +22,11 @@ internal static class ShiftModeSettingSyncPushEndpoints
         group.MapEndpoint<GenericResponse<ShiftModeSettingSyncPushResponse>>(
             HttpMethods.Post,
             "/push",
-            async (ShiftModeSettingSyncPushRequest request, ISecurityService securityService, IController<ShiftModeSettingSyncPushRequest, ShiftModeSettingSyncPushResponse> controller) =>
+            async (ShiftModeSettingSyncPushRequest request, ISecurityService securityService, IController<ShiftModeSettingSyncPushRequest, ShiftModeSettingSyncPushResponse> controller, CancellationToken cancellationToken) =>
             {
                 request.UserId = securityService.GetAuthenticatedUsername()
                     ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
-                GenericResponse<ShiftModeSettingSyncPushResponse> result = await controller.Handle(request);
+                GenericResponse<ShiftModeSettingSyncPushResponse> result = await controller.Handle(request, cancellationToken);
                 return Results.Ok(result);
             },
             "PushShiftModeSettings",

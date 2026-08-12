@@ -46,9 +46,7 @@ public sealed class ContactGetRequestValidator : ValidatorBase<ContactGetRequest
     /// <summary>
     /// Initializes a new instance of the <see cref="ContactGetRequestValidator"/> class.
     /// </summary>
-    /// <param name="service">Validation service.</param>
-    public ContactGetRequestValidator(IValidationService<ContactGetRequest> service)
-        : base(service)
+    public ContactGetRequestValidator()
     {
         this.AddRuleFor(p => p.Id)
             .AddRequirement(p => p.Id > 0, "The identifier is not valid.");
@@ -95,7 +93,7 @@ using {Organization}.{Product}.Dtos.Contact.Get;
 using {Organization}.{Product}.UseCases.Contact.Get.Extensions;
 using {Organization}.{Product}.UseCases.Contact.Get.Queries;
 using {Organization}.{Product}.UseCases.Contact.Get.Specifications;
-using {Organization}.CleanArchitecture.Abstractions.Exceptions;
+using {Organization}.CleanArchitecture.Exceptions.Abstractions.NotFound;
 using {Organization}.CleanArchitecture.Abstractions.Interactors;
 
 /// <summary>Contact get service class.</summary>
@@ -119,10 +117,11 @@ public sealed class ContactGetService : IInteractorService<ContactGetRequest, Co
 
     /// <summary>Run.</summary>
     /// <param name="request">Contact get request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A contact get response.</returns>
-    public async Task<ContactGetResponse> Run(ContactGetRequest request)
+    public async Task<ContactGetResponse> Run(ContactGetRequest request, CancellationToken cancellationToken)
     {
-        var contact = await this.queries.Get(new ContactGetByIdSpecification(request.Id));
+        var contact = await this.queries.Get(new ContactGetByIdSpecification(request.Id), cancellationToken);
 
         if (contact is null)
         {
@@ -155,8 +154,9 @@ public interface IContactGetQueries
 {
     /// <summary>Retrieves a contact matching the specification.</summary>
     /// <param name="specification">The specification criteria.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    Task<Contact> Get(Specification<Contact> specification);
+    Task<Contact> Get(Specification<Contact> specification, CancellationToken cancellationToken);
 }
 ```
 
@@ -204,11 +204,11 @@ public sealed class ContactGetByIdSpecification : Specification<Contact>
 // Copyright (c) {Organization}. All rights reserved.
 // </copyright>
 
-namespace {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.Repositories.Contact.Get;
+namespace {Organization}.{Product}.Persistence.MySql.Efc.Repositories.Contact.Get;
 
 using Microsoft.EntityFrameworkCore;
 using {Organization}.{Product}.Core.Entities;
-using {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.DataContext;
+using {Organization}.{Product}.Persistence.MySql.Efc.DataContext;
 using {Organization}.{Product}.UseCases.Contact.Get.Queries;
 using {Organization}.CleanArchitecture.Persistence.Abstractions.Handler;
 using {Organization}.CleanArchitecture.Persistence.Abstractions.Interfaces;
@@ -230,10 +230,11 @@ public sealed class ContactGetQueries : IContactGetQueries, IRepository
 
     /// <summary>Retrieves a single contact matching the specification.</summary>
     /// <param name="specification">The specification criteria.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task<Contact> Get(Specification<Contact> specification)
+    public async Task<Contact> Get(Specification<Contact> specification, CancellationToken cancellationToken)
     {
-        return await this.context.GetReadContext().Contacts.FirstOrDefaultAsync(specification.ConditionExpression) ?? null!;
+        return await this.context.GetReadContext().Contacts.FirstOrDefaultAsync(specification.ConditionExpression, cancellationToken) ?? null!;
     }
 }
 ```
@@ -278,9 +279,9 @@ internal static class ContactGetExtensions
 group.MapEndpoint<GenericResponse<ContactGetResponse>>(
     HttpMethods.Get,
     "/{id}",
-    async (int id, IController<ContactGetRequest, ContactGetResponse> controller) =>
+    async (int id, IController<ContactGetRequest, ContactGetResponse> controller, CancellationToken cancellationToken) =>
     {
-        var result = await controller.Handle(new ContactGetRequest { Id = id });
+        var result = await controller.Handle(new ContactGetRequest { Id = id }, cancellationToken);
         return Results.Ok(result);
     },
     "GetContact",

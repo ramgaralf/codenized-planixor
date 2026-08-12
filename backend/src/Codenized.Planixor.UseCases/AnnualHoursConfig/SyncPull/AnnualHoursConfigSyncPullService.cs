@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.AnnualHoursConfig.SyncPull;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.Planixor.Dtos;
 using Codenized.Planixor.Dtos.AnnualHoursConfig.Sync;
 using Codenized.Planixor.UseCases.AnnualHoursConfig.SyncPull.Queries;
 using Microsoft.Extensions.Logging;
@@ -35,15 +36,19 @@ public sealed class AnnualHoursConfigSyncPullService : IInteractorService<Annual
     /// Executes the annual hours config sync pull use case.
     /// </summary>
     /// <param name="request">The sync pull request containing user ID, last synced timestamp, and cursor.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A <see cref="AnnualHoursConfigSyncPullResponse"/> with the configs and cursor.</returns>
-    public async Task<AnnualHoursConfigSyncPullResponse> Run(AnnualHoursConfigSyncPullRequest request)
+    public async Task<AnnualHoursConfigSyncPullResponse> Run(AnnualHoursConfigSyncPullRequest request, CancellationToken cancellationToken)
     {
-        DateTime lastSyncedAt = request.LastSyncedAt ?? DateTime.MinValue;
+        // Normalised, not taken as-is: the value is bound from the query string and compared against a UTC
+        // column, so its DateTimeKind decides whether records are skipped or repeated. See SyncWatermark.
+        DateTime lastSyncedAt = SyncWatermark.Normalise(request.LastSyncedAt);
 
         AnnualHoursConfigSyncPullResult result = await this.queries.GetModifiedAfterAsync(
             request.UserId,
             lastSyncedAt,
-            request.Cursor);
+            request.Cursor,
+            cancellationToken);
 
         List<AnnualHoursConfigSyncRecord> records = result.Records.Select(config => new AnnualHoursConfigSyncRecord(
             config.Id,

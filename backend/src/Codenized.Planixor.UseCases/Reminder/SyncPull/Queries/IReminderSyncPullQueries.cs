@@ -1,4 +1,4 @@
-// <copyright file="IReminderSyncPullQueries.cs" company="Codenized">
+﻿// <copyright file="IReminderSyncPullQueries.cs" company="Codenized">
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
@@ -18,27 +18,7 @@ public interface IReminderSyncPullQueries
     /// <param name="userId">The user identifier who owns the reminders.</param>
     /// <param name="lastSyncedAt">The timestamp after which modifications should be returned.</param>
     /// <param name="cursor">The pagination cursor from a previous response, or null for the first page.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A paginated result containing reminders, a cursor for the next page, and a flag indicating more records exist.</returns>
-    Task<ReminderSyncPullResult> GetModifiedAfterAsync(string userId, DateTime lastSyncedAt, string? cursor);
-}
-
-/// <summary>
-/// Represents the paginated result of a reminder sync pull query.
-/// </summary>
-public record ReminderSyncPullResult
-{
-    /// <summary>
-    /// Gets the reminders returned in this page (max 100).
-    /// </summary>
-    required public IReadOnlyList<Reminder> Reminders { get; init; }
-
-    /// <summary>
-    /// Gets the cursor to use for retrieving the next page, or null if no more pages.
-    /// </summary>
-    required public string? Cursor { get; init; }
-
-    /// <summary>
-    /// Gets a value indicating whether more records exist beyond this page.
-    /// </summary>
-    required public bool HasMore { get; init; }
+    Task<ReminderSyncPullResult> GetModifiedAfterAsync(string userId, DateTime lastSyncedAt, string? cursor, CancellationToken cancellationToken);
 }

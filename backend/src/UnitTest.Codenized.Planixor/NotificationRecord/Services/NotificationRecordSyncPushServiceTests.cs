@@ -35,7 +35,14 @@ public sealed class NotificationRecordSyncPushServiceTests
         this.commands = Substitute.For<INotificationRecordSyncPushCommands>();
         this.queries = Substitute.For<INotificationRecordSyncPushQueries>();
         this.logger = Substitute.For<ILogger<NotificationRecordSyncPushService>>();
-        this.service = new NotificationRecordSyncPushService(this.commands, this.queries, this.logger);
+
+        // The real validator, not a substitute: these tests assert on which records get rejected, so the
+        // actual rules are what is under test.
+        this.service = new NotificationRecordSyncPushService(
+            this.commands,
+            this.queries,
+            new NotificationRecordSyncRecordValidator(),
+            this.logger);
     }
 
     /// <summary>
@@ -51,25 +58,30 @@ public sealed class NotificationRecordSyncPushServiceTests
         NotificationRecordSyncRecord record = CreateValidRecord(recordId);
         var request = new NotificationRecordSyncPushRequest([record]) { UserId = userId };
 
-        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
             .Returns(new HashSet<Guid>());
-        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
             .Returns(new List<NotificationRecordEntity>());
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
-        await this.commands.Received(1).PurgePastRecordsAsync(userId);
+        await this.commands.Received(1).PurgePastRecordsAsync(userId, CancellationToken.None);
     }
 
     /// <summary>
-    /// Verifies that when PurgePastRecordsAsync throws an exception, the service still processes
-    /// the push batch and returns acknowledged records.
+    /// Verifies that a failing purge aborts the push instead of being swallowed.
     /// </summary>
+    /// <remarks>
+    /// The purge used to be best-effort: its failure was caught and logged so the push carried on. That only made
+    /// sense while the purge committed on its own — which is precisely the defect. The deletions were already
+    /// permanent by the time the upsert could fail, so the client retried a push whose purged rows existed on
+    /// neither side. Purge and upsert now share one commit, so a failure in either must leave both unapplied.
+    /// </remarks>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Test]
-    public async Task Run_WhenPurgeThrows_StillProcessesPushBatch()
+    public async Task Run_WhenPurgeFails_AbortsWithoutCommitting()
     {
         // Arrange
         string userId = "testuser";
@@ -77,22 +89,47 @@ public sealed class NotificationRecordSyncPushServiceTests
         NotificationRecordSyncRecord record = CreateValidRecord(recordId);
         var request = new NotificationRecordSyncPushRequest([record]) { UserId = userId };
 
-        this.commands.PurgePastRecordsAsync(userId)
+        this.commands.PurgePastRecordsAsync(userId, CancellationToken.None)
             .ThrowsAsync(new InvalidOperationException("Database connection failed"));
 
-        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
             .Returns(new HashSet<Guid>());
-        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
+            .Returns(new List<NotificationRecordEntity>());
+
+        // Act, Assert
+        Assert.ThrowsAsync<InvalidOperationException>(() => this.service.Run(request, CancellationToken.None));
+
+        await this.commands.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>
+    /// Verifies that the push commits exactly once even when the batch had nothing to insert.
+    /// </summary>
+    /// <remarks>
+    /// The purge stages its deletions and no longer writes them itself, so a push whose records were all rejected
+    /// would leave those deletions uncommitted if the commit were conditional on there being something to upsert.
+    /// </remarks>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Test]
+    public async Task Run_WithNothingToUpsert_StillCommits()
+    {
+        // Arrange
+        string userId = "testuser";
+        NotificationRecordSyncRecord invalidRecord = CreateValidRecord(Guid.Empty);
+        var request = new NotificationRecordSyncPushRequest([invalidRecord]) { UserId = userId };
+
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
+            .Returns(new HashSet<Guid>());
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
             .Returns(new List<NotificationRecordEntity>());
 
         // Act
-        NotificationRecordSyncPushResponse response = await this.service.Run(request);
+        NotificationRecordSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
-        Assert.That(response.AcknowledgedIds, Contains.Item(recordId));
-        await this.commands.Received(1).UpsertAsync(
-            userId,
-            Arg.Is<IReadOnlyList<NotificationRecordEntity>>(list => list.Count == 1));
+        Assert.That(response.AcknowledgedIds, Is.Empty);
+        await this.commands.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     /// <summary>
@@ -110,25 +147,26 @@ public sealed class NotificationRecordSyncPushServiceTests
         var request = new NotificationRecordSyncPushRequest([record]) { UserId = userId };
 
         // PurgePastRecordsAsync completes without error (no records to purge)
-        this.commands.PurgePastRecordsAsync(userId)
+        this.commands.PurgePastRecordsAsync(userId, CancellationToken.None)
             .Returns(Task.CompletedTask);
 
-        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
             .Returns(new HashSet<Guid>());
-        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
             .Returns(new List<NotificationRecordEntity>());
 
         // Act
-        NotificationRecordSyncPushResponse response = await this.service.Run(request);
+        NotificationRecordSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Has.Count.EqualTo(1));
         Assert.That(response.AcknowledgedIds, Contains.Item(recordId));
         Assert.That(response.RejectedIds, Is.Empty);
-        await this.commands.Received(1).PurgePastRecordsAsync(userId);
+        await this.commands.Received(1).PurgePastRecordsAsync(userId, CancellationToken.None);
         await this.commands.Received(1).UpsertAsync(
             userId,
-            Arg.Is<IReadOnlyList<NotificationRecordEntity>>(list => list.Count == 1));
+            Arg.Is<IReadOnlyList<NotificationRecordEntity>>(list => list.Count == 1),
+            CancellationToken.None);
     }
 
     private static NotificationRecordSyncRecord CreateValidRecord(Guid id)

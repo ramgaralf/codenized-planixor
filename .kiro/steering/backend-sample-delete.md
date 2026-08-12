@@ -47,9 +47,7 @@ public sealed class ContactDeleteRequestValidator : ValidatorBase<ContactDeleteR
     /// <summary>
     /// Initializes a new instance of the <see cref="ContactDeleteRequestValidator"/> class.
     /// </summary>
-    /// <param name="service">Validation service.</param>
-    public ContactDeleteRequestValidator(IValidationService<ContactDeleteRequest> service)
-        : base(service)
+    public ContactDeleteRequestValidator()
     {
         this.AddRuleFor(p => p.Id)
             .AddRequirement(p => p.Id > 0, "The identifier is not valid.");
@@ -119,14 +117,15 @@ public sealed class ContactDeleteService : IInteractorService<ContactDeleteReque
 
     /// <summary>Run.</summary>
     /// <param name="request">Contact delete request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A contact delete response.</returns>
-    public async Task<ContactDeleteResponse> Run(ContactDeleteRequest request)
+    public async Task<ContactDeleteResponse> Run(ContactDeleteRequest request, CancellationToken cancellationToken)
     {
         // Delete returns the entity BEFORE removal — capture data for the event
-        var contact = await this.commands.Delete(new ContactDeleteByIdSpecification(request.Id));
-        await this.commands.SaveChanges();
+        var contact = await this.commands.Delete(new ContactDeleteByIdSpecification(request.Id), cancellationToken);
+        await this.commands.SaveChanges(cancellationToken);
         this.logger.LogInformation("Delete contact: {ContactId}.", contact.Id);
-        await this.eventHub.RiseEventAsync(new OnContactDeletedEvent(contact.Id, contact.Name, contact.Email ?? string.Empty));
+        await this.eventHub.RaiseEventAsync(new OnContactDeletedEvent(contact.Id, contact.Name, contact.Email ?? string.Empty), cancellationToken);
         return new ContactDeleteResponse { Id = contact.Id };
     }
 }
@@ -152,8 +151,9 @@ public interface IContactDeleteCommands : IUnitOfWork
 {
     /// <summary>Deletes a contact matching the specification and returns it.</summary>
     /// <param name="specification">The specification for the contact to delete.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> with the deleted contact entity.</returns>
-    Task<Contact> Delete(Specification<Contact> specification);
+    Task<Contact> Delete(Specification<Contact> specification, CancellationToken cancellationToken);
 }
 ```
 
@@ -166,12 +166,12 @@ public interface IContactDeleteCommands : IUnitOfWork
 // Copyright (c) {Organization}. All rights reserved.
 // </copyright>
 
-namespace {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.Repositories.Contact.Delete;
+namespace {Organization}.{Product}.Persistence.MySql.Efc.Repositories.Contact.Delete;
 
 using Microsoft.EntityFrameworkCore;
 using {Organization}.{Product}.Core.Entities;
-using {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.DataContext;
-using {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.DataContext.Guards;
+using {Organization}.{Product}.Persistence.MySql.Efc.DataContext;
+using {Organization}.{Product}.Persistence.MySql.Efc.DataContext.Guards;
 using {Organization}.{Product}.UseCases.Contact.Delete.Commands;
 using {Organization}.CleanArchitecture.Abstractions.Specifications;
 using {Organization}.CleanArchitecture.Persistence.Abstractions.Handler;
@@ -193,20 +193,22 @@ public sealed class ContactDeleteCommands : IContactDeleteCommands, IRepository
 
     /// <summary>Deletes a contact matching the specification and returns it.</summary>
     /// <param name="specification">The specification for the contact to delete.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> with the deleted contact entity.</returns>
-    public async Task<Contact> Delete(Specification<Contact> specification)
+    public async Task<Contact> Delete(Specification<Contact> specification, CancellationToken cancellationToken)
     {
         var writeContext = this.context.GetWriteContext();
-        var contact = await writeContext.Contacts.FirstAsync(specification.ConditionExpression);
+        var contact = await writeContext.Contacts.FirstAsync(specification.ConditionExpression, cancellationToken);
         writeContext.Contacts.Remove(contact);
         return contact;
     }
 
     /// <summary>Persists all pending changes to the database.</summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task SaveChanges()
+    public async Task SaveChanges(CancellationToken cancellationToken)
     {
-        await DataContextGuards.SaveChanges(this.context.GetWriteContext());
+        await DataContextGuards.SaveChanges(this.context.GetWriteContext(), cancellationToken);
     }
 }
 ```
@@ -254,9 +256,9 @@ public sealed class ContactDeleteByIdSpecification : Specification<Contact>
 group.MapEndpoint<GenericResponse<ContactDeleteResponse>>(
     HttpMethods.Delete,
     "/{id}",
-    async (int id, IController<ContactDeleteRequest, ContactDeleteResponse> controller) =>
+    async (int id, IController<ContactDeleteRequest, ContactDeleteResponse> controller, CancellationToken cancellationToken) =>
     {
-        var result = await controller.Handle(new ContactDeleteRequest { Id = id });
+        var result = await controller.Handle(new ContactDeleteRequest { Id = id }, cancellationToken);
         return Results.Ok(result);
     },
     "DeleteContact",

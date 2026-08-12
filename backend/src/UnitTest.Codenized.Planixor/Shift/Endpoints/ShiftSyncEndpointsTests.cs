@@ -6,7 +6,6 @@
 
 namespace UnitTest.Codenized.Planixor.Shift.Endpoints;
 
-using global::Codenized.CleanArchitecture.Abstractions.Validations;
 using global::Codenized.Planixor.Dtos.Shift.Sync;
 using NUnit.Framework;
 
@@ -26,10 +25,8 @@ public sealed class ShiftSyncEndpointsTests
     [SetUp]
     public void SetUp()
     {
-        var itemService = new ValidationService<ShiftSyncItem>();
-        this.itemValidator = new ShiftSyncItemValidator(itemService);
-        var pushService = new ValidationService<ShiftSyncPushRequest>();
-        this.pushValidator = new ShiftSyncPushRequestValidator(pushService, this.itemValidator);
+        this.itemValidator = new ShiftSyncItemValidator();
+        this.pushValidator = new ShiftSyncPushRequestValidator(this.itemValidator);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -113,7 +110,7 @@ public sealed class ShiftSyncEndpointsTests
 
         Assert.That(this.itemValidator.Failures, Is.Not.Empty);
         Assert.That(
-            this.itemValidator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 0 and 1440")),
+            this.itemValidator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 1 and 1440")),
             Is.True);
     }
 

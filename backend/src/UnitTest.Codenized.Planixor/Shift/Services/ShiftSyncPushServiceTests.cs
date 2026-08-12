@@ -31,6 +31,11 @@ public sealed class ShiftSyncPushServiceTests
         this.commands = Substitute.For<IShiftSyncPushCommands>();
         this.logger = Substitute.For<ILogger<ShiftSyncPushService>>();
         this.service = new ShiftSyncPushService(this.commands, this.logger);
+
+        // By default every submitted record is persisted. UpsertAsync returns the count actually written, because a
+        // record whose identifier belongs to another account is skipped; a test about that case overrides this.
+        this.commands.UpsertAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<Shift>>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.Arg<IReadOnlyList<Shift>>().Count);
     }
 
     /// <summary>
@@ -62,12 +67,13 @@ public sealed class ShiftSyncPushServiceTests
         };
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
         await this.commands.Received(1).UpsertAsync(
             userId,
-            Arg.Is<IReadOnlyList<Shift>>(shifts => shifts.Count == 1));
+            Arg.Is<IReadOnlyList<Shift>>(shifts => shifts.Count == 1),
+            CancellationToken.None);
     }
 
     /// <summary>
@@ -111,12 +117,13 @@ public sealed class ShiftSyncPushServiceTests
         };
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
         await this.commands.Received(1).UpsertAsync(
             userId,
-            Arg.Is<IReadOnlyList<Shift>>(shifts => shifts.Count == 2));
+            Arg.Is<IReadOnlyList<Shift>>(shifts => shifts.Count == 2),
+            CancellationToken.None);
     }
 
     /// <summary>
@@ -139,10 +146,40 @@ public sealed class ShiftSyncPushServiceTests
         };
 
         // Act
-        ShiftSyncPushResponse response = await this.service.Run(request);
+        ShiftSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.SyncedCount, Is.EqualTo(3));
+    }
+
+    /// <summary>
+    /// Run reports the number actually persisted, not the number submitted.
+    /// </summary>
+    /// <remarks>
+    /// A record whose identifier already belongs to another account is skipped by the repository rather than
+    /// written, so reporting the batch size would tell the client all three were stored when one was not. Before
+    /// this, such a record was not skipped at all: it fell through to an insert, hit a duplicate key, and took the
+    /// other two legitimate records down with it while the endpoint answered 500.
+    /// </remarks>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Test]
+    public async Task Run_WhenARecordBelongsToAnotherUser_ReportsOnlyWhatWasPersisted()
+    {
+        // Arrange
+        var request = new ShiftSyncPushRequest([CreateSyncItem(), CreateSyncItem(), CreateSyncItem()])
+        {
+            UserId = "testuser",
+        };
+
+        // The repository skipped one of the three, because its identifier is somebody else's.
+        this.commands.UpsertAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<Shift>>(), Arg.Any<CancellationToken>())
+            .Returns(2);
+
+        // Act
+        ShiftSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
+
+        // Assert
+        Assert.That(response.SyncedCount, Is.EqualTo(2));
     }
 
     /// <summary>
@@ -180,10 +217,11 @@ public sealed class ShiftSyncPushServiceTests
         IReadOnlyList<Shift> capturedShifts = null!;
         await this.commands.UpsertAsync(
             userId,
-            Arg.Do<IReadOnlyList<Shift>>(shifts => capturedShifts = shifts));
+            Arg.Do<IReadOnlyList<Shift>>(shifts => capturedShifts = shifts),
+            CancellationToken.None);
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(capturedShifts, Is.Not.Null);
@@ -235,10 +273,11 @@ public sealed class ShiftSyncPushServiceTests
         IReadOnlyList<Shift> capturedShifts = null!;
         await this.commands.UpsertAsync(
             userId,
-            Arg.Do<IReadOnlyList<Shift>>(shifts => capturedShifts = shifts));
+            Arg.Do<IReadOnlyList<Shift>>(shifts => capturedShifts = shifts),
+            CancellationToken.None);
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(capturedShifts[0].IsDeleted, Is.True);

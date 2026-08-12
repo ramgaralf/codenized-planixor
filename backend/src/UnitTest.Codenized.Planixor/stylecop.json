@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
+  "settings": {
+    "layoutRules": {
+      "topLevelTypes": [ "class", "interface", "enum", "struct" ]
+    },
+    "documentationRules": {
+      "companyName": "Codenized",
+
+      // The repository default is true, and it stays true everywhere else.
+      //
+      // Here it is off, and only here. The internal types in this project are test scaffolding — the input records
+      // and Arbitrary classes an FsCheck property test needs. Once the rule "one type per file" moved them out of
+      // the fixtures that owned them, they stopped being private and started demanding a documentation comment each,
+      // plus a param, a returns and a typeparam tag apiece: hundreds of lines saying "Gets the value" around tests
+      // that already say what they prove.
+      //
+      // Public elements here — every [TestFixture] and every [Test] — are still documented and still checked.
+      "documentInternalElements": false
+    }
+  }
+}

@@ -1,4 +1,4 @@
-// <copyright file="INotificationRecordSyncPullQueries.cs" company="Codenized">
+﻿// <copyright file="INotificationRecordSyncPullQueries.cs" company="Codenized">
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
@@ -18,27 +18,7 @@ public interface INotificationRecordSyncPullQueries
     /// <param name="userId">The user identifier who owns the notification records.</param>
     /// <param name="lastSyncedAt">The timestamp after which modifications should be returned.</param>
     /// <param name="cursor">The pagination cursor from a previous response, or null for the first page.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A paginated result containing notification records, a cursor for the next page, and a flag indicating more records exist.</returns>
-    Task<NotificationRecordSyncPullResult> GetModifiedAfterAsync(string userId, DateTime lastSyncedAt, string? cursor);
-}
-
-/// <summary>
-/// Represents the paginated result of a notification record sync pull query.
-/// </summary>
-public record NotificationRecordSyncPullResult
-{
-    /// <summary>
-    /// Gets the notification records returned in this page (max 100).
-    /// </summary>
-    required public IReadOnlyList<NotificationRecord> NotificationRecords { get; init; }
-
-    /// <summary>
-    /// Gets the cursor to use for retrieving the next page, or null if no more pages.
-    /// </summary>
-    required public string? Cursor { get; init; }
-
-    /// <summary>
-    /// Gets a value indicating whether more records exist beyond this page.
-    /// </summary>
-    required public bool HasMore { get; init; }
+    Task<NotificationRecordSyncPullResult> GetModifiedAfterAsync(string userId, DateTime lastSyncedAt, string? cursor, CancellationToken cancellationToken);
 }

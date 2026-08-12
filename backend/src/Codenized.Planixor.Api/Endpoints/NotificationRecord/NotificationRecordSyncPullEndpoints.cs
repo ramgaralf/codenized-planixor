@@ -6,7 +6,7 @@ namespace Codenized.Planixor.Api.Endpoints.NotificationRecord;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
-using Codenized.CleanArchitecture.Exception.Abstractions.Unauthorized;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.Unauthorized;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
 using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.NotificationRecord.Sync;
@@ -22,12 +22,12 @@ internal static class NotificationRecordSyncPullEndpoints
         group.MapEndpoint<GenericResponse<NotificationRecordSyncPullResponse>>(
             HttpMethods.Get,
             "/pull",
-            async (DateTime? lastSyncedAt, string? cursor, ISecurityService securityService, IController<NotificationRecordSyncPullRequest, NotificationRecordSyncPullResponse> controller) =>
+            async (DateTime? lastSyncedAt, string? cursor, ISecurityService securityService, IController<NotificationRecordSyncPullRequest, NotificationRecordSyncPullResponse> controller, CancellationToken cancellationToken) =>
             {
                 string userId = securityService.GetAuthenticatedUsername()
                     ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
                 var request = new NotificationRecordSyncPullRequest(userId, lastSyncedAt, cursor);
-                GenericResponse<NotificationRecordSyncPullResponse> result = await controller.Handle(request);
+                GenericResponse<NotificationRecordSyncPullResponse> result = await controller.Handle(request, cancellationToken);
                 return Results.Ok(result);
             },
             "PullNotificationRecords",
