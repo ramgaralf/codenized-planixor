@@ -31,6 +31,11 @@ public sealed class ShiftModeSettingSyncPushServiceTests
         this.commands = Substitute.For<IShiftModeSettingSyncPushCommands>();
         this.logger = Substitute.For<ILogger<ShiftModeSettingSyncPushService>>();
         this.service = new ShiftModeSettingSyncPushService(this.commands, this.logger);
+
+        // By default every submitted record is persisted. UpsertAsync returns the count actually written, because a
+        // record whose identifier belongs to another account is skipped; a test about that case overrides this.
+        this.commands.UpsertAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<ShiftModeSettingEntity>>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.Arg<IReadOnlyList<ShiftModeSettingEntity>>().Count);
     }
 
     /// <summary>
@@ -55,12 +60,13 @@ public sealed class ShiftModeSettingSyncPushServiceTests
         };
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
         await this.commands.Received(1).UpsertAsync(
             userId,
-            Arg.Is<IReadOnlyList<ShiftModeSettingEntity>>(records => records.Count == 1));
+            Arg.Is<IReadOnlyList<ShiftModeSettingEntity>>(records => records.Count == 1),
+            CancellationToken.None);
     }
 
     /// <summary>
@@ -82,7 +88,7 @@ public sealed class ShiftModeSettingSyncPushServiceTests
         };
 
         // Act
-        ShiftModeSettingSyncPushResponse response = await this.service.Run(request);
+        ShiftModeSettingSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.ProcessedCount, Is.EqualTo(2));
@@ -115,10 +121,11 @@ public sealed class ShiftModeSettingSyncPushServiceTests
         IReadOnlyList<ShiftModeSettingEntity> capturedRecords = null!;
         await this.commands.UpsertAsync(
             userId,
-            Arg.Do<IReadOnlyList<ShiftModeSettingEntity>>(records => capturedRecords = records));
+            Arg.Do<IReadOnlyList<ShiftModeSettingEntity>>(records => capturedRecords = records),
+            CancellationToken.None);
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(capturedRecords, Is.Not.Null);
@@ -156,10 +163,11 @@ public sealed class ShiftModeSettingSyncPushServiceTests
         IReadOnlyList<ShiftModeSettingEntity> capturedRecords = null!;
         await this.commands.UpsertAsync(
             userId,
-            Arg.Do<IReadOnlyList<ShiftModeSettingEntity>>(records => capturedRecords = records));
+            Arg.Do<IReadOnlyList<ShiftModeSettingEntity>>(records => capturedRecords = records),
+            CancellationToken.None);
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(capturedRecords[0].IsDeleted, Is.True);

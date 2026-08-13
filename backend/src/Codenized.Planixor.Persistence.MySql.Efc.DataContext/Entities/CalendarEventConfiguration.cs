@@ -104,7 +104,10 @@ public sealed class CalendarEventConfiguration : IEntityTypeConfiguration<Calend
         builder.HasIndex(e => e.EndDay)
             .HasDatabaseName("IX_CalendarEvents_EndDay");
 
-        builder.HasIndex(e => new { e.UserId, e.ModifiedAt })
-            .HasDatabaseName("IX_CalendarEvents_UserId_ModifiedAt");
+        // The sync pull query filters and orders by SyncedAt, so this is the index it needs. The equivalent over
+        // ModifiedAt used to be the only composite here: no query ever used it, MySQL fell back to the UserId prefix
+        // and filesorted the user's whole partition on every page, and the write cost was paid for nothing.
+        builder.HasIndex(e => new { e.UserId, e.SyncedAt })
+            .HasDatabaseName("IX_CalendarEvents_UserId_SyncedAt");
     }
 }

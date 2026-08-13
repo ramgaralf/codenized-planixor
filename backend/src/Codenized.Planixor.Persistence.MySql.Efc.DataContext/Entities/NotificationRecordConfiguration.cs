@@ -63,8 +63,11 @@ public sealed class NotificationRecordConfiguration : IEntityTypeConfiguration<N
             .HasDefaultValue(false)
             .IsRequired();
 
-        builder.HasIndex(n => new { n.UserId, n.ModifiedAt })
-            .HasDatabaseName("IX_NotificationRecords_UserId_ModifiedAt");
+        // The sync pull query filters and orders by SyncedAt, so this is the index it needs. The equivalent over
+        // ModifiedAt used to be the only composite here: no query ever used it, MySQL fell back to the UserId prefix
+        // and filesorted the user's whole partition on every page, and the write cost was paid for nothing.
+        builder.HasIndex(n => new { n.UserId, n.SyncedAt })
+            .HasDatabaseName("IX_NotificationRecords_UserId_SyncedAt");
 
         builder.HasIndex(n => new { n.UserId, n.IsDeleted })
             .HasDatabaseName("IX_NotificationRecords_UserId_IsDeleted");

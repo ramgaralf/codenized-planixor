@@ -1,4 +1,4 @@
-// <copyright file="ReminderIconPropertyTests.cs" company="Codenized">
+﻿// <copyright file="ReminderIconPropertyTests.cs" company="Codenized">
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
@@ -23,7 +23,7 @@ using NUnit.Framework;
 [Category("Feature: gh5-reminder-management, Property 15: Icon validation accepts exactly one emoji")]
 public sealed class ReminderIconPropertyTests
 {
-    private static readonly string[] SingleEmojis =
+    internal static readonly string[] SingleEmojis =
     [
         "\U0001F514", "\u23F0", "\U0001F4BC", "\u2600", "\U0001F680",
         "\U0001F3E0", "\U0001F4A1", "\U0001F30D", "\U0001F525", "\u2764",
@@ -93,73 +93,5 @@ public sealed class ReminderIconPropertyTests
     public void Create_WithMultipleEmojis_ThrowsDomainException(MultipleEmojisInput input)
     {
         Assert.Throws<DomainException>(() => ReminderIcon.Create(input.Value));
-    }
-
-    // ==================== Wrapper types for FsCheck generation ====================
-
-    /// <summary>Wrapper for valid single emoji inputs.</summary>
-    /// <param name="Value">The valid single emoji string.</param>
-    public record ValidSingleEmojiInput(string Value);
-
-    /// <summary>Wrapper for strings with multiple text elements.</summary>
-    /// <param name="Value">The multi-element string.</param>
-    public record MultipleTextElementsInput(string Value);
-
-    /// <summary>Wrapper for strings with multiple emojis concatenated.</summary>
-    /// <param name="Value">The multi-emoji string.</param>
-    public record MultipleEmojisInput(string Value);
-
-    // ==================== Arbitrary classes ====================
-
-    /// <summary>Provides arbitrary for valid single emoji inputs.</summary>
-    public sealed class ValidSingleEmojiArbitrary
-    {
-        /// <summary>Generates valid single emoji strings (exactly one text element).</summary>
-        /// <returns>An arbitrary for <see cref="ValidSingleEmojiInput"/>.</returns>
-        public static Arbitrary<ValidSingleEmojiInput> Generate()
-        {
-            Gen<ValidSingleEmojiInput> gen = Gen.Elements<string>(SingleEmojis)
-                .Select(e => new ValidSingleEmojiInput(e));
-
-            return gen.ToArbitrary();
-        }
-    }
-
-    /// <summary>Provides arbitrary for strings with multiple text elements (non-emoji characters).</summary>
-    public sealed class MultipleTextElementsArbitrary
-    {
-        /// <summary>Generates strings with multiple ASCII characters (each is one text element).</summary>
-        /// <returns>An arbitrary for <see cref="MultipleTextElementsInput"/>.</returns>
-        public static Arbitrary<MultipleTextElementsInput> Generate()
-        {
-            Gen<char> asciiChar = Gen.Elements(
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
-
-            Gen<MultipleTextElementsInput> gen = Gen.Choose(2, 10)
-                .SelectMany(length => asciiChar.ArrayOf(length))
-                .Select(chars => new MultipleTextElementsInput(new string(chars)));
-
-            return gen.ToArbitrary();
-        }
-    }
-
-    /// <summary>Provides arbitrary for strings with multiple emojis concatenated.</summary>
-    public sealed class MultipleEmojisArbitrary
-    {
-        /// <summary>Generates strings with 2–5 emojis concatenated together.</summary>
-        /// <returns>An arbitrary for <see cref="MultipleEmojisInput"/>.</returns>
-        public static Arbitrary<MultipleEmojisInput> Generate()
-        {
-            Gen<string> emojiGen = Gen.Elements<string>(SingleEmojis);
-
-            Gen<MultipleEmojisInput> gen = Gen.Choose(2, 5)
-                .SelectMany(count => emojiGen.ArrayOf(count))
-                .Select(emojis => new MultipleEmojisInput(string.Concat(emojis)));
-
-            return gen.ToArbitrary();
-        }
     }
 }

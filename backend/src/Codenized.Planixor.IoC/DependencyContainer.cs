@@ -1,4 +1,4 @@
-// <copyright file="DependencyContainer.cs" company="Codenized">
+﻿// <copyright file="DependencyContainer.cs" company="Codenized">
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
@@ -12,6 +12,7 @@ using Codenized.HealthChecks.AspNetCore.HealthChecks;
 using Codenized.Planixor.Core.Settings;
 using Codenized.Planixor.Persistence.IoC;
 using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
+using Codenized.Security.RateLimit.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -34,7 +35,7 @@ public static class DependencyContainer
         builder.Services.ConfigureAppHttpClient(appSettings.Product, appSettings.Service, appSettings.Version, appSettings.HttpClientTimeoutMiliseconds);
         builder.Services.AddCleanArchitecture(appSettings.Friendly);
         builder.Services.AddApplicationPersistence(appSettings.Friendly, builder.Configuration, "AppReadDb", "AppWriteDb");
-        builder.Services.AddGlobalExceptionStrategy();
+        builder.Services.AddGlobalExceptionStrategy("Codenized");
         return builder;
     }
 
@@ -49,15 +50,15 @@ public static class DependencyContainer
             .AddCheck<InternetHealthCheck>(
                 "InternetConnection",
                 failureStatus: HealthStatus.Unhealthy,
-                tags: new[] { HealthChecksTags.HEALTH, HealthChecksTags.STATUS })
+                tags: new[] { HealthChecksTags.Health.ToTag(), HealthChecksTags.Status.ToTag() })
             .AddCheck<DbContextHealthCheck<ApplicationReadContext>>(
                 "ApplicationReadContext",
                 failureStatus: HealthStatus.Unhealthy,
-                tags: new[] { HealthChecksTags.STATUS })
+                tags: new[] { HealthChecksTags.Status.ToTag() })
             .AddCheck<DbContextHealthCheck<ApplicationWriteContext>>(
                 "ApplicationWriteContext",
                 failureStatus: HealthStatus.Unhealthy,
-                tags: new[] { HealthChecksTags.STATUS });
+                tags: new[] { HealthChecksTags.Status.ToTag() });
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -66,7 +67,7 @@ public static class DependencyContainer
                     @$"HardDisk (c:\)",
                     new DriveHealthCheck(@"c:\"),
                     failureStatus: HealthStatus.Unhealthy,
-                    tags: new[] { HealthChecksTags.STATUS });
+                    tags: new[] { HealthChecksTags.Status.ToTag() });
         }
         else
         {
@@ -75,7 +76,7 @@ public static class DependencyContainer
                     $"HardDisk (/)",
                     new DriveHealthCheck("/"),
                     failureStatus: HealthStatus.Unhealthy,
-                    tags: new[] { HealthChecksTags.STATUS });
+                    tags: new[] { HealthChecksTags.Status.ToTag() });
         }
 
         return services;
@@ -103,6 +104,16 @@ public static class DependencyContainer
             .Validate(
                 s => s.ApiKeys == null || s.ApiKeys.All(kv => !string.IsNullOrWhiteSpace(kv.Value)),
                 "SecuritySettings contains an API key entry with an empty or whitespace value.")
+            .ValidateOnStart();
+
+        services.AddOptions<RateLimitSettings>()
+            .Bind(configuration.GetSection(nameof(RateLimitSettings)))
+            .Validate(
+                s => s.AuthenticatedPermitLimit > 0 && s.AnonymousPermitLimit > 0,
+                "RateLimitSettings permit limits must be greater than zero.")
+            .Validate(
+                s => s.WindowSeconds > 0 && s.SegmentsPerWindow > 0,
+                "RateLimitSettings window length and segment count must be greater than zero.")
             .ValidateOnStart();
 
         return services;

@@ -14,9 +14,7 @@ public sealed class ShiftModeSettingSyncPushRequestValidator : ValidatorBase<Shi
     /// <summary>
     /// Initializes a new instance of the <see cref="ShiftModeSettingSyncPushRequestValidator"/> class.
     /// </summary>
-    /// <param name="service">The validation service used to register rules and execute validation.</param>
-    public ShiftModeSettingSyncPushRequestValidator(IValidationService<ShiftModeSettingSyncPushRequest> service)
-        : base(service)
+    public ShiftModeSettingSyncPushRequestValidator()
     {
         this.AddRuleFor<List<ShiftModeSettingSyncRecord>>(x => x.Records)
             .AddRequirement(x => x.Records != null && x.Records.Count <= 1, "Records collection must contain at most one item (single-row entity).");

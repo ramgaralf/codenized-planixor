@@ -4,7 +4,6 @@
 
 namespace UnitTest.Codenized.Planixor.Shift.Validators;
 
-using global::Codenized.CleanArchitecture.Abstractions.Validations;
 using global::Codenized.Planixor.Dtos.Shift.Sync;
 using NUnit.Framework;
 
@@ -22,10 +21,8 @@ public sealed class ShiftSyncPushRequestValidatorTests
     [SetUp]
     public void SetUp()
     {
-        var itemService = new ValidationService<ShiftSyncItem>();
-        var itemValidator = new ShiftSyncItemValidator(itemService);
-        var pushService = new ValidationService<ShiftSyncPushRequest>();
-        this.validator = new ShiftSyncPushRequestValidator(pushService, itemValidator);
+        var itemValidator = new ShiftSyncItemValidator();
+        this.validator = new ShiftSyncPushRequestValidator(itemValidator);
     }
 
     /// <summary>Verifies validation passes with a valid request containing one shift.</summary>

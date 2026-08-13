@@ -47,7 +47,7 @@ public sealed class ReminderSyncPullServiceTests
         string cursor = "abc123";
         var request = new ReminderSyncPullRequest(userId, lastSyncedAt, cursor);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, cursor)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, cursor, CancellationToken.None)
             .Returns(new ReminderSyncPullResult
             {
                 Reminders = [],
@@ -56,10 +56,10 @@ public sealed class ReminderSyncPullServiceTests
             });
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
-        await this.queries.Received(1).GetModifiedAfterAsync(userId, lastSyncedAt, cursor);
+        await this.queries.Received(1).GetModifiedAfterAsync(userId, lastSyncedAt, cursor, CancellationToken.None);
     }
 
     /// <summary>
@@ -74,7 +74,7 @@ public sealed class ReminderSyncPullServiceTests
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
         var request = new ReminderSyncPullRequest(userId, lastSyncedAt, null);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new ReminderSyncPullResult
             {
                 Reminders = [],
@@ -83,7 +83,7 @@ public sealed class ReminderSyncPullServiceTests
             });
 
         // Act
-        ReminderSyncPullResponse response = await this.service.Run(request);
+        ReminderSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Records, Is.Empty);
@@ -120,7 +120,7 @@ public sealed class ReminderSyncPullServiceTests
 
         var request = new ReminderSyncPullRequest(userId, lastSyncedAt, null);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new ReminderSyncPullResult
             {
                 Reminders = [reminder],
@@ -129,7 +129,7 @@ public sealed class ReminderSyncPullServiceTests
             });
 
         // Act
-        ReminderSyncPullResponse response = await this.service.Run(request);
+        ReminderSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Records, Has.Count.EqualTo(1));
@@ -170,7 +170,7 @@ public sealed class ReminderSyncPullServiceTests
             DateTime.UtcNow,
             false);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new ReminderSyncPullResult
             {
                 Reminders = [reminder],
@@ -179,7 +179,7 @@ public sealed class ReminderSyncPullServiceTests
             });
 
         // Act
-        ReminderSyncPullResponse response = await this.service.Run(request);
+        ReminderSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Cursor, Is.EqualTo(expectedCursor));
@@ -197,7 +197,7 @@ public sealed class ReminderSyncPullServiceTests
         string userId = "testuser";
         var request = new ReminderSyncPullRequest(userId, null, null);
 
-        this.queries.GetModifiedAfterAsync(userId, DateTime.MinValue, null)
+        this.queries.GetModifiedAfterAsync(userId, DateTime.MinValue, null, CancellationToken.None)
             .Returns(new ReminderSyncPullResult
             {
                 Reminders = [],
@@ -206,10 +206,10 @@ public sealed class ReminderSyncPullServiceTests
             });
 
         // Act
-        ReminderSyncPullResponse response = await this.service.Run(request);
+        ReminderSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
-        await this.queries.Received(1).GetModifiedAfterAsync(userId, DateTime.MinValue, null);
+        await this.queries.Received(1).GetModifiedAfterAsync(userId, DateTime.MinValue, null, CancellationToken.None);
         Assert.That(response.Records, Is.Empty);
     }
 }

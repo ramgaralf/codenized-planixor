@@ -18,9 +18,6 @@ using CalendarEventEntity = Codenized.Planixor.Core.Entities.CalendarEvent;
 public sealed class CalendarEventSyncPullQueries : ICalendarEventSyncPullQueries, IRepository
 {
     private const int PageSize = 100;
-    private const string CursorSeparator = "|";
-    private const string DateTimeFormat = "o";
-
     private readonly ApplicationReadContext context;
 
     /// <summary>
@@ -40,8 +37,9 @@ public sealed class CalendarEventSyncPullQueries : ICalendarEventSyncPullQueries
     /// <param name="userId">The user identifier who owns the calendar events.</param>
     /// <param name="lastSyncedAt">The timestamp after which modifications should be returned.</param>
     /// <param name="cursor">The pagination cursor from a previous response, or null for the first page.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A paginated result containing calendar events, a cursor for the next page, and a flag indicating more records exist.</returns>
-    public async Task<CalendarEventSyncPullResult> GetModifiedAfterAsync(string userId, DateTime lastSyncedAt, string? cursor)
+    public async Task<CalendarEventSyncPullResult> GetModifiedAfterAsync(string userId, DateTime lastSyncedAt, string? cursor, CancellationToken cancellationToken)
     {
         IQueryable<CalendarEventEntity> query = this.context.CalendarEvents
             .AsNoTracking()
@@ -49,7 +47,7 @@ public sealed class CalendarEventSyncPullQueries : ICalendarEventSyncPullQueries
 
         if (cursor != null)
         {
-            (DateTime cursorModifiedAt, Guid cursorId) = DecodeCursor(cursor);
+            (DateTime cursorModifiedAt, Guid cursorId) = SyncCursor.Decode(cursor);
 
             query = query.Where(e =>
                 e.SyncedAt > cursorModifiedAt ||
@@ -60,7 +58,7 @@ public sealed class CalendarEventSyncPullQueries : ICalendarEventSyncPullQueries
             .OrderBy(e => e.SyncedAt)
             .ThenBy(e => e.Id)
             .Take(PageSize + 1)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         bool hasMore = results.Count > PageSize;
 
@@ -72,7 +70,7 @@ public sealed class CalendarEventSyncPullQueries : ICalendarEventSyncPullQueries
         if (hasMore && records.Count > 0)
         {
             CalendarEventEntity lastRecord = records[^1];
-            nextCursor = EncodeCursor(lastRecord.SyncedAt ?? lastRecord.ModifiedAt, lastRecord.Id);
+            nextCursor = SyncCursor.Encode(lastRecord.SyncedAt ?? lastRecord.ModifiedAt, lastRecord.Id);
         }
 
         return new CalendarEventSyncPullResult
@@ -81,23 +79,5 @@ public sealed class CalendarEventSyncPullQueries : ICalendarEventSyncPullQueries
             Cursor = nextCursor,
             HasMore = hasMore,
         };
-    }
-
-    private static string EncodeCursor(DateTime modifiedAt, Guid id)
-    {
-        string dateString = modifiedAt.ToString(DateTimeFormat, CultureInfo.InvariantCulture);
-        return Convert.ToBase64String(
-            System.Text.Encoding.UTF8.GetBytes($"{dateString}{CursorSeparator}{id}"));
-    }
-
-    private static (DateTime ModifiedAt, Guid Id) DecodeCursor(string cursor)
-    {
-        string decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(cursor));
-        string[] parts = decoded.Split(CursorSeparator, 2);
-
-        DateTime modifiedAt = DateTime.Parse(parts[0], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
-        Guid id = Guid.Parse(parts[1]);
-
-        return (modifiedAt, id);
     }
 }

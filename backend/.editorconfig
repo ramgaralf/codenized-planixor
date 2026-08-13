@@ -45,3 +45,20 @@ dotnet_diagnostic.SA1400.severity = none
 dotnet_diagnostic.SA1611.severity = none
 dotnet_diagnostic.SA1615.severity = none
 dotnet_diagnostic.SA1117.severity = none
+
+# One type per file, and the file named after it.
+#
+# These are on, but they are a second net, not the first one. StyleCop 1.1.118 predates C# 10 and its syntax walk
+# does not descend into a FILE-SCOPED namespace, so on `namespace X;` — which is nearly every file here — both rules
+# see an empty compilation unit and report nothing. Verified by probe: the same file with a block namespace fires
+# both immediately.
+#
+# What actually enforces the rule is OneTypePerFileTests, which parses every source file with Roslyn and also covers
+# nested types — something SA1402 never inspects at all.
+dotnet_diagnostic.SA1402.severity = warning
+dotnet_diagnostic.SA1649.severity = warning
+
+# The migrations are written by EF, not by a person: timestamped names, no copyright header, the generator's style.
+# Declaring them as what they are beats switching off one rule at a time — Roslyn skips generated code by itself.
+[**/Migrations/*.cs]
+generated_code = true

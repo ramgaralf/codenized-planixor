@@ -37,31 +37,54 @@ public sealed class AnnualHoursConfigSyncPushCommands : IAnnualHoursConfigSyncPu
     /// </summary>
     /// <param name="userId">The user identifier who owns the configurations.</param>
     /// <param name="configs">The batch of annual hours config entities to upsert.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpsertAsync(string userId, IReadOnlyList<AnnualHoursConfigEntity> configs)
+    public async Task<int> UpsertAsync(string userId, IReadOnlyList<AnnualHoursConfigEntity> configs, CancellationToken cancellationToken)
     {
         if (configs == null || configs.Count == 0)
         {
-            return;
+            return 0;
         }
 
-        Guid[] incomingIds = configs.Select(c => c.Id).ToArray();
+        List<Guid> incomingIds = configs.Select(c => c.Id).ToList();
+        List<int> incomingYears = configs.Select(c => c.Year).Distinct().ToList();
 
-        var existingConfigs = new Dictionary<Guid, AnnualHoursConfigEntity>();
+        // Tracked on purpose: ApplySync mutates the loaded entities and relies on change tracking. One query instead
+        // of a FirstOrDefaultAsync per record, which was a round trip per element of the batch with the connection
+        // held for all of them. See EntityIdFilter for why the predicate is built rather than written as Contains.
+        Dictionary<Guid, AnnualHoursConfigEntity> existingConfigs = await this.context.AnnualHoursConfigs
+            .Where(c => c.UserId == userId)
+            .Where(EntityIdFilter.IdIn<AnnualHoursConfigEntity>(incomingIds))
+            .ToDictionaryAsync(c => c.Id, cancellationToken);
 
-        foreach (Guid id in incomingIds)
-        {
-            AnnualHoursConfigEntity? existing = await this.context.AnnualHoursConfigs
-                .FirstOrDefaultAsync(c => c.UserId == userId && c.Id == id);
+        // The same year may already exist under a different Id, created by another device. That lookup was a second
+        // query per record; the whole batch's years are fetched once here instead. Loaded after the by-Id set so the
+        // change tracker returns the same instances for rows that appear in both.
+        Dictionary<int, AnnualHoursConfigEntity> existingByYear = await this.context.AnnualHoursConfigs
+            .Where(c => c.UserId == userId && incomingYears.Contains(c.Year))
+            .ToDictionaryAsync(c => c.Year, cancellationToken);
 
-            if (existing != null)
-            {
-                existingConfigs[id] = existing;
-            }
-        }
+        // Identifiers that already exist under some other account. Id is the primary key and is not scoped by user,
+        // so an incoming record carrying somebody else's identifier used to fall through to Add and blow up on a
+        // duplicate key — aborting the whole SaveChanges, silently discarding the rest of a legitimate batch, and
+        // turning the endpoint into an enumeration oracle where 200 meant "free" and 500 meant "taken".
+        //
+        // Such a record is skipped. It is not this user's to write, and the rest of the batch goes through.
+        HashSet<Guid> foreignIds = (await this.context.AnnualHoursConfigs
+            .AsNoTracking()
+            .Where(EntityIdFilter.IdIn<AnnualHoursConfigEntity>(incomingIds))
+            .Select(c => c.Id)
+            .ToListAsync(cancellationToken))
+            .Where(id => !existingConfigs.ContainsKey(id))
+            .ToHashSet();
 
         foreach (AnnualHoursConfigEntity incoming in configs)
         {
+            if (foreignIds.Contains(incoming.Id))
+            {
+                continue;
+            }
+
             if (existingConfigs.TryGetValue(incoming.Id, out AnnualHoursConfigEntity? existing))
             {
                 if (incoming.ModifiedAt >= existing.ModifiedAt)
@@ -75,16 +98,14 @@ public sealed class AnnualHoursConfigSyncPushCommands : IAnnualHoursConfigSyncPu
             }
             else
             {
-                // Check if a record with the same UserId + Year already exists (different Id from another device)
-                AnnualHoursConfigEntity? existingByYear = await this.context.AnnualHoursConfigs
-                    .FirstOrDefaultAsync(c => c.UserId == userId && c.Year == incoming.Year);
-
-                if (existingByYear != null)
+                // A record for the same UserId + Year may already exist under a different Id, created by another
+                // device. Resolved from the set loaded above rather than with a query per record.
+                if (existingByYear.TryGetValue(incoming.Year, out AnnualHoursConfigEntity? yearMatch))
                 {
                     // Another device already created a config for this year — apply LWW
-                    if (incoming.ModifiedAt >= existingByYear.ModifiedAt)
+                    if (incoming.ModifiedAt >= yearMatch.ModifiedAt)
                     {
-                        existingByYear.ApplySync(
+                        yearMatch.ApplySync(
                             incoming.Year,
                             incoming.ConfiguredHours,
                             incoming.ModifiedAt,
@@ -99,6 +120,8 @@ public sealed class AnnualHoursConfigSyncPushCommands : IAnnualHoursConfigSyncPu
             }
         }
 
-        await this.context.SaveChangesAsync();
+        await this.context.SaveChangesAsync(cancellationToken);
+
+        return configs.Count - foreignIds.Count;
     }
 }

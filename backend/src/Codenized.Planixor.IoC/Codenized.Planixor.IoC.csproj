@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Codenized.Planixor.Core\Codenized.Planixor.Core.csproj" />
@@ -12,9 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Codenized.CleanArchitecture.Abstractions" Version="10.*" />
-    <PackageReference Include="Codenized.Exceptions.GlobalExceptionStrategy" Version="10.*" />
-    <PackageReference Include="Codenized.HealthChecks.AspNetCore" Version="10.*" />
+    <PackageReference Include="Codenized.CleanArchitecture.Abstractions" Version="10.3.2" />
+    <PackageReference Include="Codenized.Exceptions.GlobalExceptionStrategy" Version="10.2.1" />
+    <PackageReference Include="Codenized.HealthChecks.AspNetCore" Version="10.2.0" />
+    <PackageReference Include="Codenized.Security.RateLimit" Version="10.0.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

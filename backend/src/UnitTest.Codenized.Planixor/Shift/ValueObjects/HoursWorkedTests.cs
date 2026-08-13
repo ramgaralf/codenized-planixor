@@ -23,13 +23,21 @@ public sealed class HoursWorkedTests
         Assert.That(result.TotalMinutes, Is.EqualTo(480));
     }
 
-    /// <summary>Verifies creation with minimum value (0) succeeds.</summary>
+    /// <summary>Verifies creation with the minimum representable value (1) succeeds.</summary>
     [Test]
     public void Create_WithMinimumValue_ReturnsHoursWorkedInstance()
     {
-        HoursWorked result = HoursWorked.Create(0);
+        HoursWorked result = HoursWorked.Create(1);
 
-        Assert.That(result.TotalMinutes, Is.EqualTo(0));
+        Assert.That(result.TotalMinutes, Is.EqualTo(1));
+    }
+
+    /// <summary>Verifies that a shift of no duration is refused.</summary>
+    /// <remarks>A zero-length shift is not something the product can represent, so it must not reach storage.</remarks>
+    [Test]
+    public void Create_WithZeroMinutes_ThrowsDomainException()
+    {
+        Assert.Throws<DomainException>(() => HoursWorked.Create(0));
     }
 
     /// <summary>Verifies creation with maximum value (1440) succeeds.</summary>

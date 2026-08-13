@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.Reminder.SyncPull;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.Planixor.Dtos;
 using Codenized.Planixor.Dtos.Reminder.Sync;
 using Codenized.Planixor.UseCases.Reminder.SyncPull.Queries;
 using Microsoft.Extensions.Logging;
@@ -35,15 +36,19 @@ public sealed class ReminderSyncPullService : IInteractorService<ReminderSyncPul
     /// Executes the reminder sync pull use case.
     /// </summary>
     /// <param name="request">The reminder sync pull request containing user ID, last synced timestamp, and cursor.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A <see cref="ReminderSyncPullResponse"/> with the reminders, cursor, and pagination flag.</returns>
-    public async Task<ReminderSyncPullResponse> Run(ReminderSyncPullRequest request)
+    public async Task<ReminderSyncPullResponse> Run(ReminderSyncPullRequest request, CancellationToken cancellationToken)
     {
-        DateTime lastSyncedAt = request.LastSyncedAt ?? DateTime.MinValue;
+        // Normalised, not taken as-is: the value is bound from the query string and compared against a UTC
+        // column, so its DateTimeKind decides whether records are skipped or repeated. See SyncWatermark.
+        DateTime lastSyncedAt = SyncWatermark.Normalise(request.LastSyncedAt);
 
         ReminderSyncPullResult result = await this.queries.GetModifiedAfterAsync(
             request.UserId,
             lastSyncedAt,
-            request.Cursor);
+            request.Cursor,
+            cancellationToken);
 
         List<ReminderSyncRecord> records = result.Reminders.Select(reminder => new ReminderSyncRecord(
             reminder.Id,

@@ -37,30 +37,46 @@ public sealed class ReminderSyncPushCommands : IReminderSyncPushCommands, IRepos
     /// </summary>
     /// <param name="userId">The user identifier who owns the reminders.</param>
     /// <param name="reminders">The batch of reminder entities to upsert.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpsertAsync(string userId, IReadOnlyList<ReminderEntity> reminders)
+    public async Task<int> UpsertAsync(string userId, IReadOnlyList<ReminderEntity> reminders, CancellationToken cancellationToken)
     {
         if (reminders == null || reminders.Count == 0)
         {
-            return;
+            return 0;
         }
 
-        // Workaround for EF Core 10 + MySQL provider: load tracked entities individually
-        var existingReminders = new Dictionary<Guid, ReminderEntity>();
+        List<Guid> incomingIds = reminders.Select(x => x.Id).ToList();
+
+        // Tracked on purpose: ApplySync mutates the loaded entities and relies on change tracking. One query instead
+        // of a FirstOrDefaultAsync per record, which was a round trip per element of the batch with the connection
+        // held for all of them. See EntityIdFilter for why the predicate is built rather than written as Contains.
+        Dictionary<Guid, ReminderEntity> existingReminders = await this.context.Reminders
+            .Where(x => x.UserId == userId)
+            .Where(EntityIdFilter.IdIn<ReminderEntity>(incomingIds))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        // Identifiers that already exist under some other account. Id is the primary key and is not scoped by user,
+        // so an incoming record carrying somebody else's identifier used to fall through to Add and blow up on a
+        // duplicate key — aborting the whole SaveChanges, silently discarding the rest of a legitimate batch, and
+        // turning the endpoint into an enumeration oracle where 200 meant "free" and 500 meant "taken".
+        //
+        // Such a record is skipped. It is not this user's to write, and the rest of the batch goes through.
+        HashSet<Guid> foreignIds = (await this.context.Reminders
+            .AsNoTracking()
+            .Where(EntityIdFilter.IdIn<ReminderEntity>(incomingIds))
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken))
+            .Where(id => !existingReminders.ContainsKey(id))
+            .ToHashSet();
 
         foreach (ReminderEntity incoming in reminders)
         {
-            ReminderEntity? existing = await this.context.Reminders
-                .FirstOrDefaultAsync(r => r.UserId == userId && r.Id == incoming.Id);
-
-            if (existing != null)
+            if (foreignIds.Contains(incoming.Id))
             {
-                existingReminders[incoming.Id] = existing;
+                continue;
             }
-        }
 
-        foreach (ReminderEntity incoming in reminders)
-        {
             if (existingReminders.TryGetValue(incoming.Id, out ReminderEntity? existing))
             {
                 if (incoming.ModifiedAt >= existing.ModifiedAt)
@@ -83,6 +99,8 @@ public sealed class ReminderSyncPushCommands : IReminderSyncPushCommands, IRepos
             }
         }
 
-        await this.context.SaveChangesAsync();
+        await this.context.SaveChangesAsync(cancellationToken);
+
+        return reminders.Count - foreignIds.Count;
     }
 }

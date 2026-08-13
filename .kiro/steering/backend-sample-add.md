@@ -49,13 +49,11 @@ public sealed class ContactAddRequestValidator : ValidatorBase<ContactAddRequest
     /// <summary>
     /// Initializes a new instance of the <see cref="ContactAddRequestValidator"/> class.
     /// </summary>
-    /// <param name="service">Validation service.</param>
-    public ContactAddRequestValidator(IValidationService<ContactAddRequest> service)
-        : base(service)
+    public ContactAddRequestValidator()
     {
         this.AddRuleFor(p => p.Name)
             .AddRequirement(p => !string.IsNullOrEmpty(p.Name), "The name field is required.")
-            .AddRequirement(p => p.Name.Length <= 50, "The name field must be at most 50 characters long.");
+            .AddRequirement(p => string.IsNullOrEmpty(p.Name) || p.Name.Length <= 50, "The name field must be at most 50 characters long.");
 
         this.AddRuleFor(p => p.Email)
             .AddRequirement(p => string.IsNullOrEmpty(p.Email) || p.Email.Length <= 200, "The email field is optional and must be at most 200 characters long.");
@@ -125,15 +123,16 @@ public sealed class ContactAddService : IInteractorService<ContactAddRequest, Co
 
     /// <summary>Run.</summary>
     /// <param name="request">Contact add request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A contact add response.</returns>
-    public async Task<ContactAddResponse> Run(ContactAddRequest request)
+    public async Task<ContactAddResponse> Run(ContactAddRequest request, CancellationToken cancellationToken)
     {
         var response = new ContactAddResponse();
         var contact = request.ToContact();
-        await this.commands.Add(contact);
-        await this.commands.SaveChanges();
+        await this.commands.Add(contact, cancellationToken);
+        await this.commands.SaveChanges(cancellationToken);
         response.Id = contact.Id;
-        await this.eventHub.RiseEventAsync(new OnContactAddedEvent(contact.Id, contact.Name, contact.Email ?? string.Empty));
+        await this.eventHub.RaiseEventAsync(new OnContactAddedEvent(contact.Id, contact.Name, contact.Email ?? string.Empty), cancellationToken);
         return response;
     }
 }
@@ -158,8 +157,9 @@ public interface IContactAddCommands : IUnitOfWork
 {
     /// <summary>Adds a new contact.</summary>
     /// <param name="contact">The contact entity to add.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    Task Add(Contact contact);
+    Task Add(Contact contact, CancellationToken cancellationToken);
 }
 ```
 
@@ -172,11 +172,11 @@ public interface IContactAddCommands : IUnitOfWork
 // Copyright (c) {Organization}. All rights reserved.
 // </copyright>
 
-namespace {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.Repositories.Contact.Add;
+namespace {Organization}.{Product}.Persistence.MySql.Efc.Repositories.Contact.Add;
 
 using {Organization}.{Product}.Core.Entities;
-using {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.DataContext;
-using {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.DataContext.Guards;
+using {Organization}.{Product}.Persistence.MySql.Efc.DataContext;
+using {Organization}.{Product}.Persistence.MySql.Efc.DataContext.Guards;
 using {Organization}.{Product}.UseCases.Contact.Add.Commands;
 using {Organization}.CleanArchitecture.Persistence.Abstractions.Handler;
 using {Organization}.CleanArchitecture.Persistence.Abstractions.Interfaces;
@@ -197,17 +197,19 @@ public sealed class ContactAddCommands : IContactAddCommands, IRepository
 
     /// <summary>Adds a new contact to the database context.</summary>
     /// <param name="contact">The contact entity to add.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task Add(Contact contact)
+    public async Task Add(Contact contact, CancellationToken cancellationToken)
     {
-        await this.context.GetWriteContext().Contacts.AddAsync(contact);
+        await this.context.GetWriteContext().Contacts.AddAsync(contact, cancellationToken);
     }
 
     /// <summary>Persists all pending changes to the database.</summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task SaveChanges()
+    public async Task SaveChanges(CancellationToken cancellationToken)
     {
-        await DataContextGuards.SaveChanges(this.context.GetWriteContext());
+        await DataContextGuards.SaveChanges(this.context.GetWriteContext(), cancellationToken);
     }
 }
 ```
@@ -234,11 +236,11 @@ internal static class ContactAddExtensions
     /// <returns>A new <see cref="Contact"/> entity.</returns>
     internal static Contact ToContact(this ContactAddRequest contactAddRequest)
     {
-        return new Contact
-        {
-            Name = contactAddRequest.Name,
-            Email = contactAddRequest.Email,
-        };
+        // Through the factory and the Value Objects, never an object initializer: the entity has no public setters,
+        // and Create is what guarantees that an instance which exists is an instance that is valid.
+        return Contact.Create(
+            ContactName.Create(contactAddRequest.Name),
+            Email.Create(contactAddRequest.Email));
     }
 }
 ```
@@ -251,9 +253,9 @@ internal static class ContactAddExtensions
 group.MapEndpoint<GenericResponse<ContactAddResponse>>(
     HttpMethods.Post,
     "/",
-    async (ContactAddRequest request, IController<ContactAddRequest, ContactAddResponse> controller) =>
+    async (ContactAddRequest request, IController<ContactAddRequest, ContactAddResponse> controller, CancellationToken cancellationToken) =>
     {
-        var result = await controller.Handle(request);
+        var result = await controller.Handle(request, cancellationToken);
         return Results.Ok(result);
     },
     "AddContact",

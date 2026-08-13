@@ -33,22 +33,23 @@ public sealed class NotificationRecordSyncPushQueries : INotificationRecordSyncP
     /// </summary>
     /// <param name="ids">The list of notification record identifiers to look up.</param>
     /// <param name="userId">The user identifier to scope the query.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A read-only list of notification records matching the provided IDs and owned by the user.</returns>
-    public async Task<IReadOnlyList<NotificationRecordEntity>> GetByIdsAsync(IReadOnlyList<Guid> ids, string userId)
+    public async Task<IReadOnlyList<NotificationRecordEntity>> GetByIdsAsync(IReadOnlyList<Guid> ids, string userId, CancellationToken cancellationToken)
     {
         if (ids == null || ids.Count == 0)
         {
             return Array.Empty<NotificationRecordEntity>();
         }
 
-        HashSet<Guid> idsSet = ids.ToHashSet();
-
-        List<NotificationRecordEntity> records = await this.context.NotificationRecords
+        // Both filters run in the database. This used to load every record the user owns and filter in memory, so a
+        // push by an account with a year of history materialised tens of thousands of rows to resolve at most 100
+        // identifiers. See EntityIdFilter for why the predicate is built rather than written as ids.Contains(n.Id).
+        return await this.context.NotificationRecords
             .AsNoTracking()
             .Where(n => n.UserId == userId)
-            .ToListAsync();
-
-        return records.Where(n => idsSet.Contains(n.Id)).ToList();
+            .Where(EntityIdFilter.IdIn<NotificationRecordEntity>(ids))
+            .ToListAsync(cancellationToken);
     }
 
     /// <summary>
@@ -56,28 +57,23 @@ public sealed class NotificationRecordSyncPushQueries : INotificationRecordSyncP
     /// regardless of ownership. Used to detect ownership conflicts.
     /// </summary>
     /// <param name="ids">The list of notification record identifiers to check.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A set of identifiers that exist in the store.</returns>
-    public async Task<IReadOnlySet<Guid>> GetExistingIdsAsync(IReadOnlyList<Guid> ids)
+    public async Task<IReadOnlySet<Guid>> GetExistingIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken)
     {
         if (ids == null || ids.Count == 0)
         {
             return new HashSet<Guid>();
         }
 
-        var existingIds = new HashSet<Guid>();
+        // One query. This used to be an AnyAsync per identifier — up to a hundred round trips in a single request,
+        // holding the connection for all of them.
+        List<Guid> found = await this.context.NotificationRecords
+            .AsNoTracking()
+            .Where(EntityIdFilter.IdIn<NotificationRecordEntity>(ids))
+            .Select(n => n.Id)
+            .ToListAsync(cancellationToken);
 
-        foreach (Guid id in ids)
-        {
-            bool exists = await this.context.NotificationRecords
-                .AsNoTracking()
-                .AnyAsync(n => n.Id == id);
-
-            if (exists)
-            {
-                existingIds.Add(id);
-            }
-        }
-
-        return existingIds;
+        return found.ToHashSet();
     }
 }

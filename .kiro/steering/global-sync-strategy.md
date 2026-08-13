@@ -153,7 +153,7 @@ Clients must unwrap `.data` from the response.
 
 ### EF Core 10 + MySQL: Cannot use `.Contains()` on `List<Guid>`
 
-The MySQL provider for EF Core 10 cannot translate `list.Contains(entity.Id)` to SQL. The workaround is to query entities individually with `FirstOrDefaultAsync(e => e.Id == id)` in a loop, or load all user records and filter in memory.
+The MySQL provider for EF Core 10 cannot translate `list.Contains(entity.Id)` to SQL. The way out is to build the predicate as a chain of `OR` over constants, which EF collapses back into a real `IN (...)`. **Never** a query per identifier, and **never** loading the user's partition to filter it in memory — the first is a round trip per element of the batch, the second a full scan on every push. See the `EntityIdFilter` section of `#backend-tech`.
 
 ### DateTime ISO format from backend lacks `Z` suffix
 

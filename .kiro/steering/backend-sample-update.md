@@ -6,7 +6,7 @@ inclusion: manual
 
 Reference implementation using `Contact` as the entity. Replace `Contact`/`contact` with the actual entity name.
 
-**Characteristics**: PUT `/{id}`, `Id` is `[JsonIgnore]` (set from route), has Commands + Specification + Extensions, optional Event, throws `NotFoundException`.
+**Characteristics**: PUT `/{id}`, `Id` is `[JsonIgnore]` (set from route), has Commands + Specification, **no Extensions**, optional Event, throws `NotFoundException`.
 
 ---
 
@@ -55,13 +55,11 @@ public sealed class ContactUpdateRequestValidator : ValidatorBase<ContactUpdateR
     /// <summary>
     /// Initializes a new instance of the <see cref="ContactUpdateRequestValidator"/> class.
     /// </summary>
-    /// <param name="service">Validation service.</param>
-    public ContactUpdateRequestValidator(IValidationService<ContactUpdateRequest> service)
-        : base(service)
+    public ContactUpdateRequestValidator()
     {
         this.AddRuleFor(p => p.Name)
             .AddRequirement(p => !string.IsNullOrEmpty(p.Name), "The name field is required.")
-            .AddRequirement(p => p.Name.Length <= 50, "The name field must be at most 50 characters long.");
+            .AddRequirement(p => string.IsNullOrEmpty(p.Name) || p.Name.Length <= 50, "The name field must be at most 50 characters long.");
 
         this.AddRuleFor(p => p.Email)
             .AddRequirement(p => string.IsNullOrEmpty(p.Email) || p.Email.Length <= 200, "The email field is optional and must be at most 200 characters long.");
@@ -99,10 +97,11 @@ namespace {Organization}.{Product}.UseCases.Contact.Update;
 
 using Microsoft.Extensions.Logging;
 using {Organization}.{Product}.Core.Entities;
+using {Organization}.{Product}.Core.ValueObjects;
 using {Organization}.{Product}.Dtos.Contact.Update;
 using {Organization}.{Product}.Events.OnContactUpdated;
 using {Organization}.{Product}.UseCases.Contact.Update.Commands;
-using {Organization}.{Product}.UseCases.Contact.Update.Extensions;
+using {Organization}.{Product}.UseCases.Contact.Update.Specifications;
 using {Organization}.CleanArchitecture.Abstractions.Events;
 using {Organization}.CleanArchitecture.Abstractions.Interactors;
 
@@ -131,18 +130,31 @@ public sealed class ContactUpdateService : IInteractorService<ContactUpdateReque
 
     /// <summary>Run.</summary>
     /// <param name="request">Contact update request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A contact update response.</returns>
-    public async Task<ContactUpdateResponse> Run(ContactUpdateRequest request)
+    public async Task<ContactUpdateResponse> Run(ContactUpdateRequest request, CancellationToken cancellationToken)
     {
-        var contact = request.ToContact();
-        await this.commands.Update(contact);
-        await this.commands.SaveChanges();
+        // Load, then let the entity change itself. A rich entity has no public setters, so an update cannot be a
+        // detached instance built from the request and handed to DbSet.Update — there is no way to build one, and
+        // no way for the entity to refuse a change it does not allow.
+        Contact contact = await this.commands.GetForUpdate(
+            new ContactUpdateByIdSpecification(request.Id),
+            cancellationToken);
+
+        contact.ChangeDetails(
+            ContactName.Create(request.Name),
+            Email.Create(request.Email));
+
+        await this.commands.SaveChanges(cancellationToken);
         this.logger.LogInformation("Update contact: {ContactId}.", contact.Id);
-        await this.eventHub.RiseEventAsync(new OnContactUpdatedEvent(contact.Id, contact.Name, contact.Email ?? string.Empty));
+        await this.eventHub.RaiseEventAsync(new OnContactUpdatedEvent(contact.Id, contact.Name.Value, contact.Email.Value), cancellationToken);
         return new ContactUpdateResponse { Id = contact.Id };
     }
 }
 ```
+
+> The entity is loaded **tracked**, so `SaveChanges` writes whatever `ChangeDetails` altered. No `DbSet.Update` call
+> is needed, and none should be made: it marks every property modified, including ones the request never mentioned.
 
 ---
 
@@ -156,17 +168,58 @@ public sealed class ContactUpdateService : IInteractorService<ContactUpdateReque
 namespace {Organization}.{Product}.UseCases.Contact.Update.Commands;
 
 using {Organization}.{Product}.Core.Entities;
+using {Organization}.CleanArchitecture.Abstractions.Specifications;
 using {Organization}.CleanArchitecture.Persistence.Abstractions.Interfaces;
 
 /// <summary>Defines the contract for contact update commands.</summary>
 public interface IContactUpdateCommands : IUnitOfWork
 {
-    /// <summary>Updates an existing contact.</summary>
-    /// <param name="contact">The updated contact entity.</param>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    Task Update(Contact contact);
+    /// <summary>Loads a contact for modification, tracked by the write context.</summary>
+    /// <param name="specification">The specification that identifies the contact.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The tracked contact.</returns>
+    /// <exception cref="NotFoundException">Thrown when no contact matches.</exception>
+    Task<Contact> GetForUpdate(Specification<Contact> specification, CancellationToken cancellationToken);
 }
 ```
+
+---
+
+## Specification
+
+```csharp
+// <copyright file="ContactUpdateByIdSpecification.cs" company="{Organization}">
+// Copyright (c) {Organization}. All rights reserved.
+// </copyright>
+
+namespace {Organization}.{Product}.UseCases.Contact.Update.Specifications;
+
+using {Organization}.{Product}.Core.Entities;
+using {Organization}.CleanArchitecture.Abstractions.Specifications;
+using System;
+using System.Linq.Expressions;
+
+/// <summary>Specification for locating the contact to update by its unique identifier.</summary>
+public sealed class ContactUpdateByIdSpecification : Specification<Contact>
+{
+    private readonly int id;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ContactUpdateByIdSpecification"/> class.
+    /// </summary>
+    /// <param name="id">Contact identifier.</param>
+    public ContactUpdateByIdSpecification(int id)
+    {
+        this.id = id;
+    }
+
+    /// <summary>Gets the condition expression.</summary>
+    public override Expression<Func<Contact, bool>> ConditionExpression => u => u.Id == this.id;
+}
+```
+
+> `ConditionExpression` is what reaches the query, so the condition runs in the database. Never `IsSatisfiedBy` inside
+> a `Where` — that materialises the table and filters in memory. See `#backend-tech` → Specifications.
 
 ---
 
@@ -177,12 +230,15 @@ public interface IContactUpdateCommands : IUnitOfWork
 // Copyright (c) {Organization}. All rights reserved.
 // </copyright>
 
-namespace {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.Repositories.Contact.Update;
+namespace {Organization}.{Product}.Persistence.MySql.Efc.Repositories.Contact.Update;
 
+using Microsoft.EntityFrameworkCore;
 using {Organization}.{Product}.Core.Entities;
-using {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.DataContext;
-using {Organization}.{Product}.Persistence.MySql.EntityFrameworkCore.DataContext.Guards;
+using {Organization}.{Product}.Persistence.MySql.Efc.DataContext;
+using {Organization}.{Product}.Persistence.MySql.Efc.DataContext.Guards;
 using {Organization}.{Product}.UseCases.Contact.Update.Commands;
+using {Organization}.CleanArchitecture.Abstractions.Specifications;
+using {Organization}.CleanArchitecture.Exceptions.Abstractions.NotFound;
 using {Organization}.CleanArchitecture.Persistence.Abstractions.Handler;
 using {Organization}.CleanArchitecture.Persistence.Abstractions.Interfaces;
 
@@ -200,20 +256,24 @@ public sealed class ContactUpdateCommands : IContactUpdateCommands, IRepository
         this.context = context;
     }
 
-    /// <summary>Updates a contact in the database context.</summary>
-    /// <param name="contact">The contact entity to update.</param>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public Task Update(Contact contact)
+    /// <summary>Loads a contact for modification, tracked by the write context.</summary>
+    /// <param name="specification">The specification that identifies the contact.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The tracked contact.</returns>
+    public async Task<Contact> GetForUpdate(Specification<Contact> specification, CancellationToken cancellationToken)
     {
-        this.context.GetWriteContext().Contacts.Update(contact);
-        return Task.CompletedTask;
+        // Tracked on purpose — no AsNoTracking. What the entity's behaviour method changes is what SaveChanges writes.
+        return await this.context.GetWriteContext().Contacts
+            .FirstOrDefaultAsync(specification.ConditionExpression, cancellationToken)
+            ?? throw new NotFoundException("CONTACT_NOT_FOUND", "Contact not found", "No contact matches the supplied identifier.");
     }
 
     /// <summary>Persists all pending changes to the database.</summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task SaveChanges()
+    public async Task SaveChanges(CancellationToken cancellationToken)
     {
-        await DataContextGuards.SaveChanges(this.context.GetWriteContext());
+        await DataContextGuards.SaveChanges(this.context.GetWriteContext(), cancellationToken);
     }
 }
 ```
@@ -222,33 +282,13 @@ public sealed class ContactUpdateCommands : IContactUpdateCommands, IRepository
 
 ## Extensions
 
-```csharp
-// <copyright file="ContactUpdateExtensions.cs" company="{Organization}">
-// Copyright (c) {Organization}. All rights reserved.
-// </copyright>
+**Update has none.** There is nothing to map: the entity is loaded from the write context and changes itself through
+a behaviour method, so no request-to-entity conversion exists. An extension that built a detached `Contact` from the
+request would need public setters, which TIER 0 #11 forbids — and it is what made the old shape reach for
+`DbSet.Update`, marking every column modified whether the request mentioned it or not.
 
-namespace {Organization}.{Product}.UseCases.Contact.Update.Extensions;
-
-using {Organization}.{Product}.Core.Entities;
-using {Organization}.{Product}.Dtos.Contact.Update;
-
-/// <summary>Extension methods for the ContactUpdate use case.</summary>
-internal static class ContactUpdateExtensions
-{
-    /// <summary>Converts a <see cref="ContactUpdateRequest"/> to a <see cref="Contact"/> entity.</summary>
-    /// <param name="contactUpdateRequest">The request to convert.</param>
-    /// <returns>A new <see cref="Contact"/> entity with Id.</returns>
-    internal static Contact ToContact(this ContactUpdateRequest contactUpdateRequest)
-    {
-        return new Contact
-        {
-            Id = contactUpdateRequest.Id,
-            Name = contactUpdateRequest.Name,
-            Email = contactUpdateRequest.Email,
-        };
-    }
-}
-```
+Add has one, because there the entity does not exist yet and `Contact.Create(...)` needs its Value Objects built from
+the request. See `#backend-sample-add`.
 
 ---
 
@@ -258,10 +298,10 @@ internal static class ContactUpdateExtensions
 group.MapEndpoint<GenericResponse<ContactUpdateResponse>>(
     HttpMethods.Put,
     "/{id}",
-    async (int id, ContactUpdateRequest request, IController<ContactUpdateRequest, ContactUpdateResponse> controller) =>
+    async (int id, ContactUpdateRequest request, IController<ContactUpdateRequest, ContactUpdateResponse> controller, CancellationToken cancellationToken) =>
     {
         request.Id = id;
-        var result = await controller.Handle(request);
+        var result = await controller.Handle(request, cancellationToken);
         return Results.Ok(result);
     },
     "UpdateContact",

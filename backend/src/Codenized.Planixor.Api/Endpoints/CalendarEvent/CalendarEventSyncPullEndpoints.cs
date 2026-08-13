@@ -6,7 +6,7 @@ namespace Codenized.Planixor.Api.Endpoints.CalendarEvent;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
-using Codenized.CleanArchitecture.Exception.Abstractions.Unauthorized;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.Unauthorized;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
 using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.CalendarEvent.Sync;
@@ -22,12 +22,12 @@ internal static class CalendarEventSyncPullEndpoints
         group.MapEndpoint<GenericResponse<CalendarEventSyncPullResponse>>(
             HttpMethods.Get,
             "/pull",
-            async (DateTime? lastSyncedAt, string? cursor, ISecurityService securityService, IController<CalendarEventSyncPullRequest, CalendarEventSyncPullResponse> controller) =>
+            async (DateTime? lastSyncedAt, string? cursor, ISecurityService securityService, IController<CalendarEventSyncPullRequest, CalendarEventSyncPullResponse> controller, CancellationToken cancellationToken) =>
             {
                 string userId = securityService.GetAuthenticatedUsername()
                     ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
                 var request = new CalendarEventSyncPullRequest(userId, lastSyncedAt, cursor);
-                GenericResponse<CalendarEventSyncPullResponse> result = await controller.Handle(request);
+                GenericResponse<CalendarEventSyncPullResponse> result = await controller.Handle(request, cancellationToken);
                 return Results.Ok(result);
             },
             "PullCalendarEvents",

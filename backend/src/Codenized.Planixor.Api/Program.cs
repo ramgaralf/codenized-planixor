@@ -1,4 +1,4 @@
-// <copyright file="Program.cs" company="Codenized">
+﻿// <copyright file="Program.cs" company="Codenized">
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
@@ -10,6 +10,7 @@ using Codenized.Planixor.Api.Endpoints;
 using Codenized.Planixor.Core.Settings;
 using Codenized.Planixor.IoC;
 using Codenized.Planixor.Persistence.IoC;
+using Codenized.Security.RateLimit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
@@ -50,12 +51,18 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyMethod().AllowAnyHeader()
-            .SetIsOriginAllowed(origin => true)
-            .AllowCredentials()
+        // No AllowCredentials: authentication travels in an explicit Authorization header, which CORS does not
+        // treat as a credential, so the API never needs the browser to attach ambient cookies. Combined with
+        // AllowAnyOrigin — which emits "*" instead of reflecting the caller's origin — the browser refuses to
+        // send credentials even if a page asks it to.
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader()
             .SetPreflightMaxAge(TimeSpan.FromHours(1));
     });
 });
+builder.Services.AddCodenizedRateLimit(builder.Configuration);
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
@@ -72,12 +79,25 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 var settings = app.Services.GetService<IOptions<AppSettings>>()?.Value ?? throw new InvalidOperationException($"{nameof(AppSettings)} not found");
-app.UseApiGlobalExceptionStrategy();
+// Migrations are a start-up step, not middleware: run them before the pipeline serves anything.
+app.UseApplicationMigrations();
+
+app.UseApiGlobalExceptionStrategy(app.Environment.IsDevelopment());
+app.UseHttpsRedirection();
+
+// CORS goes ahead of the rate limiter and of authentication, which is the order ASP.NET documents and the reason
+// error responses carry CORS headers at all. It used to be registered last, after authentication — and since the
+// authentication handler signals failure by throwing, the global handler caught it above CORS and the response went
+// out with no CORS headers. A browser client saw "TypeError: Failed to fetch" instead of the ProblemDetails the
+// server had carefully built, so every 400, 401 and 429 was invisible in the web app.
+app.UseCors();
+
+// The rate limiter stays ahead of authentication on purpose: an invalid key must be counted before the
+// authentication handler gets a chance to reject it, or a brute-force attempt would never be limited.
+app.UseRateLimiter();
+
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseApplicationMigrations();
-app.UseHttpsRedirection();
-app.UseCors();
 
 if (settings.AllowSwagger)
 {

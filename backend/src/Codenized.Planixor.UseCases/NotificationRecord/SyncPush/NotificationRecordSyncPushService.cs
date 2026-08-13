@@ -5,7 +5,8 @@
 namespace Codenized.Planixor.UseCases.NotificationRecord.SyncPush;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
-using Codenized.CleanArchitecture.Exception.Abstractions.BadRequest;
+using Codenized.CleanArchitecture.Abstractions.Validations;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
 using Codenized.Planixor.Dtos.NotificationRecord.Sync;
 using Codenized.Planixor.UseCases.NotificationRecord.SyncPush.Commands;
 using Codenized.Planixor.UseCases.NotificationRecord.SyncPush.Queries;
@@ -23,6 +24,7 @@ public sealed class NotificationRecordSyncPushService : IInteractorService<Notif
 
     private readonly INotificationRecordSyncPushCommands commands;
     private readonly INotificationRecordSyncPushQueries queries;
+    private readonly IValidator<NotificationRecordSyncRecord> recordValidator;
     private readonly ILogger<NotificationRecordSyncPushService> logger;
 
     /// <summary>
@@ -30,14 +32,17 @@ public sealed class NotificationRecordSyncPushService : IInteractorService<Notif
     /// </summary>
     /// <param name="commands">The notification record sync push commands.</param>
     /// <param name="queries">The notification record sync push queries.</param>
+    /// <param name="recordValidator">The validator applied to each record of the batch.</param>
     /// <param name="logger">The logger.</param>
     public NotificationRecordSyncPushService(
         INotificationRecordSyncPushCommands commands,
         INotificationRecordSyncPushQueries queries,
+        IValidator<NotificationRecordSyncRecord> recordValidator,
         ILogger<NotificationRecordSyncPushService> logger)
     {
         this.commands = commands;
         this.queries = queries;
+        this.recordValidator = recordValidator;
         this.logger = logger;
     }
 
@@ -46,8 +51,9 @@ public sealed class NotificationRecordSyncPushService : IInteractorService<Notif
     /// applying LWW conflict resolution, and returning acknowledged/rejected IDs.
     /// </summary>
     /// <param name="request">The notification record sync push request containing the batch of records.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A response with acknowledged and rejected record identifiers.</returns>
-    public async Task<NotificationRecordSyncPushResponse> Run(NotificationRecordSyncPushRequest request)
+    public async Task<NotificationRecordSyncPushResponse> Run(NotificationRecordSyncPushRequest request, CancellationToken cancellationToken)
     {
         if (request.Records.Count > MaxBatchSize)
         {
@@ -62,18 +68,10 @@ public sealed class NotificationRecordSyncPushService : IInteractorService<Notif
             request.UserId,
             request.Records.Count);
 
-        // Purge past notification records before processing the push batch
-        try
-        {
-            await this.commands.PurgePastRecordsAsync(request.UserId);
-        }
-        catch (Exception ex)
-        {
-            this.logger.LogWarning(
-                ex,
-                "Purge of past notification records failed for user {UserId}. Continuing with push processing.",
-                request.UserId);
-        }
+        // Queue the purge of past records. It shares the push's single commit, so it is no longer best-effort: a
+        // failure here has to abort the whole push. Swallowing it made sense while the purge committed on its own,
+        // and that was exactly the problem — the deletions were permanent before the upsert had a chance to fail.
+        await this.commands.PurgePastRecordsAsync(request.UserId, cancellationToken);
 
         var acknowledgedIds = new List<Guid>();
         var rejectedIds = new List<NotificationRecordRejectedRecord>();
@@ -83,9 +81,10 @@ public sealed class NotificationRecordSyncPushService : IInteractorService<Notif
 
         foreach (NotificationRecordSyncRecord record in request.Records)
         {
-            if (!IsValid(record))
+            if (!this.recordValidator.Validate(record))
             {
-                rejectedIds.Add(new NotificationRecordRejectedRecord(record.Id, "Missing required fields"));
+                // Read before the next Validate call: the validator replaces its failures on every run.
+                rejectedIds.Add(new NotificationRecordRejectedRecord(record.Id, this.recordValidator.Failures[0].ErrorMessage));
             }
             else
             {
@@ -95,15 +94,17 @@ public sealed class NotificationRecordSyncPushService : IInteractorService<Notif
 
         if (validRecords.Count == 0)
         {
+            // Still commit: the purge has queued its deletions and nothing else is going to write them.
+            await this.commands.SaveChangesAsync(cancellationToken);
             return new NotificationRecordSyncPushResponse(acknowledgedIds, rejectedIds);
         }
 
         // Step 2: Look up which IDs exist globally (to detect ownership conflicts)
         IReadOnlyList<Guid> validIds = validRecords.Select(r => r.Id).ToList();
-        IReadOnlySet<Guid> existingIds = await this.queries.GetExistingIdsAsync(validIds);
+        IReadOnlySet<Guid> existingIds = await this.queries.GetExistingIdsAsync(validIds, cancellationToken);
 
         // Step 3: Get existing records owned by the user (for LWW comparison)
-        IReadOnlyList<NotificationRecordEntity> ownedExisting = await this.queries.GetByIdsAsync(validIds, request.UserId);
+        IReadOnlyList<NotificationRecordEntity> ownedExisting = await this.queries.GetByIdsAsync(validIds, request.UserId, cancellationToken);
         Dictionary<Guid, NotificationRecordEntity> ownedMap = ownedExisting.ToDictionary(e => e.Id);
 
         // Step 4: Process each valid record
@@ -165,11 +166,14 @@ public sealed class NotificationRecordSyncPushService : IInteractorService<Notif
             }
         }
 
-        // Step 5: Persist all upserts in a single batch
+        // Step 5: Queue the upserts, then commit everything the request staged — the purged records and the incoming
+        // ones — in one write. The commit is unconditional: a push that only purges still has work to persist.
         if (toUpsert.Count > 0)
         {
-            await this.commands.UpsertAsync(request.UserId, toUpsert);
+            await this.commands.UpsertAsync(request.UserId, toUpsert, cancellationToken);
         }
+
+        await this.commands.SaveChangesAsync(cancellationToken);
 
         this.logger.LogInformation(
             "Notification record sync push completed for user {UserId}. Acknowledged: {AckCount}, Rejected: {RejCount}.",
@@ -178,35 +182,5 @@ public sealed class NotificationRecordSyncPushService : IInteractorService<Notif
             rejectedIds.Count);
 
         return new NotificationRecordSyncPushResponse(acknowledgedIds, rejectedIds);
-    }
-
-    private static bool IsValid(NotificationRecordSyncRecord record)
-    {
-        if (record.Id == Guid.Empty)
-        {
-            return false;
-        }
-
-        if (record.CalendarEventId == Guid.Empty)
-        {
-            return false;
-        }
-
-        if (record.AlertOffset != 0 && record.AlertOffset != 10 && record.AlertOffset != 60 && record.AlertOffset != 1440)
-        {
-            return false;
-        }
-
-        if (record.TriggerTime == default)
-        {
-            return false;
-        }
-
-        if (record.ModifiedAt == default)
-        {
-            return false;
-        }
-
-        return true;
     }
 }
