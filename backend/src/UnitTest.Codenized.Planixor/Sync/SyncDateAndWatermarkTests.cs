@@ -5,7 +5,6 @@
 namespace UnitTest.Codenized.Planixor.Sync;
 
 using System.Globalization;
-using global::Codenized.CleanArchitecture.Abstractions.Validations.Exceptions;
 using global::Codenized.Planixor.Dtos;
 using NUnit.Framework;
 
@@ -88,22 +87,36 @@ public sealed class SyncDateAndWatermarkTests
     }
 
     /// <summary>
-    /// Verifies that a watermark well into the future is refused instead of silently returning nothing.
+    /// Verifies that a watermark well into the future is clamped to the present rather than refused.
     /// </summary>
+    /// <remarks>
+    /// The client cannot avoid sending one: the Android app derives the watermark from the device clock
+    /// (<c>SyncServiceController.kt</c>, <c>System.currentTimeMillis()</c>) and the pull response carries no server
+    /// timestamp it could use instead. Refusing would leave a device with a fast clock unable to sync at all, which
+    /// is the same outcome as the silent empty page this replaced — only louder. Clamping returns everything
+    /// modified up to now.
+    /// </remarks>
     [Test]
-    public void Normalise_WithAWatermarkInTheFuture_Throws()
+    public void Normalise_WithAWatermarkInTheFuture_IsClampedToNow()
     {
-        DateTime future = DateTime.UtcNow.Add(SyncWatermark.FutureTolerance).AddHours(1);
+        DateTime before = DateTime.UtcNow;
+        DateTime future = before.Add(SyncWatermark.FutureTolerance).AddHours(1);
 
-        Assert.Throws<ValidationException>(() => SyncWatermark.Normalise(future));
+        DateTime result = SyncWatermark.Normalise(future);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.GreaterThanOrEqualTo(before));
+            Assert.That(result, Is.LessThanOrEqualTo(DateTime.UtcNow));
+        });
     }
 
-    /// <summary>Verifies that ordinary clock skew between device and server is tolerated.</summary>
+    /// <summary>Verifies that ordinary clock skew between device and server is honoured as sent.</summary>
     [Test]
-    public void Normalise_WithinTheSkewTolerance_IsAccepted()
+    public void Normalise_WithinTheSkewTolerance_IsTakenAtFaceValue()
     {
-        DateTime slightlyAhead = DateTime.UtcNow.AddMinutes(1);
+        DateTime slightlyAhead = DateTime.SpecifyKind(DateTime.UtcNow.AddMinutes(1), DateTimeKind.Utc);
 
-        Assert.DoesNotThrow(() => SyncWatermark.Normalise(slightlyAhead));
+        Assert.That(SyncWatermark.Normalise(slightlyAhead), Is.EqualTo(slightlyAhead));
     }
 }

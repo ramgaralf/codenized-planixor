@@ -4,9 +4,6 @@
 
 namespace Codenized.Planixor.Dtos;
 
-using Codenized.CleanArchitecture.Abstractions.Validations;
-using Codenized.CleanArchitecture.Abstractions.Validations.Exceptions;
-
 /// <summary>
 /// Normalises the <c>lastSyncedAt</c> watermark a pull request carries.
 /// </summary>
@@ -24,12 +21,11 @@ using Codenized.CleanArchitecture.Abstractions.Validations.Exceptions;
 public static class SyncWatermark
 {
     /// <summary>
-    /// How far into the future a watermark may be before it is treated as unusable.
+    /// How far into the future a watermark is taken at face value.
     /// </summary>
     /// <remarks>
-    /// A little slack absorbs ordinary clock skew between the device and the server. Beyond that the value is not
-    /// skew, it is a wrong clock or a wrong unit, and honouring it would silently return nothing at all — which the
-    /// user experiences as their data having disappeared.
+    /// A little slack absorbs ordinary clock skew between the device and the server, so a watermark a few seconds
+    /// ahead is honoured as sent. Beyond that the value is not skew, it is a wrong clock or a wrong unit.
     /// </remarks>
     public static readonly TimeSpan FutureTolerance = TimeSpan.FromMinutes(5);
 
@@ -39,12 +35,16 @@ public static class SyncWatermark
     /// <param name="lastSyncedAt">The value as bound from the query string, or <see langword="null"/> for a full sync.</param>
     /// <returns>
     /// The UTC instant to filter from. <see cref="DateTime.MinValue"/> when no watermark was supplied, which pulls
-    /// everything.
+    /// everything; never later than now.
     /// </returns>
-    /// <exception cref="ValidationException">
-    /// Thrown when the watermark is further into the future than <see cref="FutureTolerance"/>. It surfaces as a 400
-    /// naming the parameter, which is what a bad request value deserves.
-    /// </exception>
+    /// <remarks>
+    /// A watermark beyond <see cref="FutureTolerance"/> is clamped to the present rather than refused. The client
+    /// cannot avoid sending one: the Android app derives it from the device clock
+    /// (<c>SyncServiceController.kt</c>, <c>System.currentTimeMillis()</c>) and the pull response carries no server
+    /// timestamp for it to use instead. Refusing would leave a device with a fast clock unable to sync at all, which
+    /// is the same outcome as the silent empty page this replaced — only louder. Clamping syncs everything up to
+    /// now, which is what the user is asking for.
+    /// </remarks>
     public static DateTime Normalise(DateTime? lastSyncedAt)
     {
         if (lastSyncedAt is null)
@@ -65,20 +65,8 @@ public static class SyncWatermark
             _ => DateTime.SpecifyKind(value, DateTimeKind.Utc),
         };
 
-        if (utc > DateTime.UtcNow.Add(FutureTolerance))
-        {
-            IFailure[] failures =
-            [
-                new Failure("lastSyncedAt", "The watermark is in the future. Send the timestamp of your last successful sync, in UTC."),
-            ];
+        DateTime now = DateTime.UtcNow;
 
-            throw new ValidationException(
-                "BAD_REQUEST",
-                "Request validation",
-                "One or more parameters of the request are incorrect.",
-                failures);
-        }
-
-        return utc;
+        return utc > now.Add(FutureTolerance) ? now : utc;
     }
 }
