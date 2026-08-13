@@ -22,7 +22,7 @@ fileMatchPattern: "backend/**"
 
 | Package | Version |
 |---|---|
-| `{Organization}.*` | `10.*` (floating wildcard — never pin to minor/patch) |
+| `{Organization}.*` | **exact version** (`10.3.2`) — never a wildcard |
 | `Microsoft.EntityFrameworkCore.*` | `10.0.7` (pinned) |
 | `Microsoft.EntityFrameworkCore.Tools` | `10.0.7` (pinned) |
 | `MySql.EntityFrameworkCore` | `10.0.7` (pinned) |
@@ -33,6 +33,16 @@ fileMatchPattern: "backend/**"
 | `Microsoft.NET.Test.Sdk` | `17.*` |
 | `NSubstitute` | `5.*` |
 | `coverlet.collector` | `6.*` |
+
+> **Pin the framework packages to an exact version.** This rule used to say the opposite — `10.*`, "never pin to
+> minor/patch" — and that wildcard is what broke `develop`. Two breaking changes arrived through it without anyone
+> touching this repository: `Exceptions.Abstractions` 10.1.0 renamed its namespace from
+> `CleanArchitecture.Exception.Abstractions` to `CleanArchitecture.Exceptions.Abstractions`, and `Abstractions`
+> 10.2.0 removed `IValidationService<>`. Both landed on a branch whose last commit predated them, and the build
+> failed for reasons no diff could explain.
+>
+> An exact version costs one edit per upgrade. That edit is the point: raising a package becomes a deliberate act,
+> done after reading what changed, instead of something a restore decides on its own on whichever machine runs next.
 
 > Never add `Microsoft.EntityFrameworkCore` directly to any project other than `DataContext` — it arrives transitively.
 > Never mix EF Core major/minor versions across projects in the same solution.
