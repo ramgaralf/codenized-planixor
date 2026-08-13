@@ -30,7 +30,7 @@ public sealed class SecurityServiceTests
             },
         };
         IOptions<SecuritySettings> options = Options.Create(settings);
-        SecurityService service = new SecurityService(options);
+        SecurityService service = new SecurityService(new ApiKeyDirectory(options));
 
         // Act
         bool result = service.ValidateAPIKey("valid-api-key-123");
@@ -54,7 +54,7 @@ public sealed class SecurityServiceTests
             },
         };
         IOptions<SecuritySettings> options = Options.Create(settings);
-        SecurityService service = new SecurityService(options);
+        SecurityService service = new SecurityService(new ApiKeyDirectory(options));
 
         // Act
         bool result = service.ValidateAPIKey("wrong-key-456");
@@ -80,7 +80,7 @@ public sealed class SecurityServiceTests
             },
         };
         IOptions<SecuritySettings> options = Options.Create(settings);
-        SecurityService service = new SecurityService(options);
+        SecurityService service = new SecurityService(new ApiKeyDirectory(options));
 
         // Act
         bool result = service.ValidateAPIKey(apiKey!);
@@ -105,7 +105,7 @@ public sealed class SecurityServiceTests
             },
         };
         IOptions<SecuritySettings> options = Options.Create(settings);
-        SecurityService service = new SecurityService(options);
+        SecurityService service = new SecurityService(new ApiKeyDirectory(options));
 
         // Act
         service.ValidateAPIKey("test-key-xyz");
@@ -130,7 +130,7 @@ public sealed class SecurityServiceTests
             },
         };
         IOptions<SecuritySettings> options = Options.Create(settings);
-        SecurityService service = new SecurityService(options);
+        SecurityService service = new SecurityService(new ApiKeyDirectory(options));
 
         // Act
         string? username = service.GetAuthenticatedUsername();
@@ -154,7 +154,7 @@ public sealed class SecurityServiceTests
             },
         };
         IOptions<SecuritySettings> options = Options.Create(settings);
-        SecurityService service = new SecurityService(options);
+        SecurityService service = new SecurityService(new ApiKeyDirectory(options));
 
         // Act
         bool result = service.ValidateAPIKey("casesensitivekey123");

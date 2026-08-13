@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.Shift.SyncPush;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
 using Codenized.Planixor.Core.Entities;
 using Codenized.Planixor.Core.ValueObjects;
 using Codenized.Planixor.Dtos.Shift.Sync;
@@ -17,6 +18,9 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public sealed class ShiftSyncPushService : IInteractorService<ShiftSyncPushRequest, ShiftSyncPushResponse>
 {
+    /// <summary>The largest batch the use case will process.</summary>
+    private const int MaxBatchSize = 100;
+
     private readonly IShiftSyncPushCommands commands;
     private readonly ILogger<ShiftSyncPushService> logger;
 
@@ -37,9 +41,21 @@ public sealed class ShiftSyncPushService : IInteractorService<ShiftSyncPushReque
     /// Processes the shift sync push request by mapping DTOs to entities and upserting them.
     /// </summary>
     /// <param name="request">The shift sync push request containing the batch of shift records.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A response indicating the number of records synced.</returns>
-    public async Task<ShiftSyncPushResponse> Run(ShiftSyncPushRequest request)
+    public async Task<ShiftSyncPushResponse> Run(ShiftSyncPushRequest request, CancellationToken cancellationToken)
     {
+        // The request validator enforces this too, and it is what produces the 400 with the offending
+        // field. Repeated here as an invariant: a regression in the validator must not leave the route
+        // unbounded, which is exactly the state this entity was in.
+        if (request.Shifts.Count > MaxBatchSize)
+        {
+            throw new BadRequestException(
+                "BATCH_SIZE_EXCEEDED",
+                "Batch Size Exceeded",
+                $"Batch size exceeds maximum of {MaxBatchSize}.");
+        }
+
         this.logger.LogInformation(
             "Processing shift sync push for user {UserId} with {Count} shifts.",
             request.UserId,
@@ -61,13 +77,15 @@ public sealed class ShiftSyncPushService : IInteractorService<ShiftSyncPushReque
                 item.IsDeleted))
             .ToList();
 
-        await this.commands.UpsertAsync(request.UserId, shifts);
+        // The count comes back from the repository rather than from the batch size: a record whose identifier
+        // already belongs to another account is skipped, so the two are not always the same number.
+        int persisted = await this.commands.UpsertAsync(request.UserId, shifts, cancellationToken);
 
         this.logger.LogInformation(
             "Shift sync push completed for user {UserId}. {Count} shifts processed.",
             request.UserId,
             shifts.Count);
 
-        return new ShiftSyncPushResponse(shifts.Count);
+        return new ShiftSyncPushResponse(persisted);
     }
 }

@@ -4,7 +4,7 @@
 
 namespace UnitTest.Codenized.Planixor.Reminder.Services;
 
-using global::Codenized.CleanArchitecture.Exception.Abstractions.BadRequest;
+using global::Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
 using global::Codenized.Planixor.Core.Entities;
 using global::Codenized.Planixor.Dtos.Reminder.Sync;
 using global::Codenized.Planixor.UseCases.Reminder.SyncPush;
@@ -32,6 +32,11 @@ public sealed class ReminderSyncPushServiceTests
         this.commands = Substitute.For<IReminderSyncPushCommands>();
         this.logger = Substitute.For<ILogger<ReminderSyncPushService>>();
         this.service = new ReminderSyncPushService(this.commands, this.logger);
+
+        // By default every submitted record is persisted. UpsertAsync returns the count actually written, because a
+        // record whose identifier belongs to another account is skipped; a test about that case overrides this.
+        this.commands.UpsertAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<Reminder>>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.Arg<IReadOnlyList<Reminder>>().Count);
     }
 
     /// <summary>
@@ -49,7 +54,7 @@ public sealed class ReminderSyncPushServiceTests
 
         // Act & Assert
         Assert.ThrowsAsync<BadRequestException>(
-            async () => await this.service.Run(request));
+            async () => await this.service.Run(request, CancellationToken.None));
     }
 
     /// <summary>
@@ -67,12 +72,13 @@ public sealed class ReminderSyncPushServiceTests
 
         // Act
         Assert.ThrowsAsync<BadRequestException>(
-            async () => await this.service.Run(request));
+            async () => await this.service.Run(request, CancellationToken.None));
 
         // Assert
         this.commands.DidNotReceive().UpsertAsync(
             Arg.Any<string>(),
-            Arg.Any<IReadOnlyList<Reminder>>());
+            Arg.Any<IReadOnlyList<Reminder>>(),
+            Arg.Any<CancellationToken>());
     }
 
     /// <summary>
@@ -90,12 +96,13 @@ public sealed class ReminderSyncPushServiceTests
         var request = new ReminderSyncPushRequest(records) { UserId = userId };
 
         // Act
-        ReminderSyncPushResponse response = await this.service.Run(request);
+        ReminderSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         await this.commands.Received(1).UpsertAsync(
             userId,
-            Arg.Is<IReadOnlyList<Reminder>>(reminders => reminders.Count == 100));
+            Arg.Is<IReadOnlyList<Reminder>>(reminders => reminders.Count == 100),
+            CancellationToken.None);
         Assert.That(response.SyncedCount, Is.EqualTo(100));
     }
 
@@ -117,12 +124,13 @@ public sealed class ReminderSyncPushServiceTests
         };
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
         await this.commands.Received(1).UpsertAsync(
             userId,
-            Arg.Is<IReadOnlyList<Reminder>>(reminders => reminders.Count == 1));
+            Arg.Is<IReadOnlyList<Reminder>>(reminders => reminders.Count == 1),
+            CancellationToken.None);
     }
 
     /// <summary>
@@ -145,7 +153,7 @@ public sealed class ReminderSyncPushServiceTests
         };
 
         // Act
-        ReminderSyncPushResponse response = await this.service.Run(request);
+        ReminderSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.SyncedCount, Is.EqualTo(3));
@@ -185,10 +193,11 @@ public sealed class ReminderSyncPushServiceTests
         IReadOnlyList<Reminder> capturedReminders = null!;
         await this.commands.UpsertAsync(
             userId,
-            Arg.Do<IReadOnlyList<Reminder>>(reminders => capturedReminders = reminders));
+            Arg.Do<IReadOnlyList<Reminder>>(reminders => capturedReminders = reminders),
+            CancellationToken.None);
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(capturedReminders, Is.Not.Null);

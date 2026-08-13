@@ -6,8 +6,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Codenized.CleanArchitecture.Abstractions" Version="10.1.0" />
-    <PackageReference Include="Codenized.CleanArchitecture.Persistence.Abstractions" Version="10.1.0" />
+    <PackageReference Include="Codenized.CleanArchitecture.Abstractions" Version="10.3.2" />
+    <PackageReference Include="Codenized.CleanArchitecture.Persistence.Abstractions" Version="10.2.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -23,5 +23,14 @@
 
   <ItemGroup>
     <AdditionalFiles Include="..\..\stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      SyncCursor and EntityIdFilter stay internal: they are implementation details of how this layer talks to MySQL,
+      not part of any contract. The test project needs to reach them because the cursor is caller-controlled input
+      whose rejection paths are worth testing directly, rather than only through six near-identical repositories.
+    -->
+    <InternalsVisibleTo Include="UnitTest.Codenized.Planixor" />
   </ItemGroup>
 </Project>

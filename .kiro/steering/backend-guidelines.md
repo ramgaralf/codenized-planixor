@@ -5,7 +5,7 @@ fileMatchPattern: "backend/**"
 
 # API — Code Guidelines (.NET / C#)
 
-Apply these rules when writing, reviewing, or refactoring any C# code in `api/`.
+Apply these rules when writing, reviewing, or refactoring any C# code in `backend/`.
 
 ---
 
@@ -37,7 +37,7 @@ Consistent with JavaScript, frontend libraries, Swagger/OpenAPI, `System.Text.Js
 | Enum | PascalCase | `OrderStatus` |
 | Enum member | PascalCase | `Pending`, `Completed` |
 | Interface | PascalCase with `I` prefix | `IRepository`, `IDisposable` |
-| Domain Event | PascalCase + `DomainEvent` suffix | `ShiftCancelledDomainEvent` |
+| Domain Event | `On` + PascalCase past tense + `Event` suffix | `OnShiftCancelledEvent` |
 | Domain Exception | PascalCase + `DomainException` suffix | `ShiftDomainException` |
 
 ### Members
@@ -240,26 +240,22 @@ Rules:
 // ✅ Correct Entity pattern
 public class Shift
 {
-    private readonly List<IDomainEvent> domainEvents = new();
-
     public Guid Id { get; private set; }
     public Email EmployeeEmail { get; private set; }    // Value Object, not string
     public ShiftStatus Status { get; private set; }
-
-    public IReadOnlyCollection<IDomainEvent> DomainEvents => this.domainEvents.AsReadOnly();
 
     private Shift() { }    // EF Core
 
     public static Shift Create(Email employeeEmail, ShiftDuration duration)
     {
-        // Validate, set state, raise event, return
+        // Validate, set state, return
     }
 
     public void Cancel(string reason)
     {
         // Validate preconditions
         // Mutate state
-        // Raise domain event
+        // The Use Case Service raises the event after persisting
     }
 }
 
@@ -291,7 +287,7 @@ Rules:
 - State changes only through named domain methods (`Cancel()`, `Confirm()`, `Reassign()`)
 - Use Value Objects for properties with domain meaning — avoid primitive obsession
 - Domain methods validate preconditions before mutating state
-- Domain methods raise events via `AddDomainEvent()`
+- Entities never raise or accumulate domain events — the Use Case Service raises them after persisting
 - No infrastructure dependencies — entities are pure domain logic
 
 ### When to use Value Objects vs. primitives
@@ -306,18 +302,17 @@ Rules:
 ### Domain method design
 
 ```csharp
-// ✅ Good domain method — validates, mutates, raises event
+// ✅ Good domain method — validates preconditions, then mutates
 public void Confirm(Guid confirmedBy)
 {
     if (this.Status != ShiftStatus.Pending)
     {
-        throw new DomainException("Only pending shifts can be confirmed.");
+        throw new DomainException("SHIFT_NOT_PENDING", "Shift cannot be confirmed", "Only a pending shift can be confirmed.");
     }
 
     this.Status = ShiftStatus.Confirmed;
     this.ConfirmedBy = confirmedBy;
     this.ConfirmedAt = DateTime.UtcNow;
-    this.AddDomainEvent(new ShiftConfirmedDomainEvent(this.Id, confirmedBy));
 }
 
 // ❌ Bad — no precondition check
@@ -378,6 +373,6 @@ UnitTest.{Organization}.{Product}/
     │   └── {Entity}{Action}RequestValidatorTests.cs
     ├── Services/
     │   └── {Entity}{Action}ServiceTests.cs
-    └── Controllers/
-        └── {Entity}{Action}ControllerTests.cs
+    └── Endpoints/
+        └── {Entity}{Action}EndpointsTests.cs
 ```

@@ -14,9 +14,7 @@ public sealed class ShiftSyncItemValidator : ValidatorBase<ShiftSyncItem>
     /// <summary>
     /// Initializes a new instance of the <see cref="ShiftSyncItemValidator"/> class.
     /// </summary>
-    /// <param name="service">The validation service used to register rules and execute validation.</param>
-    public ShiftSyncItemValidator(IValidationService<ShiftSyncItem> service)
-        : base(service)
+    public ShiftSyncItemValidator()
     {
         this.AddRuleFor<Guid>(x => x.Id)
             .AddRequirement(x => x.Id != Guid.Empty, "Id is required.");
@@ -37,7 +35,9 @@ public sealed class ShiftSyncItemValidator : ValidatorBase<ShiftSyncItem>
         this.AddRuleFor<int>(x => x.EndTime)
             .AddRequirement(x => x.EndTime >= 0 && x.EndTime <= 1439, "EndTime must be between 0 and 1439.");
 
+        // Zero is rejected: a shift of no duration is not something the product can represent. Accepting it here
+        // only pushed the failure down to HoursWorked.Create, deeper into the request.
         this.AddRuleFor<int>(x => x.HoursWorked)
-            .AddRequirement(x => x.HoursWorked >= 0 && x.HoursWorked <= 1440, "HoursWorked must be between 0 and 1440.");
+            .AddRequirement(x => x.HoursWorked >= 1 && x.HoursWorked <= 1440, "HoursWorked must be between 1 and 1440.");
     }
 }

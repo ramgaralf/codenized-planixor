@@ -4,7 +4,7 @@
 
 namespace UnitTest.Codenized.Planixor.CalendarEvent.Services;
 
-using global::Codenized.CleanArchitecture.Exception.Abstractions.BadRequest;
+using global::Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
 using global::Codenized.Planixor.Dtos.CalendarEvent.Sync;
 using global::Codenized.Planixor.UseCases.CalendarEvent.SyncPush;
 using global::Codenized.Planixor.UseCases.CalendarEvent.SyncPush.Commands;
@@ -35,7 +35,14 @@ public sealed class CalendarEventSyncPushServiceTests
         this.commands = Substitute.For<ICalendarEventSyncPushCommands>();
         this.queries = Substitute.For<ICalendarEventSyncPushQueries>();
         this.logger = Substitute.For<ILogger<CalendarEventSyncPushService>>();
-        this.service = new CalendarEventSyncPushService(this.commands, this.queries, this.logger);
+
+        // The real validator, not a substitute: these tests assert on which records get rejected, so the
+        // actual rules are what is under test.
+        this.service = new CalendarEventSyncPushService(
+            this.commands,
+            this.queries,
+            new CalendarEventSyncRecordValidator(),
+            this.logger);
     }
 
     /// <summary>
@@ -66,13 +73,13 @@ public sealed class CalendarEventSyncPushServiceTests
         var request = new CalendarEventSyncPushRequest([invalidRecord]) { UserId = userId };
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Is.Empty);
         Assert.That(response.RejectedIds, Has.Count.EqualTo(1));
         Assert.That(response.RejectedIds[0].Id, Is.EqualTo(recordId));
-        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("Missing required fields"));
+        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("EventType is required."));
     }
 
     /// <summary>
@@ -90,13 +97,13 @@ public sealed class CalendarEventSyncPushServiceTests
         var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
 
         // Record exists globally but is NOT owned by this user
-        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
             .Returns(new HashSet<Guid> { recordId });
-        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
             .Returns(new List<CalendarEventEntity>());
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Is.Empty);
@@ -151,18 +158,18 @@ public sealed class CalendarEventSyncPushServiceTests
 
         var request = new CalendarEventSyncPushRequest([incomingRecord]) { UserId = userId };
 
-        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
             .Returns(new HashSet<Guid> { recordId });
-        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
             .Returns(new List<CalendarEventEntity> { existingEntity });
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Contains.Item(recordId));
         await this.commands.Received(1).UpsertBatchAsync(
-            Arg.Is<IReadOnlyList<CalendarEventEntity>>(list => list.Count == 1));
+            Arg.Is<IReadOnlyList<CalendarEventEntity>>(list => list.Count == 1), CancellationToken.None);
     }
 
     /// <summary>
@@ -211,17 +218,17 @@ public sealed class CalendarEventSyncPushServiceTests
 
         var request = new CalendarEventSyncPushRequest([incomingRecord]) { UserId = userId };
 
-        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
             .Returns(new HashSet<Guid> { recordId });
-        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
             .Returns(new List<CalendarEventEntity> { existingEntity });
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Contains.Item(recordId));
-        await this.commands.DidNotReceive().UpsertBatchAsync(Arg.Any<IReadOnlyList<CalendarEventEntity>>());
+        await this.commands.DidNotReceive().UpsertBatchAsync(Arg.Any<IReadOnlyList<CalendarEventEntity>>(), CancellationToken.None);
     }
 
     /// <summary>
@@ -239,19 +246,19 @@ public sealed class CalendarEventSyncPushServiceTests
         var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
 
         // Record does not exist in the DB at all
-        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
             .Returns(new HashSet<Guid>());
-        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
             .Returns(new List<CalendarEventEntity>());
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Contains.Item(recordId));
         await this.commands.Received(1).UpsertBatchAsync(
             Arg.Is<IReadOnlyList<CalendarEventEntity>>(list =>
-                list.Count == 1 && list[0].Id == recordId && list[0].UserId == userId));
+                list.Count == 1 && list[0].Id == recordId && list[0].UserId == userId), CancellationToken.None);
     }
 
     /// <summary>
@@ -282,13 +289,13 @@ public sealed class CalendarEventSyncPushServiceTests
         var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Is.Empty);
         Assert.That(response.RejectedIds, Has.Count.EqualTo(1));
         Assert.That(response.RejectedIds[0].Id, Is.EqualTo(recordId));
-        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("Missing required fields"));
+        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("EndDay must not be before StartDay."));
     }
 
     /// <summary>
@@ -318,13 +325,13 @@ public sealed class CalendarEventSyncPushServiceTests
 
         var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
 
-        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
             .Returns(new HashSet<Guid>());
-        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
             .Returns(new List<CalendarEventEntity>());
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Contains.Item(recordId));
@@ -359,13 +366,13 @@ public sealed class CalendarEventSyncPushServiceTests
         var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Is.Empty);
         Assert.That(response.RejectedIds, Has.Count.EqualTo(1));
         Assert.That(response.RejectedIds[0].Id, Is.EqualTo(recordId));
-        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("Missing required fields"));
+        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("A same-day reminder must end after it starts."));
     }
 
     /// <summary>
@@ -396,13 +403,13 @@ public sealed class CalendarEventSyncPushServiceTests
         var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Is.Empty);
         Assert.That(response.RejectedIds, Has.Count.EqualTo(1));
         Assert.That(response.RejectedIds[0].Id, Is.EqualTo(recordId));
-        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("Missing required fields"));
+        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("A same-day reminder must end after it starts."));
     }
 
     /// <summary>
@@ -432,13 +439,13 @@ public sealed class CalendarEventSyncPushServiceTests
 
         var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
 
-        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
             .Returns(new HashSet<Guid>());
-        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
             .Returns(new List<CalendarEventEntity>());
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Contains.Item(recordId));
@@ -473,13 +480,13 @@ public sealed class CalendarEventSyncPushServiceTests
         var request = new CalendarEventSyncPushRequest([record]) { UserId = userId };
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Is.Empty);
         Assert.That(response.RejectedIds, Has.Count.EqualTo(1));
         Assert.That(response.RejectedIds[0].Id, Is.EqualTo(recordId));
-        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("Missing required fields"));
+        Assert.That(response.RejectedIds[0].Reason, Is.EqualTo("TotalHours must not be negative."));
     }
 
     /// <summary>
@@ -497,7 +504,7 @@ public sealed class CalendarEventSyncPushServiceTests
 
         // Act & Assert
         Assert.ThrowsAsync<BadRequestException>(
-            async () => await this.service.Run(request));
+            async () => await this.service.Run(request, CancellationToken.None));
     }
 
     /// <summary>
@@ -522,13 +529,13 @@ public sealed class CalendarEventSyncPushServiceTests
 
         var request = new CalendarEventSyncPushRequest(records) { UserId = userId };
 
-        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
             .Returns(new HashSet<Guid>());
-        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
             .Returns(new List<CalendarEventEntity>());
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Has.Count.EqualTo(3));
@@ -568,13 +575,13 @@ public sealed class CalendarEventSyncPushServiceTests
 
         var request = new CalendarEventSyncPushRequest([validRecord, invalidRecord]) { UserId = userId };
 
-        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>())
+        this.queries.GetExistingIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), CancellationToken.None)
             .Returns(new HashSet<Guid>());
-        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId)
+        this.queries.GetByIdsAsync(Arg.Any<IReadOnlyList<Guid>>(), userId, CancellationToken.None)
             .Returns(new List<CalendarEventEntity>());
 
         // Act
-        CalendarEventSyncPushResponse response = await this.service.Run(request);
+        CalendarEventSyncPushResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.AcknowledgedIds, Has.Count.EqualTo(1));

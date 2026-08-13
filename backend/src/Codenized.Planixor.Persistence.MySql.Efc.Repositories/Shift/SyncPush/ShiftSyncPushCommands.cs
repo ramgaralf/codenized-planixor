@@ -37,30 +37,46 @@ public sealed class ShiftSyncPushCommands : IShiftSyncPushCommands, IRepository
     /// </summary>
     /// <param name="userId">The user identifier who owns the shifts.</param>
     /// <param name="shifts">The batch of shift entities to upsert.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpsertAsync(string userId, IReadOnlyList<ShiftEntity> shifts)
+    public async Task<int> UpsertAsync(string userId, IReadOnlyList<ShiftEntity> shifts, CancellationToken cancellationToken)
     {
         if (shifts == null || shifts.Count == 0)
         {
-            return;
+            return 0;
         }
 
-        // Workaround for EF Core 10 + MySQL provider: load tracked entities individually
-        var existingShifts = new Dictionary<Guid, ShiftEntity>();
+        List<Guid> incomingIds = shifts.Select(x => x.Id).ToList();
+
+        // Tracked on purpose: ApplySync mutates the loaded entities and relies on change tracking. One query instead
+        // of a FirstOrDefaultAsync per record, which was a round trip per element of the batch with the connection
+        // held for all of them. See EntityIdFilter for why the predicate is built rather than written as Contains.
+        Dictionary<Guid, ShiftEntity> existingShifts = await this.context.Shifts
+            .Where(x => x.UserId == userId)
+            .Where(EntityIdFilter.IdIn<ShiftEntity>(incomingIds))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        // Identifiers that already exist under some other account. Id is the primary key and is not scoped by user,
+        // so an incoming record carrying somebody else's identifier used to fall through to Add and blow up on a
+        // duplicate key — aborting the whole SaveChanges, silently discarding the rest of a legitimate batch, and
+        // turning the endpoint into an enumeration oracle where 200 meant "free" and 500 meant "taken".
+        //
+        // Such a record is skipped. It is not this user's to write, and the rest of the batch goes through.
+        HashSet<Guid> foreignIds = (await this.context.Shifts
+            .AsNoTracking()
+            .Where(EntityIdFilter.IdIn<ShiftEntity>(incomingIds))
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken))
+            .Where(id => !existingShifts.ContainsKey(id))
+            .ToHashSet();
 
         foreach (ShiftEntity incoming in shifts)
         {
-            ShiftEntity? existing = await this.context.Shifts
-                .FirstOrDefaultAsync(s => s.UserId == userId && s.Id == incoming.Id);
-
-            if (existing != null)
+            if (foreignIds.Contains(incoming.Id))
             {
-                existingShifts[incoming.Id] = existing;
+                continue;
             }
-        }
 
-        foreach (ShiftEntity incoming in shifts)
-        {
             if (existingShifts.TryGetValue(incoming.Id, out ShiftEntity? existing))
             {
                 if (incoming.ModifiedAt >= existing.ModifiedAt)
@@ -84,6 +100,8 @@ public sealed class ShiftSyncPushCommands : IShiftSyncPushCommands, IRepository
             }
         }
 
-        await this.context.SaveChangesAsync();
+        await this.context.SaveChangesAsync(cancellationToken);
+
+        return shifts.Count - foreignIds.Count;
     }
 }

@@ -48,13 +48,20 @@ Each project gets: `GenerateDocumentationFile=true`, `StyleCop.Analyzers` NuGet,
 | `{Org}.{Prod}.Dtos` | classlib | Application Business Rules | StyleCop, Abstractions | — |
 | `{Org}.{Prod}.Events` | classlib | Application Business Rules | StyleCop, Abstractions, Logging.Abstractions | Core |
 | `{Org}.{Prod}.UseCases` | classlib | Application Business Rules | StyleCop, Abstractions, Persistence.Abstractions, Logging.Abstractions | Core, Dtos, Events |
-| `{Org}.{Prod}.Services` | classlib | Interface Adapters | StyleCop, Abstractions | Core |
+| `{Org}.{Prod}.Services` | classlib | Interface Adapters | StyleCop, Abstractions, **Security.RateLimit** | Core |
 | `{Org}.{Prod}.Persistence.MySql.Efc.DataContext` | classlib | Interface Adapters | StyleCop, EFCore.Tools@10.0.7, Abstractions, Persistence.Abstractions, **Persistence.MySql** | Core |
 | `{Org}.{Prod}.Persistence.MySql.Efc.Repositories` | classlib | Interface Adapters | StyleCop, Abstractions, Persistence.Abstractions | UseCases, DataContext |
 | `{Org}.{Prod}.Persistence.IoC` | classlib | Interface Adapters | StyleCop, Abstractions, Hosting.Abstractions@10.0.0, **Persistence.MySql** | UseCases, DataContext, Repositories |
-| `{Org}.{Prod}.IoC` | classlib | Frameworks and Drivers | StyleCop, Abstractions, GlobalExceptionStrategy, HealthChecks.AspNetCore | Core, Dtos, Events, Persistence.IoC, Services, UseCases, DataContext, Repositories |
-| `{Org}.{Prod}.Api` | webapi | Frameworks and Drivers | StyleCop, OpenApi@10.0.8, GlobalExceptionStrategy, HealthChecks.AspNetCore, VisualStudio.Azure.Containers | IoC |
-| `UnitTest.{Org}.{Prod}` | classlib | Tests | StyleCop, NUnit@4.*, NUnit3TestAdapter@4.*, TestSdk@17.*, NSubstitute@5.*, coverlet@6.* | IoC |
+| `{Org}.{Prod}.IoC` | classlib | Frameworks and Drivers | StyleCop, Abstractions, GlobalExceptionStrategy, HealthChecks.AspNetCore, **Security.RateLimit** | Core, Dtos, Events, Persistence.IoC, Services, UseCases, DataContext, Repositories |
+| `{Org}.{Prod}.Api` | webapi | Frameworks and Drivers | StyleCop, OpenApi@10.0.8, GlobalExceptionStrategy, HealthChecks.AspNetCore, **Security.RateLimit**, VisualStudio.Azure.Containers | IoC |
+| `UnitTest.{Org}.{Prod}` | classlib | Tests | StyleCop, NUnit@4.*, NUnit3TestAdapter@4.*, TestSdk@17.*, NSubstitute@5.*, coverlet@6.*, **CodeAnalysis.CSharp@4.*** | IoC |
+
+> **`Security.RateLimit` goes in three projects**, and each for its own reason: `Api` calls `AddCodenizedRateLimit`,
+> `IoC` validates `RateLimitSettings` at startup, and `Services` implements `IRateLimitIdentityResolver`. Miss one and
+> the solution does not compile.
+>
+> **`Microsoft.CodeAnalysis.CSharp` in the test project** is what `OneTypePerFileTests` parses source with. See
+> `#backend-structure` for why that rule cannot be left to StyleCop.
 
 > `docker-compose.dcproj` goes directly under `<Solution>` in the `.slnx`, NOT inside any folder.
 
@@ -80,7 +87,25 @@ indent_size = 2
 
 [*.md]
 trim_trailing_whitespace = false
+
+[*.cs]
+
+# One type per file, and the file named after it. Both are silent by default.
+dotnet_diagnostic.SA1402.severity = warning
+dotnet_diagnostic.SA1649.severity = warning
+
+# EF writes the migrations, not a person: timestamped names, no copyright header, the generator's style. Declaring
+# them as what they are beats switching off one rule at a time — Roslyn skips generated code on its own.
+[**/Migrations/*.cs]
+generated_code = true
 ```
+
+> **This file starts with nothing silenced, and that is deliberate.** A `severity = none` is a decision that costs
+> something, so it gets made when a rule actually conflicts with the product — and written down with the reason, next
+> to the rule. Copying someone else's suppression list here would make a new solution blind to rules it has never
+> even met.
+>
+> `generated_code = true` is not a suppression: it states a fact about the file rather than switching off a check.
 
 ### `stylecop.json`
 
@@ -155,8 +180,8 @@ public sealed class AppSettings
     }
   },
   "ConnectionStrings": {
-    "AppReadDb": "server=host.docker.internal;user id=dbuser;password=dbpwd;persistsecurityinfo=True;database=dbname",
-    "AppWriteDb": "server=host.docker.internal;user id=dbuser;password=dbpwd;persistsecurityinfo=True;database=dbname"
+    "AppReadDb": "server=host.docker.internal;user id=dbuser;password=dbpwd;database=dbname",
+    "AppWriteDb": "server=host.docker.internal;user id=dbuser;password=dbpwd;database=dbname"
   },
   "AppSettings": {
     "Product": "{product-lowercase}",
@@ -164,8 +189,38 @@ public sealed class AppSettings
     "Friendly": "{Organization}.{Product}",
     "Environment": "dev",
     "AllowSwagger": true
+  },
+  "RateLimitSettings": {
+    "Enabled": true,
+    "AuthenticatedPermitLimit": 600,
+    "AnonymousPermitLimit": 20,
+    "WindowSeconds": 60,
+    "SegmentsPerWindow": 6,
+    "ExemptPathPrefixes": [ "/api/status", "/api/health" ]
+  },
+  "HealthCheckSettings": {
+    "StatusEndpoint": "/status",
+    "HealthEndpoint": "/health",
+    "ScanFrequency": 300000
   }
 }
+```
+
+Whatever settings your own authentication scheme needs go here too — see the note under the pipeline below.
+
+Notes on each block, because every one of these defaults is load-bearing:
+
+> **Connection strings.** Never `persistsecurityinfo=True`. It keeps the password readable on the open connection object, so it leaks through any diagnostic that dumps it.
+
+> **`RateLimitSettings`** is bound by `Codenized.Security.RateLimit`. The anonymous limit is what caps a brute-force attempt against whatever credential the API uses, so it is deliberately far tighter than the authenticated one, which has to accommodate a legitimate burst. `ExemptPathPrefixes` keeps the health probes out of the anonymous bucket — they are anonymous and polled on a schedule, so they would consume the whole allowance on their own. See `#backend-tech`.
+
+> **`HealthCheckSettings`.** Both health endpoints are anonymous and serve full diagnostic detail — the machine name, and each check's message, which is where a failing database check puts the host, port and service account. **Keep them off the public network.**
+
+Any value here can be overridden per environment without a rebuild, using `__` for nesting and no prefix. **A credential belongs in an environment variable, never in the committed file** — a key committed to the repository stays in the history after you delete it, so it has to be rotated, not removed:
+
+```
+RateLimitSettings__AnonymousPermitLimit=10
+ConnectionStrings__AppWriteDb=<connection string>
 ```
 
 ### `launchSettings.json` (`Api/Properties/`)
@@ -353,7 +408,7 @@ public static class DependencyContainer
         builder.Services.ConfigureAppHttpClient(appSettings.Product, appSettings.Service, appSettings.Version, appSettings.HttpClientTimeoutMiliseconds);
         builder.Services.AddCleanArchitecture(appSettings.Friendly);
         builder.Services.AddApplicationPersistence(appSettings.Friendly, builder.Configuration, "AppReadDb", "AppWriteDb");
-        builder.Services.AddGlobalExceptionStrategy();
+        builder.Services.AddGlobalExceptionStrategy("{Organization}");
         return builder;
     }
 
@@ -365,17 +420,17 @@ public static class DependencyContainer
     {
         {Organization}.HealthChecks.AspNetCore.DependencyContainer.AddAppHealthChecks(services, configuration);
         services.AddHealthChecks()
-            .AddCheck<InternetHealthCheck>("InternetConnection", failureStatus: HealthStatus.Unhealthy, tags: new[] { HealthChecksTags.HEALTH, HealthChecksTags.STATUS });
+            .AddCheck<InternetHealthCheck>("InternetConnection", failureStatus: HealthStatus.Unhealthy, tags: new[] { HealthChecksTags.Health.ToTag(), HealthChecksTags.Status.ToTag() });
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             services.AddHealthChecks()
-                .AddCheck(@$"HardDisk (c:\)", new DriveHealthCheck(@"c:\"), failureStatus: HealthStatus.Unhealthy, tags: new[] { HealthChecksTags.STATUS });
+                .AddCheck(@$"HardDisk (c:\)", new DriveHealthCheck(@"c:\"), failureStatus: HealthStatus.Unhealthy, tags: new[] { HealthChecksTags.Status.ToTag() });
         }
         else
         {
             services.AddHealthChecks()
-                .AddCheck($"HardDisk (/)", new DriveHealthCheck("/"), failureStatus: HealthStatus.Unhealthy, tags: new[] { HealthChecksTags.STATUS });
+                .AddCheck($"HardDisk (/)", new DriveHealthCheck("/"), failureStatus: HealthStatus.Unhealthy, tags: new[] { HealthChecksTags.Status.ToTag() });
         }
 
         return services;
@@ -392,7 +447,21 @@ public static class DependencyContainer
 
     private static IServiceCollection MapSettings(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+        services.Configure<AppSettings>(configuration.GetSection(nameof(AppSettings)));
+
+        // RateLimitSettings is bound by AddCodenizedRateLimit. Bind it again here only to add validation:
+        // ValidateOnStart turns a nonsensical limit into a failure to start rather than a limiter that lets
+        // everything through.
+        services.AddOptions<RateLimitSettings>()
+            .Bind(configuration.GetSection(nameof(RateLimitSettings)))
+            .Validate(
+                s => s.AuthenticatedPermitLimit > 0 && s.AnonymousPermitLimit > 0,
+                "RateLimitSettings permit limits must be greater than zero.")
+            .Validate(
+                s => s.WindowSeconds > 0 && s.SegmentsPerWindow > 0,
+                "RateLimitSettings window length and segment count must be greater than zero.")
+            .ValidateOnStart();
+
         return services;
     }
 
@@ -433,18 +502,35 @@ using {Organization}.{Product}.Core.Settings;
 using {Organization}.{Product}.IoC;
 using {Organization}.{Product}.Persistence.IoC;
 using {Organization}.Exceptions.GlobalExceptionStrategy;
+using {Organization}.Security.RateLimit;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.ConfigureApplication();
+
+// REQUIRED: register your product's authentication scheme here — builder.Services.AddAuthentication(...).
+// Which scheme it is (API key, JWT, mTLS) is a decision per product, not part of this template, but one has to be
+// registered: UseAuthentication() below throws at startup without it.
+builder.Services.AddAuthorization();
+
 builder.Services.AddApiHealthChecks(builder.Configuration);
 builder.Services.AddOpenApi();
+
+// Partitioned by caller, not global. A single bucket for the whole API means one noisy client throttles everyone;
+// worse, it makes the limit itself a denial-of-service tool. See #backend-tech for the resolver.
+builder.Services.AddCodenizedRateLimit(builder.Configuration);
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyMethod().AllowAnyHeader()
-            .SetIsOriginAllowed(origin => true)
-            .AllowCredentials()
+        // No AllowCredentials: authentication travels in an explicit Authorization header, which CORS does not
+        // treat as a credential, so the API never needs the browser to attach ambient cookies. Combined with
+        // AllowAnyOrigin — which emits "*" instead of reflecting the caller's origin — the browser refuses to
+        // send credentials even if a page asks it to. Never pair AllowCredentials() with a wildcard or a
+        // reflect-any-origin policy: that lets any site read authenticated responses cross-origin.
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader()
             .SetPreflightMaxAge(TimeSpan.FromHours(1));
     });
 });
@@ -464,10 +550,24 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 var settings = app.Services.GetService<IOptions<AppSettings>>()?.Value ?? throw new InvalidOperationException($"{nameof(AppSettings)} not found");
-app.UseApiGlobalExceptionStrategy();
+// Migrations are a start-up step, not middleware: run them before the pipeline serves anything.
 app.UseApplicationMigrations();
+
+app.UseApiGlobalExceptionStrategy(app.Environment.IsDevelopment());
 app.UseHttpsRedirection();
+
+// CORS goes ahead of authentication. Registered after it, an exception thrown while authenticating is caught by the
+// global handler above CORS, and the error response goes out with no CORS headers at all — so a browser client sees
+// "TypeError: Failed to fetch" instead of the ProblemDetails the server built, and every 400, 401 and 429 becomes
+// invisible in the web app.
 app.UseCors();
+
+// Then the limiter, then authentication, then authorization — in that order. The limiter first, so a flood of
+// invalid keys is rejected before the API spends work checking them; authentication before authorization, because
+// a policy cannot decide on an identity that has not been established yet.
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (settings.AllowSwagger)
 {
@@ -483,6 +583,20 @@ if (settings.AllowSwagger)
 app.UseAppEndpoints(app.Configuration, settings.ApiBasePath);
 await app.RunAsync();
 ```
+
+> **Authentication is product code, and this template deliberately does not pick a scheme for you.** Register it in
+> `Services/Authentication/`, wire it above with `AddAuthentication(...)`, and whatever settings it needs go in
+> `Core/Settings/` and `appsettings.json`. Two rules hold whichever scheme you choose:
+>
+> - **A rejected credential is 401, not 403.** The handler returns `AuthenticateResult.Fail(...)`; it does not throw.
+>   403 means "you are known and not allowed", which is a different answer, and throwing bypasses the challenge path
+>   entirely — the global exception handler catches it above CORS and the response goes out with no CORS headers.
+> - **`HandleChallengeAsync` must set `WWW-Authenticate`.** RFC 7235 requires it on every 401, and it is what tells a
+>   client which scheme to retry with. A client that implements "on 401, re-authenticate" never fires without it.
+>
+> To partition the rate limiter by caller rather than by address, implement `IRateLimitIdentityResolver` over the same
+> credential and register it as a **singleton** — the limiter runs before authentication, so it cannot read
+> `HttpContext.User`. See `#backend-tech`.
 
 ### `RegisterEndpoints.cs` (`Api/Endpoints/`)
 
@@ -540,25 +654,33 @@ public interface IApplicationContext
 namespace {Organization}.{Product}.Persistence.MySql.Efc.DataContext;
 
 using System.Reflection;
+using {Organization}.CleanArchitecture.Persistence.Abstractions.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>Application read context.</summary>
 public sealed class ApplicationReadContext : DbContext, IApplicationContext
 {
+    private readonly IServiceProvider? serviceProvider;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ApplicationReadContext"/> class.
     /// </summary>
     /// <param name="options">Database context options.</param>
-    public ApplicationReadContext(DbContextOptions<ApplicationReadContext> options)
+    /// <param name="serviceProvider">
+    /// The container used to build entity configurations that need services. Optional because the design-time
+    /// factory builds this context without one.
+    /// </param>
+    public ApplicationReadContext(DbContextOptions<ApplicationReadContext> options, IServiceProvider? serviceProvider = null)
         : base(options)
     {
+        this.serviceProvider = serviceProvider;
     }
 
     /// <summary>On model creating.</summary>
     /// <param name="modelBuilder">Model builder.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.ApplyAllConfigurationsFrom(Assembly.GetExecutingAssembly(), this.serviceProvider);
     }
 }
 ```
@@ -572,25 +694,33 @@ public sealed class ApplicationReadContext : DbContext, IApplicationContext
 namespace {Organization}.{Product}.Persistence.MySql.Efc.DataContext;
 
 using System.Reflection;
+using {Organization}.CleanArchitecture.Persistence.Abstractions.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>Application write context.</summary>
 public sealed class ApplicationWriteContext : DbContext, IApplicationContext
 {
+    private readonly IServiceProvider? serviceProvider;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ApplicationWriteContext"/> class.
     /// </summary>
     /// <param name="options">Database context options.</param>
-    public ApplicationWriteContext(DbContextOptions<ApplicationWriteContext> options)
+    /// <param name="serviceProvider">
+    /// The container used to build entity configurations that need services. Optional because the design-time
+    /// factory builds this context without one.
+    /// </param>
+    public ApplicationWriteContext(DbContextOptions<ApplicationWriteContext> options, IServiceProvider? serviceProvider = null)
         : base(options)
     {
+        this.serviceProvider = serviceProvider;
     }
 
     /// <summary>On model creating.</summary>
     /// <param name="modelBuilder">Model builder.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.ApplyAllConfigurationsFrom(Assembly.GetExecutingAssembly(), this.serviceProvider);
     }
 }
 ```
@@ -604,25 +734,33 @@ public sealed class ApplicationWriteContext : DbContext, IApplicationContext
 namespace {Organization}.{Product}.Persistence.MySql.Efc.DataContext;
 
 using System.Reflection;
+using {Organization}.CleanArchitecture.Persistence.Abstractions.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>Migration context.</summary>
 public sealed class MigrationContext : DbContext, IApplicationContext
 {
+    private readonly IServiceProvider? serviceProvider;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MigrationContext"/> class.
     /// </summary>
     /// <param name="options">Database context options.</param>
-    public MigrationContext(DbContextOptions<MigrationContext> options)
+    /// <param name="serviceProvider">
+    /// The container used to build entity configurations that need services. Optional, and normally absent here:
+    /// <see cref="MigrationContextFactory"/> builds this context at design time, where there is none.
+    /// </param>
+    public MigrationContext(DbContextOptions<MigrationContext> options, IServiceProvider? serviceProvider = null)
         : base(options)
     {
+        this.serviceProvider = serviceProvider;
     }
 
     /// <summary>On model creating.</summary>
     /// <param name="modelBuilder">Model builder.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.ApplyAllConfigurationsFrom(Assembly.GetExecutingAssembly(), this.serviceProvider);
     }
 }
 ```
@@ -644,12 +782,17 @@ public sealed class MigrationContextFactory : IDesignTimeDbContextFactory<Migrat
     /// <summary>Create database context.</summary>
     /// <param name="args">Arguments.</param>
     /// <returns>A migration context.</returns>
+    /// <remarks>
+    /// Design time only: <c>dotnet ef</c> uses this to build the model when generating migrations, so there is no
+    /// container and no application configuration here. The context is therefore constructed without a service
+    /// provider, and every entity configuration is built through its parameterless constructor.
+    /// </remarks>
     MigrationContext IDesignTimeDbContextFactory<MigrationContext>.CreateDbContext(string[] args)
     {
         var user = "dbuser";
         var pwd = "dbpwd";
         var db = "dbname";
-        string connectionString = $"server=localhost;user id={user};password={pwd};persistsecurityinfo=True;database={db}";
+        string connectionString = $"server=localhost;user id={user};password={pwd};database={db}";
         var optionsBuilder = new DbContextOptionsBuilder<MigrationContext>();
         optionsBuilder.UseMySQL(connectionString);
         return new MigrationContext(optionsBuilder.Options);
@@ -666,7 +809,7 @@ public sealed class MigrationContextFactory : IDesignTimeDbContextFactory<Migrat
 namespace {Organization}.{Product}.Persistence.MySql.Efc.DataContext.Guards;
 
 using Microsoft.EntityFrameworkCore;
-using {Organization}.CleanArchitecture.Abstractions.Exceptions;
+using {Organization}.CleanArchitecture.Exceptions.Abstractions.Database;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -675,13 +818,14 @@ public static class DataContextGuards
 {
     /// <summary>Saves changes with exception handling.</summary>
     /// <param name="context">The database context.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     /// <exception cref="DatabaseException">Thrown when a DbUpdateException occurs.</exception>
-    public static async Task SaveChanges(DbContext context)
+    public static async Task SaveChanges(DbContext context, CancellationToken cancellationToken)
     {
         try
         {
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException ex)
         {

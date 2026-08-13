@@ -20,6 +20,10 @@ public interface IAnnualHoursConfigSyncPushCommands
     /// </summary>
     /// <param name="userId">The user identifier who owns the configurations.</param>
     /// <param name="configs">The batch of annual hours config entities to upsert.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpsertAsync(string userId, IReadOnlyList<AnnualHoursConfigEntity> configs);
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
+    /// <returns>
+    /// The number of records actually persisted. A record whose identifier already belongs to another account is
+    /// skipped rather than written, so this can be lower than the batch size.
+    /// </returns>
+    Task<int> UpsertAsync(string userId, IReadOnlyList<AnnualHoursConfigEntity> configs, CancellationToken cancellationToken);
 }

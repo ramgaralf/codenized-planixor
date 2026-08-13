@@ -47,7 +47,7 @@ public sealed class ShiftSyncPullServiceTests
         string cursor = "abc123";
         var request = new ShiftSyncPullRequest(userId, lastSyncedAt, cursor);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, cursor)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, cursor, CancellationToken.None)
             .Returns(new ShiftSyncPullResult
             {
                 Shifts = [],
@@ -56,10 +56,10 @@ public sealed class ShiftSyncPullServiceTests
             });
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
-        await this.queries.Received(1).GetModifiedAfterAsync(userId, lastSyncedAt, cursor);
+        await this.queries.Received(1).GetModifiedAfterAsync(userId, lastSyncedAt, cursor, CancellationToken.None);
     }
 
     /// <summary>
@@ -74,7 +74,7 @@ public sealed class ShiftSyncPullServiceTests
         DateTime lastSyncedAt = DateTime.UtcNow.AddHours(-1);
         var request = new ShiftSyncPullRequest(userId, lastSyncedAt, null);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new ShiftSyncPullResult
             {
                 Shifts = [],
@@ -83,7 +83,7 @@ public sealed class ShiftSyncPullServiceTests
             });
 
         // Act
-        ShiftSyncPullResponse response = await this.service.Run(request);
+        ShiftSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Shifts, Is.Empty);
@@ -121,7 +121,7 @@ public sealed class ShiftSyncPullServiceTests
 
         var request = new ShiftSyncPullRequest(userId, lastSyncedAt, null);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new ShiftSyncPullResult
             {
                 Shifts = [shift],
@@ -130,7 +130,7 @@ public sealed class ShiftSyncPullServiceTests
             });
 
         // Act
-        ShiftSyncPullResponse response = await this.service.Run(request);
+        ShiftSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Shifts, Has.Count.EqualTo(1));
@@ -175,7 +175,7 @@ public sealed class ShiftSyncPullServiceTests
             DateTime.UtcNow,
             false);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new ShiftSyncPullResult
             {
                 Shifts = [shift],
@@ -184,7 +184,7 @@ public sealed class ShiftSyncPullServiceTests
             });
 
         // Act
-        ShiftSyncPullResponse response = await this.service.Run(request);
+        ShiftSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Cursor, Is.EqualTo(expectedCursor));
@@ -202,7 +202,7 @@ public sealed class ShiftSyncPullServiceTests
         string userId = "testuser";
         var request = new ShiftSyncPullRequest(userId, null, null);
 
-        this.queries.GetModifiedAfterAsync(userId, DateTime.MinValue, null)
+        this.queries.GetModifiedAfterAsync(userId, DateTime.MinValue, null, CancellationToken.None)
             .Returns(new ShiftSyncPullResult
             {
                 Shifts = [],
@@ -211,10 +211,10 @@ public sealed class ShiftSyncPullServiceTests
             });
 
         // Act
-        ShiftSyncPullResponse response = await this.service.Run(request);
+        ShiftSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
-        await this.queries.Received(1).GetModifiedAfterAsync(userId, DateTime.MinValue, null);
+        await this.queries.Received(1).GetModifiedAfterAsync(userId, DateTime.MinValue, null, CancellationToken.None);
         Assert.That(response.Shifts, Is.Empty);
     }
 }

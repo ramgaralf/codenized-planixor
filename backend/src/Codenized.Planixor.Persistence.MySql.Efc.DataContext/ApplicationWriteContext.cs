@@ -5,19 +5,27 @@
 namespace Codenized.Planixor.Persistence.MySql.Efc.DataContext;
 
 using System.Reflection;
+using Codenized.CleanArchitecture.Persistence.Abstractions.Extensions;
 using Codenized.Planixor.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>Application write context.</summary>
 public sealed class ApplicationWriteContext : DbContext, IApplicationContext
 {
+    private readonly IServiceProvider? serviceProvider;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ApplicationWriteContext"/> class.
     /// </summary>
     /// <param name="options">Database context options.</param>
-    public ApplicationWriteContext(DbContextOptions<ApplicationWriteContext> options)
+    /// <param name="serviceProvider">
+    /// The container used to build entity configurations that need services. Optional because the design-time
+    /// factory builds this context without one; see <see cref="OnModelCreating"/>.
+    /// </param>
+    public ApplicationWriteContext(DbContextOptions<ApplicationWriteContext> options, IServiceProvider? serviceProvider = null)
         : base(options)
     {
+        this.serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -52,8 +60,15 @@ public sealed class ApplicationWriteContext : DbContext, IApplicationContext
 
     /// <summary>On model creating.</summary>
     /// <param name="modelBuilder">Model builder.</param>
+    /// <remarks>
+    /// Uses the framework's <c>ApplyAllConfigurationsFrom</c> rather than EF's own
+    /// <c>ApplyConfigurationsFromAssembly</c>, so an entity configuration may take its dependencies through the
+    /// constructor — a cryptology service backing a value converter, for instance. When no container is available,
+    /// as at design time, every configuration is built through its parameterless constructor; one that needs
+    /// services fails there with a message saying so, rather than producing a model that differs from the running one.
+    /// </remarks>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.ApplyAllConfigurationsFrom(Assembly.GetExecutingAssembly(), this.serviceProvider);
     }
 }

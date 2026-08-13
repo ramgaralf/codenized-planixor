@@ -4,7 +4,8 @@
 
 namespace UnitTest.Codenized.Planixor.Security.Authentication;
 
-using global::Codenized.CleanArchitecture.Exception.Abstractions.Forbidden;
+using global::Codenized.CleanArchitecture.Exceptions.Abstractions.Forbidden;
+using global::Codenized.CleanArchitecture.Exceptions.Abstractions.Unauthorized;
 using global::Codenized.Planixor.Core.Services.Security;
 using global::Codenized.Planixor.Services.Authentication;
 using Microsoft.AspNetCore.Authentication;
@@ -26,6 +27,9 @@ public sealed class ApiKeyAuthenticationHandlerTests
     private const string SchemeName = "ApiKey";
 
     private ISecurityService securityService = null!;
+
+    /// <summary>The context the handler under test was initialised with, so a test can read the response.</summary>
+    private DefaultHttpContext httpContext = null!;
 
     /// <summary>
     /// Sets up shared test dependencies before each test.
@@ -88,17 +92,49 @@ public sealed class ApiKeyAuthenticationHandlerTests
     }
 
     /// <summary>
-    /// HandleAuthenticateAsync throws ForbiddenException when the API key is invalid.
+    /// HandleAuthenticateAsync reports failure — not forbidden — when the API key is invalid.
     /// </summary>
+    /// <remarks>
+    /// A caller presenting a wrong credential is unauthenticated, which is a 401. This used to throw
+    /// <c>ForbiddenException</c>, so the answer was a 403; and throwing out of the authenticate step bypassed the
+    /// challenge path, so the response never carried WWW-Authenticate and a client implementing "on 401,
+    /// re-authenticate" was never triggered.
+    /// </remarks>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Test]
-    public async Task HandleAuthenticateAsync_InvalidApiKey_ThrowsForbiddenException()
+    public async Task HandleAuthenticateAsync_InvalidApiKey_FailsWithoutThrowing()
     {
         // Arrange
         this.securityService.ValidateAPIKey("invalid-key").Returns(false);
         ApiKeyAuthenticationHandler handler = await this.CreateHandlerAsync(authorizationHeaderValue: "Bearer invalid-key");
 
-        // Act & Assert
-        Assert.ThrowsAsync<ForbiddenException>(async () => await handler.AuthenticateAsync());
+        // Act
+        AuthenticateResult result = await handler.AuthenticateAsync();
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Failure, Is.Not.Null);
+        });
+    }
+
+    /// <summary>
+    /// The challenge says how to authenticate before the 401 is produced.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Test]
+    public async Task HandleChallengeAsync_SetsTheAuthenticateChallenge()
+    {
+        // Arrange
+        this.securityService.ValidateAPIKey("invalid-key").Returns(false);
+        ApiKeyAuthenticationHandler handler = await this.CreateHandlerAsync(authorizationHeaderValue: "Bearer invalid-key");
+
+        // Act
+        Assert.ThrowsAsync<UnauthorizedException>(async () => await handler.ChallengeAsync(properties: null));
+
+        // Assert
+        Assert.That(this.httpContext.Response.Headers.WWWAuthenticate.ToString(), Does.Contain(SchemeName));
     }
 
     /// <summary>
@@ -140,14 +176,14 @@ public sealed class ApiKeyAuthenticationHandlerTests
             this.securityService);
 
         var scheme = new AuthenticationScheme(SchemeName, displayName: null, handlerType: typeof(ApiKeyAuthenticationHandler));
-        DefaultHttpContext httpContext = new DefaultHttpContext();
+        this.httpContext = new DefaultHttpContext();
 
         if (authorizationHeaderValue is not null)
         {
-            httpContext.Request.Headers["Authorization"] = authorizationHeaderValue;
+            this.httpContext.Request.Headers["Authorization"] = authorizationHeaderValue;
         }
 
-        await handler.InitializeAsync(scheme, httpContext);
+        await handler.InitializeAsync(scheme, this.httpContext);
 
         return handler;
     }

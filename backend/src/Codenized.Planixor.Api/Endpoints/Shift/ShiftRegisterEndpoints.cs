@@ -6,7 +6,7 @@ namespace Codenized.Planixor.Api.Endpoints.Shift;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
-using Codenized.CleanArchitecture.Exception.Abstractions.Unauthorized;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.Unauthorized;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
 using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.Shift.Sync;
@@ -30,11 +30,11 @@ internal static class ShiftRegisterEndpoints
         group.MapEndpoint<GenericResponse<ShiftSyncPushResponse>>(
             HttpMethods.Post,
             "/push",
-            async (ShiftSyncPushRequest request, ISecurityService securityService, IController<ShiftSyncPushRequest, ShiftSyncPushResponse> controller) =>
+            async (ShiftSyncPushRequest request, ISecurityService securityService, IController<ShiftSyncPushRequest, ShiftSyncPushResponse> controller, CancellationToken cancellationToken) =>
             {
                 request.UserId = securityService.GetAuthenticatedUsername()
                     ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
-                GenericResponse<ShiftSyncPushResponse> result = await controller.Handle(request);
+                GenericResponse<ShiftSyncPushResponse> result = await controller.Handle(request, cancellationToken);
                 return Results.Ok(result);
             },
             "PushShifts",
@@ -44,12 +44,12 @@ internal static class ShiftRegisterEndpoints
         group.MapEndpoint<GenericResponse<ShiftSyncPullResponse>>(
             HttpMethods.Get,
             "/pull",
-            async (DateTime? lastSyncedAt, string? cursor, ISecurityService securityService, IController<ShiftSyncPullRequest, ShiftSyncPullResponse> controller) =>
+            async (DateTime? lastSyncedAt, string? cursor, ISecurityService securityService, IController<ShiftSyncPullRequest, ShiftSyncPullResponse> controller, CancellationToken cancellationToken) =>
             {
                 string userId = securityService.GetAuthenticatedUsername()
                     ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
                 var request = new ShiftSyncPullRequest(userId, lastSyncedAt, cursor);
-                GenericResponse<ShiftSyncPullResponse> result = await controller.Handle(request);
+                GenericResponse<ShiftSyncPullResponse> result = await controller.Handle(request, cancellationToken);
                 return Results.Ok(result);
             },
             "PullShifts",

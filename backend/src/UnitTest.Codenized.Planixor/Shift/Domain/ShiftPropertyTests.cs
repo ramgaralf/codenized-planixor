@@ -1,4 +1,4 @@
-// <copyright file="ShiftPropertyTests.cs" company="Codenized">
+﻿// <copyright file="ShiftPropertyTests.cs" company="Codenized">
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
@@ -19,13 +19,13 @@ using NUnit.Framework;
 [Category("Feature: gh3-shift-management")]
 public sealed class ShiftPropertyTests
 {
-    private static readonly string[] PaletteColors =
+    internal static readonly string[] PaletteColors =
     [
         "#EF4444", "#F97316", "#F59E0B", "#10B981", "#0B86D4",
         "#2563EB", "#7C3AED", "#EC4899", "#6B7280", "#1F2937",
     ];
 
-    private static readonly string[] ValidEmojis =
+    internal static readonly string[] ValidEmojis =
     [
         "\U0001F4BC", "\u2600", "\U0001F680", "\U0001F3E0", "\U0001F4A1",
         "\U0001F30D", "\U0001F525", "\u2764", "\U0001F4DA", "\U0001F3AF",
@@ -254,128 +254,4 @@ public sealed class ShiftPropertyTests
             Assert.That(shift.HoursWorked, Is.EqualTo(hoursWorkedBeforeDelete), "HoursWorked unchanged");
         });
     }
-
-    /// <summary>
-    /// Provides FsCheck arbitrary generators for valid Shift inputs.
-    /// </summary>
-    public sealed class ShiftArbitraries
-    {
-        /// <summary>Generates arbitrary valid shift creation inputs.</summary>
-        /// <returns>An arbitrary for <see cref="ShiftCreateInput"/>.</returns>
-        public static Arbitrary<ShiftCreateInput> Generate()
-        {
-            Gen<char> alphanumChar = Gen.Elements(
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9');
-
-            Gen<char> anyNameChar = Gen.Elements(
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9', ' ', '-');
-
-            Gen<ShiftCreateInput> gen =
-                from firstChar in alphanumChar
-                from remainingLength in Gen.Choose(0, 49)
-                from remainingChars in anyNameChar.ArrayOf(remainingLength)
-                from emojiIndex in Gen.Choose(0, ValidEmojis.Length - 1)
-                from colorIndex in Gen.Choose(0, PaletteColors.Length - 1)
-                from startHours in Gen.Choose(0, 23)
-                from startMinutes in Gen.Choose(0, 59)
-                from endHours in Gen.Choose(0, 23)
-                from endMinutes in Gen.Choose(0, 59)
-                from hoursWorkedMinutes in Gen.Choose(1, 1440)
-                select new ShiftCreateInput(
-                    Guid.NewGuid(),
-                    Guid.NewGuid().ToString(),
-                    ShiftName.Create(firstChar + new string(remainingChars)),
-                    ShiftIcon.Create(ValidEmojis[emojiIndex]),
-                    ShiftColor.Create(PaletteColors[colorIndex]),
-                    ShiftTime.Create(startHours, startMinutes),
-                    ShiftTime.Create(endHours, endMinutes),
-                    HoursWorked.Create(hoursWorkedMinutes),
-                    DateTime.UtcNow);
-
-            return gen.ToArbitrary();
-        }
-
-        /// <summary>Generates arbitrary valid shift update inputs.</summary>
-        /// <returns>An arbitrary for <see cref="ShiftUpdateInput"/>.</returns>
-        public static Arbitrary<ShiftUpdateInput> Generate2()
-        {
-            Gen<char> alphanumChar = Gen.Elements(
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9');
-
-            Gen<char> anyNameChar = Gen.Elements(
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9', ' ', '-');
-
-            Gen<ShiftUpdateInput> gen =
-                from firstChar in alphanumChar
-                from remainingLength in Gen.Choose(0, 49)
-                from remainingChars in anyNameChar.ArrayOf(remainingLength)
-                from emojiIndex in Gen.Choose(0, ValidEmojis.Length - 1)
-                from colorIndex in Gen.Choose(0, PaletteColors.Length - 1)
-                from startHours in Gen.Choose(0, 23)
-                from startMinutes in Gen.Choose(0, 59)
-                from endHours in Gen.Choose(0, 23)
-                from endMinutes in Gen.Choose(0, 59)
-                from hoursWorkedMinutes in Gen.Choose(1, 1440)
-                select new ShiftUpdateInput(
-                    ShiftName.Create(firstChar + new string(remainingChars)),
-                    ShiftIcon.Create(ValidEmojis[emojiIndex]),
-                    ShiftColor.Create(PaletteColors[colorIndex]),
-                    ShiftTime.Create(startHours, startMinutes),
-                    ShiftTime.Create(endHours, endMinutes),
-                    HoursWorked.Create(hoursWorkedMinutes));
-
-            return gen.ToArbitrary();
-        }
-    }
-
-    /// <summary>
-    /// Input record for shift creation property tests.
-    /// </summary>
-#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
-    public record ShiftCreateInput(
-        Guid Id,
-        string UserId,
-        ShiftName Name,
-        ShiftIcon Icon,
-        ShiftColor BackgroundColor,
-        ShiftTime StartTime,
-        ShiftTime EndTime,
-        HoursWorked HoursWorked,
-        DateTime CreatedAt);
-
-    /// <summary>
-    /// Input record for shift update property tests.
-    /// </summary>
-    public record ShiftUpdateInput(
-        ShiftName Name,
-        ShiftIcon Icon,
-        ShiftColor BackgroundColor,
-        ShiftTime StartTime,
-        ShiftTime EndTime,
-        HoursWorked HoursWorked);
-#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
 }

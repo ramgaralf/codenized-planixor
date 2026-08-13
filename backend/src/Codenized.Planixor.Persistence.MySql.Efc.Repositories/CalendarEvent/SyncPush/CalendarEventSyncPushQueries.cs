@@ -33,24 +33,23 @@ public sealed class CalendarEventSyncPushQueries : ICalendarEventSyncPushQueries
     /// </summary>
     /// <param name="ids">The list of calendar event identifiers to look up.</param>
     /// <param name="userId">The user identifier to scope the query.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A read-only list of calendar events matching the provided IDs and owned by the user.</returns>
-    public async Task<IReadOnlyList<CalendarEventEntity>> GetByIdsAsync(IReadOnlyList<Guid> ids, string userId)
+    public async Task<IReadOnlyList<CalendarEventEntity>> GetByIdsAsync(IReadOnlyList<Guid> ids, string userId, CancellationToken cancellationToken)
     {
         if (ids == null || ids.Count == 0)
         {
             return Array.Empty<CalendarEventEntity>();
         }
 
-        // Workaround for EF Core 10 + MySQL provider type mapping issue with Contains() on Guid collections.
-        // Load all user records and filter in memory for the matching IDs.
-        HashSet<Guid> idsSet = ids.ToHashSet();
-
-        List<CalendarEventEntity> records = await this.context.CalendarEvents
+        // Both filters run in the database. This used to load every event the user owns and filter in memory, so a
+        // push by an account with a year of history materialised tens of thousands of rows to resolve at most 100
+        // identifiers. See EntityIdFilter for why the predicate is built rather than written as ids.Contains(e.Id).
+        return await this.context.CalendarEvents
             .AsNoTracking()
             .Where(e => e.UserId == userId)
-            .ToListAsync();
-
-        return records.Where(e => idsSet.Contains(e.Id)).ToList();
+            .Where(EntityIdFilter.IdIn<CalendarEventEntity>(ids))
+            .ToListAsync(cancellationToken);
     }
 
     /// <summary>
@@ -58,29 +57,23 @@ public sealed class CalendarEventSyncPushQueries : ICalendarEventSyncPushQueries
     /// regardless of ownership. Used to detect ownership conflicts.
     /// </summary>
     /// <param name="ids">The list of calendar event identifiers to check.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A set of identifiers that exist in the store.</returns>
-    public async Task<IReadOnlySet<Guid>> GetExistingIdsAsync(IReadOnlyList<Guid> ids)
+    public async Task<IReadOnlySet<Guid>> GetExistingIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken)
     {
         if (ids == null || ids.Count == 0)
         {
             return new HashSet<Guid>();
         }
 
-        // Workaround: check existence one by one to avoid Contains() type mapping issue
-        var existingIds = new HashSet<Guid>();
+        // One query. This used to be an AnyAsync per identifier — up to a hundred round trips in a single request,
+        // holding the connection for all of them.
+        List<Guid> found = await this.context.CalendarEvents
+            .AsNoTracking()
+            .Where(EntityIdFilter.IdIn<CalendarEventEntity>(ids))
+            .Select(e => e.Id)
+            .ToListAsync(cancellationToken);
 
-        foreach (Guid id in ids)
-        {
-            bool exists = await this.context.CalendarEvents
-                .AsNoTracking()
-                .AnyAsync(e => e.Id == id);
-
-            if (exists)
-            {
-                existingIds.Add(id);
-            }
-        }
-
-        return existingIds;
+        return found.ToHashSet();
     }
 }

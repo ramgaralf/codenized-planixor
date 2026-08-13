@@ -1,11 +1,11 @@
-// <copyright file="ReminderSyncPushService.cs" company="Codenized">
+﻿// <copyright file="ReminderSyncPushService.cs" company="Codenized">
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
 namespace Codenized.Planixor.UseCases.Reminder.SyncPush;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
-using Codenized.CleanArchitecture.Exception.Abstractions.BadRequest;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
 using Codenized.Planixor.Core.Entities;
 using Codenized.Planixor.Core.ValueObjects;
 using Codenized.Planixor.Dtos.Reminder.Sync;
@@ -48,8 +48,9 @@ public sealed class ReminderSyncPushService : IInteractorService<ReminderSyncPus
     /// Processes the reminder sync push request by mapping DTOs to entities and upserting them.
     /// </summary>
     /// <param name="request">The reminder sync push request containing the batch of reminder records.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A response indicating the number of records synced.</returns>
-    public async Task<ReminderSyncPushResponse> Run(ReminderSyncPushRequest request)
+    public async Task<ReminderSyncPushResponse> Run(ReminderSyncPushRequest request, CancellationToken cancellationToken)
     {
         if (request.Records.Count > MaxBatchSize)
         {
@@ -81,14 +82,16 @@ public sealed class ReminderSyncPushService : IInteractorService<ReminderSyncPus
                 item.IsDeleted))
             .ToList();
 
-        await this.commands.UpsertAsync(request.UserId, reminders);
+        // The count comes back from the repository rather than from the batch size: a record whose identifier
+        // already belongs to another account is skipped, so the two are not always the same number.
+        int persisted = await this.commands.UpsertAsync(request.UserId, reminders, cancellationToken);
 
         this.logger.LogInformation(
             "Reminder sync push completed for user {UserId}. {Count} reminders processed.",
             request.UserId,
             reminders.Count);
 
-        return new ReminderSyncPushResponse(reminders.Count);
+        return new ReminderSyncPushResponse(persisted);
     }
 
     private void ValidateSeriesFrequencies(List<ReminderSyncRecord> records)

@@ -6,44 +6,34 @@ namespace Codenized.Planixor.Services.Security;
 
 using Codenized.CleanArchitecture.Abstractions.AppServices;
 using Codenized.Planixor.Core.Services.Security;
-using Codenized.Planixor.Core.Settings;
-using Microsoft.Extensions.Options;
 
 /// <summary>
-/// Validates API keys against configured security settings and stores the authenticated username.
+/// Validates API keys against the configured directory and stores the authenticated username.
 /// </summary>
 public sealed class SecurityService : ISecurityService, IAppServiceScoped
 {
-    private readonly SecuritySettings settings;
+    private readonly IApiKeyDirectory apiKeyDirectory;
     private string? authenticatedUsername;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SecurityService"/> class.
     /// </summary>
-    /// <param name="options">The security settings options.</param>
-    public SecurityService(IOptions<SecuritySettings> options)
+    /// <param name="apiKeyDirectory">The directory that resolves an API key to its owner.</param>
+    public SecurityService(IApiKeyDirectory apiKeyDirectory)
     {
-        this.settings = options.Value;
+        this.apiKeyDirectory = apiKeyDirectory;
     }
 
     /// <inheritdoc/>
     public bool ValidateAPIKey(string apiKey)
     {
-        if (string.IsNullOrEmpty(apiKey))
+        if (!this.apiKeyDirectory.TryResolveUser(apiKey, out string username))
         {
             return false;
         }
 
-        foreach (KeyValuePair<string, string> entry in this.settings.ApiKeys)
-        {
-            if (string.Equals(entry.Value, apiKey, StringComparison.Ordinal))
-            {
-                this.authenticatedUsername = entry.Key;
-                return true;
-            }
-        }
-
-        return false;
+        this.authenticatedUsername = username;
+        return true;
     }
 
     /// <inheritdoc/>

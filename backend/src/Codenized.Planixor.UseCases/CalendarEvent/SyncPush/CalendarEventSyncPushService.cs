@@ -5,7 +5,9 @@
 namespace Codenized.Planixor.UseCases.CalendarEvent.SyncPush;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
-using Codenized.CleanArchitecture.Exception.Abstractions.BadRequest;
+using Codenized.CleanArchitecture.Abstractions.Validations;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
+using Codenized.Planixor.Dtos;
 using Codenized.Planixor.Dtos.CalendarEvent.Sync;
 using Codenized.Planixor.UseCases.CalendarEvent.SyncPush.Commands;
 using Codenized.Planixor.UseCases.CalendarEvent.SyncPush.Queries;
@@ -23,6 +25,7 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
 
     private readonly ICalendarEventSyncPushCommands commands;
     private readonly ICalendarEventSyncPushQueries queries;
+    private readonly IValidator<CalendarEventSyncRecord> recordValidator;
     private readonly ILogger<CalendarEventSyncPushService> logger;
 
     /// <summary>
@@ -30,14 +33,17 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
     /// </summary>
     /// <param name="commands">The calendar event sync push commands.</param>
     /// <param name="queries">The calendar event sync push queries.</param>
+    /// <param name="recordValidator">The validator applied to each record of the batch.</param>
     /// <param name="logger">The logger.</param>
     public CalendarEventSyncPushService(
         ICalendarEventSyncPushCommands commands,
         ICalendarEventSyncPushQueries queries,
+        IValidator<CalendarEventSyncRecord> recordValidator,
         ILogger<CalendarEventSyncPushService> logger)
     {
         this.commands = commands;
         this.queries = queries;
+        this.recordValidator = recordValidator;
         this.logger = logger;
     }
 
@@ -46,8 +52,9 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
     /// applying LWW conflict resolution, and returning acknowledged/rejected IDs.
     /// </summary>
     /// <param name="request">The calendar event sync push request containing the batch of records.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A response with acknowledged and rejected record identifiers.</returns>
-    public async Task<CalendarEventSyncPushResponse> Run(CalendarEventSyncPushRequest request)
+    public async Task<CalendarEventSyncPushResponse> Run(CalendarEventSyncPushRequest request, CancellationToken cancellationToken)
     {
         if (request.Records.Count > MaxBatchSize)
         {
@@ -70,9 +77,10 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
 
         foreach (CalendarEventSyncRecord record in request.Records)
         {
-            if (!IsValid(record))
+            if (!this.recordValidator.Validate(record))
             {
-                rejectedIds.Add(new RejectedRecord(record.Id, "Missing required fields"));
+                // Read before the next Validate call: the validator replaces its failures on every run.
+                rejectedIds.Add(new RejectedRecord(record.Id, this.recordValidator.Failures[0].ErrorMessage));
             }
             else
             {
@@ -87,10 +95,10 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
 
         // Step 2: Look up which IDs exist globally (to detect ownership conflicts)
         IReadOnlyList<Guid> validIds = validRecords.Select(r => r.Id).ToList();
-        IReadOnlySet<Guid> existingIds = await this.queries.GetExistingIdsAsync(validIds);
+        IReadOnlySet<Guid> existingIds = await this.queries.GetExistingIdsAsync(validIds, cancellationToken);
 
         // Step 3: Get existing records owned by the user (for LWW comparison)
-        IReadOnlyList<CalendarEventEntity> ownedExisting = await this.queries.GetByIdsAsync(validIds, request.UserId);
+        IReadOnlyList<CalendarEventEntity> ownedExisting = await this.queries.GetByIdsAsync(validIds, request.UserId, cancellationToken);
         Dictionary<Guid, CalendarEventEntity> ownedMap = ownedExisting.ToDictionary(e => e.Id);
 
         // Step 4: Process each valid record
@@ -121,8 +129,8 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
                 }
 
                 // Incoming record is newer — apply sync to existing entity
-                DateOnly startDay = DateOnly.Parse(record.StartDay);
-                DateOnly endDay = DateOnly.Parse(record.EndDay);
+                DateOnly startDay = SyncDate.Parse(record.StartDay);
+                DateOnly endDay = SyncDate.Parse(record.EndDay);
                 string alertOffsetsJson = AlertOffsetsMapper.Serialize(record.AlertOffsets);
                 existing.ApplySync(
                     record.EventType,
@@ -144,8 +152,8 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
             else
             {
                 // New record — insert with the authenticated UserId
-                DateOnly startDay = DateOnly.Parse(record.StartDay);
-                DateOnly endDay = DateOnly.Parse(record.EndDay);
+                DateOnly startDay = SyncDate.Parse(record.StartDay);
+                DateOnly endDay = SyncDate.Parse(record.EndDay);
                 string alertOffsetsJson = AlertOffsetsMapper.Serialize(record.AlertOffsets);
                 CalendarEventEntity newEvent = CalendarEventEntity.CreateFromSync(
                     record.Id,
@@ -171,7 +179,7 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
         // Step 5: Persist all upserts in a single batch
         if (toUpsert.Count > 0)
         {
-            await this.commands.UpsertBatchAsync(toUpsert);
+            await this.commands.UpsertBatchAsync(toUpsert, cancellationToken);
         }
 
         this.logger.LogInformation(
@@ -181,65 +189,5 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
             rejectedIds.Count);
 
         return new CalendarEventSyncPushResponse(acknowledgedIds, rejectedIds);
-    }
-
-    private static bool IsValid(CalendarEventSyncRecord record)
-    {
-        if (string.IsNullOrWhiteSpace(record.EventType))
-        {
-            return false;
-        }
-
-        if (record.EventTypeId == Guid.Empty)
-        {
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(record.StartDay))
-        {
-            return false;
-        }
-
-        if (!DateOnly.TryParse(record.StartDay, out DateOnly startDay))
-        {
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(record.EndDay))
-        {
-            return false;
-        }
-
-        if (!DateOnly.TryParse(record.EndDay, out DateOnly endDay))
-        {
-            return false;
-        }
-
-        if (endDay < startDay)
-        {
-            return false;
-        }
-
-        if (record.StartTime < 0 || record.StartTime > 1439)
-        {
-            return false;
-        }
-
-        if (record.EndTime < 0 || record.EndTime > 1439)
-        {
-            return false;
-        }
-
-        if (record.EventType == "reminder" && endDay == startDay && record.EndTime <= record.StartTime)
-        {
-            return false;
-        }
-
-        if (record.TotalHours < 0)
-        {
-            return false;
-        }
-
-        return true;
     }
 }

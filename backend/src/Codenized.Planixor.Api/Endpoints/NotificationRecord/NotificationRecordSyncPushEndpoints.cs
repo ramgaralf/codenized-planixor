@@ -6,7 +6,7 @@ namespace Codenized.Planixor.Api.Endpoints.NotificationRecord;
 
 using Codenized.CleanArchitecture.Abstractions.Controllers;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
-using Codenized.CleanArchitecture.Exception.Abstractions.Unauthorized;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.Unauthorized;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
 using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.NotificationRecord.Sync;
@@ -22,11 +22,11 @@ internal static class NotificationRecordSyncPushEndpoints
         group.MapEndpoint<GenericResponse<NotificationRecordSyncPushResponse>>(
             HttpMethods.Post,
             "/push",
-            async (NotificationRecordSyncPushRequest request, ISecurityService securityService, IController<NotificationRecordSyncPushRequest, NotificationRecordSyncPushResponse> controller) =>
+            async (NotificationRecordSyncPushRequest request, ISecurityService securityService, IController<NotificationRecordSyncPushRequest, NotificationRecordSyncPushResponse> controller, CancellationToken cancellationToken) =>
             {
                 request.UserId = securityService.GetAuthenticatedUsername()
                     ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
-                GenericResponse<NotificationRecordSyncPushResponse> result = await controller.Handle(request);
+                GenericResponse<NotificationRecordSyncPushResponse> result = await controller.Handle(request, cancellationToken);
                 return Results.Ok(result);
             },
             "PushNotificationRecords",

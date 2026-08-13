@@ -6,7 +6,6 @@
 
 namespace UnitTest.Codenized.Planixor.Shift.Validators;
 
-using global::Codenized.CleanArchitecture.Abstractions.Validations;
 using global::Codenized.Planixor.Dtos.Shift.Sync;
 using NUnit.Framework;
 
@@ -24,8 +23,7 @@ public sealed class ShiftSyncItemValidatorTests
     [SetUp]
     public void SetUp()
     {
-        var service = new ValidationService<ShiftSyncItem>();
-        this.validator = new ShiftSyncItemValidator(service);
+        this.validator = new ShiftSyncItemValidator();
     }
 
     /// <summary>Verifies validation passes for a valid shift item.</summary>
@@ -190,15 +188,18 @@ public sealed class ShiftSyncItemValidatorTests
             Is.True);
     }
 
-    /// <summary>Verifies validation passes when HoursWorked is zero.</summary>
+    /// <summary>Verifies validation rejects a shift of no duration.</summary>
+    /// <remarks>A zero-length shift is not representable, so it is refused at the edge rather than deeper in.</remarks>
     [Test]
-    public void Validate_WithZeroHoursWorked_HasNoFailures()
+    public void Validate_WithZeroHoursWorked_HasFailure()
     {
         ShiftSyncItem item = CreateValidItem() with { HoursWorked = 0 };
 
         this.validator.Validate(item);
 
-        Assert.That(this.validator.Failures, Is.Empty);
+        Assert.That(
+            this.validator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 1 and 1440")),
+            Is.True);
     }
 
     /// <summary>Verifies validation fails when HoursWorked is negative.</summary>
@@ -211,7 +212,7 @@ public sealed class ShiftSyncItemValidatorTests
 
         Assert.That(this.validator.Failures, Is.Not.Empty);
         Assert.That(
-            this.validator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 0 and 1440")),
+            this.validator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 1 and 1440")),
             Is.True);
     }
 
@@ -225,7 +226,7 @@ public sealed class ShiftSyncItemValidatorTests
 
         Assert.That(this.validator.Failures, Is.Not.Empty);
         Assert.That(
-            this.validator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 0 and 1440")),
+            this.validator.Failures.Any(f => f.ErrorMessage.Contains("HoursWorked must be between 1 and 1440")),
             Is.True);
     }
 

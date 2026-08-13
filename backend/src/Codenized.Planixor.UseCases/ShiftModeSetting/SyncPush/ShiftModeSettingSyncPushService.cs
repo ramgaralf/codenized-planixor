@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.ShiftModeSetting.SyncPush;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
 using Codenized.Planixor.Dtos.ShiftModeSetting.Sync;
 using Codenized.Planixor.UseCases.ShiftModeSetting.SyncPush.Commands;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,9 @@ using ShiftModeSettingEntity = Codenized.Planixor.Core.Entities.ShiftModeSetting
 /// </summary>
 public sealed class ShiftModeSettingSyncPushService : IInteractorService<ShiftModeSettingSyncPushRequest, ShiftModeSettingSyncPushResponse>
 {
+    /// <summary>The largest batch the use case will process.</summary>
+    private const int MaxBatchSize = 100;
+
     private readonly IShiftModeSettingSyncPushCommands commands;
     private readonly ILogger<ShiftModeSettingSyncPushService> logger;
 
@@ -36,9 +40,21 @@ public sealed class ShiftModeSettingSyncPushService : IInteractorService<ShiftMo
     /// Processes the shift mode setting sync push request by mapping DTOs to entities and upserting them.
     /// </summary>
     /// <param name="request">The shift mode setting sync push request containing the batch of records.</param>
+    /// <param name="cancellationToken">Token used to observe cancellation of the originating request.</param>
     /// <returns>A response indicating the number of records processed.</returns>
-    public async Task<ShiftModeSettingSyncPushResponse> Run(ShiftModeSettingSyncPushRequest request)
+    public async Task<ShiftModeSettingSyncPushResponse> Run(ShiftModeSettingSyncPushRequest request, CancellationToken cancellationToken)
     {
+        // The request validator enforces this too, and it is what produces the 400 with the offending
+        // field. Repeated here as an invariant: a regression in the validator must not leave the route
+        // unbounded, which is exactly the state this entity was in.
+        if (request.Records.Count > MaxBatchSize)
+        {
+            throw new BadRequestException(
+                "BATCH_SIZE_EXCEEDED",
+                "Batch Size Exceeded",
+                $"Batch size exceeds maximum of {MaxBatchSize}.");
+        }
+
         this.logger.LogInformation(
             "Processing shift mode setting sync push for user {UserId} with {Count} records.",
             request.UserId,
@@ -53,13 +69,15 @@ public sealed class ShiftModeSettingSyncPushService : IInteractorService<ShiftMo
                 item.IsDeleted))
             .ToList();
 
-        await this.commands.UpsertAsync(request.UserId, records);
+        // The count comes back from the repository rather than from the batch size: a record whose identifier
+        // already belongs to another account is skipped, so the two are not always the same number.
+        int persisted = await this.commands.UpsertAsync(request.UserId, records, cancellationToken);
 
         this.logger.LogInformation(
             "Shift mode setting sync push completed for user {UserId}. {Count} records processed.",
             request.UserId,
             records.Count);
 
-        return new ShiftModeSettingSyncPushResponse(records.Count);
+        return new ShiftModeSettingSyncPushResponse(persisted);
     }
 }

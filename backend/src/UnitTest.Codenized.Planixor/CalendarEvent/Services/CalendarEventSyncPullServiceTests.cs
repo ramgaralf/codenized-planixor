@@ -63,7 +63,7 @@ public sealed class CalendarEventSyncPullServiceTests
             lastSyncedAt,
             false);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, cursor)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, cursor, CancellationToken.None)
             .Returns(new CalendarEventSyncPullResult
             {
                 CalendarEvents = [entity],
@@ -72,7 +72,7 @@ public sealed class CalendarEventSyncPullServiceTests
             });
 
         // Act
-        CalendarEventSyncPullResponse response = await this.service.Run(request);
+        CalendarEventSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Records, Has.Count.EqualTo(1));
@@ -90,7 +90,7 @@ public sealed class CalendarEventSyncPullServiceTests
         string userId = "testuser";
         var request = new CalendarEventSyncPullRequest(userId, null, null);
 
-        this.queries.GetModifiedAfterAsync(userId, DateTime.MinValue, null)
+        this.queries.GetModifiedAfterAsync(userId, DateTime.MinValue, null, CancellationToken.None)
             .Returns(new CalendarEventSyncPullResult
             {
                 CalendarEvents = [],
@@ -99,10 +99,10 @@ public sealed class CalendarEventSyncPullServiceTests
             });
 
         // Act
-        CalendarEventSyncPullResponse response = await this.service.Run(request);
+        CalendarEventSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
-        await this.queries.Received(1).GetModifiedAfterAsync(userId, DateTime.MinValue, null);
+        await this.queries.Received(1).GetModifiedAfterAsync(userId, DateTime.MinValue, null, CancellationToken.None);
         Assert.That(response.Records, Is.Empty);
     }
 
@@ -119,7 +119,7 @@ public sealed class CalendarEventSyncPullServiceTests
         string cursor = "abc123-next-page";
         var request = new CalendarEventSyncPullRequest(userId, lastSyncedAt, cursor);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, cursor)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, cursor, CancellationToken.None)
             .Returns(new CalendarEventSyncPullResult
             {
                 CalendarEvents = [],
@@ -128,10 +128,10 @@ public sealed class CalendarEventSyncPullServiceTests
             });
 
         // Act
-        await this.service.Run(request);
+        await this.service.Run(request, CancellationToken.None);
 
         // Assert
-        await this.queries.Received(1).GetModifiedAfterAsync(userId, lastSyncedAt, cursor);
+        await this.queries.Received(1).GetModifiedAfterAsync(userId, lastSyncedAt, cursor, CancellationToken.None);
     }
 
     /// <summary>
@@ -162,7 +162,7 @@ public sealed class CalendarEventSyncPullServiceTests
             DateTime.UtcNow,
             false);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new CalendarEventSyncPullResult
             {
                 CalendarEvents = [entity],
@@ -171,7 +171,7 @@ public sealed class CalendarEventSyncPullServiceTests
             });
 
         // Act
-        CalendarEventSyncPullResponse response = await this.service.Run(request);
+        CalendarEventSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Cursor, Is.Null);
@@ -210,7 +210,7 @@ public sealed class CalendarEventSyncPullServiceTests
 
         var request = new CalendarEventSyncPullRequest(userId, lastSyncedAt, null);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new CalendarEventSyncPullResult
             {
                 CalendarEvents = [entity],
@@ -219,7 +219,7 @@ public sealed class CalendarEventSyncPullServiceTests
             });
 
         // Act
-        CalendarEventSyncPullResponse response = await this.service.Run(request);
+        CalendarEventSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Records, Has.Count.EqualTo(1));
@@ -269,7 +269,7 @@ public sealed class CalendarEventSyncPullServiceTests
 
         var request = new CalendarEventSyncPullRequest(userId, lastSyncedAt, null);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new CalendarEventSyncPullResult
             {
                 CalendarEvents = [entity],
@@ -278,7 +278,7 @@ public sealed class CalendarEventSyncPullServiceTests
             });
 
         // Act
-        CalendarEventSyncPullResponse response = await this.service.Run(request);
+        CalendarEventSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Records, Has.Count.EqualTo(1));
@@ -328,7 +328,7 @@ public sealed class CalendarEventSyncPullServiceTests
 
         var request = new CalendarEventSyncPullRequest(userId, lastSyncedAt, null);
 
-        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null)
+        this.queries.GetModifiedAfterAsync(userId, lastSyncedAt, null, CancellationToken.None)
             .Returns(new CalendarEventSyncPullResult
             {
                 CalendarEvents = [entity],
@@ -337,7 +337,7 @@ public sealed class CalendarEventSyncPullServiceTests
             });
 
         // Act
-        CalendarEventSyncPullResponse response = await this.service.Run(request);
+        CalendarEventSyncPullResponse response = await this.service.Run(request, CancellationToken.None);
 
         // Assert
         Assert.That(response.Records, Has.Count.EqualTo(1));

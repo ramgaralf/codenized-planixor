@@ -7,7 +7,7 @@ namespace Codenized.Planixor.Api.Endpoints.AnnualHoursConfig;
 using Codenized.CleanArchitecture.Abstractions.Controllers;
 using Codenized.CleanArchitecture.Abstractions.Exceptions;
 using Codenized.CleanArchitecture.Abstractions.Presenters;
-using Codenized.CleanArchitecture.Exception.Abstractions.Unauthorized;
+using Codenized.CleanArchitecture.Exceptions.Abstractions.Unauthorized;
 using Codenized.Exceptions.GlobalExceptionStrategy.Extensions;
 using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Dtos.AnnualHoursConfig.Sync;
@@ -23,13 +23,13 @@ internal static class AnnualHoursConfigSyncPullEndpoints
         group.MapEndpoint<GenericResponse<AnnualHoursConfigSyncPullResponse>>(
             HttpMethods.Get,
             "/pull",
-            async (DateTime? lastSyncedAt, string? cursor, ISecurityService securityService, IController<AnnualHoursConfigSyncPullRequest, AnnualHoursConfigSyncPullResponse> controller) =>
+            async (DateTime? lastSyncedAt, string? cursor, ISecurityService securityService, IController<AnnualHoursConfigSyncPullRequest, AnnualHoursConfigSyncPullResponse> controller, CancellationToken cancellationToken) =>
             {
                 string userId = securityService.GetAuthenticatedUsername()
                     ?? throw new UnauthorizedException("AUTH_USER_NOT_FOUND", "Authenticated user not found", "The authenticated username could not be resolved from the security service.");
 
                 var request = new AnnualHoursConfigSyncPullRequest(userId, lastSyncedAt, cursor);
-                GenericResponse<AnnualHoursConfigSyncPullResponse> result = await controller.Handle(request);
+                GenericResponse<AnnualHoursConfigSyncPullResponse> result = await controller.Handle(request, cancellationToken);
                 return Results.Ok(result);
             },
             "PullAnnualHoursConfig",
