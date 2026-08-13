@@ -1,4 +1,4 @@
-// <copyright file="CalendarEventSyncPullService.cs" company="Codenized">
+﻿// <copyright file="CalendarEventSyncPullService.cs" company="Codenized">
 // Copyright (c) Codenized. All rights reserved.
 // </copyright>
 
@@ -44,6 +44,13 @@ public sealed class CalendarEventSyncPullService : IInteractorService<CalendarEv
         // column, so its DateTimeKind decides whether records are skipped or repeated. See SyncWatermark.
         DateTime lastSyncedAt = SyncWatermark.Normalise(request.LastSyncedAt);
 
+        // Read BEFORE the query, and returned so the client sends it back as the next watermark. The filter
+        // compares against SyncedAt, which this server stamps; a watermark the client derived from its own clock is
+        // a different clock, and anything stamped inside the drift is skipped for good. Reading it first also
+        // closes the window: whatever is stamped while this query runs falls after this instant, so the next cycle
+        // still asks for it.
+        DateTime serverSyncedAt = DateTime.UtcNow;
+
         CalendarEventSyncPullResult result = await this.queries.GetModifiedAfterAsync(
             request.UserId,
             lastSyncedAt,
@@ -71,6 +78,6 @@ public sealed class CalendarEventSyncPullService : IInteractorService<CalendarEv
             records.Count,
             result.HasMore);
 
-        return new CalendarEventSyncPullResponse(records, result.Cursor);
+        return new CalendarEventSyncPullResponse(records, result.Cursor, serverSyncedAt);
     }
 }

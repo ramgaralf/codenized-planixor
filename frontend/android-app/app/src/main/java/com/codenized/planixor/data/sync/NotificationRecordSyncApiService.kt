@@ -42,6 +42,7 @@ data class NotificationRecordSyncPushResponse(
 data class NotificationRecordSyncPullResponse(
     val records: List<NotificationRecordSyncRecord>,
     val cursor: String?,
+    val serverSyncedAt: String? = null,
 )
 
 /**

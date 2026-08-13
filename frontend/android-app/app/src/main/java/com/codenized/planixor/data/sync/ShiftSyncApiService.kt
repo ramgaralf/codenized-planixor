@@ -45,6 +45,7 @@ data class ShiftSyncPullResponse(
     val shifts: List<ShiftSyncRecord>,
     val cursor: String?,
     val hasMore: Boolean,
+    val serverSyncedAt: String? = null,
 )
 
 /**

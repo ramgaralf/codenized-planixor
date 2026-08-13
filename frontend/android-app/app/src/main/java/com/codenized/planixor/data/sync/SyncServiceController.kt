@@ -205,8 +205,9 @@ class SyncServiceController @Inject constructor(
      * Updates lastSyncedAt only when at least one entity sync succeeds (Property 5).
      */
     private suspend fun performSyncCycle(config: SyncConfig) {
-        // Use epoch 0 (1970-01-01) when lastSyncedAt is null (first sync) to ensure all records are pulled
-        val lastSyncedAt = config.lastSyncedAt ?: 0L
+        // Each entity carries its own watermark, and each only moves when its own sync succeeded. A single
+        // shared value that advanced whenever *anything* succeeded skipped the failed entity's window for good.
+        suspend fun since(entity: String): String? = preferencesRepository.getSyncWatermark(entity)
 
         // Set the dynamic URL, API key, and base path for this cycle
         dynamicBaseUrlInterceptor.serverUrl = config.serverUrl
@@ -217,37 +218,37 @@ class SyncServiceController @Inject constructor(
         var hasAnySuccess = false
 
         val result1 = syncEntity("Calendar event", hasConnectivityError) {
-            calendarEventSyncAdapter.sync(lastSyncedAt)
+            calendarEventSyncAdapter.sync(since("calendarEvents")).also { r -> r.serverSyncedAt?.let { preferencesRepository.setSyncWatermark("calendarEvents", it) } }
         }
         hasConnectivityError = result1.first
         if (result1.second) hasAnySuccess = true
 
         val result2 = syncEntity("Notification record", hasConnectivityError) {
-            notificationRecordSyncAdapter.sync(lastSyncedAt)
+            notificationRecordSyncAdapter.sync(since("notificationRecords")).also { r -> r.serverSyncedAt?.let { preferencesRepository.setSyncWatermark("notificationRecords", it) } }
         }
         hasConnectivityError = result2.first
         if (result2.second) hasAnySuccess = true
 
         val result3 = syncEntity("Annual hours config", hasConnectivityError) {
-            annualHoursConfigSyncAdapter.sync(lastSyncedAt)
+            annualHoursConfigSyncAdapter.sync(since("annualHoursConfig")).also { r -> r.serverSyncedAt?.let { preferencesRepository.setSyncWatermark("annualHoursConfig", it) } }
         }
         hasConnectivityError = result3.first
         if (result3.second) hasAnySuccess = true
 
         val result4 = syncEntity("Shift", hasConnectivityError) {
-            shiftSyncAdapter.sync(lastSyncedAt)
+            shiftSyncAdapter.sync(since("shifts")).also { r -> r.serverSyncedAt?.let { preferencesRepository.setSyncWatermark("shifts", it) } }
         }
         hasConnectivityError = result4.first
         if (result4.second) hasAnySuccess = true
 
         val result5 = syncEntity("Reminder", hasConnectivityError) {
-            reminderSyncAdapter.sync(lastSyncedAt)
+            reminderSyncAdapter.sync(since("reminders")).also { r -> r.serverSyncedAt?.let { preferencesRepository.setSyncWatermark("reminders", it) } }
         }
         hasConnectivityError = result5.first
         if (result5.second) hasAnySuccess = true
 
         val result6 = syncEntity("Shift mode setting", hasConnectivityError) {
-            shiftModeSettingSyncAdapter.sync(lastSyncedAt)
+            shiftModeSettingSyncAdapter.sync(since("shiftModeSettings")).also { r -> r.serverSyncedAt?.let { preferencesRepository.setSyncWatermark("shiftModeSettings", it) } }
         }
         hasConnectivityError = result6.first
         if (result6.second) hasAnySuccess = true
@@ -276,12 +277,13 @@ class SyncServiceController @Inject constructor(
             }
         }
 
-        // Only update lastSyncedAt when at least one entity sync succeeded (Property 5)
+        // lastSyncedAt is now only what the UI shows; the queries run off the per-entity watermarks stored
+        // above, each of which is a value the server produced.
         if (hasAnySuccess) {
             try {
                 preferencesRepository.setSyncLastSyncedAt(System.currentTimeMillis())
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to update lastSyncedAt", e)
+                Log.e(TAG, "Failed to update the last sync label", e)
             }
         }
     }

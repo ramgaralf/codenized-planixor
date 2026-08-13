@@ -27,7 +27,7 @@ class ShiftSyncAdapter @Inject constructor(
     /**
      * Performs a full sync cycle: push local changes then pull remote changes.
      */
-    suspend fun sync(lastSyncedAt: Long?): SyncResult {
+    suspend fun sync(lastSyncedAt: String?): SyncResult {
         val pushResult = push()
         if (!pushResult.success) {
             return pushResult
@@ -42,6 +42,7 @@ class ShiftSyncAdapter @Inject constructor(
             rejected = pushResult.rejected + pullResult.rejected,
             success = pullResult.success,
             error = pullResult.error,
+                    serverSyncedAt = pullResult.serverSyncedAt,
         )
     }
 
@@ -96,10 +97,13 @@ class ShiftSyncAdapter @Inject constructor(
      * Pulls remote shifts modified after lastSyncedAt, paginated with cursor.
      * Applies merge logic: insert new, overwrite unmodified, LWW for conflicts.
      */
-    suspend fun pull(lastSyncedAt: Long?): SyncResult {
+    suspend fun pull(lastSyncedAt: String?): SyncResult {
         return try {
-            val lastSyncedAtIso = lastSyncedAt?.let { formatTimestampToIso(it) }
+            // Sent back exactly as the server produced it. Reformatting it here — through Instant, or
+            // through epoch millis — is how the device clock crept back into a value the server owns.
+            val lastSyncedAtIso = lastSyncedAt
             var cursor: String? = null
+            var serverSyncedAt: String? = null
             var totalInserted = 0
             var totalUpdated = 0
 
@@ -129,9 +133,11 @@ class ShiftSyncAdapter @Inject constructor(
                 }
 
                 cursor = if (body.hasMore) body.cursor else null
+                // The first page's value: the earliest, so it cannot skip anything stamped while this ran.
+                serverSyncedAt = serverSyncedAt ?: body.serverSyncedAt
             } while (cursor != null)
 
-            SyncResult(inserted = totalInserted, updated = totalUpdated)
+            SyncResult(inserted = totalInserted, updated = totalUpdated, serverSyncedAt = serverSyncedAt)
         } catch (e: Exception) {
             SyncResult(success = false, error = e.message ?: "Pull failed unexpectedly")
         }

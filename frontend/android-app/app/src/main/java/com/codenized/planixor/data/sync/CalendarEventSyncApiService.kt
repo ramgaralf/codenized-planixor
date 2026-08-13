@@ -55,6 +55,7 @@ data class RejectedRecord(
 data class CalendarEventSyncPullResponse(
     val records: List<CalendarEventSyncRecord>,
     val cursor: String?,
+    val serverSyncedAt: String? = null,
 )
 
 /**

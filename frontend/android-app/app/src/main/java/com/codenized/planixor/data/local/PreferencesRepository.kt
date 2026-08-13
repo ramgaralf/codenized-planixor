@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.codenized.planixor.data.sync.ConnectionStatus
 import com.codenized.planixor.data.sync.SyncConfig
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -142,6 +143,17 @@ class PreferencesRepository @Inject constructor(
     /**
      * Updates the lastSyncedAt timestamp for sync configuration.
      */
+    /** Reads the watermark for one entity, or null when it has never synced. */
+    suspend fun getSyncWatermark(entity: String): String? =
+        dataStore.data.first()[watermarkKey(entity)]
+
+    /** Stores the watermark the server returned for one entity. */
+    suspend fun setSyncWatermark(entity: String, serverSyncedAt: String) {
+        dataStore.edit { preferences ->
+            preferences[watermarkKey(entity)] = serverSyncedAt
+        }
+    }
+
     suspend fun setSyncLastSyncedAt(timestamp: Long) {
         dataStore.edit { preferences ->
             preferences[KEY_SYNC_LAST_SYNCED_AT] = timestamp
@@ -177,6 +189,16 @@ class PreferencesRepository @Inject constructor(
         private val KEY_SYNC_INTERVAL_MINUTES = intPreferencesKey("sync_interval_minutes")
         private val KEY_SYNC_IS_PAUSED = booleanPreferencesKey("sync_is_paused")
         private val KEY_SYNC_LAST_SYNCED_AT = longPreferencesKey("sync_last_synced_at")
+
+        /**
+         * Per-entity pull watermark, as the server returned it.
+         *
+         * Text, and stored verbatim: the pull filters on a column the server stamps, so the value has to be
+         * the server's own. The previous watermark came from this device's clock and anything stamped inside
+         * the drift between the two was skipped for good. Per entity, because one shared value advanced past
+         * the window of an entity whose sync had failed.
+         */
+        private fun watermarkKey(entity: String) = stringPreferencesKey("sync_watermark_$entity")
         private val KEY_SYNC_CONNECTION_STATUS = stringPreferencesKey("sync_connection_status")
     }
 }

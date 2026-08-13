@@ -44,6 +44,9 @@ export interface AnnualHoursConfigSyncPushResponse {
  * API response when pulling AnnualHoursConfig records.
  */
 export interface AnnualHoursConfigSyncPullResponse {
+  /** The server clock, read before the query ran. Send it back as the next lastSyncedAt. */
+  serverSyncedAt?: string;
+
   records: AnnualHoursConfigSyncRecord[];
   nextCursor: string | null;
 }
@@ -273,7 +276,8 @@ export const pushAnnualHoursConfig = async (
 export const pullAnnualHoursConfig = async (
   apiClient: AnnualHoursConfigSyncApiClient,
   lastSyncedAt: string | null,
-): Promise<void> => {
+): Promise<string | null> => {
+  let serverSyncedAt: string | null = null;
   let cursor: string | null = null;
 
   do {
@@ -281,6 +285,10 @@ export const pullAnnualHoursConfig = async (
       lastSyncedAt,
       cursor,
     );
+
+    // The first page's value is the earliest, so it is the one that cannot skip anything stamped
+    // while this loop was still running.
+    serverSyncedAt ??= response.serverSyncedAt ?? null;
 
     if (response.records.length > 0) {
       // Fetch local records matching the pulled IDs for merge
@@ -308,6 +316,8 @@ export const pullAnnualHoursConfig = async (
 
     cursor = response.nextCursor ?? null;
   } while (cursor !== null);
+
+  return serverSyncedAt;
 };
 
 /**
@@ -316,7 +326,7 @@ export const pullAnnualHoursConfig = async (
 export const syncAnnualHoursConfig = async (
   apiClient: AnnualHoursConfigSyncApiClient,
   lastSyncedAt: string | null,
-): Promise<void> => {
+): Promise<string | null> => {
   await pushAnnualHoursConfig(apiClient);
-  await pullAnnualHoursConfig(apiClient, lastSyncedAt);
+  return pullAnnualHoursConfig(apiClient, lastSyncedAt);
 };
