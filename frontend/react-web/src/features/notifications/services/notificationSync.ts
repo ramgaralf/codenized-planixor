@@ -48,6 +48,9 @@ export interface NotificationRecordSyncPushResponse {
  * API response when pulling notification records.
  */
 export interface NotificationRecordSyncPullResponse {
+  /** The server clock, read before the query ran. Send it back as the next lastSyncedAt. */
+  serverSyncedAt?: string;
+
   records: NotificationRecordSyncRecord[];
   cursor: string | null;
 }
@@ -242,11 +245,16 @@ export const pushNotificationRecords = async (
 export const pullNotificationRecords = async (
   apiClient: SyncApiClient,
   lastSyncedAt: string | null,
-): Promise<void> => {
+): Promise<string | null> => {
+  let serverSyncedAt: string | null = null;
   let cursor: string | null = null;
 
   do {
     const response = await apiClient.pullNotificationRecords(lastSyncedAt, cursor);
+
+    // The first page's value is the earliest, so it is the one that cannot skip anything stamped
+    // while this loop was still running.
+    serverSyncedAt ??= response.serverSyncedAt ?? null;
 
     if (response.records.length > 0) {
       // Fetch local records matching the pulled IDs for merge
@@ -274,6 +282,8 @@ export const pullNotificationRecords = async (
 
     cursor = response.cursor ?? null;
   } while (cursor !== null);
+
+  return serverSyncedAt;
 };
 
 /**
@@ -291,7 +301,7 @@ export const pullNotificationRecords = async (
 export const syncNotificationRecords = async (
   apiClient: SyncApiClient,
   lastSyncedAt: string | null,
-): Promise<void> => {
+): Promise<string | null> => {
   await pushNotificationRecords(apiClient);
-  await pullNotificationRecords(apiClient, lastSyncedAt);
+  return pullNotificationRecords(apiClient, lastSyncedAt);
 };

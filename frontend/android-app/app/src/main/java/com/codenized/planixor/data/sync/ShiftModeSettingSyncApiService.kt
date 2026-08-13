@@ -38,6 +38,7 @@ data class ShiftModeSettingSyncPullResponse(
     val records: List<ShiftModeSettingSyncRecord>,
     val cursor: String?,
     val hasMore: Boolean,
+    val serverSyncedAt: String? = null,
 )
 
 /**
