@@ -212,7 +212,8 @@ const PUSH_BATCH_SIZE = 100;
  * Syncs shifts with the backend (push unsynced + pull remote changes).
  */
 // eslint-disable-next-line sonarjs/cognitive-complexity
-const syncShifts = async (serverUrl: string, apiKey: string, apiBasePath: string, lastSyncedAt: string | null): Promise<void> => {
+const syncShifts = async (serverUrl: string, apiKey: string, apiBasePath: string, lastSyncedAt: string | null): Promise<string | null> => {
+  let serverSyncedAt: string | null = null;
   await pushShifts(serverUrl, apiKey, apiBasePath);
 
   // Pull
@@ -238,6 +239,7 @@ const syncShifts = async (serverUrl: string, apiKey: string, apiBasePath: string
 
     const wrapper = await response.json();
     const data = wrapper.data ?? { shifts: [], cursor: null, hasMore: false };
+    serverSyncedAt ??= data.serverSyncedAt ?? null;
 
     if (data.shifts && data.shifts.length > 0) {
       const now = new Date();
@@ -274,6 +276,8 @@ const syncShifts = async (serverUrl: string, apiKey: string, apiBasePath: string
 
     cursor = data.cursor ?? null;
   } while (cursor !== null);
+
+  return serverSyncedAt;
 };
 
 /**
@@ -328,7 +332,8 @@ const pushShifts = async (serverUrl: string, apiKey: string, apiBasePath: string
  * Syncs reminders with the backend (push unsynced + pull remote changes).
  */
 // eslint-disable-next-line sonarjs/cognitive-complexity
-const syncReminders = async (serverUrl: string, apiKey: string, apiBasePath: string, lastSyncedAt: string | null): Promise<void> => {
+const syncReminders = async (serverUrl: string, apiKey: string, apiBasePath: string, lastSyncedAt: string | null): Promise<string | null> => {
+  let serverSyncedAt: string | null = null;
   await pushReminders(serverUrl, apiKey, apiBasePath);
 
   // Pull
@@ -354,6 +359,7 @@ const syncReminders = async (serverUrl: string, apiKey: string, apiBasePath: str
 
     const wrapper = await response.json();
     const data = wrapper.data ?? { records: [], cursor: null, hasMore: false };
+    serverSyncedAt ??= data.serverSyncedAt ?? null;
 
     if (data.records && data.records.length > 0) {
       const now = new Date();
@@ -389,6 +395,8 @@ const syncReminders = async (serverUrl: string, apiKey: string, apiBasePath: str
 
     cursor = data.cursor ?? null;
   } while (cursor !== null);
+
+  return serverSyncedAt;
 };
 
 /**
@@ -514,7 +522,7 @@ const pullShiftModeSettingsPage = async (
   apiBasePath: string,
   lastSyncedAt: string | null,
   cursor: string | null,
-): Promise<{ records: ShiftModeSettingSyncRecord[]; nextCursor: string | null }> => {
+): Promise<{ records: ShiftModeSettingSyncRecord[]; nextCursor: string | null; serverSyncedAt: string | null }> => {
   const params = new URLSearchParams();
   if (lastSyncedAt) params.set('lastSyncedAt', lastSyncedAt);
   if (cursor) params.set('cursor', cursor);
@@ -536,20 +544,22 @@ const pullShiftModeSettingsPage = async (
   const wrapper = await response.json();
   const data = wrapper.data ?? { records: [], cursor: null, hasMore: false };
   const nextCursor = data.hasMore ? (data.cursor ?? null) : null;
-  return { records: data.records ?? [], nextCursor };
+  return { records: data.records ?? [], nextCursor, serverSyncedAt: data.serverSyncedAt ?? null };
 };
 
 /**
  * Syncs shift mode settings with the backend (push unsynced + pull remote changes).
  * At most 1 record exists per device.
  */
-const syncShiftModeSettings = async (serverUrl: string, apiKey: string, apiBasePath: string, lastSyncedAt: string | null): Promise<void> => {
+const syncShiftModeSettings = async (serverUrl: string, apiKey: string, apiBasePath: string, lastSyncedAt: string | null): Promise<string | null> => {
+  let serverSyncedAt: string | null = null;
   await pushShiftModeSettings(serverUrl, apiKey, apiBasePath);
 
   // Pull
   let cursor: string | null = null;
   do {
     const page = await pullShiftModeSettingsPage(serverUrl, apiKey, apiBasePath, lastSyncedAt, cursor);
+    serverSyncedAt ??= page.serverSyncedAt ?? null;
 
     if (page.records.length > 0) {
       const now = new Date();
@@ -560,6 +570,8 @@ const syncShiftModeSettings = async (serverUrl: string, apiKey: string, apiBaseP
 
     cursor = page.nextCursor;
   } while (cursor !== null);
+
+  return serverSyncedAt;
 };
 
 /**
@@ -635,15 +647,31 @@ export const runFullSyncCycle = async (): Promise<void> => {
   const notificationClient = createNotificationApiClient(serverUrl, apiKey, apiBasePath);
   const annualHoursClient = createAnnualHoursApiClient(serverUrl, apiKey, apiBasePath);
 
-  let hasError = false;
-  let hasAnySuccess = false;
+  // One watermark per entity, and each only moves when its own sync succeeded. A single shared watermark that
+  // advanced whenever *anything* succeeded skipped the failed entity's window for good.
+  const watermarks: Record<string, string> = { ...(config.entityWatermarks ?? {}) };
+  const since = (entity: string): string => watermarks[entity] ?? effectiveLastSyncedAt;
 
-  try { await syncCalendarEvents(calendarClient, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
-  try { await syncNotificationRecords(notificationClient, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
-  try { await syncAnnualHoursConfig(annualHoursClient, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
-  try { await syncShifts(serverUrl, apiKey, apiBasePath, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
-  try { await syncReminders(serverUrl, apiKey, apiBasePath, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
-  try { await syncShiftModeSettings(serverUrl, apiKey, apiBasePath, effectiveLastSyncedAt); hasAnySuccess = true; } catch { hasError = true; }
+  let hasError = false;
+
+  const run = async (entity: string, sync: (from: string) => Promise<string | null>): Promise<void> => {
+    try {
+      const serverSyncedAt = await sync(since(entity));
+
+      // Only the server's own clock is stored. Deriving it here would compare our clock against a column the
+      // server stamps, and everything inside the drift between the two would be skipped for good.
+      if (serverSyncedAt) watermarks[entity] = serverSyncedAt;
+    } catch {
+      hasError = true;
+    }
+  };
+
+  await run('calendarEvents', (from) => syncCalendarEvents(calendarClient, from));
+  await run('notificationRecords', (from) => syncNotificationRecords(notificationClient, from));
+  await run('annualHoursConfig', (from) => syncAnnualHoursConfig(annualHoursClient, from));
+  await run('shifts', (from) => syncShifts(serverUrl, apiKey, apiBasePath, from));
+  await run('reminders', (from) => syncReminders(serverUrl, apiKey, apiBasePath, from));
+  await run('shiftModeSettings', (from) => syncShiftModeSettings(serverUrl, apiKey, apiBasePath, from));
 
   // Post-cycle notification purge — fire and forget, does not affect sync status
   try {
@@ -652,12 +680,17 @@ export const runFullSyncCycle = async (): Promise<void> => {
     console.error('Post-cycle notification purge failed:', err);
   }
 
-  // Only update lastSyncedAt if at least one entity sync succeeded
-  if (hasAnySuccess) {
+  // lastSyncedAt is now only what the UI shows. The queries run off entityWatermarks, and both values come from
+  // the server so the label can never claim a sync the server did not acknowledge.
+  // Indexed rather than Array.at: the production build targets a lib where at() does not exist, and the
+  // typecheck alone does not use that config.
+  const sorted = Object.values(watermarks).sort();
+  const latest = sorted.length > 0 ? sorted[sorted.length - 1] : undefined;
+
+  if (latest) {
     try {
-      const now = new Date().toISOString();
-      useSyncStore.getState().setLastSyncedAt(now);
-      await db.syncConfig.update('default', { lastSyncedAt: now });
+      useSyncStore.getState().setLastSyncedAt(latest);
+      await db.syncConfig.update('default', { lastSyncedAt: latest, entityWatermarks: watermarks });
     } catch {
       // Silent — store update is best-effort
     }

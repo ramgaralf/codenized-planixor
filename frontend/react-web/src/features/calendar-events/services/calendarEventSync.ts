@@ -53,6 +53,9 @@ export interface CalendarEventSyncPushResponse {
  * API response when pulling calendar event records.
  */
 export interface CalendarEventSyncPullResponse {
+  /** The server clock, read before the query ran. Send it back as the next lastSyncedAt. */
+  serverSyncedAt?: string;
+
   records: CalendarEventSyncRecord[];
   cursor: string | null;
 }
@@ -254,11 +257,16 @@ export const pushCalendarEvents = async (
 export const pullCalendarEvents = async (
   apiClient: SyncApiClient,
   lastSyncedAt: string | null,
-): Promise<void> => {
+): Promise<string | null> => {
+  let serverSyncedAt: string | null = null;
   let cursor: string | null = null;
 
   do {
     const response = await apiClient.pullCalendarEvents(lastSyncedAt, cursor);
+
+    // The first page's value is the earliest, so it is the one that cannot skip anything stamped
+    // while this loop was still running.
+    serverSyncedAt ??= response.serverSyncedAt ?? null;
 
     if (response.records.length > 0) {
       // Fetch local events matching the pulled IDs for merge
@@ -286,6 +294,8 @@ export const pullCalendarEvents = async (
 
     cursor = response.cursor ?? null;
   } while (cursor !== null);
+
+  return serverSyncedAt;
 };
 
 /**
@@ -294,7 +304,7 @@ export const pullCalendarEvents = async (
 export const syncCalendarEvents = async (
   apiClient: SyncApiClient,
   lastSyncedAt: string | null,
-): Promise<void> => {
+): Promise<string | null> => {
   await pushCalendarEvents(apiClient);
-  await pullCalendarEvents(apiClient, lastSyncedAt);
+  return pullCalendarEvents(apiClient, lastSyncedAt);
 };

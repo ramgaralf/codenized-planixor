@@ -541,18 +541,21 @@ describe('syncServiceController', () => {
       expect(useSyncStore.getState().lastSyncedAt).toBe(originalLastSyncedAt);
 
       fetchSpy.mockRestore();
-      vi.mocked(calendarSync.syncCalendarEvents).mockResolvedValue(undefined);
-      vi.mocked(notificationSync.syncNotificationRecords).mockResolvedValue(undefined);
-      vi.mocked(annualHoursSync.syncAnnualHoursConfig).mockResolvedValue(undefined);
+      vi.mocked(calendarSync.syncCalendarEvents).mockResolvedValue(null);
+      vi.mocked(notificationSync.syncNotificationRecords).mockResolvedValue(null);
+      vi.mocked(annualHoursSync.syncAnnualHoursConfig).mockResolvedValue(null);
     });
 
-    it('should update lastSyncedAt when at least one entity sync succeeds', async () => {
+    it('should advance lastSyncedAt only to a value the server returned, for the entity that succeeded', async () => {
       const calendarSync = await import('@features/calendar-events/services/calendarEventSync');
       const notificationSync = await import('@features/notifications/services/notificationSync');
       const annualHoursSync = await import('@features/reports/services/annualHoursConfigSync');
 
-      // Calendar succeeds (default mock), rest fail
-      vi.mocked(calendarSync.syncCalendarEvents).mockResolvedValue(undefined);
+      // Calendar succeeds and reports the server's clock; the rest fail. Only the server's value may be
+      // stored: a watermark derived here would be this device's clock compared against a column the server
+      // stamps, and everything inside the drift between them would be skipped for good.
+      const serverSyncedAt = '2024-06-15T11:22:33.000Z';
+      vi.mocked(calendarSync.syncCalendarEvents).mockResolvedValue(serverSyncedAt);
       vi.mocked(notificationSync.syncNotificationRecords).mockRejectedValue(new Error('Network error'));
       vi.mocked(annualHoursSync.syncAnnualHoursConfig).mockRejectedValue(new Error('Network error'));
 
@@ -578,13 +581,12 @@ describe('syncServiceController', () => {
 
       await runFullSyncCycle();
 
-      // lastSyncedAt should be updated since one entity succeeded
-      expect(useSyncStore.getState().lastSyncedAt).not.toBe(originalLastSyncedAt);
+      expect(useSyncStore.getState().lastSyncedAt).toBe(serverSyncedAt);
 
       fetchSpy.mockRestore();
-      vi.mocked(calendarSync.syncCalendarEvents).mockResolvedValue(undefined);
-      vi.mocked(notificationSync.syncNotificationRecords).mockResolvedValue(undefined);
-      vi.mocked(annualHoursSync.syncAnnualHoursConfig).mockResolvedValue(undefined);
+      vi.mocked(calendarSync.syncCalendarEvents).mockResolvedValue(null);
+      vi.mocked(notificationSync.syncNotificationRecords).mockResolvedValue(null);
+      vi.mocked(annualHoursSync.syncAnnualHoursConfig).mockResolvedValue(null);
     });
 
     it('should set connectionStatus to failing when all entities fail', async () => {
@@ -620,9 +622,9 @@ describe('syncServiceController', () => {
       expect(useSyncStore.getState().connectionStatus).toBe('failing');
 
       fetchSpy.mockRestore();
-      vi.mocked(calendarSync.syncCalendarEvents).mockResolvedValue(undefined);
-      vi.mocked(notificationSync.syncNotificationRecords).mockResolvedValue(undefined);
-      vi.mocked(annualHoursSync.syncAnnualHoursConfig).mockResolvedValue(undefined);
+      vi.mocked(calendarSync.syncCalendarEvents).mockResolvedValue(null);
+      vi.mocked(notificationSync.syncNotificationRecords).mockResolvedValue(null);
+      vi.mocked(annualHoursSync.syncAnnualHoursConfig).mockResolvedValue(null);
     });
 
     it('should preserve null lastSyncedAt when all entities fail on first sync', async () => {
@@ -658,9 +660,9 @@ describe('syncServiceController', () => {
       expect(useSyncStore.getState().lastSyncedAt).toBeNull();
 
       fetchSpy.mockRestore();
-      vi.mocked(calendarSync.syncCalendarEvents).mockResolvedValue(undefined);
-      vi.mocked(notificationSync.syncNotificationRecords).mockResolvedValue(undefined);
-      vi.mocked(annualHoursSync.syncAnnualHoursConfig).mockResolvedValue(undefined);
+      vi.mocked(calendarSync.syncCalendarEvents).mockResolvedValue(null);
+      vi.mocked(notificationSync.syncNotificationRecords).mockResolvedValue(null);
+      vi.mocked(annualHoursSync.syncAnnualHoursConfig).mockResolvedValue(null);
     });
   });
 

@@ -40,6 +40,7 @@ data class AnnualHoursConfigSyncPushResponse(
 data class AnnualHoursConfigSyncPullResponse(
     val records: List<AnnualHoursConfigSyncRecord>,
     val nextCursor: String?,
+    val serverSyncedAt: String? = null,
 )
 
 /**

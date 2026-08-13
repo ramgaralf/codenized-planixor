@@ -44,6 +44,7 @@ data class ReminderSyncPullResponse(
     val records: List<ReminderSyncRecord>,
     val cursor: String?,
     val hasMore: Boolean,
+    val serverSyncedAt: String? = null,
 )
 
 /**
