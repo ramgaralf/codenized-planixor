@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.NotificationRecord.SyncPull;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Dtos;
 using Codenized.Planixor.Dtos.NotificationRecord.Sync;
 using Codenized.Planixor.UseCases.NotificationRecord.SyncPull.Queries;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Logging;
 /// Notification record sync pull service. Retrieves notification records modified after a given timestamp
 /// for the authenticated user with cursor-based pagination.
 /// </summary>
+[LogMethod]
 public sealed class NotificationRecordSyncPullService : IInteractorService<NotificationRecordSyncPullRequest, NotificationRecordSyncPullResponse>
 {
     private readonly ILogger<NotificationRecordSyncPullService> logger;

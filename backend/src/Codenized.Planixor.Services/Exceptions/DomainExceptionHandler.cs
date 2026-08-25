@@ -7,6 +7,7 @@ namespace Codenized.Planixor.Services.Exceptions;
 using System.Diagnostics;
 using Codenized.CleanArchitecture.Abstractions.Exceptions.Interfaces;
 using Codenized.CleanArchitecture.Abstractions.Exceptions.Models;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Core.Exceptions;
 
 /// <summary>
@@ -14,6 +15,7 @@ using Codenized.Planixor.Core.Exceptions;
 /// violated, to a 400 response. Discovered automatically by <c>AddGlobalExceptionStrategy("Codenized")</c>,
 /// since this assembly's name starts with the configured prefix.
 /// </summary>
+[LogMethod]
 public sealed class DomainExceptionHandler : IExceptionHandler<DomainException>
 {
     /// <summary>

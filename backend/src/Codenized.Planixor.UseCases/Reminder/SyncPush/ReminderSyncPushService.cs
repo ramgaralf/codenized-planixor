@@ -6,6 +6,7 @@ namespace Codenized.Planixor.UseCases.Reminder.SyncPush;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
 using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Core.Entities;
 using Codenized.Planixor.Core.ValueObjects;
 using Codenized.Planixor.Dtos.Reminder.Sync;
@@ -16,6 +17,7 @@ using Microsoft.Extensions.Logging;
 /// Reminder sync push service. Receives a batch of reminder records from the client,
 /// maps them to domain entities, and upserts with last-writer-wins conflict resolution.
 /// </summary>
+[LogMethod]
 public sealed class ReminderSyncPushService : IInteractorService<ReminderSyncPushRequest, ReminderSyncPushResponse>
 {
     private const int MaxBatchSize = 100;
@@ -62,11 +64,6 @@ public sealed class ReminderSyncPushService : IInteractorService<ReminderSyncPus
 
         this.ValidateSeriesFrequencies(request.Records);
 
-        this.logger.LogInformation(
-            "Processing reminder sync push for user {UserId} with {Count} reminders.",
-            request.UserId,
-            request.Records.Count);
-
         IReadOnlyList<Reminder> reminders = request.Records
             .Select(item => Reminder.CreateFromSync(
                 item.Id,
@@ -87,8 +84,9 @@ public sealed class ReminderSyncPushService : IInteractorService<ReminderSyncPus
         int persisted = await this.commands.UpsertAsync(request.UserId, reminders, cancellationToken);
 
         this.logger.LogInformation(
-            "Reminder sync push completed for user {UserId}. {Count} reminders processed.",
+            "Reminder sync push for user {UserId}: {Persisted} of {BatchSize} reminders persisted.",
             request.UserId,
+            persisted,
             reminders.Count);
 
         return new ReminderSyncPushResponse(persisted);

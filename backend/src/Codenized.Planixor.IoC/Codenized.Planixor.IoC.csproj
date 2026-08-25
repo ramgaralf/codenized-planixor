@@ -15,6 +15,7 @@
     <PackageReference Include="Codenized.CleanArchitecture.Abstractions" Version="10.3.2" />
     <PackageReference Include="Codenized.Exceptions.GlobalExceptionStrategy" Version="10.2.1" />
     <PackageReference Include="Codenized.HealthChecks.AspNetCore" Version="10.3.1" />
+    <PackageReference Include="Codenized.OpenTelemetry.Logger" Version="10.1.0" />
     <PackageReference Include="Codenized.Security.RateLimit" Version="10.0.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

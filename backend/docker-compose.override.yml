@@ -3,3 +3,18 @@ services:
   codenized.planixor.api:
     ports:
       - "80:80"
+    environment:
+      # appsettings.json ships every telemetry destination and signal off — a container run through
+      # `docker compose up` does NOT inherit the host shell's environment variables on its own, so this is
+      # what actually enables Honeycomb export locally. HONEYCOMB_API_KEY must be set as an environment
+      # variable on the host before running docker compose — never write the real key into this file, it is
+      # committed. This block is local-only: a real deployment (Render, etc.) injects these same variable
+      # names through its own dashboard/config, without ever reading this file.
+      TelemetrySettings__Otlp__Enabled: "false"
+      TelemetrySettings__Traces__Enabled: "false"
+      TelemetrySettings__Metrics__Enabled: "false"
+      TelemetrySettings__Otlp__Headers: "x-honeycomb-team=${HONEYCOMB_API_KEY:?Set the HONEYCOMB_API_KEY environment variable before running docker compose}"
+      # Also turns on the console destination so `docker compose logs` shows the package's own
+      # traceId/spanId-correlated lines instead of the plain ASP.NET Core default provider.
+      TelemetrySettings__Console__Enabled: "true"
+      TelemetrySettings__Console__MinimumLevel: "Debug"

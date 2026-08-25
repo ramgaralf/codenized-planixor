@@ -6,6 +6,7 @@ namespace Codenized.Planixor.Services.Security;
 
 using System.Collections.Frozen;
 using Codenized.CleanArchitecture.Abstractions.AppServices;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Core.Services.Security;
 using Codenized.Planixor.Core.Settings;
 using Microsoft.Extensions.Options;
@@ -22,6 +23,7 @@ using Microsoft.Extensions.Options;
 /// is a deliberate trade-off not taken here.
 /// </para>
 /// </remarks>
+[LogMethod]
 public sealed class ApiKeyDirectory : IApiKeyDirectory, IAppServiceSingleton
 {
     private readonly FrozenDictionary<string, string> usersByApiKey;

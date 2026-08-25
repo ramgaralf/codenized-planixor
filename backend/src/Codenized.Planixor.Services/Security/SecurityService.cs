@@ -5,11 +5,13 @@
 namespace Codenized.Planixor.Services.Security;
 
 using Codenized.CleanArchitecture.Abstractions.AppServices;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Core.Services.Security;
 
 /// <summary>
 /// Validates API keys against the configured directory and stores the authenticated username.
 /// </summary>
+[LogMethod]
 public sealed class SecurityService : ISecurityService, IAppServiceScoped
 {
     private readonly IApiKeyDirectory apiKeyDirectory;

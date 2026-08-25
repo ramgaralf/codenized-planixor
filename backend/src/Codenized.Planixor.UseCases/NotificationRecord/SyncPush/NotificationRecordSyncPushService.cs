@@ -7,6 +7,7 @@ namespace Codenized.Planixor.UseCases.NotificationRecord.SyncPush;
 using Codenized.CleanArchitecture.Abstractions.Interactors;
 using Codenized.CleanArchitecture.Abstractions.Validations;
 using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Dtos.NotificationRecord.Sync;
 using Codenized.Planixor.UseCases.NotificationRecord.SyncPush.Commands;
 using Codenized.Planixor.UseCases.NotificationRecord.SyncPush.Queries;
@@ -18,6 +19,7 @@ using NotificationRecordEntity = Codenized.Planixor.Core.Entities.NotificationRe
 /// validates each record, enforces ownership, applies last-writer-wins conflict resolution,
 /// and returns acknowledged and rejected IDs.
 /// </summary>
+[LogMethod]
 public sealed class NotificationRecordSyncPushService : IInteractorService<NotificationRecordSyncPushRequest, NotificationRecordSyncPushResponse>
 {
     private const int MaxBatchSize = 100;
@@ -62,11 +64,6 @@ public sealed class NotificationRecordSyncPushService : IInteractorService<Notif
                 "Batch Size Exceeded",
                 "Batch size exceeds maximum of 100.");
         }
-
-        this.logger.LogInformation(
-            "Processing notification record sync push for user {UserId} with {Count} records.",
-            request.UserId,
-            request.Records.Count);
 
         // Queue the purge of past records. It shares the push's single commit, so it is no longer best-effort: a
         // failure here has to abort the whole push. Swallowing it made sense while the purge committed on its own,

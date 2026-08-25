@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.Reminder.SyncPull;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Dtos;
 using Codenized.Planixor.Dtos.Reminder.Sync;
 using Codenized.Planixor.UseCases.Reminder.SyncPull.Queries;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Logging;
 /// Reminder sync pull service. Retrieves reminders modified after a given timestamp
 /// for the authenticated user with cursor-based pagination.
 /// </summary>
+[LogMethod]
 public sealed class ReminderSyncPullService : IInteractorService<ReminderSyncPullRequest, ReminderSyncPullResponse>
 {
     private readonly ILogger<ReminderSyncPullService> logger;

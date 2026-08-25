@@ -7,6 +7,7 @@ namespace Codenized.Planixor.UseCases.CalendarEvent.SyncPush;
 using Codenized.CleanArchitecture.Abstractions.Interactors;
 using Codenized.CleanArchitecture.Abstractions.Validations;
 using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Dtos;
 using Codenized.Planixor.Dtos.CalendarEvent.Sync;
 using Codenized.Planixor.UseCases.CalendarEvent.SyncPush.Commands;
@@ -19,6 +20,7 @@ using CalendarEventEntity = Codenized.Planixor.Core.Entities.CalendarEvent;
 /// validates each record, enforces ownership, applies last-writer-wins conflict resolution,
 /// and returns acknowledged and rejected IDs.
 /// </summary>
+[LogMethod]
 public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEventSyncPushRequest, CalendarEventSyncPushResponse>
 {
     private const int MaxBatchSize = 100;
@@ -63,11 +65,6 @@ public sealed class CalendarEventSyncPushService : IInteractorService<CalendarEv
                 "Batch Size Exceeded",
                 "Batch size exceeds maximum of 100.");
         }
-
-        this.logger.LogInformation(
-            "Processing calendar event sync push for user {UserId} with {Count} records.",
-            request.UserId,
-            request.Records.Count);
 
         var acknowledgedIds = new List<Guid>();
         var rejectedIds = new List<RejectedRecord>();

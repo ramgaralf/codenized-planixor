@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.CalendarEvent.SyncPull;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Dtos;
 using Codenized.Planixor.Dtos.CalendarEvent.Sync;
 using Codenized.Planixor.UseCases.CalendarEvent.SyncPull.Queries;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Logging;
 /// Calendar event sync pull service. Retrieves calendar events modified after a given timestamp
 /// for the authenticated user with cursor-based pagination.
 /// </summary>
+[LogMethod]
 public sealed class CalendarEventSyncPullService : IInteractorService<CalendarEventSyncPullRequest, CalendarEventSyncPullResponse>
 {
     private readonly ILogger<CalendarEventSyncPullService> logger;

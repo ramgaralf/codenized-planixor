@@ -6,6 +6,7 @@ namespace Codenized.Planixor.UseCases.Shift.SyncPush;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
 using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Core.Entities;
 using Codenized.Planixor.Core.ValueObjects;
 using Codenized.Planixor.Dtos.Shift.Sync;
@@ -16,6 +17,7 @@ using Microsoft.Extensions.Logging;
 /// Shift sync push service. Receives a batch of shift records from the client,
 /// maps them to domain entities, and upserts with last-writer-wins conflict resolution.
 /// </summary>
+[LogMethod]
 public sealed class ShiftSyncPushService : IInteractorService<ShiftSyncPushRequest, ShiftSyncPushResponse>
 {
     /// <summary>The largest batch the use case will process.</summary>
@@ -56,11 +58,6 @@ public sealed class ShiftSyncPushService : IInteractorService<ShiftSyncPushReque
                 $"Batch size exceeds maximum of {MaxBatchSize}.");
         }
 
-        this.logger.LogInformation(
-            "Processing shift sync push for user {UserId} with {Count} shifts.",
-            request.UserId,
-            request.Shifts.Count);
-
         IReadOnlyList<Shift> shifts = request.Shifts
             .Select(item => Shift.CreateFromSync(
                 item.Id,
@@ -82,8 +79,9 @@ public sealed class ShiftSyncPushService : IInteractorService<ShiftSyncPushReque
         int persisted = await this.commands.UpsertAsync(request.UserId, shifts, cancellationToken);
 
         this.logger.LogInformation(
-            "Shift sync push completed for user {UserId}. {Count} shifts processed.",
+            "Shift sync push for user {UserId}: {Persisted} of {BatchSize} shifts persisted.",
             request.UserId,
+            persisted,
             shifts.Count);
 
         return new ShiftSyncPushResponse(persisted);

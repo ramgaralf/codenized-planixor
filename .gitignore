@@ -8,3 +8,4 @@ Thumbs.db
 .vscode/
 *.suo
 *.user
+/backend/src/Codenized.Planixor.Api/logs

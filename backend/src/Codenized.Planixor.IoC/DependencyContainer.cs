@@ -9,6 +9,7 @@ using Codenized.CleanArchitecture.Persistence.MySql.HealthChecks;
 using Codenized.Exceptions.GlobalExceptionStrategy;
 using Codenized.HealthChecks.AspNetCore.Entities;
 using Codenized.HealthChecks.AspNetCore.HealthChecks;
+using Codenized.OpenTelemetry.Logger;
 using Codenized.Planixor.Core.Settings;
 using Codenized.Planixor.Persistence.IoC;
 using Codenized.Planixor.Persistence.MySql.Efc.DataContext;
@@ -35,6 +36,7 @@ public static class DependencyContainer
         builder.Services.ConfigureAppHttpClient(appSettings.Product, appSettings.Service, appSettings.Version, appSettings.HttpClientTimeoutMiliseconds);
         builder.Services.AddCleanArchitecture(appSettings.Friendly);
         builder.Services.AddApplicationPersistence(appSettings.Friendly, builder.Configuration, "AppReadDb", "AppWriteDb");
+        builder.Services.AddCodenizedTelemetry(builder.Configuration);
         builder.Services.AddGlobalExceptionStrategy("Codenized");
         return builder;
     }

@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.AnnualHoursConfig.SyncPull;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Dtos;
 using Codenized.Planixor.Dtos.AnnualHoursConfig.Sync;
 using Codenized.Planixor.UseCases.AnnualHoursConfig.SyncPull.Queries;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Logging;
 /// Annual hours config sync pull service. Retrieves configs modified after a given timestamp
 /// for the authenticated user with cursor-based pagination.
 /// </summary>
+[LogMethod]
 public sealed class AnnualHoursConfigSyncPullService : IInteractorService<AnnualHoursConfigSyncPullRequest, AnnualHoursConfigSyncPullResponse>
 {
     private readonly ILogger<AnnualHoursConfigSyncPullService> logger;

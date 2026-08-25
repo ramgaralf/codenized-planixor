@@ -6,6 +6,7 @@ namespace Codenized.Planixor.UseCases.ShiftModeSetting.SyncPush;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
 using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Dtos.ShiftModeSetting.Sync;
 using Codenized.Planixor.UseCases.ShiftModeSetting.SyncPush.Commands;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ using ShiftModeSettingEntity = Codenized.Planixor.Core.Entities.ShiftModeSetting
 /// Shift mode setting sync push service. Receives a batch of shift mode setting records from the client,
 /// maps them to domain entities, and upserts with last-writer-wins conflict resolution.
 /// </summary>
+[LogMethod]
 public sealed class ShiftModeSettingSyncPushService : IInteractorService<ShiftModeSettingSyncPushRequest, ShiftModeSettingSyncPushResponse>
 {
     /// <summary>The largest batch the use case will process.</summary>
@@ -55,11 +57,6 @@ public sealed class ShiftModeSettingSyncPushService : IInteractorService<ShiftMo
                 $"Batch size exceeds maximum of {MaxBatchSize}.");
         }
 
-        this.logger.LogInformation(
-            "Processing shift mode setting sync push for user {UserId} with {Count} records.",
-            request.UserId,
-            request.Records.Count);
-
         IReadOnlyList<ShiftModeSettingEntity> records = request.Records
             .Select(item => ShiftModeSettingEntity.CreateFromSync(
                 item.Id,
@@ -74,8 +71,9 @@ public sealed class ShiftModeSettingSyncPushService : IInteractorService<ShiftMo
         int persisted = await this.commands.UpsertAsync(request.UserId, records, cancellationToken);
 
         this.logger.LogInformation(
-            "Shift mode setting sync push completed for user {UserId}. {Count} records processed.",
+            "Shift mode setting sync push for user {UserId}: {Persisted} of {BatchSize} records persisted.",
             request.UserId,
+            persisted,
             records.Count);
 
         return new ShiftModeSettingSyncPushResponse(persisted);

@@ -125,6 +125,134 @@ A throttled request gets a `429` as a `ProblemDetails` with `code: TOO_MANY_REQU
 
 `ExemptPathPrefixes` keeps the health probes out of the anonymous bucket: they are anonymous and polled on a schedule, so they would consume the whole allowance on their own. CORS preflight is exempt for the same class of reason — it carries no credential.
 
+### `Codenized.OpenTelemetry.Logger`
+Provides: `services.AddCodenizedTelemetry(configuration)`, `[LogMethod]`, `[NoLog]`, `[LogSensitive]`, `TelemetryActivitySource`, `TelemetrySettings`.
+
+Logs, traces and metrics over OpenTelemetry in one call, with `traceId`/`spanId` correlated onto every log line. Two independent axes: **what** is collected (`Logs` / `Traces` / `Metrics`) and **where** it goes (`Otlp` / `File` / `Console`) — every destination runs at the same time, each with its own bounded queue, so console and file can both be on while developing, and file and OTLP both on in production.
+
+```csharp
+builder.Services.AddCodenizedTelemetry(builder.Configuration);
+```
+
+Wired in `Codenized.Planixor.IoC\DependencyContainer.cs`, inside `ConfigureApplication`, alongside the other cross-cutting `Add*` calls.
+
+> `[LogMethod]` is woven at **compile time** (AspectInjector), so it only takes effect in an assembly that references the package **directly** — a `ProjectReference`-only chain does not get the attribute woven in. In Planixor this means `Codenized.Planixor.IoC`, `Codenized.Planixor.UseCases` and `Codenized.Planixor.Services` all carry their own `PackageReference`, not just `Api`.
+
+#### `TelemetrySettings`
+
+```jsonc
+"TelemetrySettings": {
+  "ServiceName": "Codenized.Planixor.Api",   // required — every backend files under "unknown_service" without it
+  "ServiceVersion": "",                       // defaults to the entry assembly's version
+  "Environment": "dev",                       // reported as the deployment.environment resource attribute
+
+  "Logs":    { "Enabled": true },
+  "Traces":  { "Enabled": false, "SampleRatio": 1.0 },   // ParentBased(TraceIdRatio) — 0..1
+  "Metrics": { "Enabled": false },
+
+  "Instrumentation": {
+    "AspNetCore": true,   // incoming requests — reads the incoming W3C trace context
+    "HttpClient": true,   // outgoing calls — writes the trace context onto the wire
+    "Runtime": true       // GC, thread pool, memory — metrics only
+  },
+
+  "MethodLogging": {
+    "Enabled": true,
+    "Level": "Debug",              // entry and successful exit
+    "ExceptionLevel": "Error",
+    "IncludeParameters": false,    // off by default — arguments can carry secrets/PII
+    "IncludeReturn": false,
+    "IncludeDuration": true,
+    "CreateSpan": true,            // a child span per [LogMethod] method, when Traces is on
+    "MaxValueLength": 512,
+    "VisibleCharacters": 2,        // "ey****J9"; 0 masks entirely
+    "RedactedParameterNames": [ "password", "token", "secret", "apikey", "authorization", "credential" ]
+  },
+
+  "Otlp": {
+    "Enabled": false,
+    "Endpoint": "https://api.honeycomb.io:443",
+    "Protocol": "Grpc",            // or "HttpProtobuf"
+    "Headers": "x-honeycomb-team=YOUR_API_KEY",   // vendor key — env var only, never committed
+    "TimeoutMilliseconds": 10000
+  },
+
+  "File": {
+    "Enabled": false,
+    "Format": "Json",              // or "Text"
+    "MinimumLevel": "Debug",
+    "Directory": "logs",
+    "Pattern": "log_%y-%m-%d.log", // %y %m %d %h %M %p %% — own tokens, not strftime's
+    "RetainedFileCount": 7,        // 0 keeps everything
+    "MaxFileSizeBytes": 104857600  // 0 removes the cap; past it, .1, .2, ... suffixes
+  },
+
+  "Console": {
+    "Enabled": false,              // enabling this calls ClearProviders() — see note below
+    "Format": "Text",
+    "MinimumLevel": "Information",
+    "Color": "Auto"                // "Auto" | "Always" | "Never"
+  }
+}
+```
+
+`Otlp` is the only destination that carries all three signals — `Traces` and `Metrics` can only reach OTLP; `File` and `Console` are log-record destinations only. `Otlp` has no `MinimumLevel` of its own: what reaches it is whatever the `Logging` section opens the pipeline to.
+
+#### `ILogger<T>` — nothing new to learn
+
+Existing `ILogger<T>` code needs no changes. `T` becomes the `category`; named placeholders (`LogInformation("order {Id} placed", id)`) land in a structured `attributes` object, so `LogInformation($"order {id} placed")` loses that — interpolated strings arrive as one opaque sentence. `BeginScope` is carried into its own `scopes` object, kept separate from `attributes` so a scope key and an attribute key sharing a name never collide into a duplicate JSON member. The framework's own `TraceId`/`SpanId`/`ParentId` scope is switched off — this package writes those as top-level fields instead, so they are never duplicated.
+
+> Enabling `Console` calls `ClearProviders()` internally, replacing ASP.NET Core's default console provider with this package's own formatter. Register any provider you want to keep *after* `AddCodenizedTelemetry`.
+
+#### `[LogMethod]` — automatic entry/exit/failure
+
+```csharp
+[LogMethod]
+public sealed class ShiftSyncPushService : IInteractorService<ShiftSyncPushRequest, ShiftSyncPushResponse>
+{
+    public async Task<ShiftSyncPushResponse> Run(ShiftSyncPushRequest request, [LogSensitive] CancellationToken cancellationToken) { … }
+
+    [NoLog]
+    public bool IsReady() => true;
+}
+```
+
+Applied to a class it covers every method; applied to a method it covers that one; `[NoLog]` takes one back out. The weave sees calls a container-based interceptor cannot — private, internal and static methods, and a type calling itself — because it rewrites the assembly at compile time rather than proxying an interface. Every property on the attribute overrides `MethodLogging` for that one method: `[LogMethod(Level = LogLevel.Information, IncludeParameters = LogToggle.Enabled)]`.
+
+Async completion is timed correctly, not when the method returns its `Task`:
+
+| Return type | "Exited" means |
+|---|---|
+| `void`, `T` | the method returned |
+| `Task`, `Task<T>` | the task completed |
+| `ValueTask`, `ValueTask<T>` | the task completed |
+| `IAsyncEnumerable<T>` | the stream ended |
+| `async void` | nothing observable — only entry is recorded |
+
+Failures are recorded with type, message, method and duration, and **no stack trace** — `Codenized.Exceptions.GlobalExceptionStrategy` already writes it once. With `CreateSpan` on and `Traces.Enabled`, each marked method also opens a child span; with tracing off, no listener means no `Activity` is created at all — the attribute costs nothing.
+
+> Before `AddCodenizedTelemetry` runs (or in a project that never calls it, such as `UnitTest.Codenized.Planixor`), a woven method behaves exactly as if it carried no attribute — the aspect is a no-op until `MethodLoggingInitializer`, a hosted service registered inside `AddCodenizedTelemetry`, switches it on.
+
+Currently applied in Planixor to the 12 sync interactor services under `Codenized.Planixor.UseCases` (`{Aggregate}SyncPull/PushService.Run`, one push+pull pair per aggregate: `AnnualHoursConfig`, `CalendarEvent`, `NotificationRecord`, `Reminder`, `Shift`, `ShiftModeSetting`) and to four classes under `Codenized.Planixor.Services`: `Security\SecurityService`, `Security\ApiKeyDirectory`, `Security\ApiKeyRateLimitIdentityResolver`, `Exceptions\DomainExceptionHandler`.
+
+#### Custom spans
+
+Automatic instrumentation gives one span per incoming request and one per outgoing `HttpClient` call — nothing in between. `TelemetryActivitySource` is registered as a singleton, already known to the tracer:
+
+```csharp
+public sealed class OrderService(TelemetryActivitySource telemetry)
+{
+    public async Task PlaceAsync(Order order)
+    {
+        using Activity? activity = telemetry.StartActivity("place-order");
+        activity?.SetTag("order.id", order.Id);
+        // …
+    }
+}
+```
+
+An `ActivitySource` created by hand works too, but its name must be registered with the tracer or every span it makes is dropped in silence.
+
 ## DI auto-registration
 
 `AddCleanArchitecture(friendlyName)` scans all assemblies whose name starts with `friendlyName.ToLowerInvariant()` and auto-registers:

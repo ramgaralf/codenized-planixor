@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.Shift.SyncPull;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Dtos;
 using Codenized.Planixor.Dtos.Shift.Sync;
 using Codenized.Planixor.UseCases.Shift.SyncPull.Queries;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Logging;
 /// Shift sync pull service. Retrieves shifts modified after a given timestamp
 /// for the authenticated user with cursor-based pagination.
 /// </summary>
+[LogMethod]
 public sealed class ShiftSyncPullService : IInteractorService<ShiftSyncPullRequest, ShiftSyncPullResponse>
 {
     private readonly ILogger<ShiftSyncPullService> logger;

@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.UseCases.ShiftModeSetting.SyncPull;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Dtos;
 using Codenized.Planixor.Dtos.ShiftModeSetting.Sync;
 using Codenized.Planixor.UseCases.ShiftModeSetting.SyncPull.Queries;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Logging;
 /// Shift mode setting sync pull service. Retrieves shift mode settings modified after a given timestamp
 /// for the authenticated user with cursor-based pagination.
 /// </summary>
+[LogMethod]
 public sealed class ShiftModeSettingSyncPullService : IInteractorService<ShiftModeSettingSyncPullRequest, ShiftModeSettingSyncPullResponse>
 {
     private readonly ILogger<ShiftModeSettingSyncPullService> logger;

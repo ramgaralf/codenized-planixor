@@ -5,6 +5,7 @@
 namespace Codenized.Planixor.Services.Security;
 
 using Codenized.CleanArchitecture.Abstractions.AppServices;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Core.Services.Security;
 using Codenized.Security.RateLimit.Abstractions;
 using Microsoft.AspNetCore.Http;
@@ -21,6 +22,7 @@ using Microsoft.AspNetCore.Http;
 /// request scope. <see cref="ApiKeyDirectory"/> is a singleton for the same reason.
 /// </para>
 /// </remarks>
+[LogMethod]
 public sealed class ApiKeyRateLimitIdentityResolver : IRateLimitIdentityResolver, IAppServiceSingleton
 {
     private const string BearerPrefix = "Bearer ";

@@ -26,6 +26,10 @@ dotnet run --project src/Codenized.Planixor.Api
 docker compose up --build
 ```
 
+## Observability
+
+Logs, traces and metrics over OpenTelemetry via `Codenized.OpenTelemetry.Logger`, exportable to Honeycomb (or any OTLP-compatible backend). See `TelemetrySettings` in `appsettings.json` and the `Codenized.OpenTelemetry.Logger` section of `.kiro/steering/backend-tech.md` for the full configuration reference.
+
 ## Solution Structure
 
 | Tier | Folder | Projects |

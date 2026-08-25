@@ -6,6 +6,7 @@ namespace Codenized.Planixor.UseCases.AnnualHoursConfig.SyncPush;
 
 using Codenized.CleanArchitecture.Abstractions.Interactors;
 using Codenized.CleanArchitecture.Exceptions.Abstractions.BadRequest;
+using Codenized.OpenTelemetry.Logger.Aspects;
 using Codenized.Planixor.Dtos.AnnualHoursConfig.Sync;
 using Codenized.Planixor.UseCases.AnnualHoursConfig.SyncPush.Commands;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ using AnnualHoursConfigEntity = Codenized.Planixor.Core.Entities.AnnualHoursConf
 /// Annual hours config sync push service. Receives a batch of annual hours config records
 /// from the client, maps them to domain entities, and upserts with last-writer-wins conflict resolution.
 /// </summary>
+[LogMethod]
 public sealed class AnnualHoursConfigSyncPushService : IInteractorService<AnnualHoursConfigSyncPushRequest, AnnualHoursConfigSyncPushResponse>
 {
     /// <summary>The largest batch the use case will process.</summary>
@@ -55,11 +57,6 @@ public sealed class AnnualHoursConfigSyncPushService : IInteractorService<Annual
                 $"Batch size exceeds maximum of {MaxBatchSize}.");
         }
 
-        this.logger.LogInformation(
-            "Processing annual hours config sync push for user {UserId} with {Count} records.",
-            request.UserId,
-            request.Records.Count);
-
         IReadOnlyList<AnnualHoursConfigEntity> configs = request.Records
             .Select(record => AnnualHoursConfigEntity.CreateFromSync(
                 record.Id,
@@ -75,8 +72,9 @@ public sealed class AnnualHoursConfigSyncPushService : IInteractorService<Annual
         int persisted = await this.commands.UpsertAsync(request.UserId, configs, cancellationToken);
 
         this.logger.LogInformation(
-            "Annual hours config sync push completed for user {UserId}. {Count} records processed.",
+            "Annual hours config sync push for user {UserId}: {Persisted} of {BatchSize} records persisted.",
             request.UserId,
+            persisted,
             configs.Count);
 
         return new AnnualHoursConfigSyncPushResponse(persisted);
